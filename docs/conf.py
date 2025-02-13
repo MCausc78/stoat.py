@@ -6,8 +6,9 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-import sys
 import os
+import re
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -18,7 +19,17 @@ sys.path.append(os.path.abspath('extensions'))
 project = 'pyvolt'
 copyright = '2024, MCausc78'
 author = 'MCausc78'
-release = '0.8.0'
+
+
+version = ''
+with open('../pyvolt/__init__.py', 'r') as fp:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE).group(1)  # type: ignore
+
+# The full version, including alpha/beta/rc tags.
+release = version
+
+# This assumes a tag is available for final releases
+branch = 'master' if version.endswith('a') else 'v' + version
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -77,6 +88,20 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'furo'
 html_static_path = ['_static']
 
+
+html_context = {
+    'revolt_invite': 'https://rvlt.gg/ZZQb4sxx',
+    'pyvolt_extensions': [
+        ('pyvolt.ext.commands', 'ext/commands'),
+    ],
+}
+
+resource_links = {
+    'revolt': 'https://rvlt.gg/ZZQb4sxx',
+    'issues': 'https://github.com/MCausc78/pyvolt/issues',
+    'discussions': 'https://github.com/MCausc78/pyvolt/discussions',
+    'examples': f'https://github.com/MCausc78/pyvolt/tree/{branch}/examples',
+}
 
 def setup(app):
     app.add_css_file('style.css')

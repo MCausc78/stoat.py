@@ -34,7 +34,7 @@ import typing
 import aiohttp
 from multidict import CIMultiDict
 
-from . import routes, utils
+from . import __version__, routes, utils
 from .authentication import (
     PartialAccount,
     MFATicket,
@@ -63,7 +63,6 @@ from .core import (
     UndefinedOr,
     ULIDOr,
     resolve_id,
-    __version__ as version,
 )
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
 from .errors import (
@@ -125,7 +124,7 @@ if typing.TYPE_CHECKING:
     from .webhook import BaseWebhook, Webhook
 
 
-DEFAULT_HTTP_USER_AGENT = f'pyvolt (https://github.com/MCausc78/pyvolt, {version})'
+DEFAULT_HTTP_USER_AGENT = f'pyvolt (https://github.com/MCausc78/pyvolt, {__version__})'
 
 
 _L = logging.getLogger(__name__)

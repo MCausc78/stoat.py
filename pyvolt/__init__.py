@@ -9,6 +9,12 @@ A basic wrapper for the Revolt API.
 
 """
 
+__title__ = 'pyvolt'
+__author__ = 'MCausc78'
+__license__ = 'MIT'
+__copyright__ = 'Copyright 2024-present MCausc78'
+__version__ = '0.8.0a'
+
 from . import (
     abc as abc,
     routes as routes,
@@ -51,5 +57,23 @@ import typing
 
 if typing.TYPE_CHECKING:
     from . import raw as raw
+
+
+class _VersionInfo(typing.NamedTuple):
+    major: int
+    minor: int
+    micro: int
+    releaselevel: typing.Literal['alpha', 'beta', 'candidate', 'final']
+    serial: int
+
+
+version_info: typing.Final[_VersionInfo] = _VersionInfo(
+    major=0,
+    minor=8,
+    micro=0,
+    releaselevel='alpha',
+    serial=0,
+)
+
 
 del typing

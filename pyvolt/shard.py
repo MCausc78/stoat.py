@@ -31,8 +31,8 @@ from inspect import isawaitable
 import logging
 import typing
 
-from . import utils
-from .core import ULIDOr, resolve_id, __version__ as version
+from . import __version__, utils
+from .core import ULIDOr, resolve_id
 from .enums import ShardFormat
 from .errors import PyvoltException, ShardClosedError, AuthenticationError, ConnectError
 
@@ -95,7 +95,7 @@ class EventHandler(ABC):
         ...
 
 
-DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/pyvolt, {version})'
+DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/pyvolt, {__version__})'
 
 
 class Shard:
