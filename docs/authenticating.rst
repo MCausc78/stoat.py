@@ -7,7 +7,7 @@ Tokens
 
 Tokens are how we authenticate with Revolt.
 
-Regular (and bot) tokens are exactly 64 characters long and generated with `nanoid <https://docs.rs/nanoid/latest/nanoid/>`_`
+Regular (and bot) tokens are exactly 64 characters long and generated with `nanoid <https://docs.rs/nanoid/latest/nanoid/>`_
 and contain only ``_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`` characters.
 
 How do I obtain mine?

@@ -34,8 +34,7 @@ import aiohttp
 from attrs import define, field
 from multidict import CIMultiDict
 
-from . import utils
-from .core import __version__
+from . import __version__, utils
 from .errors import HTTPException
 
 if typing.TYPE_CHECKING:
