@@ -25,3 +25,4 @@ These pages go into great detail about everything the API can do.
   :maxdepth: 1
 
   api
+  server_subscriptions
