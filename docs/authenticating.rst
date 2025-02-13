@@ -32,7 +32,7 @@ Or, you can do it manually:
 Traditional Authentication
 --------------------------
 
-To manually authenticate via having email and password, you'll need to call :meth:`HTTPClient.login_with_email` method.
+To manually authenticate via having email and password, you'll need to call :meth:`pyvolt.HTTPClient.login_with_email` method.
 
 Example:
 
