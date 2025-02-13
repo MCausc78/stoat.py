@@ -35,7 +35,7 @@ from attrs import define, field
 from multidict import CIMultiDict
 
 from . import utils
-from .core import __version__ as version
+from .core import __version__
 from .errors import HTTPException
 
 if typing.TYPE_CHECKING:
@@ -185,7 +185,7 @@ class Resource(ABC):
 
 _cdn_session: typing.Optional[aiohttp.ClientSession] = None
 
-DEFAULT_CDN_USER_AGENT = f'pyvolt CDN client (https://github.com/MCausc78/pyvolt, {version})'
+DEFAULT_CDN_USER_AGENT = f'pyvolt CDN client (https://github.com/MCausc78/pyvolt, {__version__})'
 
 
 def _get_session() -> aiohttp.ClientSession:

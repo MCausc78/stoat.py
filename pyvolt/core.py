@@ -79,8 +79,6 @@ def resolve_id(resolvable: ULIDOr[U], /) -> str:
 # zero ID
 ZID = '00000000000000000000000000'
 
-__version__: str = '0.8.0'
-
 __all__ = (
     'Undefined',
     'UNDEFINED',
@@ -91,6 +89,5 @@ __all__ = (
     'HasID',
     'ULIDOr',
     'resolve_id',
-    '__version__',
     'ZID',
 )

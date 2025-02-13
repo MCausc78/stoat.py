@@ -34,9 +34,9 @@ from attrs import define, field
 
 from multidict import CIMultiDict
 
-from . import utils
+from . import __version__, utils
 from .bot import BaseBot
-from .core import UNDEFINED, UndefinedOr, __version__ as version
+from .core import UNDEFINED, UndefinedOr
 from .errors import DiscoverError, InvalidData
 from .server import ServerFlags, BaseServer
 
@@ -49,7 +49,7 @@ if typing.TYPE_CHECKING:
     from .user import StatelessUserProfile, UserProfile
 
 _L = logging.getLogger(__name__)
-DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {version})'
+DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {__version__})'
 
 _new_server_flags = ServerFlags.__new__
 
