@@ -1081,7 +1081,7 @@ class Client:
         event: type[EventT],
         /,
         *,
-        check: Callable[[EventT], bool] | None = None,
+        check: typing.Optional[Callable[[EventT], bool]] = None,
         count: int = 1,
         timeout: typing.Optional[float] = None,
     ) -> typing.Union[TemporarySubscription[EventT], TemporarySubscriptionList[EventT]]:
@@ -1149,9 +1149,9 @@ class Client:
 
         Raises
         -------
-        TypeError
+        :class:`TypeError`
             If ``count`` parameter was negative or zero.
-        asyncio.TimeoutError
+        :class:`asyncio.TimeoutError`
             If a timeout is provided and it was reached.
 
         Returns
@@ -1254,12 +1254,12 @@ class Client:
 
     @property
     def me(self) -> typing.Optional[OwnUser]:
-        """Optional[:class:`OwnUser`]: The currently logged in user. ``None`` if not logged in."""
+        """Optional[:class:`.OwnUser`]: The currently logged in user. ``None`` if not logged in."""
         return self._state._me
 
     @property
     def user(self) -> typing.Optional[OwnUser]:
-        """Optional[:class:`OwnUser`]: The currently logged in user. ``None`` if not logged in.
+        """Optional[:class:`.OwnUser`]: The currently logged in user. ``None`` if not logged in.
 
         Alias to :attr:`.me`.
         """
@@ -1267,27 +1267,27 @@ class Client:
 
     @property
     def saved_notes(self) -> typing.Optional[SavedMessagesChannel]:
-        """Optional[:class:`SavedMessagesChannel`]: The Saved Notes channel."""
+        """Optional[:class:`.SavedMessagesChannel`]: The Saved Notes channel."""
         return self._state._saved_notes
 
     @property
     def http(self) -> HTTPClient:
-        """:class:`HTTPClient`: The HTTP client."""
+        """:class:`.HTTPClient`: The HTTP client."""
         return self._state.http
 
     @property
     def shard(self) -> Shard:
-        """:class:`Shard`: The Revolt WebSocket client."""
+        """:class:`.Shard`: The Revolt WebSocket client."""
         return self._state.shard
 
     @property
     def state(self) -> State:
-        """:class:`State`: The controller for all entities and components."""
+        """:class:`.State`: The controller for all entities and components."""
         return self._state
 
     @property
     def channels(self) -> Mapping[str, Channel]:
-        """Mapping[:class:`str`, :class:`Channel`]: Mapping of cached channels."""
+        """Mapping[:class:`str`, :class:`.Channel`]: Mapping of cached channels."""
         cache = self._state.cache
         if cache:
             return cache.get_channels_mapping()
@@ -1295,7 +1295,7 @@ class Client:
 
     @property
     def emojis(self) -> Mapping[str, Emoji]:
-        """Mapping[:class:`str`, :class:`Emoji`]: Mapping of cached emojis."""
+        """Mapping[:class:`str`, :class:`.Emoji`]: Mapping of cached emojis."""
         cache = self._state.cache
         if cache:
             return cache.get_emojis_mapping()
@@ -1303,7 +1303,7 @@ class Client:
 
     @property
     def servers(self) -> Mapping[str, Server]:
-        """Mapping[:class:`str`, :class:`Server`]: Mapping of cached servers."""
+        """Mapping[:class:`str`, :class:`.Server`]: Mapping of cached servers."""
         cache = self._state.cache
         if cache:
             return cache.get_servers_mapping()
@@ -1311,7 +1311,7 @@ class Client:
 
     @property
     def users(self) -> Mapping[str, User]:
-        """Mapping[:class:`str`, :class:`User`]: Mapping of cached users."""
+        """Mapping[:class:`str`, :class:`.User`]: Mapping of cached users."""
         cache = self._state.cache
         if cache:
             return cache.get_users_mapping()
@@ -1327,7 +1327,7 @@ class Client:
 
     @property
     def dm_channels(self) -> Mapping[str, DMChannel]:
-        """Mapping[:class:`str`, :class:`DMChannel`]: Mapping of user IDs to cached DM channels."""
+        """Mapping[:class:`str`, :class:`.DMChannel`]: Mapping of user IDs to cached DM channels."""
 
         cache = self._state.cache
         if not cache:
@@ -1342,7 +1342,7 @@ class Client:
 
     @property
     def private_channels(self) -> Mapping[str, typing.Union[DMChannel, GroupChannel]]:
-        """Mapping[:class:`str`, Union[:class:`DMChannel`, :class:`GroupChannel`]]: Mapping of channel IDs to private channels."""
+        """Mapping[:class:`str`, Union[:class:`.DMChannel`, :class:`.GroupChannel`]]: Mapping of channel IDs to private channels."""
         cache = self._state.cache
         if not cache:
             return {}
@@ -1350,15 +1350,15 @@ class Client:
 
     @property
     def ordered_private_channels_old(self) -> list[typing.Union[DMChannel, GroupChannel]]:
-        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in Revite order."""
+        """List[Union[:class:`.DMChannel`, :class:`.GroupChannel`]]: The list of private channels in Revite order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_old, reverse=True)
 
     @property
     def ordered_private_channels(self) -> list[typing.Union[DMChannel, GroupChannel]]:
-        """List[Union[:class:`DMChannel`, :class:`GroupChannel`]]: The list of private channels in new client's order."""
+        """List[Union[:class:`D.MChannel`, :class:`.GroupChannel`]]: The list of private channels in new client's order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_new, reverse=True)
 
-    def get_channel(self, channel_id: str, /) -> Channel | None:
+    def get_channel(self, channel_id: str, /) -> typing.Optional[Channel]:
         """Retrieves a channel from cache.
 
         Parameters
@@ -1368,7 +1368,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`Channel`]
+        Optional[:class:`.Channel`]
             The channel or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1378,44 +1378,53 @@ class Client:
     async def fetch_channel(self, channel_id: str, /) -> Channel:
         """|coro|
 
-        Fetch a :class:`Channel` with the specified ID from the API. This is shortcut to :meth:`HTTPClient.get_channel`.
+        Fetch a :class:`.Channel` with the specified ID.
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
+        This is shortcut to :meth:`HTTPClient.get_channel`.
+
         Parameters
         ----------
-        channel: ULIDOr[:class:`BaseChannel`]
+        channel: ULIDOr[:class:`.BaseChannel`]
             The channel to fetch.
 
         Raises
         ------
-        Unauthorized
-            +------------------------------------------+-----------------------------------------+
-            | Possible :attr:`Unauthorized.type` value | Reason                                  |
-            +------------------------------------------+-----------------------------------------+
-            | ``InvalidSession``                       | The current bot/user token is invalid.  |
-            +------------------------------------------+-----------------------------------------+
-        Forbidden
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | Possible :attr:`Forbidden.type` value | Reason                                                      | Populated attributes         |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-            | ``MissingPermission``                 | You do not have the proper permissions to view the channel. | :attr:`Forbidden.permission` |
-            +---------------------------------------+-------------------------------------------------------------+------------------------------+
-        NotFound
-            +--------------------------------------+---------------------------------+
-            | Possible :attr:`NotFound.type` value | Reason                          |
-            +--------------------------------------+---------------------------------+
-            | ``NotFound``                         | The channel was not found.      |
-            +--------------------------------------+---------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the channel. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
 
         Returns
         -------
         :class:`.Channel`
             The retrieved channel.
         """
+
         return await self.http.get_channel(channel_id)
 
-    def get_emoji(self, emoji_id: str, /) -> Emoji | None:
+    def get_emoji(self, emoji_id: str, /) -> typing.Optional[Emoji]:
         """Retrieves a emoji from cache.
 
         Parameters
@@ -1435,21 +1444,35 @@ class Client:
     async def fetch_emoji(self, emoji_id: str, /) -> Emoji:
         """|coro|
 
-        Retrieves a emoji from API. This is shortcut to :meth:`HTTPClient.get_emoji`.
+        Retrieves a custom emoji.
+
+        This is shortcut to :meth:`HTTPClient.get_emoji`.
 
         Parameters
         ----------
-        emoji_id: :class:`str`
-            The emoji ID.
+        emoji: ULIDOr[:class:`.BaseEmoji`]
+            The emoji to retrieve.
+
+        Raises
+        ------
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------+
+            | Value        | Reason                   |
+            +--------------+--------------------------+
+            | ``NotFound`` | The emoji was not found. |
+            +--------------+--------------------------+
 
         Returns
         -------
         :class:`Emoji`
             The retrieved emoji.
         """
+
         return await self.http.get_emoji(emoji_id)
 
-    def get_read_state(self, channel_id: str, /) -> ReadState | None:
+    def get_read_state(self, channel_id: str, /) -> typing.Optional[ReadState]:
         """Retrieves a read state from cache.
 
         Parameters
@@ -1466,7 +1489,7 @@ class Client:
         if cache:
             return cache.get_read_state(channel_id, caching._USER_REQUEST)
 
-    def get_server(self, server_id: str, /) -> Server | None:
+    def get_server(self, server_id: str, /) -> typing.Optional[Server]:
         """Retrieves a server from cache.
 
         Parameters
@@ -1483,24 +1506,47 @@ class Client:
         if cache:
             return cache.get_server(server_id, caching._USER_REQUEST)
 
-    async def fetch_server(self, server_id: str, /) -> Server:
+    async def fetch_server(self, server_id: str, *, populate_channels: typing.Optional[bool] = None) -> Server:
         """|coro|
 
-        Retrieves a server from API. This is shortcut to :meth:`.HTTPClient.get_server`.
+        Retrieves a :class:`Server`.
+
+        This is shortcut to :meth:`HTTPClient.get_server`.
 
         Parameters
         ----------
-        server_id: :class:`str`
-            The server ID.
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to retrieve.
+        populate_channels: Optional[:class:`bool`]
+            Whether to populate :attr:`Server.channels`.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
 
         Returns
         -------
         :class:`.Server`
-            The server.
+            The retrieved server.
         """
-        return await self.http.get_server(server_id)
+        return await self.http.get_server(server_id, populate_channels=populate_channels)
 
-    def get_user(self, user_id: str, /) -> User | None:
+    def get_user(self, user_id: str, /) -> typing.Optional[User]:
         """Retrieves a user from cache.
 
         Parameters

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
-import aiohttp
 import argparse
 import asyncio
 import logging
 import platform
-import pyvolt
 import sys
+import typing
+
+import aiohttp
+import pyvolt
 
 
 def show_version() -> None:
@@ -21,7 +23,7 @@ def show_version() -> None:
     print('\n'.join(entries))
 
 
-async def login(email: str, password: str, friendly_name: str | None):
+async def login(email: str, password: str, friendly_name: typing.Optional[str]):
     session = aiohttp.ClientSession()
 
     state = pyvolt.State()

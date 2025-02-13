@@ -76,7 +76,7 @@ class State:
         provide_cache_context_in: typing.Optional[list[ProvideCacheContextIn]] = None,
         shard: typing.Optional[Shard] = None,
     ) -> None:
-        self._cache: Cache | None = cache
+        self._cache: typing.Optional[Cache] = cache
         self.provide_cache_context_in: list[ProvideCacheContextIn] = provide_cache_context_in or []
         self._cdn_client: typing.Optional[CDNClient] = None
         self._http: typing.Optional[HTTPClient] = None

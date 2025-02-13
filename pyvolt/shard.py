@@ -131,7 +131,7 @@ class Shard:
         The HTTP user agent used when connecting to WebSocket.
     """
 
-    _socket: aiohttp.ClientWebSocketResponse | None
+    _socket: typing.Optional[aiohttp.ClientWebSocketResponse]
 
     __slots__ = (
         '_closed',
@@ -162,34 +162,34 @@ class Shard:
         self,
         token: str,
         *,
-        base: str | None = None,
+        base: typing.Optional[str] = None,
         bot: bool = True,
-        connect_delay: float | None = 2,
+        connect_delay: typing.Optional[float] = 2,
         format: ShardFormat = ShardFormat.json,
-        handler: EventHandler | None = None,
+        handler: typing.Optional[EventHandler] = None,
         reconnect_on_timeout: bool = True,
         request_user_settings: list[str] | None = None,
-        retries: int | None = None,
+        retries: typing.Optional[int] = None,
         session: utils.MaybeAwaitableFunc[[Shard], aiohttp.ClientSession] | aiohttp.ClientSession,
         state: State,
-        user_agent: str | None = None,
+        user_agent: typing.Optional[str] = None,
     ) -> None:
         if format is ShardFormat.msgpack and not _HAS_MSGPACK:
             raise TypeError('Cannot use msgpack format without dependency')
 
         self._closed: bool = False
         self._heartbeat_sequence: int = 1
-        self._last_close_code: int | None = None
+        self._last_close_code: typing.Optional[int] = None
         self._sequence: int = 0
         self._session = session
-        self._socket: aiohttp.ClientWebSocketResponse | None = None
+        self._socket: typing.Optional[aiohttp.ClientWebSocketResponse] = None
         self.base: str = base or 'wss://ws.revolt.chat/'
         self.bot: bool = bot
-        self.connect_delay: int | float | None = connect_delay
+        self.connect_delay: typing.Optional[float] = connect_delay
         self.format: ShardFormat = format
-        self.handler: EventHandler | None = handler
-        self.last_ping_at: datetime | None = None
-        self.last_pong_at: datetime | None = None
+        self.handler: typing.Optional[EventHandler] = handler
+        self.last_ping_at: typing.Optional[datetime] = None
+        self.last_pong_at: typing.Optional[datetime] = None
         self.logged_out: bool = False
         self.reconnect_on_timeout: bool = reconnect_on_timeout
         self.request_user_settings = request_user_settings
@@ -528,7 +528,7 @@ class Shard:
                 heartbeat_task.cancel()
                 heartbeat_task = asyncio.create_task(self._heartbeat())
 
-            exc: BaseException | None = None
+            exc: typing.Optional[BaseException] = None
             while not self._closed:
                 try:
                     if exc:
@@ -570,7 +570,7 @@ class Shard:
                 try:
                     await socket.close()
                 except Exception as exc:
-                    _L.warning('failed to close websocket', exc_info=exc)
+                    _L.warning('Failed to close websocket', exc_info=exc)
         self._last_close_code = None
 
     async def _handle(self, payload: raw.ClientEvent, /) -> bool:
@@ -583,14 +583,14 @@ class Shard:
                     extra = f'nonce is behind of {self._heartbeat_sequence - nonce} beats'
                 if self.reconnect_on_timeout:
                     _L.error(
-                        'missed Pong, expected %s, got %s (%s)',
+                        'Missed Pong, expected %s, got %s (%s)',
                         self._heartbeat_sequence,
                         nonce,
                         extra,
                     )
                 else:
                     _L.warning(
-                        'missed Pong, expected %s, got %s (%s)',
+                        'Missed Pong, expected %s, got %s (%s)',
                         self._heartbeat_sequence,
                         nonce,
                         extra,

@@ -56,7 +56,7 @@ class Messageable:
         """:class:`str`: Retrieves the channel's ID, if possible."""
         return ''
 
-    def get_message(self, message_id: str, /) -> Message | None:
+    def get_message(self, message_id: str, /) -> typing.Optional[Message]:
         """Retrieves a channel message from cache.
 
         Parameters
@@ -66,7 +66,7 @@ class Messageable:
 
         Returns
         -------
-        Optional[:class:`Message`]
+        Optional[:class:`.Message`]
             The message or ``None`` if not found.
         """
         state = self._get_state()
@@ -77,14 +77,14 @@ class Messageable:
 
     @property
     def messages(self) -> Mapping[str, Message]:
-        """Mapping[:class:`str`, :class:`Message`]: Returns all messages in this channel."""
+        """Mapping[:class:`str`, :class:`.Message`]: Returns all messages in this channel."""
         cache = self.state.cache
         if cache:
             return cache.get_messages_mapping_of(self.get_channel_id(), caching._USER_REQUEST) or {}
         return {}
 
     async def begin_typing(self) -> None:
-        """Begins typing in channel, until :meth:`end_typing` is called."""
+        """Begins typing in channel, until :meth:`~.end_typing` is called."""
         state = self._get_state()
         channel_id = await self.fetch_channel_id()
         return await state.shard.begin_typing(channel_id)
@@ -127,7 +127,7 @@ class Messageable:
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
 
-            If ``nearby`` is provided, then this is ``(limit + 1)``.
+            If ``nearby`` is provided, then this is ``(limit + 2)``.
         before: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message before which messages should be fetched.
         after: Optional[ULIDOr[:class:`.BaseMessage`]]
@@ -231,6 +231,7 @@ class Messageable:
         You must have :attr:`~Permissions.send_messages` to do this.
 
         If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do that.
+
         If message mentions any roles, you must :attr:`~Permission.mention_roles` to do that.
 
         Parameters

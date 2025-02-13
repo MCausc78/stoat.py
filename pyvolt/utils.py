@@ -56,7 +56,7 @@ if typing.TYPE_CHECKING:
     P = typing.ParamSpec('P')
     T = typing.TypeVar('T')
 
-    MaybeAwaitable = T | Awaitable[T]
+    MaybeAwaitable = typing.Union[T, Awaitable[T]]
     MaybeAwaitableFunc = Callable[P, MaybeAwaitable[T]]
 
 
@@ -150,7 +150,7 @@ _BOOL_TRUE_VALUES: typing.Final[tuple[str, ...]] = (
 def decode_bool(
     b: str,
     /,
-) -> bool | None:
+) -> typing.Optional[bool]:
     v = b.casefold()
     if v in _BOOL_TRUE_VALUES:
         return True

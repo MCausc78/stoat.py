@@ -49,21 +49,42 @@ class BaseBot(Base):
 
         Deletes the bot.
 
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        bot: ULIDOr[:class:`.BaseBot`]
+            The bot to delete.
+
         Raises
         ------
-        NotFound
-            +--------------------------------------+--------------------------------------------------------------+
-            | Possible :attr:`NotFound.type` value | Reason                                                       |
-            +--------------------------------------+--------------------------------------------------------------+
-            | ``NotFound``                         | The bot was not found, or the current user does not own bot. |
-            +--------------------------------------+--------------------------------------------------------------+
-        InternalServerError
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
-            | Possible :attr:`InternalServerError.type` value | Reason                                         | Populated attributes                                                          |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
-            | ``DatabaseError``                               | Something went wrong during querying database. | :attr:`InternalServerError.collection`, :attr:`InternalServerError.operation` |
-            +-------------------------------------------------+------------------------------------------------+-------------------------------------------------------------------------------|
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+----------------------------------------+
+            | Value               | Reason                                 |
+            +---------------------+----------------------------------------+
+            | ``InvalidSession``  | The current bot/user token is invalid. |
+            +---------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------------------------------------+
+            | Value        | Reason                                                       |
+            +--------------+--------------------------------------------------------------+
+            | ``NotFound`` | The bot was not found, or the current user does not own bot. |
+            +--------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
+
         return await self.state.http.delete_bot(self.id)
 
     async def edit(

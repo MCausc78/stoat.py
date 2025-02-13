@@ -622,7 +622,7 @@ class BaseUser(Base, Connectable, Messageable):
         """
         return await self.state.http.get_mutuals_with(self.id)
 
-    async def open_dm(self) -> SavedMessagesChannel | DMChannel:
+    async def open_dm(self) -> typing.Union[SavedMessagesChannel, DMChannel]:
         """|coro|
 
         Retrieve a DM (or create if it doesn't exist) with another user.

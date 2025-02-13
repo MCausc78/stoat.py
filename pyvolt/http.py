@@ -943,7 +943,7 @@ class HTTPClient:
     async def delete_bot(self, bot: ULIDOr[BaseBot], /) -> None:
         """|coro|
 
-        Deletes the bot.
+        Deletes a bot.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2294,7 +2294,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
             The channel the message is in.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`.BaseMessage`]
             The message to retrieve.
 
         Raises
@@ -2356,7 +2356,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
             The channel the message is in.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`.BaseMessage`]
             The message to pin.
 
         Raises
@@ -3750,7 +3750,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        code: Union[:class:`str`, :class:`BaseInvite`]
+        code: Union[:class:`str`, :class:`.BaseInvite`]
             The invite code.
 
         Raises
@@ -5899,7 +5899,6 @@ class HTTPClient:
     async def get_server(
         self,
         server: ULIDOr[BaseServer],
-        /,
         *,
         populate_channels: typing.Optional[bool] = None,
     ) -> Server:
@@ -5909,10 +5908,10 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`BaseServer`]
-            The ID of the server.
-        populate_channels: :class:`bool`
-            Whether to populate channels.
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to retrieve.
+        populate_channels: Optional[:class:`bool`]
+            Whether to populate :attr:`Server.channels`.
 
         Raises
         ------
@@ -6177,7 +6176,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: ULIDOr[:class:`BaseUser`]
+        user: ULIDOr[:class:`.BaseUser`]
             The user to block.
 
         Raises
@@ -7040,7 +7039,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: ULIDOr[:class:`BaseUser`]
+        user: ULIDOr[:class:`.BaseUser`]
             The user to unblock.
 
         Raises
@@ -7444,8 +7443,8 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: ULIDOr[:class:`BaseWebhook`]
-            The ID of the webhook.
+        webhook: ULIDOr[:class:`.BaseWebhook`]
+            The webhook to retrieve.
         token: Optional[:class:`str`]
             The webhook token.
 
