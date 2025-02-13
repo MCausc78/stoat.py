@@ -3,8 +3,8 @@ pyvolt
 
 A simple, flexible API wrapper for Revolt.
 
-.. warning::
-    This is alpha software. Please report bugs on GitHub issues if you will find any.
+.. note::
+    This is beta software. Please report bugs on GitHub issues if you will find any.
 
 Key Features
 -------------
