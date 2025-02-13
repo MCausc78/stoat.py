@@ -19,7 +19,7 @@ Since they don't appear to be changed, this page documents them in detail.
 
 In essence, since library does not provide an automatic way to manage subscriptions, you'll need to do it manually through :meth:`~pyvolt.Server.subscribe` method.
 
-Users are automatically subscribed to all friends, all recipients from all groups the user in, users who have friend request from the current users and users the current user sent friend request to.
+Users are automatically subscribed to all users they have relationship or open DM with, and all recipients from all groups the user in.
 
 Subscriptions are automatically expired within 15 minutes.
 
