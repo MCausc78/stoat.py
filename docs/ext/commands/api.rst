@@ -60,27 +60,27 @@ Event Reference
 CommandErrorEvent
 ~~~~~~~~~~~~~~~~~
 
-.. attributetable:: CommandErrorEvent
+.. attributetable:: pyvolt.ext.commands.CommandErrorEvent
 
-.. autoclass:: CommandErrorEvent
+.. autoclass:: pyvolt.ext.commands.CommandErrorEvent
     :members:
     :inherited-members:
 
 CommandEvent
 ~~~~~~~~~~~~
 
-.. attributetable:: CommandEvent
+.. attributetable:: pyvolt.ext.commands.CommandEvent
 
-.. autoclass:: CommandEvent
+.. autoclass:: pyvolt.ext.commands.CommandEvent
     :members:
     :inherited-members:
 
 CommandCompletionEvent
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: CommandCompletionEvent
+.. attributetable:: pyvolt.ext.commands.CommandCompletionEvent
 
-.. autoclass:: CommandCompletionEvent
+.. autoclass:: pyvolt.ext.commands.CommandCompletionEvent
     :members:
     :inherited-members:
 

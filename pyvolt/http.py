@@ -4817,7 +4817,7 @@ class HTTPClient:
 
         Query members by a given name.
 
-        .. warn::
+        .. warning::
             This API is not stable and may be removed in the future.
 
         Parameters

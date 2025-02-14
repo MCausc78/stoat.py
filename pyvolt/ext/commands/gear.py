@@ -401,7 +401,7 @@ class Gear(metaclass=GearMeta):
         A special method that is called whenever an error
         is dispatched inside this gear.
 
-        This is similar to :class:`.CommandErrorEvent` except only applying
+        This is similar to :class:`CommandErrorEvent` except only applying
         to the commands inside this gear.
 
         This **must** be a coroutine.
