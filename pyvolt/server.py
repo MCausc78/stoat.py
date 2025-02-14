@@ -110,7 +110,7 @@ class Category:
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, Category) and self.id == other.id
 
-    def build(self) -> raw.Category:
+    def to_dict(self) -> raw.Category:
         return {
             'id': self.id,
             'title': self.title,
@@ -160,7 +160,7 @@ class SystemMessageChannels:
             )
         )
 
-    def build(self) -> raw.SystemMessageChannels:
+    def to_dict(self) -> raw.SystemMessageChannels:
         payload: raw.SystemMessageChannels = {}
         if self.user_joined is not None:
             payload['user_joined'] = self.user_joined
@@ -1312,9 +1312,9 @@ class BaseServer(Base):
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------------------+---------------------------------------+
-            | Value                    | Reason                                |
-            +--------------------------+---------------------------------------+
+            +--------------------------+--------------------------------------+
+            | Value                    | Reason                               |
+            +--------------------------+--------------------------------------+
             | ``CannotReportYourself`` | You tried to report your own server. |
             +--------------------------+--------------------------------------+
             | ``FailedValidation``     | The payload was invalid.             |

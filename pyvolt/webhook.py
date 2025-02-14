@@ -144,13 +144,13 @@ class BaseWebhook(Base):
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+---------------------------------------------------------------------------+
-            | Value                | Reason                                                                    |
-            +----------------------+---------------------------------------------------------------------------+
-            | ``InvalidSession``   | The current bot/user token is invalid.                                    |
-            +----------------------+---------------------------------------------------------------------------+
-            | ``NotAuthenticated`` | The webhook token is invalid. Only applicable when ``by_`` is provided. |
-            +----------------------+---------------------------------------------------------------------------+
+            +----------------------+------------------------------------------------------------------------------+
+            | Value                | Reason                                                                       |
+            +----------------------+------------------------------------------------------------------------------+
+            | ``InvalidSession``   | The current bot/user token is invalid.                                       |
+            +----------------------+------------------------------------------------------------------------------+
+            | ``NotAuthenticated`` | The webhook token is invalid. Only applicable when ``by_token`` is ``True``. |
+            +----------------------+------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -231,7 +231,7 @@ class BaseWebhook(Base):
             The embeds to send the message with.
 
             Webhook must have :attr:`~Permissions.send_embeds` to provide this.
-        masquearde: Optional[:class:`.MessagesMasquerade`]
+        masquerade: Optional[:class:`.MessageMasquerade`]
             The masquerade for the message.
 
             Webhook must have :attr:`~Permissions.use_masquerade` to provide this.

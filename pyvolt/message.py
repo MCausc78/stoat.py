@@ -73,7 +73,7 @@ class Reply:
         self.id = resolve_id(id)
         self.mention = mention
 
-    def build(self) -> raw.ReplyIntent:
+    def to_dict(self) -> raw.ReplyIntent:
         return {
             'id': self.id,
             'mention': self.mention,
@@ -99,7 +99,7 @@ class MessageInteractions:
         self.reactions: list[str] = reactions
         self.restrict_reactions: bool = restrict_reactions
 
-    def build(self) -> raw.Interactions:
+    def to_dict(self) -> raw.Interactions:
         return {
             'reactions': self.reactions,
             'restrict_reactions': self.restrict_reactions,
@@ -117,7 +117,7 @@ class MessageMasquerade:
         The image URL to replace the displayed avatar on message with.
     color: Optional[:class:`str`]
         The CSS color to replace display role color shown on message.
-        This must be valid `CSS color <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value)`_.
+        This must be valid `CSS color <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value>`_.
 
         You (or webhook) must have :attr:`~Permissions.manage_roles` permission to set this attribute.
     """
@@ -135,7 +135,7 @@ class MessageMasquerade:
         self.avatar: typing.Optional[str] = avatar
         self.color: typing.Optional[str] = color
 
-    def build(self) -> raw.Masquerade:
+    def to_dict(self) -> raw.Masquerade:
         payload: raw.Masquerade = {}
         if self.name is not None:
             payload['name'] = self.name
@@ -162,7 +162,7 @@ class SendableEmbed:
     media: Optional[:class:`.ResolvableResource`]
         The file inside the embed.
     color: Optional[:class:`str`]
-        The embed color. This must be valid `CSS color <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value)`_.
+        The embed color. This must be valid `CSS color <https://developer.mozilla.org/en-US/docs/Web/CSS/color_value>`_.
     """
 
     __slots__ = ('icon_url', 'url', 'title', 'description', 'media', 'color')
@@ -184,7 +184,7 @@ class SendableEmbed:
         self.media: typing.Optional[ResolvableResource] = media
         self.color: typing.Optional[str] = color
 
-    async def build(self, state: State, /) -> raw.SendableEmbed:
+    async def to_dict(self, state: State, /) -> raw.SendableEmbed:
         payload: raw.SendableEmbed = {}
         if self.icon_url is not None:
             payload['icon_url'] = self.icon_url
@@ -634,12 +634,12 @@ class BaseMessage(Base):
             The embeds to send the message with.
 
             You must have :attr:`~Permissions.send_embeds` to provide this.
-        masquearde: Optional[:class:`.Masquerade`]
+        masquearde: Optional[:class:`.MessageMasquerade`]
             The message masquerade.
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 

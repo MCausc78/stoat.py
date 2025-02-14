@@ -957,11 +957,11 @@ class HTTPClient:
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
-            +---------------------+----------------------------------------+
-            | Value               | Reason                                 |
-            +---------------------+----------------------------------------+
-            | ``InvalidSession``  | The current bot/user token is invalid. |
-            +---------------------+----------------------------------------+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -1119,11 +1119,11 @@ class HTTPClient:
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------------------------------+--------------------------------------------------------------+
-            | Value                                | Reason                                                       |
-            +--------------------------------------+--------------------------------------------------------------+
-            | ``NotFound``                         | The bot was not found, or the current user does not own bot. |
-            +--------------------------------------+--------------------------------------------------------------+
+            +--------------+--------------------------------------------------------------+
+            | Value        | Reason                                                       |
+            +--------------+--------------------------------------------------------------+
+            | ``NotFound`` | The bot was not found, or the current user does not own bot. |
+            +--------------+--------------------------------------------------------------+
 
         Returns
         -------
@@ -1949,7 +1949,6 @@ class HTTPClient:
     async def get_group_recipients(
         self,
         channel: ULIDOr[GroupChannel],
-        /,
     ) -> list[User]:
         """|coro|
 
@@ -2018,7 +2017,7 @@ class HTTPClient:
     async def delete_messages(self, channel: ULIDOr[TextableChannel], messages: Sequence[ULIDOr[BaseMessage]]) -> None:
         """|coro|
 
-        Delete multiple messages.
+        Deletes multiple messages.
 
         You must have :attr:`~Permissions.manage_messages` to do this regardless whether you authored the message or not.
 
@@ -2273,7 +2272,7 @@ class HTTPClient:
         if content is not UNDEFINED:
             payload['content'] = content
         if embeds is not UNDEFINED:
-            payload['embeds'] = [await embed.build(self.state) for embed in embeds]
+            payload['embeds'] = [await embed.to_dict(self.state) for embed in embeds]
 
         resp: raw.Message = await self.request(
             routes.CHANNELS_MESSAGE_EDIT.compile(
@@ -2333,7 +2332,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`Message`
+        :class:`.Message`
             The retrieved message.
         """
         resp: raw.Message = await self.request(
@@ -2753,7 +2752,7 @@ class HTTPClient:
             The embeds to send the message with.
 
             You must have :attr:`~Permissions.send_embeds` to provide this.
-        masquearde: Optional[:class:`.MessagesMasquerade`]
+        masquerade: Optional[:class:`.MessagesMasquerade`]
             The masquerade for the message.
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
@@ -2857,15 +2856,15 @@ class HTTPClient:
             ]
         if replies is not None:
             payload['replies'] = [
-                (reply.build() if isinstance(reply, Reply) else {'id': resolve_id(reply), 'mention': False})
+                (reply.to_dict() if isinstance(reply, Reply) else {'id': resolve_id(reply), 'mention': False})
                 for reply in replies
             ]
         if embeds is not None:
-            payload['embeds'] = [await embed.build(self.state) for embed in embeds]
+            payload['embeds'] = [await embed.to_dict(self.state) for embed in embeds]
         if masquerade is not None:
-            payload['masquerade'] = masquerade.build()
+            payload['masquerade'] = masquerade.to_dict()
         if interactions is not None:
-            payload['interactions'] = interactions.build()
+            payload['interactions'] = interactions.to_dict()
 
         flags = None
 
@@ -3075,6 +3074,10 @@ class HTTPClient:
             The channel.
         role: ULIDOr[:class:`.BaseRole`]
             The role.
+        allow: :class:`.Permissions`
+            The permissions to allow for role in channel.
+        deny: :class:`.Permissions`
+            The permissions to deny for role in channel.
 
         Raises
         ------
@@ -3228,7 +3231,7 @@ class HTTPClient:
             The updated group/server channel with new permissions.
         """
         payload: raw.DataDefaultChannelPermissions = {
-            'permissions': (permissions.build() if isinstance(permissions, PermissionOverride) else permissions.value)
+            'permissions': permissions.to_dict() if isinstance(permissions, PermissionOverride) else permissions.value,
         }
         resp: raw.Channel = await self.request(
             routes.CHANNELS_PERMISSIONS_SET_DEFAULT.compile(channel_id=resolve_id(channel)),
@@ -3484,7 +3487,7 @@ class HTTPClient:
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
-            The server.
+            The server to create emoji in.
         name: :class:`str`
             The emoji name. Must be between 1 and 32 chars long. Can only contain ASCII digits, underscore and lowercase letters.
         nsfw: Optional[:class:`bool`]
@@ -3647,7 +3650,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`Emoji`
+        :class:`.Emoji`
             The retrieved emoji.
         """
         resp: raw.Emoji = await self.request(
@@ -4095,9 +4098,9 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------------------+---------------------------------------+
-            | Value                    | Reason                                |
-            +--------------------------+---------------------------------------+
+            +--------------------------+--------------------------------------+
+            | Value                    | Reason                               |
+            +--------------------------+--------------------------------------+
             | ``CannotReportYourself`` | You tried to report your own server. |
             +--------------------------+--------------------------------------+
             | ``FailedValidation``     | The payload was invalid.             |
@@ -4155,8 +4158,8 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
-            The server to report.
+        user: ULIDOr[:class:`.BaseUser`]
+            The user to report.
         reason: :class:`.UserReportReason`
             The reason for reporting user.
         additional_context: Optional[:class:`str`]
@@ -5188,7 +5191,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`.BaseServer`]
             The server to set default permissions for.
         permissions: :class:`.Permissions`
             The new permissions.
@@ -5772,7 +5775,7 @@ class HTTPClient:
             The new server categories structure.
 
             You must have :attr:`~Permissions.manage_channels`.
-        system_messsages: UndefinedOr[Optional[:class:`.SystemMessageChannels`]]
+        system_messages: UndefinedOr[Optional[:class:`.SystemMessageChannels`]]
             The new system message channels configuration.
         flags: UndefinedOr[:class:`.ServerFlags`]
             The new server flags. You must be a privileged user to provide this.
@@ -5866,13 +5869,13 @@ class HTTPClient:
             if categories is None:
                 remove.append('Categories')
             else:
-                payload['categories'] = [e.build() for e in categories]
+                payload['categories'] = [category.to_dict() for category in categories]
 
         if system_messages is not UNDEFINED:
             if system_messages is None:
                 remove.append('SystemMessages')
             else:
-                payload['system_messages'] = system_messages.build()
+                payload['system_messages'] = system_messages.to_dict()
 
         if flags is not UNDEFINED:
             payload['flags'] = flags.value
@@ -6314,10 +6317,10 @@ class HTTPClient:
             else:
                 payload['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
         if status is not UNDEFINED:
-            payload['status'] = status.build()
+            payload['status'] = status.to_dict()
             remove.extend(status.remove)
         if profile is not UNDEFINED:
-            payload['profile'] = await profile.build(self.state)
+            payload['profile'] = await profile.to_dict(self.state)
             remove.extend(profile.remove)
         if badges is not UNDEFINED:
             payload['badges'] = badges.value
@@ -7282,7 +7285,7 @@ class HTTPClient:
             The embeds to send the message with.
 
             Webhook must have :attr:`~Permissions.send_embeds` to provide this.
-        masquearde: Optional[:class:`.MessagesMasquerade`]
+        masquerade: Optional[:class:`.MessagesMasquerade`]
             The masquerade for the message.
 
             Webhook must have :attr:`~Permissions.use_masquerade` to provide this.
@@ -7374,15 +7377,15 @@ class HTTPClient:
             ]
         if replies is not None:
             payload['replies'] = [
-                (reply.build() if isinstance(reply, Reply) else {'id': resolve_id(reply), 'mention': False})
+                (reply.to_dict() if isinstance(reply, Reply) else {'id': resolve_id(reply), 'mention': False})
                 for reply in replies
             ]
         if embeds is not None:
-            payload['embeds'] = [await embed.build(self.state) for embed in embeds]
+            payload['embeds'] = [await embed.to_dict(self.state) for embed in embeds]
         if masquerade is not None:
-            payload['masquerade'] = masquerade.build()
+            payload['masquerade'] = masquerade.to_dict()
         if interactions is not None:
-            payload['interactions'] = interactions.build()
+            payload['interactions'] = interactions.to_dict()
 
         flags = None
 

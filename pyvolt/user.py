@@ -103,7 +103,7 @@ class UserStatusEdit:
             remove.append('StatusPresence')
         return remove
 
-    def build(self) -> raw.UserStatus:
+    def to_dict(self) -> raw.UserStatus:
         payload: raw.UserStatus = {}
         if self.text not in (None, UNDEFINED):
             payload['text'] = self.text
@@ -206,7 +206,7 @@ class UserProfileEdit:
             remove.append('ProfileBackground')
         return remove
 
-    async def build(self, state: State, /) -> raw.DataUserProfile:
+    async def to_dict(self, state: State, /) -> raw.DataUserProfile:
         payload: raw.DataUserProfile = {}
         if self.content not in (None, UNDEFINED):
             payload['content'] = self.content

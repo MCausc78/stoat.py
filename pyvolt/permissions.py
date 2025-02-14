@@ -81,7 +81,7 @@ class PermissionOverride:
     def deny(self, deny: Permissions, /) -> None:
         self.raw_deny = deny.value
 
-    def build(self) -> raw.Override:
+    def to_dict(self) -> raw.Override:
         return {'allow': self.raw_allow, 'deny': self.raw_deny}
 
     def __repr__(self) -> str:

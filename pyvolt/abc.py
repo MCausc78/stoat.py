@@ -36,7 +36,7 @@ if typing.TYPE_CHECKING:
     from .cdn import ResolvableResource
     from .core import ULIDOr
     from .enums import MessageSort
-    from .message import Reply, MessageInteractions, Masquerade, SendableEmbed, BaseMessage, Message
+    from .message import Reply, MessageInteractions, MessageMasquerade, SendableEmbed, BaseMessage, Message
     from .state import State
 
 
@@ -218,7 +218,7 @@ class Messageable:
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
         embeds: typing.Optional[list[SendableEmbed]] = None,
-        masquerade: typing.Optional[Masquerade] = None,
+        masquerade: typing.Optional[MessageMasquerade] = None,
         interactions: typing.Optional[MessageInteractions] = None,
         silent: typing.Optional[bool] = None,
         mention_everyone: typing.Optional[bool] = None,
@@ -250,7 +250,7 @@ class Messageable:
             The embeds to send the message with.
 
             You must have :attr:`~Permissions.send_embeds` to provide this.
-        masquearde: Optional[:class:`.Masquerade`]
+        masquerade: Optional[:class:`.MessageMasquerade`]
             The message masquerade.
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.

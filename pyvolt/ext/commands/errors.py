@@ -803,7 +803,7 @@ class ExpectedClosingQuoteError(ArgumentParsingError):
 class ExtensionError(PyvoltException):
     """Base exception for extension related errors.
 
-    This inherits from :exc:`~discord.DiscordException`.
+    This inherits from :exc:`~pyvolt.DiscordException`.
 
     Attributes
     ------------
@@ -816,7 +816,7 @@ class ExtensionError(PyvoltException):
     def __init__(self, /, *args: typing.Any, message: typing.Optional[str] = None, name: str) -> None:
         self.name: str = name
         message = f'Extension {name!r} had an error.' if message is None else message
-        # clean-up @everyone and @here mentions
+        # clean-up @everyone and @online mentions
         m = message.replace('@everyone', '@\u200beveryone').replace('@online', '@\u200bonline')
         super().__init__(m, *args)
 

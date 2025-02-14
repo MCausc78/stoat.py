@@ -26,7 +26,7 @@ from __future__ import annotations
 
 from importlib.machinery import ModuleSpec
 from importlib.util import find_spec, module_from_spec, resolve_name
-from inspect import cleandoc, isawaitable
+from inspect import cleandoc, isawaitable, iscoroutinefunction
 import logging
 import sys
 import types
@@ -59,6 +59,7 @@ if typing.TYPE_CHECKING:
 _L = logging.getLogger(__name__)
 
 T = typing.TypeVar('T')
+_CFT = typing.TypeVar('_CFT', bound='Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]')
 
 
 def when_mentioned(bot: Bot, _message: Message, /) -> list[str]:
@@ -356,6 +357,71 @@ class Bot(Client, GroupMixin[None]):
                 return False
 
         return True
+
+    def before_invoke(self, coro: _CFT, /) -> _CFT:
+        """A decorator that registers a coroutine as a pre-invoke hook.
+
+        A pre-invoke hook is called directly before the command is
+        called. This makes it a useful function to set up database
+        connections or any type of set up required.
+
+        This pre-invoke hook takes a sole parameter, a :class:`.Context`.
+
+        .. note::
+
+            The :meth:`~.Bot.before_invoke` and :meth:`~.Bot.after_invoke` hooks are
+            only called if all checks and argument parsing procedures pass
+            without error. If any check or argument parsing procedures fail
+            then the hooks are not called.
+
+        Parameters
+        ----------
+        coro: :ref:`coroutine <coroutine>`
+            The coroutine to register as the pre-invoke hook.
+
+        Raises
+        ------
+        :class:`TypeError`
+            The coroutine passed is not actually a coroutine.
+        """
+        if not iscoroutinefunction(coro):
+            raise TypeError('The pre-invoke hook must be a coroutine.')
+
+        self._before_invoke = coro
+        return coro
+
+    def after_invoke(self, coro: _CFT, /) -> _CFT:
+        r"""A decorator that registers a coroutine as a post-invoke hook.
+
+        A post-invoke hook is called directly after the command is
+        called. This makes it a useful function to clean-up database
+        connections or any type of clean up required.
+
+        This post-invoke hook takes a sole parameter, a :class:`.Context`.
+
+        .. note::
+
+            Similar to :meth:`~.Bot.before_invoke`\, this is not called unless
+            checks and argument parsing procedures succeed. This hook is,
+            however, **always** called regardless of the internal command
+            callback raising an error (i.e. :exc:`.CommandInvokeError`\).
+            This makes it ideal for clean-up scenarios.
+
+        Parameters
+        ----------
+        coro: :ref:`coroutine <coroutine>`
+            The coroutine to register as the post-invoke hook.
+
+        Raises
+        ------
+        :class:`TypeError`
+            The coroutine passed is not actually a coroutine.
+        """
+        if not iscoroutinefunction(coro):
+            raise TypeError('The post-invoke hook must be a coroutine.')
+
+        self._after_invoke = coro
+        return coro
 
     # gears
 
