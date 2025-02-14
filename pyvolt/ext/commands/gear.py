@@ -94,7 +94,7 @@ class GearMeta(type):
         The gear description. By default, it is the cleaned docstring of the class.
     command_attrs: :class:`dict`
         A list of attributes to apply to every command inside this gear. The dictionary
-        is passed into the :class:`Command` options at ``__init__``.
+        is passed into the :class:`.Command` options at ``__init__``.
         If you specify attributes inside the command attribute in the class, it will
         override the one specified inside this attribute. For example:
 
@@ -190,7 +190,7 @@ class Gear(metaclass=GearMeta):
     help group commands together. More information on them can be found on
     the :ref:`ext_commands_gears` page.
 
-    When inheriting from this class, the options shown in :class:`GearMeta`
+    When inheriting from this class, the options shown in :class:`.GearMeta`
     are equally valid here.
     """
 
@@ -401,7 +401,7 @@ class Gear(metaclass=GearMeta):
         A special method that is called whenever an error
         is dispatched inside this gear.
 
-        This is similar to :func:`.on_command_error` except only applying
+        This is similar to :class:`.CommandErrorEvent` except only applying
         to the commands inside this gear.
 
         This **must** be a coroutine.
@@ -410,7 +410,7 @@ class Gear(metaclass=GearMeta):
         -----------
         ctx: :class:`.Context`
             The invocation context where the error happened.
-        error: :class:`CommandError`
+        error: :class:`.CommandError`
             The error that happened.
         """
         pass

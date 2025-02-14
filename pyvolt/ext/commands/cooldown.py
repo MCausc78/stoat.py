@@ -419,7 +419,7 @@ class Cooldown:
 
         Returns
         --------
-        :class:`Cooldown`
+        :class:`.Cooldown`
             A new instance of this cooldown.
         """
         return self.__class__(self.rate, self.per)

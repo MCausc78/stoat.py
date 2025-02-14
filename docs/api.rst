@@ -48,15 +48,6 @@ Client
     .. automethod:: Client.on(event=None, /)
         :decorator:
 
-.. function:: listen(self=None, event=None, /)
-
-   Alias to :meth:`Client.listen`.
-
-   :param self: The event to listen to or client to register listener on.
-   :type self: Optional[Union[:class:`Client`, EventT]]
-   :param event: The event to listen to.
-   :type event: Optional[EventT]
-
 ClientEventHandler
 ~~~~~~~~~~~~~~~~~~
 

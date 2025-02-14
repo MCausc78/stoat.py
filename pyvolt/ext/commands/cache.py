@@ -41,13 +41,13 @@ class CommandsCacheContext(BaseCacheContext):
 
 @define(slots=True)
 class MemberConverterCacheContext(CommandsCacheContext):
-    """Represents a cache context that was created in :class:`MemberConverter`."""
+    """Represents a cache context that was created in :class:`.MemberConverter`."""
 
     argument: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The argument."""
 
     context: Context[Bot] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`Context`: The context."""
+    """:class:`.Context`: The context."""
 
     server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`.Server`: The server the lookup was done in."""
@@ -55,24 +55,24 @@ class MemberConverterCacheContext(CommandsCacheContext):
 
 @define(slots=True)
 class UserConverterCacheContext(CommandsCacheContext):
-    """Represents a cache context that was created in :class:`UserConverter`."""
+    """Represents a cache context that was created in :class:`.UserConverter`."""
 
     argument: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The argument."""
 
     context: Context[Bot] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`Context`: The context."""
+    """:class:`.Context`: The context."""
 
 
 @define(slots=True)
 class ServerConverterCacheContext(CommandsCacheContext):
-    """Represents a cache context that was created in :class:`ServerConverter`."""
+    """Represents a cache context that was created in :class:`.ServerConverter`."""
 
     argument: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The argument."""
 
     context: Context[Bot] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`Context`: The context."""
+    """:class:`.Context`: The context."""
 
 
 @define(slots=True)
@@ -83,7 +83,7 @@ class MessageConverterCacheContext(CommandsCacheContext):
     """:class:`str`: The argument."""
 
     context: Context[Bot] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`Context`: The context."""
+    """:class:`.Context`: The context."""
 
     server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The server's ID the message is in. May be empty or not exist."""
@@ -97,7 +97,7 @@ class BaseServerChannelConverterCacheContext(CommandsCacheContext):
     """:class:`str`: The argument."""
 
     context: Context[Bot] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`Context`: The context."""
+    """:class:`.Context`: The context."""
 
     server_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The server's ID. May be empty."""
@@ -123,7 +123,7 @@ class EmojiConverterCacheContext(CommandsCacheContext):
     """Represents a cache context that was created in :meth:`EmojiConverter.convert`."""
 
     context: Context[Bot] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`Context`: The context."""
+    """:class:`.Context`: The context."""
 
     argument: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The argument."""

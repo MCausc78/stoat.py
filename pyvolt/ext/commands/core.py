@@ -285,10 +285,10 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         If the command is invoked while it is disabled, then
         :exc:`.DisabledCommand` is raised to the :func:`.on_command_error`
         event. Defaults to ``True``.
-    parent: Optional[:class:`Group`]
+    parent: Optional[:class:`.Group`]
         The parent group that this command belongs to. ``None`` if there
         isn't one.
-    gear: Optional[:class:`Gear`]
+    gear: Optional[:class:`.Gear`]
         The gear that this command belongs to. ``None`` if there isn't one.
     checks: List[Callable[[:class:`.Context`], :class:`bool`]]
         A list of predicates that verifies if the command could be executed
@@ -309,7 +309,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         regular matter rather than passing the rest completely raw. If ``True``
         then the keyword-only argument will pass in the rest of the arguments
         in a completely raw matter. Defaults to ``False``.
-    invoked_subcommand: Optional[:class:`Command`]
+    invoked_subcommand: Optional[:class:`.Command`]
         The subcommand that was invoked, if any.
     require_var_positional: :class:`bool`
         If ``True`` and a variadic positional argument is specified, requires
@@ -512,10 +512,10 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
             pass
 
     def update(self, /, **kwargs: typing.Any) -> None:
-        """Updates :class:`Command` instance with updated attribute.
+        """Updates :class:`.Command` instance with updated attribute.
 
         This works similarly to the :func:`~pyvolt.ext.commands.command` decorator in terms
-        of parameters in that they are passed to the :class:`Command` or
+        of parameters in that they are passed to the :class:`.Command` or
         subclass constructors, sans the name and callback.
         """
         gear = self.gear
@@ -560,7 +560,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
 
         Returns
         --------
-        :class:`Command`
+        :class:`.Command`
             A new instance of this command.
         """
         ret = self.__class__(self.callback, **self.__original_kwargs__)
@@ -708,7 +708,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
 
     @property
     def clean_params(self) -> dict[str, Parameter]:
-        """Dict[:class:`str`, :class:`Parameter`]:
+        """Dict[:class:`str`, :class:`.Parameter`]:
         Retrieves the parameter dictionary without the context or self parameters.
 
         Useful for inspecting signature.
@@ -740,13 +740,11 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
 
     @property
     def parents(self) -> list[Group[typing.Any, ..., typing.Any]]:
-        """List[:class:`Group`]: Retrieves the parents of this command.
+        """List[:class:`.Group`]: Retrieves the parents of this command.
 
         If the command has no parents then it returns an empty :class:`list`.
 
         For example in commands ``?a b c test``, the parents are ``[c, b, a]``.
-
-        .. versionadded:: 1.1
         """
         entries = []
         command = self
@@ -758,7 +756,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
 
     @property
     def root_parent(self) -> typing.Optional[Group[typing.Any, ..., typing.Any]]:
-        """Optional[:class:`Group`]: Retrieves the root parent of this command.
+        """Optional[:class:`.Group`]: Retrieves the root parent of this command.
 
         If the command has no parents then it returns ``None``.
 
@@ -1103,7 +1101,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
 
         Raises
         -------
-        :class:`CommandError`
+        :class:`.CommandError`
             Any command error that was raised during a check call will be propagated
             by this function.
 
@@ -1189,7 +1187,7 @@ class GroupMixin(typing.Generic[GearT]):
 
         Parameters
         -----------
-        command: :class:`Command`
+        command: :class:`.Command`
             The command to add.
 
         Raises
@@ -1283,7 +1281,7 @@ class GroupMixin(typing.Generic[GearT]):
 
         Returns
         --------
-        Optional[:class:`Command`]
+        Optional[:class:`.Command`]
             The command that was requested. If not found, returns ``None``.
         """
 
@@ -1352,7 +1350,7 @@ class GroupMixin(typing.Generic[GearT]):
 
         Returns
         --------
-        Callable[..., :class:`Command`]
+        Callable[..., :class:`.Command`]
             A decorator that converts the provided method into a Command, adds it to the bot, then returns it.
         """
 
@@ -1410,7 +1408,7 @@ class GroupMixin(typing.Generic[GearT]):
 
         Returns
         --------
-        Callable[..., :class:`Group`]
+        Callable[..., :class:`.Group`]
             A decorator that converts the provided method into a Group, adds it to the bot, then returns it.
         """
 
@@ -1451,11 +1449,11 @@ class Group(GroupMixin[GearT], Command[GearT, P, T]):
         super().__init__(*args, **attrs)
 
     def copy(self) -> Self:
-        """Creates a copy of this :class:`Group`.
+        """Creates a copy of this :class:`.Group`.
 
         Returns
         --------
-        :class:`Group`
+        :class:`.Group`
             A new instance of this group.
         """
         ret = super().copy()
@@ -1665,8 +1663,8 @@ def group(
 ) -> typing.Any:
     """A decorator that transforms a function into a :class:`.Group`.
 
-    This is similar to the :func:`~discord.ext.commands.command` decorator but the ``cls``
-    parameter is set to :class:`Group` by default.
+    This is similar to the :func:`~pyvolt.ext.commands.command` decorator but the ``cls``
+    parameter is set to :class:`.Group` by default.
     """
     if cls is None:
         cls = Group

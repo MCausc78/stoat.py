@@ -62,7 +62,7 @@ class UserInputError(CommandError):
     """The base exception type for errors that involve errors
     regarding user input.
 
-    This inherits from :exc:`CommandError`.
+    This inherits from :exc:`.CommandError`.
     """
 
     __slots__ = ()
@@ -72,11 +72,11 @@ class MissingRequiredArgument(UserInputError):
     """Exception raised when parsing a command and a parameter
     that is required is not encountered.
 
-    This inherits from :exc:`UserInputError`.
+    This inherits from :exc:`.UserInputError`.
 
     Attributes
     -----------
-    parameter: :class:`Parameter`
+    parameter: :class:`.Parameter`
         The argument that is missing.
     """
 
@@ -89,11 +89,11 @@ class MissingRequiredAttachment(UserInputError):
     """Exception raised when parsing a command and a parameter
     that requires an attachment is not given.
 
-    This inherits from :exc:`UserInputError`.
+    This inherits from :exc:`.UserInputError`.
 
     Attributes
     -----------
-    parameter: :class:`Parameter`
+    parameter: :class:`.Parameter`
         The argument that is missing an attachment.
     """
 
@@ -110,7 +110,7 @@ class TooManyArguments(UserInputError):
     """Exception raised when the command was passed too many arguments and its
     :attr:`.Command.ignore_extra` attribute was not set to ``True``.
 
-    This inherits from :exc:`UserInputError`
+    This inherits from :exc:`.UserInputError`
     """
 
     __slots__ = ()
@@ -120,7 +120,7 @@ class BadArgument(UserInputError):
     """Exception raised when a parsing or conversion failure is encountered
     on an argument to pass into a command.
 
-    This inherits from :exc:`UserInputError`
+    This inherits from :exc:`.UserInputError`
     """
 
     __slots__ = ()
@@ -129,7 +129,7 @@ class BadArgument(UserInputError):
 class CheckFailure(CommandError):
     """Exception raised when the predicates in :attr:`.Command.checks` have failed.
 
-    This inherits from :exc:`CommandError`
+    This inherits from :exc:`.CommandError`
     """
 
     __slots__ = ()
@@ -138,13 +138,13 @@ class CheckFailure(CommandError):
 class CheckAnyFailure(CheckFailure):
     """Exception raised when all predicates in :func:`check_any` fail.
 
-    This inherits from :exc:`CheckFailure`.
+    This inherits from :exc:`.CheckFailure`.
 
     Attributes
     ------------
-    errors: List[:class:`CheckFailure`]
+    errors: List[:class:`.CheckFailure`]
         A list of errors that were caught during execution.
-    checks: List[Callable[[:class:`Context`], :class:`bool`]]
+    checks: List[Callable[[:class:`.Context`], :class:`bool`]]
         A list of check predicates that failed.
     """
 
@@ -163,7 +163,7 @@ class PrivateMessageOnly(CheckFailure):
     """Exception raised when an operation does not work outside of private
     message contexts.
 
-    This inherits from :exc:`CheckFailure`.
+    This inherits from :exc:`.CheckFailure`.
     """
 
     __slots__ = ()
@@ -176,7 +176,7 @@ class NoPrivateMessage(CheckFailure):
     """Exception raised when an operation does not work in private message
     contexts.
 
-    This inherits from :exc:`CheckFailure`.
+    This inherits from :exc:`.CheckFailure`.
     """
 
     __slots__ = ()
@@ -188,7 +188,7 @@ class NoPrivateMessage(CheckFailure):
 class NotOwner(CheckFailure):
     """Exception raised when the message author is not the owner of the bot.
 
-    This inherits from :exc:`CheckFailure`.
+    This inherits from :exc:`.CheckFailure`.
     """
 
     __slots__ = ()
@@ -198,7 +198,7 @@ class ObjectNotFound(BadArgument):
     """Exception raised when the argument provided did not match the format
     of an ID or a mention.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -217,7 +217,7 @@ class MemberNotFound(BadArgument):
     """Exception raised when the member provided was not found in the bot's
     cache.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -235,7 +235,7 @@ class MemberNotFound(BadArgument):
 class ServerNotFound(BadArgument):
     """Exception raised when the server provided was not found in the bot's cache.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -254,7 +254,7 @@ class UserNotFound(BadArgument):
     """Exception raised when the user provided was not found in the bot's
     cache.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -272,7 +272,7 @@ class UserNotFound(BadArgument):
 class MessageNotFound(BadArgument):
     """Exception raised when the message provided was not found in the channel.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -291,7 +291,7 @@ class ChannelIDNotReadable(BadArgument):
     """Exception raised when the bot does not have permission to read messages
     in the channel.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -310,7 +310,7 @@ class ChannelNotReadable(BadArgument):
     """Exception raised when the bot does not have permission to read messages
     in the channel.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -328,7 +328,7 @@ class ChannelNotReadable(BadArgument):
 class ChannelNotFound(BadArgument):
     """Exception raised when the bot can not find the channel.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -346,13 +346,13 @@ class ChannelNotFound(BadArgument):
 class InvalidChannelType(BadArgument):
     """Exception raised when the channel is of invalid type.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
     argument: :class:`str`
         The channel supplied by the caller that had invalid type.
-    channel: :class:`BaseChannel`
+    channel: :class:`.BaseChannel`
         The channel object supplied by the caller that had invalid type.
 
     """
@@ -368,7 +368,7 @@ class InvalidChannelType(BadArgument):
 class ChannelNotInServer(BadArgument):
     """Exception raised when the channel does not belong to the current server.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -387,7 +387,7 @@ class ChannelNotInServer(BadArgument):
 class CategoryNotFound(BadArgument):
     """Exception raised when the bot can not find the category.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -403,7 +403,7 @@ class CategoryNotFound(BadArgument):
 class BadColorArgument(BadArgument):
     """Exception raised when the color is not valid.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -421,7 +421,7 @@ class BadColorArgument(BadArgument):
 class RoleNotFound(BadArgument):
     """Exception raised when the bot can not find the role.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -439,7 +439,7 @@ class RoleNotFound(BadArgument):
 class BadInviteArgument(BadArgument):
     """Exception raised when the invite is invalid.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -457,7 +457,7 @@ class BadInviteArgument(BadArgument):
 class EmojiNotFound(BadArgument):
     """Exception raised when the bot can not find the emoji.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -477,7 +477,7 @@ class EmojiNotFound(BadArgument):
 #     """Exception raised when the emoji provided does not match the correct
 #     format.
 
-#     This inherits from :exc:`BadArgument`.
+#     This inherits from :exc:`.BadArgument`.
 
 #     Attributes
 #     -----------
@@ -493,7 +493,7 @@ class EmojiNotFound(BadArgument):
 class BadBoolArgument(BadArgument):
     """Exception raised when a boolean argument was not convertable.
 
-    This inherits from :exc:`BadArgument`.
+    This inherits from :exc:`.BadArgument`.
 
     Attributes
     -----------
@@ -511,7 +511,7 @@ class BadBoolArgument(BadArgument):
 class RangeError(BadArgument):
     """Exception raised when an argument is out of range.
 
-    This inherits from :exc:`BadArgument`
+    This inherits from :exc:`.BadArgument`
 
     Attributes
     -----------
@@ -562,7 +562,7 @@ class RangeError(BadArgument):
 class DisabledCommand(CommandError):
     """Exception raised when the command being invoked is disabled.
 
-    This inherits from :exc:`CommandError`.
+    This inherits from :exc:`.CommandError`.
     """
 
     __slots__ = ()
@@ -571,7 +571,7 @@ class DisabledCommand(CommandError):
 class CommandInvokeError(CommandError):
     """Exception raised when the command being invoked raised an exception.
 
-    This inherits from :exc:`CommandError`.
+    This inherits from :exc:`.CommandError`.
 
     Attributes
     -----------
@@ -590,14 +590,14 @@ class CommandInvokeError(CommandError):
 class CommandOnCooldown(CommandError):
     """Exception raised when the command being invoked is on cooldown.
 
-    This inherits from :exc:`CommandError`
+    This inherits from :exc:`.CommandError`
 
     Attributes
     -----------
     cooldown: :class:`~pyvolt.ext.commands.Cooldown`
         A class with attributes ``rate`` and ``per`` similar to the
         :func:`.cooldown` decorator.
-    type: :class:`BucketType`
+    type: :class:`.BucketType`
         The type associated with the cooldown.
     retry_after: :class:`float`
         The amount of seconds to wait before you can retry again.
@@ -619,7 +619,7 @@ class CommandOnCooldown(CommandError):
 class MaxConcurrencyReached(CommandError):
     """Exception raised when the command being invoked has reached its maximum concurrency.
 
-    This inherits from :exc:`CommandError`.
+    This inherits from :exc:`.CommandError`.
 
     Attributes
     ------------
@@ -651,7 +651,7 @@ class CommandNotFound(CommandError):
     This is not raised for invalid subcommands, rather just the
     initial main command that is attempted to be invoked.
 
-    This inherits from :exc:`CommandError`.
+    This inherits from :exc:`.CommandError`.
     """
 
     __slots__ = ()
@@ -661,7 +661,7 @@ class BadUnionArgument(UserInputError):
     """Exception raised when a :data:`typing.Union` converter fails for all
     its associated types.
 
-    This inherits from :exc:`UserInputError`.
+    This inherits from :exc:`.UserInputError`.
 
     Attributes
     -----------
@@ -669,7 +669,7 @@ class BadUnionArgument(UserInputError):
         The parameter that failed being converted.
     converters: Tuple[Type, ``...``]
         A tuple of converters attempted in conversion, in order of failure.
-    errors: List[:class:`CommandError`]
+    errors: List[:class:`.CommandError`]
         A list of errors that were caught from failing the conversion.
     """
 
@@ -700,7 +700,7 @@ class BadLiteralArgument(UserInputError):
     """Exception raised when a :data:`typing.Literal` converter fails for all
     its associated values.
 
-    This inherits from :exc:`UserInputError`.
+    This inherits from :exc:`.UserInputError`.
 
     Attributes
     -----------
@@ -708,7 +708,7 @@ class BadLiteralArgument(UserInputError):
         The parameter that failed being converted.
     literals: Tuple[Any, ``...``]
         A tuple of values compared against in conversion, in order of failure.
-    errors: List[:class:`CommandError`]
+    errors: List[:class:`.CommandError`]
         A list of errors that were caught from failing the conversion.
     argument: :class:`str`
         The argument's value that failed to be converted. Defaults to an empty string.
@@ -736,7 +736,7 @@ class BadLiteralArgument(UserInputError):
 class ArgumentParsingError(UserInputError):
     """An exception raised when the parser fails to parse a user's input.
 
-    This inherits from :exc:`UserInputError`.
+    This inherits from :exc:`.UserInputError`.
 
     There are child classes that implement more granular parsing errors for
     i18n purposes.
@@ -748,7 +748,7 @@ class ArgumentParsingError(UserInputError):
 class UnexpectedQuoteError(ArgumentParsingError):
     """An exception raised when the parser encounters a quote mark inside a non-quoted string.
 
-    This inherits from :exc:`ArgumentParsingError`.
+    This inherits from :exc:`.ArgumentParsingError`.
 
     Attributes
     ------------
@@ -767,7 +767,7 @@ class InvalidEndOfQuotedStringError(ArgumentParsingError):
     """An exception raised when a space is expected after the closing quote in a string
     but a different character is found.
 
-    This inherits from :exc:`ArgumentParsingError`.
+    This inherits from :exc:`.ArgumentParsingError`.
 
     Attributes
     -----------
@@ -785,7 +785,7 @@ class InvalidEndOfQuotedStringError(ArgumentParsingError):
 class ExpectedClosingQuoteError(ArgumentParsingError):
     """An exception raised when a quote character is expected but not found.
 
-    This inherits from :exc:`ArgumentParsingError`.
+    This inherits from :exc:`.ArgumentParsingError`.
 
     Attributes
     -----------
@@ -824,7 +824,7 @@ class ExtensionError(PyvoltException):
 class ExtensionAlreadyLoaded(ExtensionError):
     """An exception raised when an extension has already been loaded.
 
-    This inherits from :exc:`ExtensionError`.
+    This inherits from :exc:`.ExtensionError`.
     """
 
     __slots__ = ()
@@ -836,7 +836,7 @@ class ExtensionAlreadyLoaded(ExtensionError):
 class ExtensionNotLoaded(ExtensionError):
     """An exception raised when an extension was not loaded.
 
-    This inherits from :exc:`ExtensionError`.
+    This inherits from :exc:`.ExtensionError`.
     """
 
     __slots__ = ()
@@ -848,7 +848,7 @@ class ExtensionNotLoaded(ExtensionError):
 class NoEntryPointError(ExtensionError):
     """An exception raised when an extension does not have a ``setup`` entry point function.
 
-    This inherits from :exc:`ExtensionError`.
+    This inherits from :exc:`.ExtensionError`.
     """
 
     __slots__ = ()
@@ -860,7 +860,7 @@ class NoEntryPointError(ExtensionError):
 class ExtensionFailed(ExtensionError):
     """An exception raised when an extension failed to load during execution of the module or ``setup`` entry point.
 
-    This inherits from :exc:`ExtensionError`.
+    This inherits from :exc:`.ExtensionError`.
 
     Attributes
     -----------
@@ -882,7 +882,7 @@ class ExtensionFailed(ExtensionError):
 class ExtensionNotFound(ExtensionError):
     """An exception raised when an extension is not found.
 
-    This inherits from :exc:`ExtensionError`.
+    This inherits from :exc:`.ExtensionError`.
 
     Attributes
     -----------

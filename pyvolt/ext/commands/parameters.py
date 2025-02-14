@@ -82,7 +82,7 @@ def _gen_property(name: str, /) -> property:
 
 
 class Parameter(inspect.Parameter):
-    r"""A class that stores information on a :class:`Command`\'s parameter.
+    r"""A class that stores information on a :class:`.Command`\'s parameter.
 
     This is a subclass of :class:`inspect.Parameter`.
     """
@@ -177,7 +177,7 @@ class Parameter(inspect.Parameter):
 
     @property
     def displayed_default(self) -> typing.Optional[str]:
-        """Optional[:class:`str`]: The displayed default in :class:`Command.signature`."""
+        """Optional[:class:`str`]: The displayed default in :attr:`Command.signature`."""
         if self._displayed_default is not EMPTY:
             return self._displayed_default
 
@@ -201,7 +201,7 @@ class Parameter(inspect.Parameter):
 
         Parameters
         ----------
-        ctx: :class:`Context`
+        ctx: :class:`.Context`
             The invocation context that is used to get the default argument.
         """
         # pre-condition: required is False
@@ -223,7 +223,7 @@ def parameter(
 ) -> typing.Any:
     r"""parameter(\*, converter=..., default=..., description=..., displayed_default=..., displayed_name=...)
 
-    A way to assign custom metadata for a :class:`Command`\'s parameter.
+    A way to assign custom metadata for a :class:`.Command`\'s parameter.
 
     Examples
     --------
@@ -241,7 +241,7 @@ def parameter(
         The converter to use for this parameter, this replaces the annotation at runtime which is transparent to type checkers.
     default: Any
         The default value for the parameter, if this is a :term:`callable` or a |coroutine_link|_ it is called with a
-        positional :class:`Context` argument.
+        positional :class:`.Context` argument.
     description: :class:`str`
         The description of this parameter.
     displayed_default: :class:`str`

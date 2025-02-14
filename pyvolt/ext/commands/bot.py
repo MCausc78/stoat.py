@@ -61,6 +61,58 @@ _L = logging.getLogger(__name__)
 T = typing.TypeVar('T')
 
 
+def when_mentioned(bot: Bot, _message: Message, /) -> list[str]:
+    """A callable that implements a command prefix equivalent to being mentioned.
+
+    These are meant to be passed into the :attr:`.Bot.command_prefix` attribute.
+    """
+    me = bot.me
+    if me is None:
+        return []
+    return [f'<@{me.id}> ', f'<@!{me.id}> ']
+
+
+def when_mentioned_or(*prefixes: str) -> Callable[[Bot, Message], list[str]]:
+    """A callable that implements when mentioned or other prefixes provided.
+
+    These are meant to be passed into the :attr:`.Bot.command_prefix` attribute.
+
+    Example
+    -------
+
+    .. code-block:: python3
+
+        bot = commands.Bot(command_prefix=commands.when_mentioned_or('!'))
+
+
+    .. note::
+
+        This callable returns another callable, so if this is done inside a custom
+        callable, you must call the returned callable, for example:
+
+        .. code-block:: python3
+
+            async def get_prefix(bot, message):
+                extras = await prefixes_for(message.server)  # returns a list
+                return commands.when_mentioned_or(*extras)(bot, message)
+
+
+    See Also
+    --------
+    :func:`.when_mentioned`
+    """
+
+    r = list(prefixes)
+
+    def inner(bot: Bot, _message: Message, /) -> list[str]:
+        me = bot.me
+        if me is None:
+            return r
+        return [f'<@{me.id}> ', f'<@!{me.id}> '] + r
+
+    return inner
+
+
 class Bot(Client, GroupMixin[None]):
     """Represents a Revolt bot.
 
@@ -332,9 +384,9 @@ class Bot(Client, GroupMixin[None]):
         -------
         :class:`TypeError`
             The gear does not inherit from :class:`.Gear`.
-        :class:`CommandError`
+        :class:`.CommandError`
             An error happened during loading.
-        :class:`ClientException`
+        :class:`.ClientException`
             A gear with the same name is already loaded.
         """
 
@@ -364,7 +416,7 @@ class Bot(Client, GroupMixin[None]):
 
         Returns
         --------
-        Optional[:class:`Gear`]
+        Optional[:class:`.Gear`]
             The gear that was requested. If not found, returns ``None``.
         """
         return self.__gears.get(name)
@@ -404,7 +456,7 @@ class Bot(Client, GroupMixin[None]):
 
     @property
     def gears(self) -> Mapping[str, Gear]:
-        """Mapping[:class:`str`, :class:`Gear`]: A read-only mapping of gear name to gear."""
+        """Mapping[:class:`str`, :class:`.Gear`]: A read-only mapping of gear name to gear."""
         return self.__gears
 
     # extensions
@@ -505,16 +557,16 @@ class Bot(Client, GroupMixin[None]):
             Defaults to ``None``.
 
         Raises
-        --------
-        :class:`ExtensionNotFound`
+        ------
+        :class:`.ExtensionNotFound`
             The extension could not be imported.
             This is also raised if the name of the extension could not
             be resolved using the provided ``package`` parameter.
-        :class:`ExtensionAlreadyLoaded`
+        :class:`.ExtensionAlreadyLoaded`
             The extension is already loaded.
-        :class:`NoEntryPointError`
+        :class:`.NoEntryPointError`
             The extension does not have a setup function.
-        :class:`ExtensionFailed`
+        :class:`.ExtensionFailed`
             The extension or its setup function had an execution error.
         """
 
@@ -554,10 +606,10 @@ class Bot(Client, GroupMixin[None]):
 
         Raises
         -------
-        :class:`ExtensionNotFound`
+        :class:`.ExtensionNotFound`
             The name of the extension could not
             be resolved using the provided ``package`` parameter.
-        :class:`ExtensionNotLoaded`
+        :class:`.ExtensionNotLoaded`
             The extension was not loaded.
         """
 
@@ -592,15 +644,15 @@ class Bot(Client, GroupMixin[None]):
 
         Raises
         -------
-        :class:`ExtensionNotLoaded`
+        :class:`.ExtensionNotLoaded`
             The extension was not loaded.
-        :class:`ExtensionNotFound`
+        :class:`.ExtensionNotFound`
             The extension could not be imported.
             This is also raised if the name of the extension could not
             be resolved using the provided ``package`` parameter.
-        :class:`NoEntryPointError`
+        :class:`.NoEntryPointError`
             The extension does not have a setup function.
-        :class:`ExtensionFailed`
+        :class:`.ExtensionFailed`
             The extension setup function had an execution error.
         """
 
@@ -722,4 +774,8 @@ class Bot(Client, GroupMixin[None]):
         await self.process_commands(event.message, event.shard)
 
 
-__all__ = ('Bot',)
+__all__ = (
+    'when_mentioned',
+    'when_mentioned_or',
+    'Bot',
+)

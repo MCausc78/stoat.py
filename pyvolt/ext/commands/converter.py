@@ -108,9 +108,9 @@ class Converter(typing.Protocol[T_co]):
 
         Raises
         -------
-        :class:`CommandError`
+        :class:`.CommandError`
             A generic exception occurred when converting the argument.
-        :class:`BadArgument`
+        :class:`.BadArgument`
             The converter failed to convert the argument.
         """
         raise NotImplementedError('Derived classes need to implement this.')
@@ -1040,18 +1040,18 @@ async def run_converters(ctx: Context[BotT], converter: typing.Any, argument: st
 
     Parameters
     ------------
-    ctx: :class:`Context`
+    ctx: :class:`.Context`
         The invocation context to run the converters under.
     converter: Any
         The converter to run, this corresponds to the annotation in the function.
     argument: :class:`str`
         The argument to convert to.
-    param: :class:`Parameter`
+    param: :class:`.Parameter`
         The parameter being converted. This is mainly for error reporting.
 
     Raises
     -------
-    :class:`CommandError`
+    :class:`.CommandError`
         The converter failed to convert.
 
     Returns

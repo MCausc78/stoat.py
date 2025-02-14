@@ -19,13 +19,13 @@ class Context(typing.Generic[BotT], pyvolt.abc.Messageable):
 
     Attributes
     -----------
-    author: Union[:class:`pyvolt.Member`, :class:`pyvolt.User`]
+    author: Union[:class:`~pyvolt.Member`, :class:`~pyvolt.User`]
         The user who created this context.
     author_id: :class:`str`
         The user's ID who created this context.
-    bot: :class:`Bot`
+    bot: :class:`.Bot`
         The bot in this context.
-    channel: Union[:class:`pyvolt.TextableChannel`, :class:`pyvolt.PartialMessageable`]
+    channel: Union[:class:`~pyvolt.TextableChannel`, :class:`~pyvolt.PartialMessageable`]
         The channel the context was created in.
     command: Optional[:class:`.Command`]
         The command used in this context.
@@ -33,15 +33,15 @@ class Context(typing.Generic[BotT], pyvolt.abc.Messageable):
         Whether invoking the command failed.
     label: :class:`str`
         The substring used to invoke the command. May be empty sometimes.
-    me: Union[:class:`pyvolt.Member`, :class:`pyvolt.OwnUser`]
+    me: Union[:class:`~pyvolt.Member`, :class:`~pyvolt.OwnUser`]
         The bot user in this context.
-    message: :class:`pyvolt.Message`
+    message: :class:`~pyvolt.Message`
         The message that caused this context to be created.
     prefix: :class:`str`
         The prefix used to invoke command. May be empty sometimes.
-    server: Optional[:class:`pyvolt.Server`]
-        The server this command happened in.
-    shard: :class:`pyvolt.Shard`
+    server: Optional[:class:`~pyvolt.Server`]
+        The server this command invoked in.
+    shard: :class:`~pyvolt.Shard`
         The shard the context was created on.
     view: :class:`.StringView`
         The string view, used to parse command parameters.
