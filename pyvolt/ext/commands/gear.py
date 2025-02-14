@@ -41,10 +41,6 @@ if typing.TYPE_CHECKING:
     from .context import Context
     from .core import Command
 
-__all__ = (
-    'GearMeta',
-    'Gear',
-)
 
 FuncT = typing.TypeVar('FuncT', bound='Callable[..., typing.Any]')
 _log = logging.getLogger(__name__)
@@ -512,3 +508,9 @@ class Gear(metaclass=GearMeta):
                 await maybe_coroutine(self.gear_unload)
             except Exception:
                 _log.exception('Ignoring exception in gear unload for Gear %r (%r)', cls, self.qualified_name)
+
+
+__all__ = (
+    'GearMeta',
+    'Gear',
+)
