@@ -98,13 +98,6 @@ Decorators
 .. autofunction:: pyvolt.ext.commands.group
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.hybrid_command
-    :decorator:
-
-.. autofunction:: pyvolt.ext.commands.hybrid_group
-    :decorator:
-
-
 Command
 ~~~~~~~
 
