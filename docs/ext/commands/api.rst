@@ -157,57 +157,6 @@ GroupMixin
     .. automethod:: GroupMixin.group(*args, **kwargs)
         :decorator:
 
-HybridCommand
-~~~~~~~~~~~~~
-
-.. attributetable:: pyvolt.ext.commands.HybridCommand
-
-.. autoclass:: pyvolt.ext.commands.HybridCommand
-    :members:
-    :special-members: __call__
-    :exclude-members: after_invoke, autocomplete, before_invoke, error
-
-    .. automethod:: HybridCommand.after_invoke()
-        :decorator:
-
-    .. automethod:: HybridCommand.autocomplete(name)
-        :decorator:
-
-    .. automethod:: HybridCommand.before_invoke()
-        :decorator:
-
-    .. automethod:: HybridCommand.error()
-        :decorator:
-
-HybridGroup
-~~~~~~~~~~~~
-
-.. attributetable:: pyvolt.ext.commands.HybridGroup
-
-.. autoclass:: pyvolt.ext.commands.HybridGroup
-    :members:
-    :inherited-members:
-    :exclude-members: after_invoke, autocomplete, before_invoke, command, error, group
-
-    .. automethod:: HybridGroup.after_invoke()
-        :decorator:
-
-    .. automethod:: HybridGroup.autocomplete(name)
-        :decorator:
-
-    .. automethod:: HybridGroup.before_invoke()
-        :decorator:
-
-    .. automethod:: HybridGroup.command(*args, **kwargs)
-        :decorator:
-
-    .. automethod:: HybridGroup.error()
-        :decorator:
-
-    .. automethod:: HybridGroup.group(*args, **kwargs)
-        :decorator:
-
-
 .. _ext_commands_api_gears:
 
 Gears
@@ -624,10 +573,6 @@ Exceptions
 .. autoexception:: pyvolt.ext.commands.CommandRegistrationError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.HybridCommandError
-    :members:
-
-
 Exception Hierarchy
 ~~~~~~~~~~~~~~~~~~~~~
 
@@ -676,7 +621,6 @@ Exception Hierarchy
             - :exc:`~.commands.CommandInvokeError`
             - :exc:`~.commands.CommandOnCooldown`
             - :exc:`~.commands.MaxConcurrencyReached`
-            - :exc:`~.commands.HybridCommandError`
         - :exc:`~.commands.ExtensionError`
             - :exc:`~.commands.ExtensionAlreadyLoaded`
             - :exc:`~.commands.ExtensionNotLoaded`
