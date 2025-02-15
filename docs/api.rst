@@ -104,6 +104,62 @@ CompiledRoute
 .. autoclass:: pyvolt.routes.CompiledRoute
     :members:
 
+RateLimit
+~~~~~~~~~
+
+.. attributetable:: RateLimit
+
+.. autoclass:: RateLimit
+    :members:
+
+RateLimitBlocker
+~~~~~~~~~~~~~~~~
+
+.. attributetable:: RateLimitBlocker
+
+.. autoclass:: RateLimitBlocker
+    :members:
+
+RateLimiter
+~~~~~~~~~~~
+
+.. attributetable:: RateLimiter
+
+.. autoclass:: RateLimiter
+    :members:
+
+DefaultRateLimit
+~~~~~~~~~~~~~~~~
+
+.. attributetable:: DefaultRateLimit
+
+.. autoclass:: DefaultRateLimit
+    :members:
+
+DefaultRateLimitBlocker
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: DefaultRateLimitBlocker
+
+.. autoclass:: DefaultRateLimitBlocker
+    :members:
+
+_NoopRateLimitBlocker
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: _NoopRateLimitBlocker
+
+.. autoclass:: _NoopRateLimitBlocker
+    :members:
+
+DefaultRateLimiter
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: DefaultRateLimiter
+
+.. autoclass:: DefaultRateLimiter
+    :members:
+
 Shard
 ~~~~~
 
