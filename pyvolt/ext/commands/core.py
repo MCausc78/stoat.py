@@ -2292,6 +2292,74 @@ def max_concurrency(number: int, per: BucketType = BucketType.default, *, wait: 
     return decorator  # type: ignore
 
 
+def before_invoke(coro: Hook[GearT, ContextT], /) -> Callable[[T], T]:
+    """A decorator that registers a coroutine as a pre-invoke hook.
+
+    This allows you to refer to one before invoke hook for several commands that
+    do not have to be within the same gear.
+
+    Example
+    -------
+
+    .. code-block:: python3
+
+        async def record_usage(ctx):
+            print(ctx.author, 'used', ctx.command, 'at', ctx.message.created_at)
+
+
+        @bot.command()
+        @commands.before_invoke(record_usage)
+        async def who(ctx):  # Output: <User> used who at <Time>
+            await ctx.send('i am a bot')
+
+
+        class What(commands.Gear):
+            @commands.before_invoke(record_usage)
+            @commands.command()
+            async def when(self, ctx):  # Output: <User> used when at <Time>
+                await ctx.send(f'and i have existed since {ctx.bot.user.created_at}')
+
+            @commands.command()
+            async def where(self, ctx):  # Output: <Nothing>
+                await ctx.send('on Revolt')
+
+            @commands.command()
+            async def why(self, ctx):  # Output: <Nothing>
+                await ctx.send('because someone made me')
+
+    """
+
+    def decorator(
+        func: typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]], /
+    ) -> typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]]:
+        if isinstance(func, Command):
+            func.before_invoke(coro)
+        else:
+            func.__before_invoke__ = coro  # type: ignore
+        return func
+
+    return decorator  # type: ignore
+
+
+def after_invoke(coro: Hook[GearT, ContextT], /) -> Callable[[T], T]:
+    """A decorator that registers a coroutine as a post-invoke hook.
+
+    This allows you to refer to one after invoke hook for several commands that
+    do not have to be within the same gear.
+    """
+
+    def decorator(
+        func: typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]], /
+    ) -> typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]]:
+        if isinstance(func, Command):
+            func.after_invoke(coro)
+        else:
+            func.__after_invoke__ = coro  # type: ignore
+        return func
+
+    return decorator  # type: ignore
+
+
 __all__ = (
     'get_signature_parameters',
     'extract_descriptions_from_docstring',
@@ -2320,4 +2388,6 @@ __all__ = (
     'cooldown',
     'dynamic_cooldown',
     'max_concurrency',
+    'before_invoke',
+    'after_invoke',
 )
