@@ -347,7 +347,7 @@ class PartialWebhook(BaseWebhook):
     """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new webhook's stateless avatar."""
 
     raw_permissions: UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`int`: The new webhook's permissions raw value."""
+    """UndefinedOr[:class:`int`]: The new webhook's permissions raw value."""
 
     @property
     def avatar(self) -> UndefinedOr[typing.Optional[Asset]]:
@@ -391,6 +391,9 @@ class Webhook(BaseWebhook):
 
     token: typing.Optional[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The webhook's private token."""
+
+    def _token(self) -> typing.Optional[str]:
+        return self.token
 
     def locally_update(self, data: PartialWebhook, /) -> None:
         """Locally updates webhook with provided data.

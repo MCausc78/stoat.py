@@ -37,7 +37,8 @@ from pyvolt import Client, Message, MessageCreateEvent, Shard, utils
 from .context import Context
 from .core import GroupMixin
 from .errors import (
-    # CommandError,
+    CommandError,
+    CheckFailure,
     CommandNotFound,
     ExtensionAlreadyLoaded,
     ExtensionNotLoaded,
@@ -818,8 +819,15 @@ class Bot(Client, GroupMixin[None]):
     async def invoke(self, ctx: Context[Self], /) -> None:
         if ctx.command is not None:
             self.dispatch(CommandEvent(context=ctx))
-            await ctx.command.invoke(ctx)
-            self.dispatch(CommandCompletionEvent(context=ctx))
+            try:
+                if await self.can_run(ctx, call_once=True):
+                    await ctx.command.invoke(ctx)
+                else:
+                    raise CheckFailure('The global check once functions failed.')
+            except CommandError as exc:
+                await ctx.command.dispatch_error(ctx, exc)
+            else:
+                self.dispatch(CommandCompletionEvent(context=ctx))
         elif ctx.label:
             exc = CommandNotFound(f'Command "{ctx.label}" is not found')
             self.dispatch(CommandErrorEvent(context=ctx, error=exc))
