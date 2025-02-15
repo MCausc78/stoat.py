@@ -609,7 +609,7 @@ class CommandOnCooldown(CommandError):
         'type',
     )
 
-    def __init__(self, cooldown: Cooldown, retry_after: float, type: BucketType) -> None:
+    def __init__(self, *, cooldown: Cooldown, retry_after: float, type: BucketType) -> None:
         self.cooldown: Cooldown = cooldown
         self.retry_after: float = retry_after
         self.type: BucketType = type

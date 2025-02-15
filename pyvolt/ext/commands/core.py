@@ -25,6 +25,7 @@ from .errors import (
     NotOwner,
     DisabledCommand,
     CommandInvokeError,
+    CommandOnCooldown,
     MissingRole,
     BotMissingRole,
     MissingAnyRole,
@@ -291,7 +292,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
     enabled: :class:`bool`
         A boolean that indicates if the command is currently enabled.
         If the command is invoked while it is disabled, then
-        :exc:`.DisabledCommand` is raised to the :func:`.on_command_error`
+        :exc:`.DisabledCommand` is raised to the :class:`.CommandErrorEvent`
         event. Defaults to ``True``.
     parent: Optional[:class:`.Group`]
         The parent group that this command belongs to. ``None`` if there
@@ -303,7 +304,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         with the given :class:`.Context` as the sole parameter. If an exception
         is necessary to be thrown to signal failure, then one inherited from
         :exc:`.CommandError` should be used. Note that if the checks fail then
-        :exc:`.CheckFailure` exception is raised to the :func:`.on_command_error`
+        :exc:`.CheckFailure` exception is raised to the :class:`.CommandErrorEvent`
         event.
     description: :class:`str`
         The message prefixed into the default help command.
@@ -325,8 +326,10 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
     ignore_extra: :class:`bool`
         If ``True``\, ignores extraneous strings passed to a command if all its
         requirements are met (e.g. ``?foo a b c`` when only expecting ``a``
-        and ``b``). Otherwise :func:`.on_command_error` and local error handlers
-        are called with :exc:`.TooManyArguments`. Defaults to ``True``.
+        and ``b``). Otherwise :class:`.CommandErrorEvent` is dispatched and
+        local error handlers are called with :exc:`.TooManyArguments`.
+
+        Defaults to ``True``.
     cooldown_after_parsing: :class:`bool`
         If ``True``\, cooldown processing is done after argument parsing,
         which calls converters. If ``False`` then cooldown processing is done
@@ -880,7 +883,12 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
             if bucket is not None:
                 retry_after = bucket.update_rate_limit(current)
                 if retry_after:
-                    raise CommandOnCooldown(bucket, retry_after, self._buckets.type)  # type: ignore
+                    # I have no idea why we are passing Callable (self._buckets.type) to param of type BucketType, but guess it seems to be correct
+                    raise CommandOnCooldown(
+                        cooldown=bucket,
+                        retry_after=retry_after,
+                        type=self._buckets.type,  # type: ignore
+                    )
 
     async def prepare(self, ctx: Context[BotT], /) -> None:
         ctx.command = self
@@ -937,8 +945,8 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
     def error(self, coro: Error[GearT, ContextT], /) -> Error[GearT, ContextT]:
         """A decorator that registers a coroutine as a local error handler.
 
-        A local error handler is an :func:`.on_command_error` event limited to
-        a single command. However, the :func:`.on_command_error` is still
+        A local error handler is an :class:`.CommandErrorEvent` event limited to
+        a single command. However, the :class:`.CommandErrorEvent` is still
         invoked afterwards as the catch-all.
 
         Parameters
@@ -947,8 +955,8 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
             The coroutine to register as the local error handler.
 
         Raises
-        -------
-        TypeError
+        ------
+        :class:`TypeError`
             The coroutine passed is not actually a coroutine.
         """
 
@@ -979,8 +987,8 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
             The coroutine to register as the pre-invoke hook.
 
         Raises
-        -------
-        TypeError
+        ------
+        :class:`TypeError`
             The coroutine passed is not actually a coroutine.
         """
         if not asyncio.iscoroutinefunction(coro):
@@ -1001,12 +1009,12 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         See :meth:`.Bot.after_invoke` for more info.
 
         Parameters
-        -----------
+        ----------
         coro: :ref:`coroutine <coroutine>`
             The coroutine to register as the post-invoke hook.
 
         Raises
-        -------
+        ------
         TypeError
             The coroutine passed is not actually a coroutine.
         """
@@ -1096,18 +1104,18 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         command is disabled.
 
         Parameters
-        -----------
+        ----------
         ctx: :class:`.Context`
             The ctx of the command currently being invoked.
 
         Raises
-        -------
+        ------
         :class:`.CommandError`
             Any command error that was raised during a check call will be propagated
             by this function.
 
         Returns
-        --------
+        -------
         :class:`bool`
             A boolean indicating if the command can be invoked.
         """
@@ -1187,15 +1195,15 @@ class GroupMixin(typing.Generic[GearT]):
         :meth:`~.GroupMixin.group` shortcut decorators are used instead.
 
         Parameters
-        -----------
+        ----------
         command: :class:`.Command`
             The command to add.
 
         Raises
-        -------
-        CommandRegistrationError
+        ------
+        :class:`CommandRegistrationError`
             If the command or its alias is already registered by different command.
-        TypeError
+        :class:`TypeError`
             If the command passed is not a subclass of :class:`.Command`.
         """
 
@@ -1607,7 +1615,7 @@ def command(
     decorator.
 
     Parameters
-    -----------
+    ----------
     name: :class:`str`
         The name to create the command with. By default this uses the
         function name unchanged.
@@ -1619,8 +1627,8 @@ def command(
         by ``cls``.
 
     Raises
-    -------
-    TypeError
+    ------
+    :class:`TypeError`
         If the function is not a coroutine or is already a command.
     """
     if cls is None:
@@ -1680,12 +1688,12 @@ def check(predicate: UserCheck[ContextT], /) -> Check[ContextT]:
     These checks should be predicates that take in a single parameter taking
     a :class:`.Context`. If the check returns a ``False``\-like value then
     during invocation a :exc:`.CheckFailure` exception is raised and sent to
-    the :func:`.on_command_error` event.
+    the :class:`.CommandErrorEvent` event.
 
     If an exception should be thrown in the predicate then it should be a
     subclass of :exc:`.CommandError`. Any exception not subclassed from it
     will be propagated while those subclassed will be sent to
-    :func:`.on_command_error`.
+    :class:`.CommandErrorEvent`.
 
     A special attribute named ``predicate`` is bound to the value
     returned by this decorator to retrieve the predicate passed to the
@@ -1790,15 +1798,15 @@ def check_any(*checks: Check[ContextT]) -> Check[ContextT]:
         The ``predicate`` attribute for this function **is** a coroutine.
 
     Parameters
-    ------------
+    ----------
     \*checks: Callable[[:class:`Context`], :class:`bool`]
         An argument list of checks that have been decorated with
         the :func:`check` decorator.
 
     Raises
-    -------
-    TypeError
-        A check passed has not been decorated with the :func:`check`
+    ------
+    :class:`TypeError`
+        A check passed has not been decorated with the :func:`.check`
         decorator.
 
     Examples
@@ -2182,7 +2190,7 @@ def cooldown(
     type :class:`.BucketType`.
 
     If a cooldown is triggered, then :exc:`.CommandOnCooldown` is triggered in
-    :func:`.on_command_error` and the local error handler.
+    :class:`.CommandErrorEvent` and the local error handler.
 
     A command can only have a single cooldown.
 

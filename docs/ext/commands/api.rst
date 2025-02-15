@@ -211,7 +211,7 @@ Enums
 .. _ext_commands_api_checks:
 
 Checks
--------
+------
 
 .. autofunction:: pyvolt.ext.commands.check(predicate)
     :decorator:
