@@ -31,7 +31,7 @@ from pyvolt import PyvoltException, utils
 if typing.TYPE_CHECKING:
     from collections.abc import Callable
 
-    from pyvolt import BaseChannel, BaseServerChannel, ServerChannel
+    from pyvolt import BaseChannel, Channel, BaseServerChannel, ServerChannel
 
     from .bot import Bot
     from .context import Context
@@ -657,6 +657,146 @@ class CommandNotFound(CommandError):
     __slots__ = ()
 
 
+class MissingRole(CheckFailure):
+    """Exception raised when the command invoker lacks a role to run a command.
+
+    This inherits from :exc:`CheckFailure`.
+
+    Attributes
+    -----------
+    missing_role: :class:`str`
+        The required role that is missing.
+        This is the parameter passed to :func:`~.commands.has_role`.
+    """
+
+    def __init__(self, *, missing_role: str) -> None:
+        self.missing_role: str = missing_role
+        message = f'Role {missing_role!r} is required to run this command.'
+        super().__init__(message)
+
+
+class BotMissingRole(CheckFailure):
+    """Exception raised when the bot's member lacks a role to run a command.
+
+    This inherits from :exc:`CheckFailure`.
+
+    Attributes
+    -----------
+    missing_role: :class:`str`
+        The required role that is missing.
+        This is the parameter passed to :func:`~.commands.has_role`.
+    """
+
+    def __init__(self, *, missing_role: str) -> None:
+        self.missing_role: str = missing_role
+        message = f'Bot requires the role {missing_role!r} to run this command'
+        super().__init__(message)
+
+
+class MissingAnyRole(CheckFailure):
+    """Exception raised when the command invoker lacks any of
+    the roles specified to run a command.
+
+    This inherits from :exc:`CheckFailure`.
+
+    Attributes
+    -----------
+    missing_roles: List[:class:`str`]
+        The roles that the invoker is missing.
+        These are the parameters passed to :func:`~.commands.has_any_role`.
+    """
+
+    def __init__(self, *, missing_roles: list[str]) -> None:
+        self.missing_roles: list[str] = missing_roles
+
+        missing = [f"'{role}'" for role in missing_roles]
+        fmt = utils.human_join(missing)
+        message = f'You are missing at least one of the required roles: {fmt}'
+        super().__init__(message)
+
+
+class BotMissingAnyRole(CheckFailure):
+    """Exception raised when the bot's member lacks any of
+    the roles specified to run a command.
+
+    This inherits from :exc:`CheckFailure`.
+
+    Attributes
+    -----------
+    missing_roles: List[:class:`str`]
+        The roles that the bot's member is missing.
+        These are the parameters passed to :func:`~.commands.has_any_role`.
+
+    """
+
+    def __init__(self, *, missing_roles: list[str]) -> None:
+        self.missing_roles: list[str] = missing_roles
+
+        missing = [f"'{role}'" for role in missing_roles]
+        fmt = utils.human_join(missing)
+        message = f'Bot is missing at least one of the required roles: {fmt}'
+        super().__init__(message)
+
+
+class NSFWChannelRequired(CheckFailure):
+    """Exception raised when a channel does not have the required NSFW setting.
+
+    This inherits from :exc:`CheckFailure`.
+
+    Attributes
+    -----------
+    channel: :class:`~pyvolt.Channel`
+        The channel that does not have NSFW enabled.
+    """
+
+    def __init__(self, *, channel: Channel) -> None:
+        self.channel: Channel = channel
+        super().__init__(f"Channel '{channel}' needs to be NSFW for this command to work.")
+
+
+class MissingPermissions(CheckFailure):
+    """Exception raised when the command invoker lacks permissions to run a
+    command.
+
+    This inherits from :exc:`CheckFailure`.
+
+    Attributes
+    -----------
+    missing_permissions: List[:class:`str`]
+        The required permissions that are missing.
+    """
+
+    def __init__(self, /, *args: typing.Any, missing_permissions: list[str]) -> None:
+        self.missing_permissions: list[str] = missing_permissions
+
+        missing = [perm.replace('_', ' ').title() for perm in missing_permissions]
+        fmt = utils.human_join(missing, final='and')
+        message = f'You are missing {fmt} permission(s) to run this command.'
+        super().__init__(message, *args)
+
+
+class BotMissingPermissions(CheckFailure):
+    """Exception raised when the bot's member lacks permissions to run a
+    command.
+
+    This inherits from :exc:`CheckFailure`.
+
+    Attributes
+    -----------
+    missing_permissions: List[:class:`str`]
+        The required permissions that are missing.
+    """
+
+    def __init__(self, /, *args: typing.Any, missing_permissions: list[str]) -> None:
+        self.missing_permissions: list[str] = missing_permissions
+
+        missing = [perm.replace('_', ' ').replace('guild', 'server').title() for perm in missing_permissions]
+
+        fmt = utils.human_join(missing, final='and')
+        message = f'Bot requires {fmt} permission(s) to run this command.'
+        super().__init__(message, *args)
+
+
 class BadUnionArgument(UserInputError):
     """Exception raised when a :data:`typing.Union` converter fails for all
     its associated types.
@@ -956,6 +1096,13 @@ __all__ = (
     'DisabledCommand',
     'CommandInvokeError',
     'CommandNotFound',
+    'MissingRole',
+    'BotMissingRole',
+    'MissingAnyRole',
+    'BotMissingAnyRole',
+    'NSFWChannelRequired',
+    'MissingPermissions',
+    'BotMissingPermissions',
     'BadUnionArgument',
     'BadLiteralArgument',
     'ArgumentParsingError',

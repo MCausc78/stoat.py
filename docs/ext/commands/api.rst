@@ -225,7 +225,7 @@ Checks
 .. autofunction:: pyvolt.ext.commands.has_permissions(**perms)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.has_guild_permissions(**perms)
+.. autofunction:: pyvolt.ext.commands.has_server_permissions(**perms)
     :decorator:
 
 .. autofunction:: pyvolt.ext.commands.has_any_role(*items)
@@ -237,7 +237,7 @@ Checks
 .. autofunction:: pyvolt.ext.commands.bot_has_permissions(**perms)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.bot_has_guild_permissions(**perms)
+.. autofunction:: pyvolt.ext.commands.bot_has_server_permissions(**perms)
     :decorator:
 
 .. autofunction:: pyvolt.ext.commands.bot_has_any_role(*items)
@@ -258,7 +258,7 @@ Checks
 .. autofunction:: pyvolt.ext.commands.after_invoke(coro)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.guild_only(,)
+.. autofunction:: pyvolt.ext.commands.server_only(,)
     :decorator:
 
 .. autofunction:: pyvolt.ext.commands.dm_only(,)

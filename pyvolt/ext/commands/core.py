@@ -12,22 +12,30 @@ from pyvolt.utils import MISSING
 
 from ._types import GearT, _BaseCommand
 from .converter import Greedy, run_converters
-from .cooldown import BucketType, CooldownMapping, MaxConcurrency, Cooldown
+from .cooldown import BucketType, CooldownMapping, DynamicCooldownMapping, MaxConcurrency, Cooldown
 from .errors import (
     CommandError,
     MissingRequiredArgument,
     MissingRequiredAttachment,
     TooManyArguments,
     CheckFailure,
-    # CheckAnyFailure,
-    # PrivateMessageOnly,
-    # NoPrivateMessage,
-    # NotOwner,
+    CheckAnyFailure,
+    PrivateMessageOnly,
+    NoPrivateMessage,
+    NotOwner,
     DisabledCommand,
     CommandInvokeError,
+    MissingRole,
+    BotMissingRole,
+    MissingAnyRole,
+    BotMissingAnyRole,
+    NSFWChannelRequired,
+    MissingPermissions,
+    BotMissingPermissions,
     ArgumentParsingError,
     CommandRegistrationError,
 )
+
 from .events import CommandErrorEvent
 from .gear import Gear
 from .parameters import Parameter, Signature
@@ -36,7 +44,7 @@ if typing.TYPE_CHECKING:
     from collections.abc import Callable, Coroutine, Generator
     from typing_extensions import Self
 
-    from ._types import BotT, ContextT, Error, Hook, UserCheck
+    from ._types import BotT, ContextT, Error, Hook, UserCheck, Check
     from .context import Context
 
 P = typing.ParamSpec('P')
@@ -784,7 +792,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
     def __str__(self) -> str:
         return self.qualified_name
 
-    async def _parse_arguments(self, ctx: Context[BotT]) -> None:
+    async def _parse_arguments(self, ctx: Context[BotT], /) -> None:
         ctx.args = [ctx] if self.gear is None else [self.gear, ctx]
         ctx.kwargs = {}
         args = ctx.args
@@ -1086,13 +1094,6 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         Checks if the command can be executed by checking all the predicates
         inside the :attr:`~Command.checks` attribute. This also checks whether the
         command is disabled.
-
-        .. versionchanged:: 1.3
-            Checks whether the command is disabled or not
-
-        .. versionchanged:: 2.0
-
-            ``ctx`` parameter is now positional-only.
 
         Parameters
         -----------
@@ -1670,3 +1671,651 @@ def group(
         cls = Group
 
     return command(name=name, cls=cls, **attrs)
+
+
+def check(predicate: UserCheck[ContextT], /) -> Check[ContextT]:
+    r"""A decorator that adds a check to the :class:`.Command` or its
+    subclasses. These checks could be accessed via :attr:`.Command.checks`.
+
+    These checks should be predicates that take in a single parameter taking
+    a :class:`.Context`. If the check returns a ``False``\-like value then
+    during invocation a :exc:`.CheckFailure` exception is raised and sent to
+    the :func:`.on_command_error` event.
+
+    If an exception should be thrown in the predicate then it should be a
+    subclass of :exc:`.CommandError`. Any exception not subclassed from it
+    will be propagated while those subclassed will be sent to
+    :func:`.on_command_error`.
+
+    A special attribute named ``predicate`` is bound to the value
+    returned by this decorator to retrieve the predicate passed to the
+    decorator. This allows the following introspection and chaining to be done:
+
+    .. code-block:: python3
+
+        def owner_or_permissions(**perms):
+            original = commands.has_permissions(**perms).predicate
+
+            async def extended_check(ctx):
+                if ctx.server is None:
+                    return False
+                return ctx.server.owner_id == ctx.author_id or await original(ctx)
+
+            return commands.check(extended_check)
+
+    .. note::
+
+        The function returned by ``predicate`` is **always** a coroutine,
+        even if the original function was not a coroutine.
+
+    Examples
+    --------
+
+    Creating a basic check to see if the command invoker is you.
+
+    .. code-block:: python3
+
+        def check_if_it_is_me(ctx):
+            return ctx.author_id == '01H1QAGNCAP1VHW0CYXBZ5P176'
+
+
+        @bot.command()
+        @commands.check(check_if_it_is_me)
+        async def only_for_me(ctx):
+            await ctx.send('I know you!')
+
+    Transforming common checks into its own decorator:
+
+    .. code-block:: python3
+
+        def is_me():
+            def predicate(ctx):
+                return ctx.author_id == '01H1QAGNCAP1VHW0CYXBZ5P176'
+
+            return commands.check(predicate)
+
+
+        @bot.command()
+        @is_me()
+        async def only_me(ctx):
+            await ctx.send('Only you!')
+
+
+    Parameters
+    ----------
+    predicate: Callable[[:class:`.Context`], :class:`bool`]
+        The predicate to check if the command should be invoked.
+    """
+
+    def decorator(
+        func: typing.Union[
+            Command[typing.Any, ..., typing.Any], Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]
+        ],
+        /,
+    ) -> typing.Union[
+        Command[typing.Any, ..., typing.Any], Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]
+    ]:
+        if isinstance(func, Command):
+            func.checks.append(predicate)  # type: ignore
+        else:
+            if hasattr(func, '__commands_checks__'):
+                func.__commands_checks__.append(predicate)  # type: ignore
+            else:
+                func.__commands_checks__ = [predicate]  # type: ignore
+
+        return func
+
+    if inspect.iscoroutinefunction(predicate):
+        decorator.predicate = predicate  # type: ignore
+    else:
+
+        @wraps(predicate)
+        async def wrapper(ctx: ContextT, /):
+            return predicate(ctx)
+
+        decorator.predicate = wrapper  # type: ignore
+
+    return decorator  # type: ignore
+
+
+def check_any(*checks: Check[ContextT]) -> Check[ContextT]:
+    r"""A :func:`check` that is added that checks if any of the checks passed
+    will pass, i.e. using logical OR.
+
+    If all checks fail then :exc:`.CheckAnyFailure` is raised to signal the failure.
+    It inherits from :exc:`.CheckFailure`.
+
+    .. note::
+
+        The ``predicate`` attribute for this function **is** a coroutine.
+
+    Parameters
+    ------------
+    \*checks: Callable[[:class:`Context`], :class:`bool`]
+        An argument list of checks that have been decorated with
+        the :func:`check` decorator.
+
+    Raises
+    -------
+    TypeError
+        A check passed has not been decorated with the :func:`check`
+        decorator.
+
+    Examples
+    ---------
+
+    Creating a basic check to see if it's the bot owner or
+    the server owner:
+
+    .. code-block:: python3
+
+        def is_server_owner():
+            def predicate(ctx):
+                return ctx.server is not None and ctx.server.owner_id == ctx.author_id
+
+            return commands.check(predicate)
+
+
+        @bot.command()
+        @commands.check_any(commands.is_owner(), is_server_owner())
+        async def only_for_owners(ctx):
+            await ctx.send('Hello mister owner!')
+    """
+
+    unwrapped = []
+    for wrapped in checks:
+        try:
+            pred = wrapped.predicate
+        except AttributeError:
+            raise TypeError(f'{wrapped!r} must be wrapped by commands.check decorator') from None
+        else:
+            unwrapped.append(pred)
+
+    async def predicate(ctx: Context[BotT], /) -> bool:
+        errors = []
+        for func in unwrapped:
+            try:
+                value = await func(ctx)
+            except CheckFailure as e:
+                errors.append(e)
+            else:
+                if value:
+                    return True
+        # If we're here, all checks failed
+        raise CheckAnyFailure(unwrapped, errors)
+
+    return check(predicate)
+
+
+def has_role(item: str, /) -> Check[typing.Any]:
+    """A :func:`.check` that is added that checks if the member invoking the
+    command has the role specified via the ID specified.
+
+    If the message is invoked in a private message context then the check will
+    return ``False``.
+
+    This check raises one of two special exceptions, :exc:`.MissingRole` if the user
+    is missing a role, or :exc:`.NoPrivateMessage` if it is used in a private message.
+    Both inherit from :exc:`.CheckFailure`.
+
+    Parameters
+    ----------
+    item: :class:`str`
+        The ID of the role to check.
+    """
+
+    def predicate(ctx: Context[BotT], /) -> bool:
+        author = ctx.author
+
+        if not isinstance(author, pyvolt.Member):
+            raise NoPrivateMessage()
+
+        if item not in author.roles:
+            raise MissingRole(missing_role=item)
+
+        return True
+
+    return check(predicate)
+
+
+def has_any_role(*items: str) -> Callable[[T], T]:
+    r"""A :func:`.check` that is added that checks if the member invoking the
+    command has **any** of the roles specified. This means that if they have
+    one out of the three roles specified, then this check will return ``True``.
+
+    Similar to :func:`.has_role`\, the IDs passed in must be exact.
+
+    This check raises one of two special exceptions, :exc:`.MissingAnyRole` if the user
+    is missing all roles, or :exc:`.NoPrivateMessage` if it is used in a private message.
+    Both inherit from :exc:`.CheckFailure`.
+
+    Parameters
+    ----------
+    items: List[:class:`str`]
+        An argument list of IDs to check that the member has roles wise.
+
+    Example
+    -------
+
+    .. code-block:: python3
+
+        @bot.command()
+        @commands.has_any_role('01J35ZZX7FJH21YCCMYQHET5H9')
+        async def cool(ctx):
+            await ctx.send('You are cool indeed')
+    """
+
+    def predicate(ctx: Context[BotT], /):
+        author = ctx.author
+
+        if not isinstance(author, pyvolt.Member):
+            raise NoPrivateMessage()
+
+        roles = author.roles
+
+        if any(item in roles for item in items):
+            return True
+
+        raise MissingAnyRole(missing_roles=list(items))
+
+    return check(predicate)
+
+
+def bot_has_role(item: str, /) -> Callable[[T], T]:
+    """Similar to :func:`.has_role` except checks if the bot itself has the
+    role.
+
+    This check raises one of two special exceptions, :exc:`.BotMissingRole` if the bot
+    is missing the role, or :exc:`.NoPrivateMessage` if it is used in a private message.
+    Both inherit from :exc:`.CheckFailure`.
+    """
+
+    def predicate(ctx: Context[BotT], /):
+        me = ctx.me
+
+        if not isinstance(me, pyvolt.Member):
+            raise NoPrivateMessage()
+
+        if item not in me.roles:
+            raise BotMissingRole(missing_role=item)
+
+        return True
+
+    return check(predicate)
+
+
+def bot_has_any_role(*items: str) -> Callable[[T], T]:
+    """Similar to :func:`.has_any_role` except checks if the bot itself has
+    any of the roles listed.
+
+    This check raises one of two special exceptions, :exc:`.BotMissingAnyRole` if the bot
+    is missing all roles, or :exc:`.NoPrivateMessage` if it is used in a private message.
+    Both inherit from :exc:`.CheckFailure`.
+    """
+
+    def predicate(ctx: Context[BotT], /):
+        me = ctx.me
+
+        if not isinstance(me, pyvolt.Member):
+            raise NoPrivateMessage()
+
+        if any(item in me.roles for item in items):
+            return True
+        raise BotMissingAnyRole(missing_roles=list(items))
+
+    return check(predicate)
+
+
+def has_permissions(**perms: bool) -> Check[typing.Any]:
+    """A :func:`.check` that is added that checks if the member has all of
+    the permissions necessary.
+
+    Note that this check operates on the current channel permissions, not the
+    server wide permissions.
+
+    The permissions passed in must be exactly like the properties shown under
+    :class:`.pyvolt.Permissions`.
+
+    This check raises a special exception, :exc:`.MissingPermissions`
+    that is inherited from :exc:`.CheckFailure`.
+
+    Parameters
+    ----------
+    perms
+        An argument list of permissions to check for.
+
+    Example
+    -------
+
+    .. code-block:: python3
+
+        @bot.command()
+        @commands.has_permissions(manage_messages=True)
+        async def test(ctx):
+            await ctx.send('You can manage messages.')
+
+    """
+
+    invalid = set(perms) - set(pyvolt.Permissions.VALID_FLAGS)
+    if invalid:
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+
+    def predicate(ctx: Context[BotT], /) -> bool:
+        permissions = ctx.channel.permissions_for(ctx.author)
+
+        missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
+
+        if missing:
+            raise MissingPermissions(missing_permissions=missing)
+        return True
+
+    return check(predicate)
+
+
+def bot_has_permissions(**perms: bool) -> Check[typing.Any]:
+    """Similar to :func:`.has_permissions` except checks if the bot itself has
+    the permissions listed.
+
+    This check raises a special exception, :exc:`.BotMissingPermissions`
+    that is inherited from :exc:`.CheckFailure`.
+    """
+
+    invalid = set(perms) - set(pyvolt.Permissions.VALID_FLAGS)
+    if invalid:
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+
+    def predicate(ctx: Context[BotT], /) -> bool:
+        permissions = ctx.channel.permissions_for(ctx.me)
+
+        missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
+
+        if missing:
+            raise BotMissingPermissions(missing_permissions=missing)
+        return True
+
+    return check(predicate)
+
+
+def has_server_permissions(**perms: bool) -> Check[typing.Any]:
+    """Similar to :func:`.has_permissions`, but operates on server wide
+    permissions instead of the current channel permissions.
+
+    If this check is called in a DM context, it will raise an
+    exception, :exc:`.NoPrivateMessage`.
+    """
+
+    invalid = set(perms) - set(pyvolt.Permissions.VALID_FLAGS)
+    if invalid:
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+
+    def predicate(ctx: Context[BotT], /) -> bool:
+        if ctx.server is None:
+            raise NoPrivateMessage()
+
+        permissions = ctx.server.permissions_for(ctx.author)
+        missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
+
+        if missing:
+            raise MissingPermissions(missing_permissions=missing)
+        return True
+
+    return check(predicate)
+
+
+def bot_has_server_permissions(**perms: bool) -> Check[typing.Any]:
+    """Similar to :func:`.has_server_permissions`, but checks the bot
+    members server permissions.
+    """
+
+    invalid = set(perms) - set(pyvolt.Permissions.VALID_FLAGS)
+    if invalid:
+        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+
+    def predicate(ctx: Context[BotT], /) -> bool:
+        if ctx.server is None:
+            raise NoPrivateMessage()
+
+        permissions = ctx.server.permissions_for(ctx.me)
+        missing = [perm for perm, value in perms.items() if getattr(permissions, perm) != value]
+
+        if missing:
+            raise BotMissingPermissions(missing_permissions=missing)
+        return True
+
+    return check(predicate)
+
+
+def dm_only() -> Check[typing.Any]:
+    """A :func:`.check` that indicates this command must only be used in a
+    DM context. Only private messages are allowed when
+    using the command.
+
+    This check raises a special exception, :exc:`.PrivateMessageOnly`
+    that is inherited from :exc:`.CheckFailure`.
+    """
+
+    def predicate(ctx: Context[BotT], /) -> bool:
+        if ctx.server is None:
+            return True
+        raise PrivateMessageOnly()
+
+    return check(predicate)
+
+
+def server_only() -> Check[typing.Any]:
+    """A :func:`.check` that indicates this command must only be used in a
+    server context only. Basically, no private messages are allowed when
+    using the command.
+
+    This check raises a special exception, :exc:`.NoPrivateMessage`
+    that is inherited from :exc:`.CheckFailure`.
+    """
+
+    def predicate(ctx: Context[BotT], /) -> bool:
+        if ctx.server is None:
+            raise NoPrivateMessage()
+        return True
+
+    return check(predicate)
+
+
+def is_owner() -> Check[typing.Any]:
+    """A :func:`.check` that checks if the person invoking this command is the
+    owner of the bot.
+
+    This check raises a special exception, :exc:`.NotOwner` that is derived
+    from :exc:`.CheckFailure`.
+    """
+
+    async def predicate(ctx: Context[BotT], /) -> bool:
+        me = ctx.bot.me
+
+        passed = False
+        if me is None:
+            return passed
+
+        if me.bot is None:
+            passed = me.id == ctx.author_id
+        else:
+            passed = me.bot.owner_id == ctx.author_id
+
+        if passed:
+            return True
+
+        raise NotOwner('You do not own this bot.')
+
+    return check(predicate)
+
+
+def is_nsfw() -> Check[typing.Any]:
+    """A :func:`.check` that checks if the channel is a NSFW channel.
+
+    This check raises a special exception, :exc:`.NSFWChannelRequired`
+    that is derived from :exc:`.CheckFailure`.
+
+    If used on hybrid commands, this will be equivalent to setting the
+    application command's ``nsfw`` attribute to ``True``. In an unsupported
+    context, such as a subcommand, this will still fallback to applying the
+    check.
+    """
+
+    def predicate(ctx: Context[BotT], /) -> bool:
+        ch = ctx.channel
+        if isinstance(ch, pyvolt.PartialMessageable) or getattr(ch, 'nsfw', True):
+            return True
+        raise NSFWChannelRequired(channel=ch)
+
+    return check(predicate)
+
+
+def cooldown(
+    rate: int,
+    per: float,
+    type: typing.Union[BucketType, Callable[[Context[typing.Any]], typing.Any]] = BucketType.default,
+) -> Callable[[T], T]:
+    """A decorator that adds a cooldown to a :class:`.Command`
+
+    A cooldown allows a command to only be used a specific amount
+    of times in a specific time frame. These cooldowns can be based
+    either on a per-server, per-channel, per-user, per-role or global basis.
+    Denoted by the third argument of ``type`` which must be of enum
+    type :class:`.BucketType`.
+
+    If a cooldown is triggered, then :exc:`.CommandOnCooldown` is triggered in
+    :func:`.on_command_error` and the local error handler.
+
+    A command can only have a single cooldown.
+
+    Parameters
+    ------------
+    rate: :class:`int`
+        The number of times a command can be used before triggering a cooldown.
+    per: :class:`float`
+        The amount of seconds to wait for a cooldown when it's been triggered.
+    type: Union[:class:`.BucketType`, Callable[[:class:`.Context`], Any]]
+        The type of cooldown to have. If callable, it must return a key for the mapping.
+    """
+
+    def decorator(
+        func: typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]], /
+    ) -> typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]]:
+        if isinstance(func, Command):
+            func._buckets = CooldownMapping(original=Cooldown(rate, per), type=type)
+        else:
+            func.__commands_cooldown__ = CooldownMapping(original=Cooldown(rate, per), type=type)  # type: ignore
+        return func
+
+    return decorator  # type: ignore
+
+
+def dynamic_cooldown(
+    cooldown: Callable[[Context[typing.Any]], typing.Optional[Cooldown]],
+    type: typing.Union[BucketType, Callable[[Context[typing.Any]], typing.Any]],
+) -> Callable[[T], T]:
+    """A decorator that adds a dynamic cooldown to a :class:`.Command`.
+
+    This differs from :func:`.cooldown` in that it takes a function that
+    accepts a single parameter of type :class:`.Context` and must
+    return a :class:`~pyvolt.ext.commands.Cooldown` or ``None``.
+    If ``None`` is returned then that cooldown is effectively bypassed.
+
+    A cooldown allows a command to only be used a specific amount
+    of times in a specific time frame. These cooldowns can be based
+    either on a per-server, per-channel, per-user, per-role or global basis.
+    Denoted by the third argument of ``type`` which must be of enum
+    type :class:`.BucketType`.
+
+    If a cooldown is triggered, then :exc:`.CommandOnCooldown` is triggered in
+    :class:`.CommandErrorEvent` and the local error handler.
+
+    A command can only have a single cooldown.
+
+    Parameters
+    ------------
+    cooldown: Callable[[:class:`.Context`], Optional[:class:`~pyvolt.ext.commands.Cooldown`]]
+        A function that takes a message and returns a cooldown that will
+        apply to this invocation or ``None`` if the cooldown should be bypassed.
+    type: :class:`.BucketType`
+        The type of cooldown to have.
+    """
+    if not callable(cooldown):
+        raise TypeError('A callable must be provided')
+
+    if type is BucketType.default:
+        raise ValueError('BucketType.default cannot be used in dynamic cooldowns')
+
+    def decorator(
+        func: typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]],
+        /,
+    ) -> typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]]:
+        if isinstance(func, Command):
+            func._buckets = DynamicCooldownMapping(factory=cooldown, type=type)
+        else:
+            func.__commands_cooldown__ = DynamicCooldownMapping(factory=cooldown, type=type)  # type: ignore
+        return func
+
+    return decorator  # type: ignore
+
+
+def max_concurrency(number: int, per: BucketType = BucketType.default, *, wait: bool = False) -> Callable[[T], T]:
+    """A decorator that adds a maximum concurrency to a :class:`.Command` or its subclasses.
+
+    This enables you to only allow a certain number of command invocations at the same time,
+    for example if a command takes too long or if only one user can use it at a time. This
+    differs from a cooldown in that there is no set waiting period or token bucket -- only
+    a set number of people can run the command.
+
+    Parameters
+    -------------
+    number: :class:`int`
+        The maximum number of invocations of this command that can be running at the same time.
+    per: :class:`.BucketType`
+        The bucket that this concurrency is based on, e.g. ``BucketType.server`` would allow
+        it to be used up to ``number`` times per server.
+    wait: :class:`bool`
+        Whether the command should wait for the queue to be over. If this is set to ``False``
+        then instead of waiting until the command can run again, the command raises
+        :exc:`.MaxConcurrencyReached` to its error handler. If this is set to ``True``
+        then the command waits until it can be executed.
+    """
+
+    def decorator(
+        func: typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]], /
+    ) -> typing.Union[Command, Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]]:
+        value = MaxConcurrency(number, per=per, wait=wait)
+        if isinstance(func, Command):
+            func._max_concurrency = value
+        else:
+            func.__commands_max_concurrency__ = value  # type: ignore
+        return func
+
+    return decorator  # type: ignore
+
+
+__all__ = (
+    'get_signature_parameters',
+    'extract_descriptions_from_docstring',
+    '_CaseInsensitiveDict',
+    '_StatelessAssetIterator',
+    '_AssetIterator',
+    'Command',
+    'GroupMixin',
+    'Group',
+    'command',
+    'group',
+    'check',
+    'check_any',
+    'has_role',
+    'has_any_role',
+    'bot_has_role',
+    'bot_has_any_role',
+    'has_permissions',
+    'bot_has_server_permissions',
+    'dm_only',
+    'server_only',
+    'is_owner',
+    'is_nsfw',
+    'cooldown',
+    'dynamic_cooldown',
+    'max_concurrency',
+)

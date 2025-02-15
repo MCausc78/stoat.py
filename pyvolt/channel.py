@@ -1588,6 +1588,23 @@ class PartialMessageable(Messageable):
     def get_channel_id(self) -> str:
         return self.id
 
+    def permissions_for(self, _target: typing.Union[User, Member], /) -> Permissions:
+        """Calculate permissions for given user.
+
+        This is sentinel.
+
+        Parameters
+        ----------
+        target: Union[:class:`.User`, :class:`.Member`]
+            The member or user to calculate permissions for.
+
+        Returns
+        -------
+        :class:`.Permissions`
+            The calculated permissions.
+        """
+        return Permissions.none()
+
 
 __all__ = (
     'BaseChannel',
