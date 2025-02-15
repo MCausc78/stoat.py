@@ -91,17 +91,17 @@ HTTPClient
 Route
 ~~~~~
 
-.. attributetable:: Route
+.. attributetable:: pyvolt.routes.Route
 
-.. autoclass:: Route
+.. autoclass:: pyvolt.routes.Route
     :members:
 
 CompiledRoute
 ~~~~~~~~~~~~~
 
-.. attributetable:: CompiledRoute
+.. attributetable:: pyvolt.routes.CompiledRoute
 
-.. autoclass:: CompiledRoute
+.. autoclass:: pyvolt.routes.CompiledRoute
     :members:
 
 Shard
