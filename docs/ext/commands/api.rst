@@ -391,6 +391,21 @@ Defaults
     A default :class:`Parameter` which returns the :attr:`~.Context.server` for this context. This will never be ``None``. If the command is called in a DM context then :exc:`~pyvolt.ext.commands.NoPrivateMessage` is raised to the error handlers.
 
 
+.. _ext_commands_api_cooldowns:
+
+Cooldowns
+---------
+
+.. attributetable:: pyvolt.ext.commands.MaxConcurrency
+
+.. autoclass:: pyvolt.ext.commands.MaxConcurrency
+    :members:
+
+.. attributetable:: pyvolt.ext.commands.Cooldown
+
+.. autoclass:: pyvolt.ext.commands.Cooldown
+    :members:
+
 .. _ext_commands_api_errors:
 
 Exceptions
