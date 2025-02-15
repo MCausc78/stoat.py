@@ -315,9 +315,9 @@ Converters
 .. autoclass:: pyvolt.ext.commands.MessageConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.PartialMessageConverter
+.. attributetable:: pyvolt.ext.commands.BaseMessageConverter
 
-.. autoclass:: pyvolt.ext.commands.PartialMessageConverter
+.. autoclass:: pyvolt.ext.commands.BaseMessageConverter
     :members:
 
 .. attributetable:: pyvolt.ext.commands.ServerChannelConverter
@@ -394,7 +394,7 @@ Defaults
 .. _ext_commands_api_errors:
 
 Exceptions
------------
+----------
 
 .. autoexception:: pyvolt.ext.commands.CommandError
     :members:
