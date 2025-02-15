@@ -88,6 +88,22 @@ HTTPClient
 .. autoclass:: HTTPClient
     :members:
 
+Route
+~~~~~
+
+.. attributetable:: Route
+
+.. autoclass:: Route
+    :members:
+
+CompiledRoute
+~~~~~~~~~~~~~
+
+.. attributetable:: CompiledRoute
+
+.. autoclass:: CompiledRoute
+    :members:
+
 Shard
 ~~~~~
 
@@ -2226,6 +2242,128 @@ Cache
 Models
 ------
 
+PartialAccount
+~~~~~~~~~~~~~~
+
+.. attributetable:: PartialAccount
+
+.. autoclass:: PartialAccount
+    :members:
+
+MFATicket
+~~~~~~~~~
+
+.. attributetable:: MFATicket
+
+.. autoclass:: MFATicket
+    :members:
+
+WebPushSubscription
+~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: WebPushSubscription
+
+.. autoclass:: WebPushSubscription
+    :members:
+
+PartialSession
+~~~~~~~~~~~~~~
+
+.. attributetable:: PartialSession
+
+.. autoclass:: PartialSession
+    :members:
+
+Session
+~~~~~~~
+
+.. attributetable:: Session
+
+.. autoclass:: Session
+    :members:
+
+MFARequired
+~~~~~~~~~~~
+
+.. attributetable:: MFARequired
+
+.. autoclass:: MFARequired
+    :members:
+
+AccountDisabled
+~~~~~~~~~~~~~~~
+
+.. attributetable:: AccountDisabled
+
+.. autoclass:: AccountDisabled
+    :members:
+
+MFAStatus
+~~~~~~~~~
+
+.. attributetable:: MFAStatus
+
+.. autoclass:: MFAStatus
+    :members:
+
+BaseMFAResponse
+~~~~~~~~~~~~~~~
+
+.. attributetable:: BaseMFAResponse
+
+.. autoclass:: BaseMFAResponse
+    :members:
+
+ByPassword
+~~~~~~~~~~
+
+.. attributetable:: ByPassword
+
+.. autoclass:: ByPassword
+    :members:
+
+ByRecoveryCode
+~~~~~~~~~~~~~~
+
+.. attributetable:: ByRecoveryCode
+
+.. autoclass:: ByRecoveryCode
+    :members:
+
+ByTOTP
+~~~~~~
+
+.. attributetable:: ByTOTP
+
+.. autoclass:: ByTOTP
+    :members:
+
+MFAResponse
+~~~~~~~~~~~
+
+.. class:: MFAResponse
+
+    A union of all possible MFA verification responses.
+    
+    The following classes are included in this union:
+
+    - :class:`.ByPassword`
+    - :class:`.ByRecoveryCode`
+    - :class:`.ByTOTP`
+
+LoginResult
+~~~~~~~~~~~
+
+.. class:: LoginResult
+
+    A union of all login responses.
+    
+    The following classes are included in this union:
+
+    - :class:`.Session`
+    - :class:`.MFARequired`
+    - :class:`.AccountDisabled`
+
 StatelessAsset
 ~~~~~~~~~~~~~~
 
@@ -2249,6 +2387,70 @@ Asset
 .. autoclass:: AssetMetadata
     :members:
 
+UserStatus
+~~~~~~~~~~
+
+.. attributetable:: UserStatus
+
+.. autoclass:: UserStatus
+    :members:
+
+UserStatusEdit
+~~~~~~~~~~~~~~
+
+.. attributetable:: UserStatusEdit
+
+.. autoclass:: UserStatusEdit
+    :members:
+
+StatelessUserProfile
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: StatelessUserProfile
+
+.. autoclass:: StatelessUserProfile
+    :members:
+
+UserProfile
+~~~~~~~~~~~
+
+.. attributetable:: UserProfile
+
+.. autoclass:: UserProfile
+    :members:
+
+PartialUserProfile
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PartialUserProfile
+
+.. autoclass:: PartialUserProfile
+    :members:
+
+UserProfileEdit
+~~~~~~~~~~~~~~~
+
+.. attributetable:: UserProfileEdit
+
+.. autoclass:: UserProfileEdit
+    :members:
+
+Relationship
+~~~~~~~~~~~~
+
+.. attributetable:: Relationship
+
+.. autoclass:: Relationship
+    :members:
+
+Mutuals
+~~~~~~~
+
+.. attributetable:: Mutuals
+
+.. autoclass:: Mutuals
+    :members:
+
 BaseUser
 ~~~~~~~~
 
@@ -2257,21 +2459,21 @@ BaseUser
 .. autoclass:: BaseUser
     :members:
 
-BotUserMetadata
-~~~~~~~~~~~~~~~
-
-.. attributetable:: BotUserMetadata
-
-.. autoclass:: BotUserMetadata
-    :members:
-    :inherited-members:
-
 DisplayUser
 ~~~~~~~~~~~
 
 .. attributetable:: DisplayUser
 
 .. autoclass:: DisplayUser
+    :members:
+    :inherited-members:
+
+BotUserMetadata
+~~~~~~~~~~~~~~~
+
+.. attributetable:: BotUserMetadata
+
+.. autoclass:: BotUserMetadata
     :members:
     :inherited-members:
 
@@ -2283,7 +2485,6 @@ PartialUser
 .. autoclass:: PartialUser
     :members:
     :inherited-members:
-
 
 User
 ~~~~
@@ -2303,6 +2504,24 @@ OwnUser
     :members:
     :inherited-members:
     :exclude-members: accept_friend_request, block, deny_friend_request, mutual_friend_ids, mutual_server_ids, mutuals, remove_friend, report, send_friend_request, unblock
+
+UserVoiceState
+~~~~~~~~~~~~~~
+
+.. attributetable:: UserVoiceState
+
+.. autoclass:: UserVoiceState
+    :members:
+    :inherited-members:
+
+PartialUserVoiceState
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PartialUserVoiceState
+
+.. autoclass:: PartialUserVoiceState
+    :members:
+    :inherited-members:
 
 BaseBot
 ~~~~~~~
@@ -3223,6 +3442,15 @@ Role
     :members:
     :inherited-members:
 
+Ban
+~~~
+
+.. attributetable:: Ban
+
+.. autoclass:: Ban
+    :members:
+    :inherited-members:
+
 BaseWebhook
 ~~~~~~~~~~~
 
@@ -3247,6 +3475,87 @@ Webhook
 .. attributetable:: Webhook
 
 .. autoclass:: Webhook
+    :members:
+    :inherited-members:
+
+BaseInvite
+~~~~~~~~~~
+
+.. attributetable:: BaseInvite
+
+.. autoclass:: BaseInvite
+    :members:
+    :inherited-members:
+
+ServerPublicInvite
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerPublicInvite
+
+.. autoclass:: ServerPublicInvite
+    :members:
+    :inherited-members:
+
+GroupPublicInvite
+~~~~~~~~~~~~~~~~~
+
+.. attributetable:: GroupPublicInvite
+
+.. autoclass:: GroupPublicInvite
+    :members:
+    :inherited-members:
+
+UnknownPublicInvite
+~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UnknownPublicInvite
+
+.. autoclass:: UnknownPublicInvite
+    :members:
+    :inherited-members:
+
+PublicInvite
+~~~~~~~~~~~~
+
+.. attributetable:: PublicInvite
+
+.. autoclass:: PublicInvite
+    :members:
+    :inherited-members:
+
+PrivateBaseInvite
+~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PrivateBaseInvite
+
+.. autoclass:: PrivateBaseInvite
+    :members:
+    :inherited-members:
+
+GroupInvite
+~~~~~~~~~~~
+
+.. attributetable:: GroupInvite
+
+.. autoclass:: GroupInvite
+    :members:
+    :inherited-members:
+
+ServerInvite
+~~~~~~~~~~~~
+
+.. attributetable:: ServerInvite
+
+.. autoclass:: ServerInvite
+    :members:
+    :inherited-members:
+
+Invite
+~~~~~~
+
+.. attributetable:: Invite
+
+.. autoclass:: Invite
     :members:
     :inherited-members:
 
@@ -3296,6 +3605,54 @@ JoltUserSettings
 .. attributetable:: JoltUserSettings
 
 .. autoclass:: JoltUserSettings
+    :members:
+
+InstanceCaptchaFeature
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: InstanceCaptchaFeature
+
+.. autoclass:: InstanceCaptchaFeature
+    :members:
+
+InstanceGenericFeature
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: InstanceGenericFeature
+
+.. autoclass:: InstanceGenericFeature
+    :members:
+
+InstanceVoiceFeature
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: InstanceVoiceFeature
+
+.. autoclass:: InstanceVoiceFeature
+    :members:
+
+InstanceFeaturesConfig
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: InstanceFeaturesConfig
+
+.. autoclass:: InstanceFeaturesConfig
+    :members:
+
+InstanceBuild
+~~~~~~~~~~~~~
+
+.. attributetable:: InstanceBuild
+
+.. autoclass:: InstanceBuild
+    :members:
+
+Instance
+~~~~~~~~
+
+.. attributetable:: Instance
+
+.. autoclass:: Instance
     :members:
 
 

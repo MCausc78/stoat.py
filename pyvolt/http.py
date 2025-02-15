@@ -2730,7 +2730,7 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.send_messages` to do this.
 
-        If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do that.
+        If message mentions "\\@everyone" or "\\@online", you must have :attr:`~Permissions.mention_everyone` to do that.
 
         If message mentions any roles, you must have :attr:`~Permissions.mention_roles` to do that.
 
@@ -2752,12 +2752,12 @@ class HTTPClient:
             The embeds to send the message with.
 
             You must have :attr:`~Permissions.send_embeds` to provide this.
-        masquerade: Optional[:class:`.MessagesMasquerade`]
+        masquerade: Optional[:class:`.MessageMasquerade`]
             The masquerade for the message.
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 
@@ -4680,7 +4680,7 @@ class HTTPClient:
         timeout: UndefinedOr[Optional[Union[:class:`~datetime.datetime`, :class:`~datetime.timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
 
-            This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
+            This must be a timezone-aware datetime object. Consider using :func:`pyvolt.utils.utcnow()`.
 
             You must have :attr:`~Permissions.timeout_members` to provide this.
         can_publish: UndefinedOr[Optional[:class:`bool`]]
@@ -5984,6 +5984,11 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.UserSettings`
+            The partial user settings with provided keys.
         """
         # Sync endpoints aren't meant to be used with bot accounts
         if keys is None:
@@ -6669,7 +6674,7 @@ class HTTPClient:
         )
         return UserFlags(resp['flags'])
 
-    async def get_mutuals_with(self, user: ULIDOr[BaseUser], /) -> Mutuals:
+    async def get_mutuals_with(self, user: ULIDOr[BaseUser]) -> Mutuals:
         """|coro|
 
         Retrieves a list of mutual friends and servers with another user.
@@ -7261,7 +7266,7 @@ class HTTPClient:
 
         The webhook must have :attr:`~Permissions.send_messages` to do this.
 
-        If message mentions '@everyone' or '@here', the webhook must have :attr:`~Permissions.mention_everyone` to do that.
+        If message mentions "\\@everyone" or "\\@online", the webhook must have :attr:`~Permissions.mention_everyone` to do that.
 
         If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
 
@@ -7285,12 +7290,12 @@ class HTTPClient:
             The embeds to send the message with.
 
             Webhook must have :attr:`~Permissions.send_embeds` to provide this.
-        masquerade: Optional[:class:`.MessagesMasquerade`]
+        masquerade: Optional[:class:`.MessageMasquerade`]
             The masquerade for the message.
 
             Webhook must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 
@@ -7785,18 +7790,18 @@ class HTTPClient:
         Parameters
         ----------
         mfa_ticket: :class:`str`
-            The MFA ticket code.
+            The valid MFA ticket token.
 
         Raises
         ------
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +------------------+----------------------------+
-            | Value            | Reason                     |
-            +------------------+----------------------------+
-            | ``InvalidToken`` | The MFA ticket is invalid. |
-            +------------------+----------------------------+
+            +------------------+-------------------------------------------+
+            | Value            | Reason                                    |
+            +------------------+-------------------------------------------+
+            | ``InvalidToken`` | The provided MFA ticket token is invalid. |
+            +------------------+-------------------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -7827,18 +7832,18 @@ class HTTPClient:
         Parameters
         ----------
         mfa_ticket: :class:`str`
-            The MFA ticket code.
+            The valid MFA ticket token.
 
         Raises
         ------
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +------------------+----------------------------+
-            | Value            | Reason                     |
-            +------------------+----------------------------+
-            | ``InvalidToken`` | The MFA ticket is invalid. |
-            +------------------+----------------------------+
+            +------------------+-------------------------------------------+
+            | Value            | Reason                                    |
+            +------------------+-------------------------------------------+
+            | ``InvalidToken`` | The provided MFA ticket token is invalid. |
+            +------------------+-------------------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -7878,6 +7883,11 @@ class HTTPClient:
             +-------------------+---------------------------------------------------------+
             | ``InternalError`` | Somehow something went wrong during retrieving account. |
             +-------------------+---------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.PartialAccount`
+            The retrieved account.
         """
         resp: raw.a.AccountInfo = await self.request(routes.AUTH_ACCOUNT_FETCH_ACCOUNT.compile(), bot=False)
         return self.state.parser.parse_partial_account(resp)
@@ -8077,6 +8087,11 @@ class HTTPClient:
             +-------------------+------------------------------------------------+----------------------------------------------------------------+
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
             +-------------------+------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        Optional[:class:`.MFATicket`]
+            The MFA ticket.
         """
         response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), token=None)
         if response is not None and isinstance(response, dict) and 'ticket' in response:
@@ -8307,7 +8322,7 @@ class HTTPClient:
         Parameters
         ----------
         mfa_ticket: :class:`str`
-            The MFA ticket token.
+            The valid MFA ticket token.
 
         Raises
         ------
@@ -8385,7 +8400,7 @@ class HTTPClient:
         Parameters
         ----------
         mfa_ticket: :class:`str`
-            The MFA ticket token.
+            The valid MFA ticket token.
 
         Raises
         ------
@@ -8444,6 +8459,11 @@ class HTTPClient:
             +-------------------+-----------------------------------------------------------------------+
             | ``InternalError`` | Somehow something went wrong during retrieving available MFA methods. |
             +-------------------+-----------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`.MFAMethod`]
+            The available MFA methods.
         """
         resp: list[raw.a.MFAMethod] = await self.request(routes.AUTH_MFA_GET_MFA_METHODS.compile(), bot=False)
         return list(map(MFAMethod, resp))
@@ -8470,6 +8490,8 @@ class HTTPClient:
             | Value              | Reason                                    |
             +--------------------+-------------------------------------------+
             | ``InvalidSession`` | The current user token is invalid.        |
+            +--------------------+-------------------------------------------+
+            | ``InvalidToken``   | The provided MFA ticket token is invalid. |
             +--------------------+-------------------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:

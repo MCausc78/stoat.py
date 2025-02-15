@@ -57,7 +57,7 @@ Example:
         # The user has 2FA enabled.
         
         # You can use ``use_totp`` for usual ``123456`` 2FA codes, or ``use_recovery_code`` for recovery ones (``xxxx-yyyy``).
-        # If you have and you wish to skip asking TOTP/recovery code from user, you might want to use pyotp here.
+        # If you have MFA secret key and you wish to skip asking TOTP/recovery code from user, you might want to use pyotp here.
         result = await result.use_totp('123456')
     
     if isinstance(result, pyvolt.AccountDisabled):

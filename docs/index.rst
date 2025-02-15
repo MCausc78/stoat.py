@@ -46,7 +46,7 @@ These extensions help you during development when it comes to common tasks.
 .. toctree::
   :maxdepth: 1
 
-  ext/commands/index.rst
+  ext/commands/index
 
 Manuals
 ---------

@@ -234,7 +234,7 @@ class Messageable:
 
         You must have :attr:`~pyvolt.Permissions.send_messages` to do this.
 
-        If message mentions '@everyone' or '@here', you must have :attr:`~pyvolt.Permissions.mention_everyone` to do that.
+        If message mentions "\\@everyone" or "\\@online", you must have :attr:`~pyvolt.Permissions.mention_everyone` to do that.
 
         If message mentions any roles, you must :attr:`~pyvolt.Permission.mention_roles` to do that.
 
@@ -259,7 +259,7 @@ class Messageable:
 
             You must have :attr:`~pyvolt.Permissions.use_masquerade` to provide this.
 
-            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`~pyvolt.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
         interactions: Optional[:class:`~pyvolt.MessageInteractions`]
             The message interactions.
 

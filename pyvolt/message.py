@@ -615,7 +615,7 @@ class BaseMessage(Base):
 
         You must have :attr:`~Permissions.send_messages` to do this.
 
-        If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do that.
+        If message mentions "\\@everyone" or "\\@online", you must have :attr:`~Permissions.mention_everyone` to do that.
         If message mentions any roles, you must :attr:`~Permission.mention_roles` to do that.
 
         Parameters

@@ -207,7 +207,7 @@ class BaseWebhook(Base):
 
         The webhook must have :attr:`~Permissions.send_messages` to do this.
 
-        If message mentions '@everyone' or '@here', the webhook must have :attr:`~Permissions.mention_everyone` to do that.
+        If message mentions "\\@everyone" or "\\@online", the webhook must have :attr:`~Permissions.mention_everyone` to do that.
 
         If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
 
@@ -236,7 +236,7 @@ class BaseWebhook(Base):
 
             Webhook must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 

@@ -1156,7 +1156,7 @@ class Client:
 
         Returns
         --------
-        Union[:class:`TemporarySubscription`, :class:`TemporarySubscriptionList`]
+        Union[:class:`~pyvolt.TemporarySubscription`, :class:`~pyvolt.TemporarySubscriptionList`]
             The subscription. This can be ``await``'ed.
         """
 
@@ -1200,7 +1200,7 @@ class Client:
         return sub
 
     def all_subscriptions(self) -> list[EventSubscription[BaseEvent]]:
-        """List[EventSubscription[:class:`BaseEvent`]]: Returns all event subscriptions."""
+        """List[EventSubscription[:class:`~pyvolt.BaseEvent`]]: Returns all event subscriptions."""
         ret = []
         for _, v in self._handlers.items():
             ret.extend(v[0].values())
@@ -1215,7 +1215,7 @@ class Client:
         ----------
         event: Type[EventT]
             The event to get subscriptions to.
-        include_subclasses: class:`bool`
+        include_subclasses: :class:`bool`
             Whether to include subclassed events. Defaults to ``False``.
         """
         if include_subclasses:
@@ -1254,12 +1254,12 @@ class Client:
 
     @property
     def me(self) -> typing.Optional[OwnUser]:
-        """Optional[:class:`.OwnUser`]: The currently logged in user. ``None`` if not logged in."""
+        """Optional[:class:`~pyvolt.OwnUser`]: The currently logged in user. ``None`` if not logged in."""
         return self._state._me
 
     @property
     def user(self) -> typing.Optional[OwnUser]:
-        """Optional[:class:`.OwnUser`]: The currently logged in user. ``None`` if not logged in.
+        """Optional[:class:`~pyvolt.OwnUser`]: The currently logged in user. ``None`` if not logged in.
 
         Alias to :attr:`.me`.
         """
@@ -1267,70 +1267,70 @@ class Client:
 
     @property
     def saved_notes(self) -> typing.Optional[SavedMessagesChannel]:
-        """Optional[:class:`.SavedMessagesChannel`]: The Saved Notes channel."""
+        """Optional[:class:`~pyvolt.SavedMessagesChannel`]: The Saved Notes channel."""
         return self._state._saved_notes
 
     @property
     def http(self) -> HTTPClient:
-        """:class:`.HTTPClient`: The HTTP client."""
+        """:class:`~pyvolt.HTTPClient`: The HTTP client."""
         return self._state.http
 
     @property
     def shard(self) -> Shard:
-        """:class:`.Shard`: The Revolt WebSocket client."""
+        """:class:`~pyvolt.Shard`: The Revolt WebSocket client."""
         return self._state.shard
 
     @property
     def state(self) -> State:
-        """:class:`.State`: The controller for all entities and components."""
+        """:class:`~pyvolt.State`: The controller for all entities and components."""
         return self._state
 
     @property
     def channels(self) -> Mapping[str, Channel]:
-        """Mapping[:class:`str`, :class:`.Channel`]: Mapping of cached channels."""
+        """Mapping[:class:`str`, :class:`~pyvolt.Channel`]: Mapping of cached channels."""
         cache = self._state.cache
-        if cache:
-            return cache.get_channels_mapping()
-        return {}
+        if cache is None:
+            return {}
+        return cache.get_channels_mapping()
 
     @property
     def emojis(self) -> Mapping[str, Emoji]:
-        """Mapping[:class:`str`, :class:`.Emoji`]: Mapping of cached emojis."""
+        """Mapping[:class:`str`, :class:`~pyvolt.Emoji`]: Mapping of cached emojis."""
         cache = self._state.cache
-        if cache:
-            return cache.get_emojis_mapping()
-        return {}
+        if cache is None:
+            return {}
+        return cache.get_emojis_mapping()
 
     @property
     def servers(self) -> Mapping[str, Server]:
-        """Mapping[:class:`str`, :class:`.Server`]: Mapping of cached servers."""
+        """Mapping[:class:`str`, :class:`~pyvolt.Server`]: Mapping of cached servers."""
         cache = self._state.cache
-        if cache:
-            return cache.get_servers_mapping()
-        return {}
+        if cache is None:
+            return {}
+        return cache.get_servers_mapping()
 
     @property
     def users(self) -> Mapping[str, User]:
-        """Mapping[:class:`str`, :class:`.User`]: Mapping of cached users."""
+        """Mapping[:class:`str`, :class:`~pyvolt.User`]: Mapping of cached users."""
         cache = self._state.cache
-        if cache:
-            return cache.get_users_mapping()
-        return {}
+        if cache is None:
+            return {}
+        return cache.get_users_mapping()
 
     @property
     def dm_channel_ids(self) -> Mapping[str, str]:
         """Mapping[:class:`str`, :class:`str`]: Mapping of user IDs to cached DM channel IDs."""
         cache = self._state.cache
-        if cache:
-            return cache.get_private_channels_by_users_mapping()
-        return {}
+        if cache is None:
+            return {}
+        return cache.get_private_channels_by_users_mapping()
 
     @property
     def dm_channels(self) -> Mapping[str, DMChannel]:
-        """Mapping[:class:`str`, :class:`.DMChannel`]: Mapping of user IDs to cached DM channels."""
+        """Mapping[:class:`str`, :class:`~pyvolt.DMChannel`]: Mapping of user IDs to cached DM channels."""
 
         cache = self._state.cache
-        if not cache:
+        if cache is None:
             return {}
 
         result: dict[str, DMChannel] = {}
@@ -1342,20 +1342,20 @@ class Client:
 
     @property
     def private_channels(self) -> Mapping[str, typing.Union[DMChannel, GroupChannel]]:
-        """Mapping[:class:`str`, Union[:class:`.DMChannel`, :class:`.GroupChannel`]]: Mapping of channel IDs to private channels."""
+        """Mapping[:class:`str`, Union[:class:`~pyvolt.DMChannel`, :class:`~pyvolt.GroupChannel`]]: Mapping of channel IDs to private channels."""
         cache = self._state.cache
-        if not cache:
+        if cache is None:
             return {}
         return cache.get_private_channels_mapping()
 
     @property
     def ordered_private_channels_old(self) -> list[typing.Union[DMChannel, GroupChannel]]:
-        """List[Union[:class:`.DMChannel`, :class:`.GroupChannel`]]: The list of private channels in Revite order."""
+        """List[Union[:class:`~pyvolt.DMChannel`, :class:`~pyvolt.GroupChannel`]]: The list of private channels in Revite order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_old, reverse=True)
 
     @property
     def ordered_private_channels(self) -> list[typing.Union[DMChannel, GroupChannel]]:
-        """List[Union[:class:`D.MChannel`, :class:`.GroupChannel`]]: The list of private channels in new client's order."""
+        """List[Union[:class:`~pyvolt.DMChannel`, :class:`~pyvolt.GroupChannel`]]: The list of private channels in new client's order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_new, reverse=True)
 
     def get_channel(self, channel_id: str, /) -> typing.Optional[Channel]:
@@ -1368,7 +1368,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`.Channel`]
+        Optional[:class:`~pyvolt.Channel`]
             The channel or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1378,37 +1378,37 @@ class Client:
     async def fetch_channel(self, channel_id: str, /) -> Channel:
         """|coro|
 
-        Fetch a :class:`.Channel` with the specified ID.
+        Fetch a :class:`~pyvolt.Channel` with the specified ID.
 
-        You must have :attr:`~Permissions.view_channel` to do this.
+        You must have :attr:`~pyvolt.Permissions.view_channel` to do this.
 
-        This is shortcut to :meth:`HTTPClient.get_channel`.
+        This is shortcut to :meth:`pyvolt.HTTPClient.get_channel`.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.BaseChannel`]
+        channel: ULIDOr[:class:`~pyvolt.BaseChannel`]
             The channel to fetch.
 
         Raises
         ------
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.Unauthorized`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +--------------------+----------------------------------------+
             | Value              | Reason                                 |
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        :class:`Forbidden`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.Forbidden`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +-----------------------+-------------------------------------------------------------+
             | Value                 | Reason                                                      |
             +-----------------------+-------------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to view the channel. |
             +-----------------------+-------------------------------------------------------------+
-        :class:`NotFound`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.NotFound`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +--------------+----------------------------+
             | Value        | Reason                     |
@@ -1434,7 +1434,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`.Emoji`]
+        Optional[:class:`~pyvolt.Emoji`]
             The emoji or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1446,17 +1446,17 @@ class Client:
 
         Retrieves a custom emoji.
 
-        This is shortcut to :meth:`HTTPClient.get_emoji`.
+        This is shortcut to :meth:`pyvolt.HTTPClient.get_emoji`.
 
         Parameters
         ----------
-        emoji: ULIDOr[:class:`.BaseEmoji`]
+        emoji: ULIDOr[:class:`~pyvolt.BaseEmoji`]
             The emoji to retrieve.
 
         Raises
         ------
-        :class:`NotFound`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.NotFound`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +--------------+--------------------------+
             | Value        | Reason                   |
@@ -1466,7 +1466,7 @@ class Client:
 
         Returns
         -------
-        :class:`Emoji`
+        :class:`~pyvolt.Emoji`
             The retrieved emoji.
         """
 
@@ -1482,7 +1482,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`.ReadState`]
+        Optional[:class:`~pyvolt.ReadState`]
             The read state or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1499,7 +1499,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`.Server`]
+        Optional[:class:`~pyvolt.Server`]
             The server or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1509,20 +1509,20 @@ class Client:
     async def fetch_server(self, server_id: str, *, populate_channels: typing.Optional[bool] = None) -> Server:
         """|coro|
 
-        Retrieves a :class:`Server`.
+        Retrieves a :class:`~pyvolt.Server`.
 
-        This is shortcut to :meth:`HTTPClient.get_server`.
+        This is shortcut to :meth:`pyvolt.HTTPClient.get_server`.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`~pyvolt.BaseServer`]
             The server to retrieve.
         populate_channels: Optional[:class:`bool`]
-            Whether to populate :attr:`Server.channels`.
+            Whether to populate :attr:`~pyvolt.Server.channels`.
 
         Raises
         ------
-        :class:`Unauthorized`
+        :class:`~pyvolt.Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------------+-----------------------------------------+
@@ -1530,7 +1530,7 @@ class Client:
             +--------------------+-----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid.  |
             +--------------------+-----------------------------------------+
-        :class:`NotFound`
+        :class:`~pyvolt.NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------+---------------------------+
@@ -1541,7 +1541,7 @@ class Client:
 
         Returns
         -------
-        :class:`.Server`
+        :class:`pyvolt.Server`
             The retrieved server.
         """
         return await self.http.get_server(server_id, populate_channels=populate_channels)
@@ -1556,7 +1556,7 @@ class Client:
 
         Returns
         -------
-        Optional[:class:`.User`]
+        Optional[:class:`~pyvolt.User`]
             The user or ``None`` if not found.
         """
         cache = self._state.cache
@@ -1566,7 +1566,7 @@ class Client:
     async def fetch_user(self, user_id: str, /) -> User:
         """|coro|
 
-        Retrieves a user from API. This is shortcut to :meth:`HTTPClient.get_user`.
+        Retrieves a user from API. This is shortcut to :meth:`pyvolt.HTTPClient.get_user`.
 
         Parameters
         ----------
@@ -1575,19 +1575,19 @@ class Client:
 
         Returns
         -------
-        :class:`User`
+        :class:`~pyvolt.User`
             The user.
         """
         return await self.http.get_user(user_id)
 
     @property
     def settings(self) -> UserSettings:
-        """:class:`.UserSettings`: The current user settings."""
+        """:class:`~pyvolt.UserSettings`: The current user settings."""
         return self._state.settings
 
     @property
     def system(self) -> User:
-        """:class:`.User`: The Revolt sentinel user."""
+        """:class:`~pyvolt.User`: The Revolt sentinel user."""
         return self._state.system
 
     async def start(self) -> None:
@@ -1601,7 +1601,14 @@ class Client:
     async def close(self, *, http: bool = True, cleanup_websocket: bool = True) -> None:
         """|coro|
 
-        Closes all HTTP sessions, and websocket connections.
+        Closes all HTTP sessions, and WebSocket connections.
+
+        Parameters
+        ----------
+        http: :class:`bool`
+            Whether to clean up HTTP sessions.
+        cleanup_websocket: :class:`bool`
+            Whether to clean up WebSocket.
         """
 
         self.closed = True
@@ -1781,17 +1788,17 @@ class Client:
             The group name. Must be between 1 and 32 characters long.
         description: Optional[:class:`str`]
             The group description. Can be only up to 1024 characters.
-        icon: Optional[:class:`.ResolvableResource`]
+        icon: Optional[:class:`~pyvolt.ResolvableResource`]
             The group's icon.
-        recipients: Optional[List[ULIDOr[:class:`.BaseUser`]]]
+        recipients: Optional[List[ULIDOr[:class:`~pyvolt.BaseUser`]]]
             The users to create the group with, only up to 49 users. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
             To mark the group as NSFW or not.
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.HTTPException`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +----------------------+-------------------------------------------+
             | Value                | Reason                                    |
@@ -1800,16 +1807,16 @@ class Client:
             +----------------------+-------------------------------------------+
             | ``IsBot``            | The current token belongs to bot account. |
             +----------------------+-------------------------------------------+
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.Unauthorized`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +--------------------+----------------------------------------+
             | Value              | Reason                                 |
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        :class:`Forbidden`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.Forbidden`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +-----------------------+------------------------------------------------------------------+
             | Value                 | Reason                                                           |
@@ -1820,26 +1827,26 @@ class Client:
             +-----------------------+------------------------------------------------------------------+
             | ``NotFriends``        | You're not friends with the users you want to create group with. |
             +-----------------------+------------------------------------------------------------------+
-        :class:`NotFound`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.NotFound`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +--------------+----------------------------------+
             | Value        | Reason                           |
             +--------------+----------------------------------+
             | ``NotFound`` | One of recipients was not found. |
             +--------------+----------------------------------+
-        :class:`InternalServerError`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.InternalServerError`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
-            | Value             | Reason                                         | Populated attributes                                                |
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                              |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~pyvolt.HTTPException.collection`, :attr:`~pyvolt.HTTPException.operation` |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`.GroupChannel`
+        :class:`~pyvolt.GroupChannel`
             The new group.
         """
 
@@ -1866,7 +1873,7 @@ class Client:
 
         Raises
         ------
-        :class:`HTTPException`
+        :class:`~pyvolt.HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
             +----------------------+------------------------------------------------------+
@@ -1880,7 +1887,7 @@ class Client:
             +----------------------+------------------------------------------------------+
             | ``TooManyServers``   | You're in too many servers than the instance allows. |
             +----------------------+------------------------------------------------------+
-        :class:`Unauthorized`
+        :class:`~pyvolt.Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
             +--------------------+-----------------------------------------+
@@ -1888,18 +1895,18 @@ class Client:
             +--------------------+-----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid.  |
             +--------------------+-----------------------------------------+
-        :class:`InternalServerError`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.InternalServerError`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
-            | Value             | Reason                                         | Populated attributes                                                |
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                              |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~pyvolt.HTTPException.collection`, :attr:`~pyvolt.HTTPException.operation` |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`.Server`
+        :class:`~pyvolt.Server`
             The created server.
         """
 
