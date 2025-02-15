@@ -556,7 +556,7 @@ class HTTPClient:
         ----------
         headers: CIMultiDict[Any]
             The headers to populate.
-        route: :class:`~routes.CompiledRoute`
+        route: :class:`~pyvolt.routes.CompiledRoute`
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
@@ -669,7 +669,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        route: :class:`~pyvolt.CompiledRoute`
+        route: :class:`~pyvolt.routes.CompiledRoute`
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
@@ -677,7 +677,7 @@ class HTTPClient:
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
-        json: UndefinedOr[typing.Any]
+        json_body: UndefinedOr[typing.Any]
             The JSON payload to pass in.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
@@ -845,7 +845,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        route: :class:`~pyvolt.CompiledRoute`
+        route: :class:`~pyvolt.routes.CompiledRoute`
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
@@ -862,6 +862,8 @@ class HTTPClient:
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+        \\*\\*kwargs
+            The keyword arguments to pass to :meth:`.send_request`.
 
         Raises
         ------
@@ -871,7 +873,7 @@ class HTTPClient:
         Returns
         -------
         typing.Any
-            The parsed JSON response.
+            The parsed JSON response or nothing.
         """
         response = await self.raw_request(
             route,
@@ -6724,7 +6726,8 @@ class HTTPClient:
         """
         # Apparently, this is only method that doesn't raise anything
         resp: raw.FlagResponse = await self.request(
-            routes.USERS_FETCH_USER_FLAGS.compile(user_id=resolve_id(user)), token=None
+            routes.USERS_FETCH_USER_FLAGS.compile(user_id=resolve_id(user)),
+            token=None,
         )
         return UserFlags(resp['flags'])
 
