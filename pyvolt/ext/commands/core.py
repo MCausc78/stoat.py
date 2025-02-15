@@ -917,8 +917,8 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
     async def invoke(self, ctx: Context[BotT], /) -> None:
         await self.prepare(ctx)
 
-        # terminate the invoked_subcommand chain.
-        # since we're in a regular command (and not a group) then
+        # Terminate the invoked_subcommand chain.
+        # Since we're in a regular command (and not a group), then
         # the invoked subcommand is None.
         ctx.invoked_subcommand = None
         ctx.subcommand_passed = None
@@ -2181,7 +2181,7 @@ def cooldown(
     per: float,
     type: typing.Union[BucketType, Callable[[Context[typing.Any]], typing.Any]] = BucketType.default,
 ) -> Callable[[T], T]:
-    """A decorator that adds a cooldown to a :class:`.Command`
+    """A decorator that adds a cooldown to a :class:`.Command`.
 
     A cooldown allows a command to only be used a specific amount
     of times in a specific time frame. These cooldowns can be based
@@ -2195,7 +2195,7 @@ def cooldown(
     A command can only have a single cooldown.
 
     Parameters
-    ------------
+    ----------
     rate: :class:`int`
         The number of times a command can be used before triggering a cooldown.
     per: :class:`float`
@@ -2239,7 +2239,7 @@ def dynamic_cooldown(
     A command can only have a single cooldown.
 
     Parameters
-    ------------
+    ----------
     cooldown: Callable[[:class:`.Context`], Optional[:class:`~pyvolt.ext.commands.Cooldown`]]
         A function that takes a message and returns a cooldown that will
         apply to this invocation or ``None`` if the cooldown should be bypassed.

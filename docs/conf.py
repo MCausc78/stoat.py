@@ -66,7 +66,9 @@ extlinks = {
 intersphinx_mapping = {
     'py': ('https://docs.python.org/3', None),
     'aio': ('https://docs.aiohttp.org/en/stable/', None),
-    'req': ('https://requests.readthedocs.io/en/latest/', None)
+    'req': ('https://requests.readthedocs.io/en/latest/', None),
+    # unfortunately livekit does not use Sphinx, and therefore does not have objects.inv, so this will fail
+    # 'livekit': ('https://docs.livekit.io/python/livekit/rtc/', None),
 }
 
 rst_prolog = """

@@ -66,7 +66,7 @@ class Messageable:
 
         Returns
         -------
-        Optional[:class:`.Message`]
+        Optional[:class:`~pyvolt.Message`]
             The message or ``None`` if not found.
         """
         state = self._get_state()
@@ -77,7 +77,7 @@ class Messageable:
 
     @property
     def messages(self) -> Mapping[str, Message]:
-        """Mapping[:class:`str`, :class:`.Message`]: Returns all messages in this channel."""
+        """Mapping[:class:`str`, :class:`~pyvolt.Message`]: Returns all messages in this channel."""
         cache = self.state.cache
         if cache:
             return cache.get_messages_mapping_of(self.get_channel_id(), caching._USER_REQUEST) or {}
@@ -95,6 +95,10 @@ class Messageable:
         channel_id = await self.fetch_channel_id()
         await state.shard.end_typing(channel_id)
 
+    # We can't use normal references like :class:`HTTPException` or :class:`.MessageInteractions`,
+    # because it breaks references in commands extension.
+    # Use :class:`~pyvolt.HTTPException` and :class:`~pyvolt.MessageInteractions` explicitly.
+
     async def search(
         self,
         query: typing.Optional[str] = None,
@@ -110,10 +114,10 @@ class Messageable:
 
         Searches for messages in this channel.
 
-        For ``query`` and ``pinned``, only one parameter can be provided, otherwise a :class:`HTTPException` will
+        For ``query`` and ``pinned``, only one parameter can be provided, otherwise a :class:`~pyvolt.HTTPException` will
         be thrown with ``InvalidOperation`` type.
 
-        You must have :attr:`~Permissions.read_message_history` to do this.
+        You must have :attr:`~pyvolt.Permissions.read_message_history` to do this.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -128,13 +132,13 @@ class Messageable:
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
 
             If ``nearby`` is provided, then this is ``(limit + 2)``.
-        before: Optional[ULIDOr[:class:`.BaseMessage`]]
+        before: Optional[ULIDOr[:class:`~pyvolt.BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[ULIDOr[:class:`.BaseMessage`]]
+        after: Optional[ULIDOr[:class:`~pyvolt.BaseMessage`]]
             The message after which messages should be fetched.
-        sort: Optional[:class:`.MessageSort`]
-            The message sort direction. Defaults to :attr:`.MessageSort.latest`
-        nearby: Optional[ULIDOr[:class:`.BaseMessage`]]
+        sort: Optional[:class:`~pyvolt.MessageSort`]
+            The message sort direction. Defaults to :attr:`~pyvolt.MessageSort.latest`
+        nearby: Optional[ULIDOr[:class:`~pyvolt.BaseMessage`]]
             The message to search around.
 
             Providing this parameter will discard ``before``, ``after`` and ``sort`` parameters.
@@ -145,8 +149,8 @@ class Messageable:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.HTTPException`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +----------------------+-------------------------------------------------------------------------+
             | Value                | Reason                                                                  |
@@ -157,42 +161,42 @@ class Messageable:
             +----------------------+-------------------------------------------------------------------------+
             | ``IsBot``            | The current token belongs to bot account.                               |
             +----------------------+-------------------------------------------------------------------------+
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.Unauthorized`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +--------------------+----------------------------------------+
             | Value              | Reason                                 |
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        :class:`Forbidden`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.Forbidden`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +-----------------------+------------------------------------------------------------+
             | Value                 | Reason                                                     |
             +-----------------------+------------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to search messages. |
             +-----------------------+------------------------------------------------------------+
-        :class:`NotFound`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.NotFound`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +--------------+----------------------------+
             | Value        | Reason                     |
             +--------------+----------------------------+
             | ``NotFound`` | The channel was not found. |
             +--------------+----------------------------+
-        :class:`InternalServerError`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.InternalServerError`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
-            | Value             | Reason                                         | Populated attributes                                                |
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                              |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~pyvolt.HTTPException.collection`, :attr:`~pyvolt.HTTPException.operation` |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
 
         Returns
         -------
-        List[:class:`.Message`]
+        List[:class:`~pyvolt.Message`]
             The messages matched.
         """
 
@@ -228,11 +232,11 @@ class Messageable:
 
         Sends a message to this channel.
 
-        You must have :attr:`~Permissions.send_messages` to do this.
+        You must have :attr:`~pyvolt.Permissions.send_messages` to do this.
 
-        If message mentions '@everyone' or '@here', you must have :attr:`~Permissions.mention_everyone` to do that.
+        If message mentions '@everyone' or '@here', you must have :attr:`~pyvolt.Permissions.mention_everyone` to do that.
 
-        If message mentions any roles, you must :attr:`~Permission.mention_roles` to do that.
+        If message mentions any roles, you must :attr:`~pyvolt.Permission.mention_roles` to do that.
 
         Parameters
         ----------
@@ -240,26 +244,26 @@ class Messageable:
             The message content.
         nonce: Optional[:class:`str`]
             The message nonce.
-        attachments: Optional[List[:class:`.ResolvableResource`]]
+        attachments: Optional[List[:class:`~pyvolt.ResolvableResource`]]
             The attachments to send the message with.
 
-            You must have :attr:`~Permissions.upload_files` to provide this.
-        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
+            You must have :attr:`~pyvolt.Permissions.upload_files` to provide this.
+        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`~pyvolt.BaseMessage`]]]]
             The message replies.
-        embeds: Optional[List[:class:`.SendableEmbed`]]
+        embeds: Optional[List[:class:`~pyvolt.SendableEmbed`]]
             The embeds to send the message with.
 
-            You must have :attr:`~Permissions.send_embeds` to provide this.
-        masquerade: Optional[:class:`.MessageMasquerade`]
+            You must have :attr:`~pyvolt.Permissions.send_embeds` to provide this.
+        masquerade: Optional[:class:`~pyvolt.MessageMasquerade`]
             The message masquerade.
 
-            You must have :attr:`~Permissions.use_masquerade` to provide this.
+            You must have :attr:`~pyvolt.Permissions.use_masquerade` to provide this.
 
             If :attr:`.Masquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
-        interactions: Optional[:class:`.MessageInteractions`]
+        interactions: Optional[:class:`~pyvolt.MessageInteractions`]
             The message interactions.
 
-            If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
+            If :attr:`~pyvolt.MessageInteractions.reactions` is provided, :attr:`~pyvolt.Permissions.react` is required.
         silent: Optional[:class:`bool`]
             Whether to suppress notifications or not.
         mention_everyone: Optional[:class:`bool`]
@@ -277,72 +281,72 @@ class Messageable:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`pyvolt.HTTPException`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | Value                  | Reason                                                                                                             |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``EmptyMessage``       | The message was empty.                                                                                             |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``FailedValidation``   | The payload was invalid.                                                                                           |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidFlagValue``   | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                                    |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``IsBot``              | The current token belongs to bot account.                                                                          |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``IsNotBot``           | The current token belongs to user account.                                                                         |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``PayloadTooLarge``    | The message was too large.                                                                                         |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyAttachments`` | You provided more attachments than allowed on this instance.                                                       |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                            |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
-            +------------------------+--------------------------------------------------------------------------------------------------------------------+
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                                           |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``EmptyMessage``       | The message was empty.                                                                                                           |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation``   | The payload was invalid.                                                                                                         |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidFlagValue``   | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                                                  |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`~pyvolt.MessageInteractions.reactions` elements was invalid.                    |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidProperty``    | :attr:`~pyvolt.MessageInteractions.restrict_reactions` was ``True`` and :attr:`~pyvolt.MessageInteractions.reactions` was empty. |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot``              | The current token belongs to bot account.                                                                                        |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``IsNotBot``           | The current token belongs to user account.                                                                                       |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``PayloadTooLarge``    | The message was too large.                                                                                                       |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyAttachments`` | You provided more attachments than allowed on this instance.                                                                     |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                                          |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                                             |
+            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+        :class:`~pyvolt.Unauthorized`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +--------------------+----------------------------------------+
             | Value              | Reason                                 |
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        :class:`Forbidden`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.Forbidden`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +-----------------------+----------------------------------------------------------+
             | Value                 | Reason                                                   |
             +-----------------------+----------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to send messages. |
             +-----------------------+----------------------------------------------------------+
-        :class:`NotFound`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~pyvolt.NotFound`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
 
             +--------------+---------------------------------------+
             | Value        | Reason                                |
             +--------------+---------------------------------------+
             | ``NotFound`` | The channel/file/reply was not found. |
             +--------------+---------------------------------------+
-        :class:`InternalServerError`
+        :class:`pyvolt.InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
-            | Value             | Reason                                                | Populated attributes                                                |
-            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database.        | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
-            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
-            | ``InternalError`` | Somehow something went wrong during message creation. |                                                                     |
-            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            +-------------------+-------------------------------------------------------+-----------------------------------------------------------------------------------+
+            | Value             | Reason                                                | Populated attributes                                                              |
+            +-------------------+-------------------------------------------------------+-----------------------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.        | :attr:`~pyvolt.HTTPException.collection`, :attr:`~pyvolt.HTTPException.operation` |
+            +-------------------+-------------------------------------------------------+-----------------------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during message creation. |                                                                                   |
+            +-------------------+-------------------------------------------------------+-----------------------------------------------------------------------------------+
 
         Returns
         -------
-        :class:`.Message`
+        :class:`~pyvolt.Message`
             The message that was sent.
         """
 
