@@ -192,9 +192,9 @@ Enums
     .. attribute:: user
 
         The user bucket operates on a per-user basis.
-    .. attribute:: guild
+    .. attribute:: server
 
-        The guild bucket operates on a per-guild basis.
+        The server bucket operates on a per-server basis.
     .. attribute:: channel
 
         The channel bucket operates on a per-channel basis.
@@ -295,9 +295,9 @@ Converters
 .. autoclass:: pyvolt.ext.commands.Converter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.ObjectConverter
+.. attributetable:: pyvolt.ext.commands.BaseConverter
 
-.. autoclass:: pyvolt.ext.commands.ObjectConverter
+.. autoclass:: pyvolt.ext.commands.BaseConverter
     :members:
 
 .. attributetable:: pyvolt.ext.commands.MemberConverter
@@ -471,7 +471,7 @@ Exceptions
 .. autoexception:: pyvolt.ext.commands.MemberNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.GuildNotFound
+.. autoexception:: pyvolt.ext.commands.ServerNotFound
     :members:
 
 .. autoexception:: pyvolt.ext.commands.UserNotFound
@@ -483,12 +483,6 @@ Exceptions
 .. autoexception:: pyvolt.ext.commands.ChannelNotReadable
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ThreadNotFound
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.BadColourArgument
-    :members:
-
 .. autoexception:: pyvolt.ext.commands.RoleNotFound
     :members:
 
@@ -496,18 +490,6 @@ Exceptions
     :members:
 
 .. autoexception:: pyvolt.ext.commands.EmojiNotFound
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.PartialEmojiConversionFailure
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.GuildStickerNotFound
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.ScheduledEventNotFound
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.SoundboardSoundNotFound
     :members:
 
 .. autoexception:: pyvolt.ext.commands.BadBoolArgument
