@@ -2307,6 +2307,8 @@ __all__ = (
     'check_any',
     'has_role',
     'has_any_role',
+    'bot_has_role',
+    'bot_has_any_role',
     'has_permissions',
     'bot_has_permissions',
     'has_server_permissions',
