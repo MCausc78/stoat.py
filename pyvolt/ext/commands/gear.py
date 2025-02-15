@@ -478,7 +478,7 @@ class Gear(metaclass=GearMeta):
         if cls.bot_check_once is not Gear.bot_check_once:
             bot.add_check(self.bot_check_once, call_once=True)
 
-        # while Bot.add_listener can raise if it's not a coroutine,
+        # while Bot.subscribe can raise if it's not a coroutine,
         # this precondition is already met by the listener decorator
         # already, thus this should never raise.
         # Outside of, memory errors and the like...

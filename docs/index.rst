@@ -39,17 +39,17 @@ If you're having trouble with something, these resources might help.
 - Ask in our :resource:`GitHub discussions page <discussions>`.
 
 Extensions
-------------
+----------
 
 These extensions help you during development when it comes to common tasks.
 
 .. toctree::
   :maxdepth: 1
 
-  ext/commands/index
+  ext/commands/index.rst
 
 Manuals
----------
+-------
 
 These pages go into great detail about everything the API can do.
 
@@ -57,3 +57,4 @@ These pages go into great detail about everything the API can do.
   :maxdepth: 1
 
   api
+  pyvolt.ext.commands API reference <ext/commands/api.rst>
