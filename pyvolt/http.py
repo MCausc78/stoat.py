@@ -511,7 +511,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        route: :class:`~routes.CompiledRoute`
+        route: :class:`~pyvolt.CompiledRoute`
             The route.
 
         Returns
@@ -534,6 +534,8 @@ class HTTPClient:
         self.token = token
         self.bot = bot
 
+    # In future I want to add something like "HTTP adapters" which allow to use different HTTP clients like ``curl_cffi``,
+    # but not now.
     def add_headers(
         self,
         headers: CIMultiDict[typing.Any],
@@ -548,6 +550,34 @@ class HTTPClient:
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> utils.MaybeAwaitable[None]:
+        """Populate headers.
+
+        Parameters
+        ----------
+        headers: CIMultiDict[Any]
+            The headers to populate.
+        route: :class:`~routes.CompiledRoute`
+            The route.
+        accept_json: :class:`bool`
+            Whether to explicitly receive JSON or not. Defaults to ``True``.
+        bot: UndefinedOr[:class:`bool`]
+            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+        cookie: UndefinedOr[:class:`str`]
+            The cookies to use when performing a request.
+        json: UndefinedOr[typing.Any]
+            The JSON payload to pass in.
+        mfa_ticket: Optional[:class:`str`]
+            The MFA ticket to pass in headers.
+        token: UndefinedOr[Optional[:class:`str`]]
+            The token to use when requesting the route.
+        user_agent: UndefinedOr[:class:`str`]
+            The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+
+        Returns
+        -------
+        MaybeAwaitable[None]
+            ``None`` if no asynchronous code is required to be executed. An awaitable object otherwise.
+        """
         if accept_json:
             headers['Accept'] = 'application/json'
 
@@ -591,6 +621,28 @@ class HTTPClient:
         headers: CIMultiDict[typing.Any],
         **kwargs,
     ) -> aiohttp.ClientResponse:
+        """Perform an actual HTTP request.
+
+        This is different from :meth:`.raw_request` as latter performs complete error and ratelimit handling.
+
+        Parameters
+        ----------
+        session: :class:`aiohttp.ClientSession`
+            The session to use to send request.
+        method: :class:`str`
+            The HTTP method.
+        url: :class:`str`
+            The URL to send HTTP request to.
+        headers: CIMultiDict[Any]
+            The HTTP headers.
+        \\*\\*kwargs
+            The keyword arguments to pass to :meth:`aiohttp.ClientSession.request`.
+
+        Returns
+        -------
+        :class:`aiohttp.ClientResponse`
+            The response.
+        """
         return await session.request(
             method,
             url,
@@ -617,7 +669,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        route: :class:`~routes.CompiledRoute`
+        route: :class:`~pyvolt.CompiledRoute`
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
@@ -633,6 +685,8 @@ class HTTPClient:
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+        \\*\\*kwargs
+            The keyword arguments to pass to :meth:`.send_request`.
 
         Raises
         ------
@@ -791,7 +845,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        route: :class:`~routes.CompiledRoute`
+        route: :class:`~pyvolt.CompiledRoute`
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
