@@ -27,6 +27,13 @@ from __future__ import annotations
 import typing
 
 from .context_managers import Typing
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    ULIDOr,
+    ZID,
+)
+from .ulid import _ulid_new
 
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping
@@ -34,7 +41,6 @@ if typing.TYPE_CHECKING:
 
     from . import cache as caching
     from .cdn import ResolvableResource
-    from .core import ULIDOr
     from .enums import MessageSort
     from .message import Reply, MessageInteractions, MessageMasquerade, SendableEmbed, BaseMessage, Message
     from .state import State
@@ -98,6 +104,67 @@ class Messageable:
     # We can't use normal references like :class:`HTTPException` or :class:`.MessageInteractions`,
     # because it breaks references in commands extension.
     # Use :class:`~pyvolt.HTTPException` and :class:`~pyvolt.MessageInteractions` explicitly.
+
+    async def acknowledge(self, message: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED) -> None:
+        """|coro|
+
+        Marks the channel as read.
+
+        You must have :attr:`~Permissions.view_channel` to do this.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        message: ULIDOr[:class:`.BaseMessage`]
+            The message to mark as read.
+
+        Raises
+        ------
+        :class:`~pyvolt.HTTPException`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`~pyvolt.Unauthorized`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`~pyvolt.Forbidden`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the channel. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`~pyvolt.NotFound`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        """
+
+        state = self._get_state()
+        channel_id = await self.fetch_channel_id()
+
+        if message is UNDEFINED:
+            message = _ulid_new()
+        elif message is None:
+            message = ZID
+
+        await state.http.acknowledge_message(channel_id, message)
 
     async def search(
         self,

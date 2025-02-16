@@ -57,6 +57,7 @@ if typing.TYPE_CHECKING:
     from .server import BaseRole, Role, Server, Member
     from .state import State
     from .user import BaseUser, User, UserVoiceState
+    from .webhook import Webhook
 
 _new_permissions = Permissions.__new__
 
@@ -973,6 +974,75 @@ class GroupChannel(BaseChannel, Messageable):
 
         return await self.state.http.create_channel_invite(self.id)
 
+    async def create_webhook(
+        self,
+        *,
+        name: str,
+        avatar: typing.Optional[ResolvableResource] = None,
+    ) -> Webhook:
+        """|coro|
+
+        Creates a webhook which 3rd party platforms can use to send.
+
+        You must have :attr:`~Permissions.manage_webhooks` permission to do this.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The webhook name. Must be between 1 and 32 chars long.
+        avatar: Optional[:class:`.ResolvableResource`]
+            The webhook avatar.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                               |
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | ``InvalidOperation``      | The channel was not type of :attr:`~ChannelType.group` or :attr:`~ChannelType.text`. |
+            +---------------------------+--------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------+
+            | Value                            | Reason                                                      |
+            +----------------------------------+-------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to create a webhook. |
+            +----------------------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The channel/file was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Webhook`
+            The created webhook.
+        """
+        return await self.state.http.create_webhook(self.id, name=name, avatar=avatar)
+
     async def leave(self, *, silent: typing.Optional[bool] = None) -> None:
         """|coro|
 
@@ -1502,6 +1572,75 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         else:
             res = None
         return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
+
+    async def create_webhook(
+        self,
+        *,
+        name: str,
+        avatar: typing.Optional[ResolvableResource] = None,
+    ) -> Webhook:
+        """|coro|
+
+        Creates a webhook which 3rd party platforms can use to send.
+
+        You must have :attr:`~Permissions.manage_webhooks` permission to do this.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The webhook name. Must be between 1 and 32 chars long.
+        avatar: Optional[:class:`.ResolvableResource`]
+            The webhook avatar.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                               |
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | ``InvalidOperation``      | The channel was not type of :attr:`~ChannelType.group` or :attr:`~ChannelType.text`. |
+            +---------------------------+--------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------+
+            | Value                            | Reason                                                      |
+            +----------------------------------+-------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to create a webhook. |
+            +----------------------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The channel/file was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Webhook`
+            The created webhook.
+        """
+        return await self.state.http.create_webhook(self.id, name=name, avatar=avatar)
 
 
 @define(slots=True)

@@ -46,7 +46,7 @@ class HTTPException(PyvoltException):
     """Exception that's raised when an HTTP request operation fails.
 
     Attributes
-    ------------
+    ----------
     response: :class:`aiohttp.ClientResponse`
         The response of the failed HTTP request. This is an
         instance of :class:`aiohttp.ClientResponse`.

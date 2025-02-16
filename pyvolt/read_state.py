@@ -27,7 +27,16 @@ from __future__ import annotations
 from attrs import define, field
 import typing
 
+from .core import (
+    UNDEFINED,
+    UndefinedOr,
+    ULIDOr,
+    resolve_id,
+    ZID,
+)
+
 if typing.TYPE_CHECKING:
+    from .message import BaseMessage
     from .state import State
 
 
@@ -59,6 +68,84 @@ class ReadState:
             and self.channel_id == other.channel_id
             and self.user_id == self.user_id
         )
+
+    async def edit(
+        self,
+        *,
+        last_acked_message_id: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED,
+    ) -> ReadState:
+        """|coro|
+
+        Edits the read state.
+
+        You must have :attr:`~Permissions.view_channel` to do this.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        last_acked_message_id: UndefinedOr[Optional[ULIDOr[:class:`.BaseMessage`]]]
+            The new last acknowledged message's ID.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the message. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+
+        Returns
+        -------
+        :class:`.ReadState`
+            The newly updated read state.
+        """
+
+        if last_acked_message_id is UNDEFINED:
+            return self
+
+        if last_acked_message_id is None:
+            last_acked_message_id = ZID
+        else:
+            last_acked_message_id = resolve_id(last_acked_message_id)
+
+        await self.state.http.acknowledge_message(self.channel_id, last_acked_message_id)
+        read_state = ReadState(
+            state=self.state,
+            channel_id=self.channel_id,
+            user_id=self.user_id,
+            last_acked_message_id=None if last_acked_message_id == ZID else last_acked_message_id,
+            mentioned_in=[m for m in self.mentioned_in if m >= last_acked_message_id],
+        )
+        return read_state
 
 
 __all__ = ('ReadState',)

@@ -272,7 +272,7 @@ class TextEmbed(StatelessTextEmbed):
 
     @property
     def media(self) -> typing.Optional[Asset]:
-        """Optional[:class:`Asset`]: The embed media."""
+        """Optional[:class:`.Asset`]: The embed media."""
         return self.internal_media.attach_state(self.state, 'attachments') if self.internal_media else None
 
 

@@ -1,9 +1,14 @@
 from __future__ import annotations
 
+from os import urandom
+from time import time_ns
+import typing
+
 # https://github.com/mdomke/python-ulid/blob/main/ulid/__init__.py
 # https://github.com/mdomke/python-ulid/blob/main/ulid/base32.py
 
-_LUT = [
+_CROCKFORD_BASE32_ALPHABET: typing.Final[str] = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+_LUT: typing.Final[list[int]] = [
     0xFF,
     0xFF,
     0xFF,
@@ -154,4 +159,62 @@ def _ulid_decode_timestamp(v: bytes, /) -> bytes:
     )
 
 
-__all__ = ('_LUT', '_ulid_timestamp', '_ulid_decode_timestamp')
+def _ulid_encode(v: bytes, /) -> str:
+    return _ulid_encode_timestamp(v[:6]) + _ulid_encode_randomness(v[6:])
+
+
+def _ulid_encode_timestamp(v: bytes, /) -> str:
+    return ''.join(
+        [
+            _CROCKFORD_BASE32_ALPHABET[(v[0] & 224) >> 5],
+            _CROCKFORD_BASE32_ALPHABET[(v[0] & 31)],
+            _CROCKFORD_BASE32_ALPHABET[(v[1] & 248) >> 3],
+            _CROCKFORD_BASE32_ALPHABET[((v[1] & 7) << 2) | ((v[2] & 192) >> 6)],
+            _CROCKFORD_BASE32_ALPHABET[((v[2] & 62) >> 1)],
+            _CROCKFORD_BASE32_ALPHABET[((v[2] & 1) << 4) | ((v[3] & 240) >> 4)],
+            _CROCKFORD_BASE32_ALPHABET[((v[3] & 15) << 1) | ((v[4] & 128) >> 7)],
+            _CROCKFORD_BASE32_ALPHABET[(v[4] & 124) >> 2],
+            _CROCKFORD_BASE32_ALPHABET[((v[4] & 3) << 3) | ((v[5] & 224) >> 5)],
+            _CROCKFORD_BASE32_ALPHABET[(v[5] & 31)],
+        ]
+    )
+
+
+def _ulid_encode_randomness(v: bytes, /) -> str:
+    return ''.join(
+        [
+            _CROCKFORD_BASE32_ALPHABET[(v[0] & 248) >> 3],
+            _CROCKFORD_BASE32_ALPHABET[((v[0] & 7) << 2) | ((v[1] & 192) >> 6)],
+            _CROCKFORD_BASE32_ALPHABET[(v[1] & 62) >> 1],
+            _CROCKFORD_BASE32_ALPHABET[((v[1] & 1) << 4) | ((v[2] & 240) >> 4)],
+            _CROCKFORD_BASE32_ALPHABET[((v[2] & 15) << 1) | ((v[3] & 128) >> 7)],
+            _CROCKFORD_BASE32_ALPHABET[(v[3] & 124) >> 2],
+            _CROCKFORD_BASE32_ALPHABET[((v[3] & 3) << 3) | ((v[4] & 224) >> 5)],
+            _CROCKFORD_BASE32_ALPHABET[(v[4] & 31)],
+            _CROCKFORD_BASE32_ALPHABET[(v[5] & 248) >> 3],
+            _CROCKFORD_BASE32_ALPHABET[((v[5] & 7) << 2) | ((v[6] & 192) >> 6)],
+            _CROCKFORD_BASE32_ALPHABET[(v[6] & 62) >> 1],
+            _CROCKFORD_BASE32_ALPHABET[((v[6] & 1) << 4) | ((v[7] & 240) >> 4)],
+            _CROCKFORD_BASE32_ALPHABET[((v[7] & 15) << 1) | ((v[8] & 128) >> 7)],
+            _CROCKFORD_BASE32_ALPHABET[(v[8] & 124) >> 2],
+            _CROCKFORD_BASE32_ALPHABET[((v[8] & 3) << 3) | ((v[9] & 224) >> 5)],
+            _CROCKFORD_BASE32_ALPHABET[(v[9] & 31)],
+        ]
+    )
+
+
+def _ulid_new() -> str:
+    timestamp = (time_ns() // 1000000).to_bytes(6, byteorder='big')
+    randomness = urandom(10)
+    return _ulid_encode(timestamp + randomness)
+
+
+__all__ = (
+    '_LUT',
+    '_ulid_timestamp',
+    '_ulid_decode_timestamp',
+    '_ulid_encode',
+    '_ulid_encode_timestamp',
+    '_ulid_encode_randomness',
+    '_ulid_new',
+)

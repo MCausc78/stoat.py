@@ -89,7 +89,7 @@ class ServerEmoji(BaseEmoji):
     async def delete(self) -> None:
         """|coro|
 
-        Deletes a emoji.
+        Deletes the emoji.
 
         You must have :attr:`~Permissions.manage_customization` to do this if you do not own
         the emoji, unless it was detached (already deleted).
@@ -153,7 +153,7 @@ ResolvableEmoji = typing.Union[BaseEmoji, str]
 
 
 def resolve_emoji(resolvable: ResolvableEmoji, /) -> str:
-    """:class:`str`: Resolves emoji's ID from parameter.
+    """Resolves emoji's ID from parameter.
 
     Parameters
     ----------

@@ -997,7 +997,7 @@ class Client:
     ]:
         """Register an event listener.
 
-        There is alias called :meth:`on`.
+        There is an alias for this called :meth:`~.on`.
 
         Examples
         --------
@@ -1041,7 +1041,38 @@ class Client:
 
         return decorator
 
-    on = listen
+    def on(
+        self,
+        event: typing.Optional[type[EventT]] = None,
+        /,
+    ) -> Callable[
+        [utils.MaybeAwaitableFunc[[EventT], None]],
+        EventSubscription[EventT],
+    ]:
+        """Register an event listener.
+
+        This is an alias of :meth:`~.listen`.
+
+        Examples
+        --------
+
+        Ping Pong: ::
+
+            @client.listen()
+            async def on_message_create(event: pyvolt.MessageCreateEvent):
+                message = event.message
+                if message.content == '!ping':
+                    await message.reply('pong!')
+
+
+            # It returns :class:`EventSubscription`, so you can do ``on_message_create.remove()``
+
+        Parameters
+        ----------
+        event: Optional[Type[EventT]]
+            The event to listen to.
+        """
+        return self.listen(event)
 
     @typing.overload
     def wait_for(  # pyright: ignore[reportOverlappingOverload]
