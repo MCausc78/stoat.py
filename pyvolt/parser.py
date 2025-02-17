@@ -922,6 +922,7 @@ class Parser:
         return ChannelVoiceStateContainer(
             channel_id=payload['id'],
             participants={s.user_id: s for s in map(self.parse_user_voice_state, payload['participants'])},
+            node=payload.get('node', ''),
         )
 
     @typing.overload

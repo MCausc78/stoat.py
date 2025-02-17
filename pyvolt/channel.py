@@ -230,79 +230,6 @@ class BaseChannel(Base):
             default_permissions=default_permissions,
         )
 
-    async def join_call(self) -> str:
-        """|coro|
-
-        Asks the voice server for a token to join the call.
-
-        You must have :attr:`~Permissions.connect` to do this.
-
-        If current instance uses legacy voice server (determined by whether :attr:`InstanceFeaturesConfig.livekit_voice` is ``False``),
-        then you cannot connect to channel with type of :attr:`~ChannelType.text` and if you do,
-        it will raise :class:`HTTPException` with ``CannotJoinCall`` type.
-
-        Raises
-        ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | Value                     | Reason                                                                                                                            |
-            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``AlreadyConnected``      | The current user was already connected to this voice channel.                                                                     |
-            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``AlreadyInVoiceChannel`` | The current user was already connected to other voice channel.                                                                    |
-            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``CannotJoinCall``        | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
-            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidOperation``      | The voice server is unavailable.                                                                                                  |
-            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotAVoiceChannel``      | ???. Only applicable to instances using Livekit                                                                                   |
-            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``VosoUnavailable``       | The voice server is unavailable.                                                                                                  |
-            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +--------------------+----------------------------------------+
-            | Value              | Reason                                 |
-            +--------------------+----------------------------------------+
-            | ``InvalidSession`` | The current bot/user token is invalid. |
-            +--------------------+----------------------------------------+
-        :class:`Forbidden`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +----------------------------------+--------------------------------------------------------+
-            | Value                            | Reason                                                 |
-            +----------------------------------+--------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to join a call. |
-            +----------------------------------+--------------------------------------------------------+
-        :class:`NotFound`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +--------------+----------------------------+
-            | Value        | Reason                     |
-            +--------------+----------------------------+
-            | ``NotFound`` | The channel was not found. |
-            +--------------+----------------------------+
-        :class:`InternalServerError`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-            | Value             | Reason                                          | Populated attributes                                                |
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database.  | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-            | ``InternalError`` | Somehow something went during retrieving token. |                                                                     |
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-
-        Returns
-        -------
-        :class:`str`
-            The token for authenticating with the voice server.
-        """
-        return await self.state.http.join_call(self.id)
-
     def permissions_for(self, _target: typing.Union[User, Member], /) -> Permissions:
         """Calculate permissions for given user.
 
@@ -536,7 +463,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
 
 @define(slots=True)
-class DMChannel(BaseChannel, Messageable):
+class DMChannel(BaseChannel, Connectable, Messageable):
     """Represents a private channel between two users."""
 
     active: bool = field(repr=True, kw_only=True)
@@ -626,7 +553,7 @@ class DMChannel(BaseChannel, Messageable):
 
 
 @define(slots=True)
-class GroupChannel(BaseChannel, Messageable):
+class GroupChannel(BaseChannel, Connectable, Messageable):
     """Represesnts Revolt group channel between 1 or more participants."""
 
     name: str = field(repr=True, kw_only=True)
@@ -1628,7 +1555,11 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
             )
         else:
             res = None
-        return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
+        return res or ChannelVoiceStateContainer(
+            channel_id=self.id,
+            participants={},
+            node='',
+        )
 
     async def create_webhook(
         self,
@@ -1727,7 +1658,11 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
                 self.id,
                 caching._USER_REQUEST,
             )
-        return res or ChannelVoiceStateContainer(channel_id=self.id, participants={})
+        return res or ChannelVoiceStateContainer(
+            channel_id=self.id,
+            participants={},
+            node='',
+        )
 
 
 ServerChannel = typing.Union[TextChannel, VoiceChannel]
@@ -1744,6 +1679,9 @@ class ChannelVoiceStateContainer:
 
     participants: dict[str, UserVoiceState] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, :class:`.UserVoiceState`]: The channel's participants."""
+
+    node: str = field(repr=True, kw_only=True)
+    """:class:`str`: The node name."""
 
     def locally_add(self, state: UserVoiceState, /) -> None:
         """Locally adds user's voice state into this container.

@@ -456,6 +456,88 @@ class Connectable:
         """:class:`str`: Retrieves the channel's ID, if possible."""
         return ''
 
+    async def join_call(
+        self,
+        *,
+        node: UndefinedOr[str] = UNDEFINED,
+    ) -> tuple[str, str]:
+        """|coro|
+
+        Asks the voice server for a token to join the call.
+
+        You must have :attr:`~Permissions.connect` to do this.
+
+        Parameters
+        ----------
+        node: UndefinedOr[:class:`str`]
+            The node's name to use for starting a call.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                                                                            |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyConnected``      | The current user was already connected to this voice channel.                                                                     |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyInVoiceChannel`` | The current user was already connected to other voice channel.                                                                    |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``CannotJoinCall``        | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``      | The voice server is unavailable.                                                                                                  |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``      | ???. Only applicable to instances using Livekit                                                                                   |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``VosoUnavailable``       | The voice server is unavailable.                                                                                                  |
+            +---------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------+
+            | Value                            | Reason                                                 |
+            +----------------------------------+--------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to join a call. |
+            +----------------------------------+--------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                          | Populated attributes                                                |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.  | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went during retrieving token. |                                                                     |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        Tuple[:class:`str`, :class:`str`]
+            The token for authenticating with the voice server, and node WebSocket URL (can be empty if instance does not use Livekit).
+        """
+
+        channel_id = await self.fetch_channel_id()
+        state = self.state
+
+        return await state.http.join_call(channel_id, node=node)
+
     async def connect(self) -> Room:
         """:class:`Room`: Connects to a voice channel."""
 
@@ -469,14 +551,7 @@ class Connectable:
             state = self.state
 
             room = Room()
-
-            url = state.voice_url
-            if not url:
-                instance = await state.http.query_node()
-                url = instance.features.voice.url  # type: ignore # TODO: Fix this.
-                state.voice_url = url
-
-            token = await state.http.join_call(channel_id)
+            token, url = await state.http.join_call(channel_id)
 
             await room.connect(url, token)
             return room

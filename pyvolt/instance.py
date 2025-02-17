@@ -82,6 +82,12 @@ class InstanceVosoVoiceFeature:
     websocket_url: str = field(repr=True, kw_only=True)
     """:class:`str`: The URL pointing to the voice WebSocket server."""
 
+    def is_voso(self) -> typing.Literal[True]:
+        return True
+
+    def is_livekit(self) -> typing.Literal[False]:
+        return False
+
 
 @define(slots=True)
 class InstanceLivekitVoiceFeature:
@@ -92,6 +98,12 @@ class InstanceLivekitVoiceFeature:
 
     nodes: list[InstanceLivekitVoiceNode] = field(repr=True, kw_only=True)
     """List[:class:`.InstanceLivekitVoiceNode`]: The Livekit nodes on this instance."""
+
+    def is_voso(self) -> typing.Literal[False]:
+        return False
+
+    def is_livekit(self) -> typing.Literal[True]:
+        return True
 
 
 InstanceVoiceFeature = typing.Union[

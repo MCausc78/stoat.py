@@ -129,8 +129,14 @@ class OptionsChannelDelete(typing.TypedDict):
 
 class CreateVoiceUserResponse(typing.TypedDict):
     token: str
+    url: str  # Available only in Livekit
 
 
 class ChannelVoiceState(typing.TypedDict):
     id: str
     participants: list[UserVoiceState]
+    node: str
+
+
+class DataJoinCall(typing.TypedDict):
+    node: str

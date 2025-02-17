@@ -3296,7 +3296,12 @@ class HTTPClient:
         r = self.state.parser.parse_channel(resp)
         return r  # type: ignore
 
-    async def join_call(self, channel: ULIDOr[typing.Union[DMChannel, GroupChannel, TextChannel, VoiceChannel]]) -> str:
+    async def join_call(
+        self,
+        channel: ULIDOr[typing.Union[DMChannel, GroupChannel, TextChannel, VoiceChannel]],
+        *,
+        node: UndefinedOr[str] = UNDEFINED,
+    ) -> tuple[str, str]:
         """|coro|
 
         Asks the voice server for a token to join the call.
@@ -3312,6 +3317,8 @@ class HTTPClient:
             whether :attr:`InstanceFeaturesConfig.livekit_voice` is ``False``), then
             a channel with type of :attr:`~ChannelType.text` cannot be passed and
             will raise :class:`HTTPException` with ``CannotJoinCall`` type.
+        node: UndefinedOr[:class:`str`]
+            The node's name to use for starting a call.
 
         Raises
         ------
@@ -3370,13 +3377,22 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`str`
-            The token for authenticating with the voice server.
+        Tuple[:class:`str`, :class:`str`]
+            The token for authenticating with the voice server, and node WebSocket URL (can be empty if instance does not use Livekit).
         """
-        resp: raw.CreateVoiceUserResponse = await self.request(
-            routes.CHANNELS_VOICE_JOIN.compile(channel_id=resolve_id(channel))
-        )
-        return resp['token']
+
+        resp: raw.CreateVoiceUserResponse
+        route = routes.CHANNELS_VOICE_JOIN.compile(channel_id=resolve_id(channel))
+
+        if node is UNDEFINED:
+            resp = await self.request(route)
+        else:
+            payload: raw.DataJoinCall = {
+                'node': node,
+            }
+            resp = await self.request(route, json=payload)
+
+        return resp['token'], resp.get('url', '')
 
     async def create_webhook(
         self,
