@@ -12,10 +12,22 @@ class Feature(typing.TypedDict):
     url: str
 
 
-class VoiceFeature(typing.TypedDict):
+class LivekitVoiceNode(typing.TypedDict):
+    name: str
+    lat: float
+    lon: float
+    public_url: str
+
+
+class VosoVoiceFeature(typing.TypedDict):
     enabled: bool
     url: str
     ws: str
+
+
+class LivekitVoiceFeature(typing.TypedDict):
+    enabled: bool
+    nodes: list[LivekitVoiceNode]
 
 
 class RevoltFeatures(typing.TypedDict):
@@ -24,8 +36,8 @@ class RevoltFeatures(typing.TypedDict):
     invite_only: bool
     autumn: Feature
     january: Feature
-    voso: VoiceFeature
-    livekit: typing_extensions.NotRequired[VoiceFeature]
+    voso: VosoVoiceFeature
+    livekit: typing_extensions.NotRequired[LivekitVoiceFeature]
 
 
 class BuildInformation(typing.TypedDict):

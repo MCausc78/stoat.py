@@ -473,7 +473,7 @@ class Connectable:
             url = state.voice_url
             if not url:
                 instance = await state.http.query_node()
-                url = instance.features.voice.url
+                url = instance.features.voice.url  # type: ignore # TODO: Fix this.
                 state.voice_url = url
 
             token = await state.http.join_call(channel_id)

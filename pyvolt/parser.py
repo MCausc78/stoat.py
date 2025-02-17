@@ -150,6 +150,9 @@ from .events import (
 from .instance import (
     InstanceCaptchaFeature,
     InstanceGenericFeature,
+    InstanceLivekitVoiceNode,
+    InstanceVosoVoiceFeature,
+    InstanceLivekitVoiceFeature,
     InstanceVoiceFeature,
     InstanceFeaturesConfig,
     InstanceBuild,
@@ -1562,10 +1565,10 @@ class Parser:
 
         livekit: bool
         try:
-            voice: raw.VoiceFeature = payload['livekit']  # pyright: ignore[reportTypedDictNotRequiredAccess]
+            voice: typing.Any = payload['livekit']  # pyright: ignore[reportTypedDictNotRequiredAccess]
             livekit = True
         except KeyError:
-            voice = payload['voso']
+            voice: typing.Any = payload['voso']
             livekit = False
 
         return InstanceFeaturesConfig(
@@ -1574,8 +1577,7 @@ class Parser:
             invite_only=payload['invite_only'],
             autumn=self.parse_instance_generic_feature(payload['autumn']),
             january=self.parse_instance_generic_feature(payload['january']),
-            voice=self.parse_instance_voice_feature(voice),
-            livekit_voice=livekit,
+            voice=self.parse_instance_voice_feature(voice, livekit),
         )
 
     def parse_instance_generic_feature(self, payload: raw.Feature, /) -> InstanceGenericFeature:
@@ -1596,7 +1598,19 @@ class Parser:
             url=payload['url'],
         )
 
-    def parse_instance_voice_feature(self, payload: raw.VoiceFeature, /) -> InstanceVoiceFeature:
+    @typing.overload
+    def parse_instance_voice_feature(
+        self, payload: raw.LivekitVoiceFeature, livekit: typing.Literal[True], /
+    ) -> InstanceLivekitVoiceFeature: ...
+
+    @typing.overload
+    def parse_instance_voice_feature(
+        self, payload: raw.VosoVoiceFeature, livekit: typing.Literal[False], /
+    ) -> InstanceVosoVoiceFeature: ...
+
+    def parse_instance_voice_feature(
+        self, payload: typing.Union[raw.LivekitVoiceFeature, raw.VosoVoiceFeature], livekit: bool, /
+    ) -> InstanceVoiceFeature:
         """Parses a instance voice feature object.
 
         Parameters
@@ -1609,10 +1623,38 @@ class Parser:
         :class:`InstanceVoiceFeature`
             The parsed instance voice feature object.
         """
-        return InstanceVoiceFeature(
-            enabled=payload['enabled'],
-            url=payload['url'],
-            websocket_url=payload['ws'],
+        if livekit:
+            payload = typing.cast('raw.LivekitVoiceFeature', payload)
+            return InstanceLivekitVoiceFeature(
+                enabled=payload['enabled'],
+                nodes=list(map(self.parse_instance_livekit_voice_node, payload.get('nodes', ()))),
+            )
+        else:
+            payload = typing.cast('raw.VosoVoiceFeature', payload)
+            return InstanceVosoVoiceFeature(
+                enabled=payload['enabled'],
+                url=payload['url'],
+                websocket_url=payload['ws'],
+            )
+
+    def parse_instance_livekit_voice_node(self, payload: raw.LivekitVoiceNode, /) -> InstanceLivekitVoiceNode:
+        """Parses a instance voice node object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The instance voice node payload to parse.
+
+        Returns
+        -------
+        :class:`InstanceLivekitVoiceNode`
+            The parsed instance voice node object.
+        """
+        return InstanceLivekitVoiceNode(
+            name=payload['name'],
+            latitude=payload['lat'],
+            longitude=payload['lon'],
+            public_url=payload['public_url'],
         )
 
     def parse_invite(self, payload: raw.Invite, /) -> Invite:

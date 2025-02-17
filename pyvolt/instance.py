@@ -53,8 +53,25 @@ class InstanceGenericFeature:
 
 
 @define(slots=True)
-class InstanceVoiceFeature:
-    """Represents how voice server is configured on Revolt instance."""
+class InstanceLivekitVoiceNode:
+    """Represents a Livekit node."""
+
+    name: str = field(repr=True, kw_only=True)
+    """:class:`str`: The node's name."""
+
+    latitude: float = field(repr=True, kw_only=True)
+    """:class:`float`: The latitude."""
+
+    longitude: float = field(repr=True, kw_only=True)
+    """:class:`float`: The longitude."""
+
+    public_url: str = field(repr=True, kw_only=True)
+    """:class:`str`: The node's public WebSocket URL."""
+
+
+@define(slots=True)
+class InstanceVosoVoiceFeature:
+    """Represents how Voso voice server is configured on Revolt instance."""
 
     enabled: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the voice server is enabled on current instance."""
@@ -64,6 +81,23 @@ class InstanceVoiceFeature:
 
     websocket_url: str = field(repr=True, kw_only=True)
     """:class:`str`: The URL pointing to the voice WebSocket server."""
+
+
+@define(slots=True)
+class InstanceLivekitVoiceFeature:
+    """Represents how Livekit voice server is configured on Revolt instance."""
+
+    enabled: bool = field(repr=True, kw_only=True)
+    """:class:`bool`: Whether the voice server is enabled on current instance."""
+
+    nodes: list[InstanceLivekitVoiceNode] = field(repr=True, kw_only=True)
+    """List[:class:`.InstanceLivekitVoiceNode`]: The Livekit nodes on this instance."""
+
+
+InstanceVoiceFeature = typing.Union[
+    InstanceVosoVoiceFeature,
+    InstanceLivekitVoiceFeature,
+]
 
 
 @define(slots=True)
@@ -87,9 +121,6 @@ class InstanceFeaturesConfig:
 
     voice: InstanceVoiceFeature = field(repr=True, kw_only=True)
     """:class:`.InstanceVoiceFeature`: The configuration for Vortex or Livekit (voice server service)."""
-
-    livekit_voice: bool = field(repr=True, kw_only=True)
-    """:class:`bool`: Whether this instance uses Livekit instead of Voso/Vortex."""
 
 
 # Sample build object (own instance):
@@ -153,6 +184,9 @@ class Instance:
 __all__ = (
     'InstanceCaptchaFeature',
     'InstanceGenericFeature',
+    'InstanceLivekitVoiceNode',
+    'InstanceVosoVoiceFeature',
+    'InstanceLivekitVoiceFeature',
     'InstanceVoiceFeature',
     'InstanceFeaturesConfig',
     'InstanceBuild',
