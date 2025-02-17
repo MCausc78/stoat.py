@@ -4594,7 +4594,7 @@ class HTTPClient:
     async def get_server_emojis(self, server: ULIDOr[BaseServer]) -> list[ServerEmoji]:
         """|coro|
 
-        Retrieves all custom :class:`ServerEmoji`'s that belong to a server.
+        Retrieves all custom :class:`.ServerEmoji`'s that belong to a server.
 
         Parameters
         ----------
@@ -4638,7 +4638,7 @@ class HTTPClient:
         )
         return list(map(self.state.parser.parse_server_emoji, resp))
 
-    async def get_server_invites(self, server: ULIDOr[BaseServer], /) -> list[ServerInvite]:
+    async def get_server_invites(self, server: ULIDOr[BaseServer]) -> list[ServerInvite]:
         """|coro|
 
         Retrieves all invites that belong to a server.
@@ -4687,7 +4687,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`ServerInvite`]
+        List[:class:`.ServerInvite`]
             The retrieved invites.
         """
         resp: list[raw.ServerInvite] = await self.request(

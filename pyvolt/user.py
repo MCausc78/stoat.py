@@ -305,16 +305,179 @@ class BaseUser(Base, Connectable, Messageable):
     async def accept_friend_request(self) -> User:
         """|coro|
 
-        Accepts the incoming friend request.
+        Accept another user's friend request.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                                    |
+            +----------------------------------+-------------------------------------------------------------------------------------------+
+            | ``IsBot``                        | Either the current user or user you tried to accept friend request from are bot accounts. |
+            +----------------------------------+-------------------------------------------------------------------------------------------+
+            | ``TooManyPendingFriendRequests`` | You sent too many outgoing friend requests.                                               |
+            +----------------------------------+-------------------------------------------------------------------------------------------+
+        :class:`NoEffect`
+            You tried to accept friend request from yourself.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+--------------------------------------------------------------------+
+            | Value            | Reason                                                             |
+            +------------------+--------------------------------------------------------------------+
+            | ``BlockedOther`` | The user you tried to accept friend request from have blocked you. |
+            +------------------+--------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+---------------------------------------------------------------------------+
+            | Value                  | Reason                                                                    |
+            +------------------------+---------------------------------------------------------------------------+
+            | ``AlreadyFriends``     | You're already friends with user you tried to accept friend request from. |
+            +------------------------+---------------------------------------------------------------------------+
+            | ``AlreadySentRequest`` | You already sent friend request to this user.                             |
+            +------------------------+---------------------------------------------------------------------------+
+            | ``Blocked``            | You have blocked the user you tried to accept friend request from.        |
+            +------------------------+---------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.User`
+            The user you accepted friend request from.
         """
         return await self.state.http.accept_friend_request(self.id)
 
     async def block(self) -> User:
         """|coro|
 
-        Blocks the user.
+        Blocks an user.
+
+        .. note::
+            This is not supposed to be used by bot accounts.
+
+        Parameters
+        ----------
+        user: ULIDOr[:class:`.BaseUser`]
+            The user to block.
+
+        Raises
+        ------
+        :class:`NoEffect`
+            You tried to block yourself or someone that you already had blocked.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.User`
+            The blocked user.
         """
+
         return await self.state.http.block_user(self.id)
+
+    async def deny_friend_request(self) -> User:
+        """|coro|
+
+        Denies another user's friend request.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-----------------------------------------------------------------------------------------+
+            | Value     | Reason                                                                                  |
+            +-----------+-----------------------------------------------------------------------------------------+
+            | ``IsBot`` | Either the current user or user you tried to deny friend request from are bot accounts. |
+            +-----------+-----------------------------------------------------------------------------------------+
+        :class:`NoEffect`
+            You tried to deny friend request from user you had no friend request sent from/to.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.User`
+            The user you denied friend request from.
+        """
+
+        return await self.state.http.deny_friend_request(self.id)
 
     async def edit(
         self,
@@ -395,34 +558,36 @@ class BaseUser(Base, Connectable, Messageable):
             flags=flags,
         )
 
-    async def deny_friend_request(self) -> User:
+    async def fetch(self) -> User:
         """|coro|
 
-        Denies another user's friend request.
+        Retrieve a user's information.
 
-        .. note::
-            This can only be used by non-bot accounts.
+        You must have :attr:`~UserPermissions.access` to do this.
+
+        Parameters
+        ----------
+        user: ULIDOr[:class:`.BaseUser`]
+            The user.
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +-----------+-----------------------------------------------------------------------------------------+
-            | Value     | Reason                                                                                  |
-            +-----------+-----------------------------------------------------------------------------------------+
-            | ``IsBot`` | Either the current user or user you tried to deny friend request from are bot accounts. |
-            +-----------+-----------------------------------------------------------------------------------------+
-        :class:`NoEffect`
-            You tried to deny friend request from user you had no friend request sent from/to.
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------------+----------------------------------------+
-            | Value              | Reason                                 |
-            +--------------------+----------------------------------------+
-            | ``InvalidSession`` | The current bot/user token is invalid. |
-            +--------------------+----------------------------------------+
+            +------------------------+----------------------------------------+
+            | Value                  | Reason                                 |
+            +------------------------+----------------------------------------+
+            | ``InvalidSession``     | The current bot/user token is invalid. |
+            +------------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+------------------------------------------------------------------+
+            | Value                     | Reason                                                           |
+            +---------------------------+------------------------------------------------------------------+
+            | ``MissingUserPermission`` | You do not have the proper permissions to view access user data. |
+            +---------------------------+------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -431,22 +596,89 @@ class BaseUser(Base, Connectable, Messageable):
             +--------------+-------------------------+
             | ``NotFound`` | The user was not found. |
             +--------------+-------------------------+
-        :class:`InternalServerError`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
-            | Value             | Reason                                         | Populated attributes                                                |
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
-            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
         :class:`.User`
-            The user you denied friend request from.
+            The retrieved user.
+        """
+        return await self.state.http.get_user(self.id)
+
+    async def fetch_default_avatar(self) -> bytes:
+        """|coro|
+
+        Return a default user avatar based on the given ID.
+
+        Parameters
+        ----------
+        user: ULIDOr[:class:`.BaseUser`]
+            The user to retrieve default avatar of.
+
+        Returns
+        -------
+        :class:`bytes`
+            The image in PNG format.
+        """
+        return await self.state.http.get_default_avatar(self.id)
+
+    async def fetch_flags(self, user: ULIDOr[BaseUser], /) -> UserFlags:
+        """|coro|
+
+        Retrieves flags for user.
+
+        Parameters
+        ----------
+        user: ULIDOr[:class:`.BaseUser`]
+            The user to retrieve flags for.
+
+        Returns
+        -------
+        :class:`.UserFlags`
+            The retrieved flags.
+        """
+        return await self.state.http.get_user_flags(self.id)
+
+    async def fetch_profile(self) -> UserProfile:
+        """|coro|
+
+        Retrieve profile of an user.
+
+        You must have :attr:`~UserPermissions.view_profile` to do this.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+----------------------------------------+
+            | Value                  | Reason                                 |
+            +------------------------+----------------------------------------+
+            | ``InvalidSession``     | The current bot/user token is invalid. |
+            +------------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------+
+            | Value                     | Reason                                                       |
+            +---------------------------+--------------------------------------------------------------+
+            | ``MissingUserPermission`` | You do not have the proper permissions to view user profile. |
+            +---------------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+
+        Returns
+        -------
+        :class:`.UserProfile`
+            The retrieved user profile.
         """
 
-        return await self.state.http.deny_friend_request(self.id)
+        return await self.state.http.get_user_profile(self.id)
 
     async def mutual_friend_ids(self) -> list[str]:
         """|coro|
@@ -673,48 +905,6 @@ class BaseUser(Base, Connectable, Messageable):
         """
 
         return await self.state.http.open_dm(self.id)
-
-    async def fetch_profile(self) -> UserProfile:
-        """|coro|
-
-        Retrieve profile of an user.
-
-        You must have :attr:`~UserPermissions.view_profile` to do this.
-
-        Raises
-        ------
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +------------------------+----------------------------------------+
-            | Value                  | Reason                                 |
-            +------------------------+----------------------------------------+
-            | ``InvalidSession``     | The current bot/user token is invalid. |
-            +------------------------+----------------------------------------+
-        :class:`Forbidden`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +---------------------------+--------------------------------------------------------------+
-            | Value                     | Reason                                                       |
-            +---------------------------+--------------------------------------------------------------+
-            | ``MissingUserPermission`` | You do not have the proper permissions to view user profile. |
-            +---------------------------+--------------------------------------------------------------+
-        :class:`NotFound`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +--------------+-------------------------+
-            | Value        | Reason                  |
-            +--------------+-------------------------+
-            | ``NotFound`` | The user was not found. |
-            +--------------+-------------------------+
-
-        Returns
-        -------
-        :class:`.UserProfile`
-            The retrieved user profile.
-        """
-
-        return await self.state.http.get_user_profile(self.id)
 
     async def remove_friend(self) -> User:
         """|coro|

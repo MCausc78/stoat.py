@@ -262,6 +262,55 @@ class BaseMessage(Base):
 
         return cache.get_server(channel.server_id, caching._USER_REQUEST)
 
+    async def ack(self) -> None:
+        """|coro|
+
+        Marks this message as read.
+
+        This is an alias for :meth:`~.acknowledge`.
+
+        You must have :attr:`~Permissions.view_channel` to do this.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-------------------------------------------+
+            | Value     | Reason                                    |
+            +-----------+-------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. |
+            +-----------+-------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the message. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        """
+        return await self.acknowledge()
+
     async def acknowledge(self) -> None:
         """|coro|
 
@@ -311,28 +360,15 @@ class BaseMessage(Base):
         """
         return await self.state.http.acknowledge_message(self.channel_id, self.id)
 
-    async def ack(self) -> None:
+    async def clear_reactions(self) -> None:
         """|coro|
 
-        Marks this message as read.
+        Removes all the reactions from the message.
 
-        This is an alias for :meth:`~.acknowledge`.
-
-        You must have :attr:`~Permissions.view_channel` to do this.
-
-        .. note::
-            This can only be used by non-bot accounts.
+        You must have :attr:`~Permissions.manage_messages` to do this.
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +-----------+-------------------------------------------+
-            | Value     | Reason                                    |
-            +-----------+-------------------------------------------+
-            | ``IsBot`` | The current token belongs to bot account. |
-            +-----------+-------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -344,21 +380,29 @@ class BaseMessage(Base):
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+-------------------------------------------------------------+
-            | Value                 | Reason                                                      |
-            +-----------------------+-------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to view the message. |
-            +-----------------------+-------------------------------------------------------------+
+            +-----------------------+---------------------------------------------------------------------+
+            | Value                 | Reason                                                              |
+            +-----------------------+---------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to remove all the reactions. |
+            +-----------------------+---------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------+----------------------------+
-            | Value        | Reason                     |
-            +--------------+----------------------------+
-            | ``NotFound`` | The channel was not found. |
-            +--------------+----------------------------+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The channel or message was not found. |
+            +--------------+---------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.acknowledge()
+        return await self.state.http.clear_reactions(self.channel_id, self.id)
 
     async def delete(self) -> None:
         """|coro|
@@ -477,6 +521,53 @@ class BaseMessage(Base):
         """
 
         return await self.state.http.edit_message(self.channel_id, self.id, content=content, embeds=embeds)
+
+    async def fetch(self) -> Message:
+        """|coro|
+
+        Retrieves the message.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the channel. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------------------+
+            | Value        | Reason                             |
+            +--------------+------------------------------------+
+            | ``NotFound`` | The channel/message was not found. |
+            +--------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Message`
+            The retrieved message.
+        """
+        return await self.state.http.get_message(self.channel_id, self.id)
 
     async def pin(self) -> None:
         """|coro|
@@ -616,6 +707,7 @@ class BaseMessage(Base):
         You must have :attr:`~Permissions.send_messages` to do this.
 
         If message mentions "\\@everyone" or "\\@online", you must have :attr:`~Permissions.mention_everyone` to do that.
+
         If message mentions any roles, you must :attr:`~Permission.mention_roles` to do that.
 
         Parameters

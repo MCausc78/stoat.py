@@ -66,6 +66,7 @@ if typing.TYPE_CHECKING:
         TextableChannel,
         PartialMessageable,
     )
+    from .invite import ServerInvite
     from .state import State
 
 _new_permissions = Permissions.__new__
@@ -778,6 +779,90 @@ class BaseServer(Base):
             self.id, type=type, name=name, description=description, nsfw=nsfw
         )
 
+    async def create_server_emoji(
+        self,
+        name: str,
+        *,
+        nsfw: typing.Optional[bool] = None,
+        image: ResolvableResource,
+    ) -> ServerEmoji:
+        """|coro|
+
+        Creates an emoji in server.
+
+        You must have :attr:`~Permissions.manage_customization` to do this.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        name: :class:`str`
+            The emoji name. Must be between 1 and 32 chars long. Can only contain ASCII digits, underscore and lowercase letters.
+        nsfw: Optional[:class:`bool`]
+            Whether the emoji is NSFW or not. Defaults to ``False``.
+        image: :class:`.ResolvableResource`
+            The emoji data.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------+
+            | Value                | Reason                                                        |
+            +----------------------+---------------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                                      |
+            +----------------------+---------------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.                     |
+            +----------------------+---------------------------------------------------------------+
+            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance. |
+            +----------------------+---------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------+
+            | Value                 | Reason                                                             |
+            +-----------------------+--------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create emojis in server. |
+            +-----------------------+--------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/file was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.ServerEmoji`
+            The created emoji.
+        """
+        return await self.state.http.create_server_emoji(
+            self.id,
+            name=name,
+            nsfw=nsfw,
+            image=image,
+        )
+
     async def create_text_channel(
         self, name: str, *, description: typing.Optional[str] = None, nsfw: typing.Optional[bool] = None
     ) -> TextChannel:
@@ -1133,6 +1218,349 @@ class BaseServer(Base):
             analytics=analytics,
         )
 
+    async def fetch(
+        self,
+        *,
+        populate_channels: typing.Optional[bool] = None,
+    ) -> Server:
+        """|coro|
+
+        Retrieves the server.
+
+        Parameters
+        ----------
+        populate_channels: Optional[:class:`bool`]
+            Whether to populate :attr:`Server.channels`.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+
+        Returns
+        -------
+        :class:`.Server`
+            The retrieved server.
+        """
+        return await self.state.http.get_server(self.id)
+
+    async def fetch_bans(self) -> list[Ban]:
+        """|coro|
+
+        Retrieves all bans on the server.
+
+        You must have :attr:`~Permissions.ban_members` to do this.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve all bans. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`.Ban`]
+            The ban entries.
+        """
+        return await self.state.http.get_bans(self.id)
+
+    async def fetch_emojis(self) -> list[ServerEmoji]:
+        """|coro|
+
+        Retrieves all custom :class:`ServerEmoji`'s that belong to the server.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`.ServerEmoji`]
+            The retrieved emojis.
+        """
+        return await self.state.http.get_server_emojis(self.id)
+
+    async def fetch_invites(self) -> list[ServerInvite]:
+        """|coro|
+
+        Retrieves all invites that belong to the server.
+
+        You must have :attr:`~Permissions.manage_server` to do this.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------+
+            | Value                 | Reason                                                             |
+            +-----------------------+--------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve server invites. |
+            +-----------------------+--------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`.ServerInvite`]
+            The retrieved invites.
+        """
+        return await self.state.http.get_server_invites(self.id)
+
+    async def fetch_member(
+        self,
+        member: typing.Union[str, BaseUser, BaseMember],
+    ) -> Member:
+        """|coro|
+
+        Retrieves a member.
+
+        Parameters
+        ----------
+        member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+            The user to retrieve.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Member`
+            The retrieved member.
+        """
+        return await self.state.http.get_member(self.id, member)
+
+    async def fetch_members(self, *, exclude_offline: typing.Optional[bool] = None) -> list[Member]:
+        """|coro|
+
+        Retrieves all server members.
+
+        Parameters
+        ----------
+        exclude_offline: Optional[:class:`bool`]
+            Whether to exclude offline users.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`.Member`]
+            The retrieved members.
+        """
+        return await self.state.http.get_members(self.id, exclude_offline=exclude_offline)
+
+    async def fetch_member_list(self, *, exclude_offline: typing.Optional[bool] = None) -> MemberList:
+        """|coro|
+
+        Retrieves server member list.
+
+        Parameters
+        ----------
+        exclude_offline: Optional[:class:`bool`]
+            Whether to exclude offline users.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.MemberList`
+            The member list.
+        """
+        return await self.state.http.get_member_list(self.id, exclude_offline=exclude_offline)
+
+    async def fetch_role(
+        self,
+        role: ULIDOr[BaseRole],
+    ) -> Role:
+        """|coro|
+
+        Retrieves a server role.
+
+        Parameters
+        ----------
+        role: ULIDOr[:class:`.BaseRole`]
+            The role to retrieve.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/role was not found. |
+            +--------------+--------------------------------+
+
+        Returns
+        -------
+        :class:`.Role`
+            The retrieved role.
+        """
+        return await self.state.http.get_role(self.id, role)
+
     async def join(self) -> Server:
         """|coro|
 
@@ -1201,6 +1629,65 @@ class BaseServer(Base):
         """
         server = await self.state.http.accept_invite(self.id)
         return server  # type: ignore
+
+    async def kick(self, member: typing.Union[str, BaseUser, BaseMember]) -> None:
+        """|coro|
+
+        Kicks a member from the server.
+
+        Parameters
+        ----------
+        member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+            The member to kick.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+---------------------------------+
+            | Value                    | Reason                          |
+            +--------------------------+---------------------------------+
+            | ``CannotRemoveYourself`` | You tried to kick yourself.     |
+            +--------------------------+---------------------------------+
+            | ``InvalidOperation``     | You tried to kick server owner. |
+            +--------------------------+---------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                              |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``NotElevated``                  | Rank of your top role is higher than rank of top role of user you're trying to ban. |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to ban members.                              |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/user was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        return await self.state.http.kick_member(self.id, member)
 
     async def leave(self, *, silent: typing.Optional[bool] = None) -> None:
         """|coro|
@@ -1286,6 +1773,53 @@ class BaseServer(Base):
         """
 
         return await self.state.http.mark_server_as_read(self.id)
+
+    async def query_members_by_name(self, query: str) -> list[Member]:
+        """|coro|
+
+        Query members by a given name.
+
+        .. warning::
+            This API is not stable and may be removed in the future.
+
+        Parameters
+        ----------
+        query: :class:`str`
+            The query to search members for.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`.Member`]
+            The members matched.
+        """
+        return await self.state.http.query_members_by_name(self.id, query)
 
     async def report(
         self,

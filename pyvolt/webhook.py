@@ -332,6 +332,72 @@ class BaseWebhook(Base):
             mention_online=mention_online,
         )
 
+    async def fetch(
+        self,
+        *,
+        token: typing.Optional[str] = None,
+    ) -> Webhook:
+        """|coro|
+
+        Retrieves a webhook.
+
+        If webhook token wasn't given, the library will attempt get webhook with bot/user token.
+
+        You must have :attr:`~Permissions.manage_webhooks` to do this.
+
+        .. note::
+            Due to Revolt limitation, the webhook avatar information will be partial if no token is provided.
+            Fields are guaranteed to be non-zero/non-empty are ``id`` and ``user_id``.
+
+        Parameters
+        ----------
+        token: Optional[:class:`str`]
+            The webhook token.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------------------+
+            | Value                | Reason                                                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``InvalidSession``   | The current bot/user token is invalid.                                    |
+            +----------------------+---------------------------------------------------------------------------+
+            | ``NotAuthenticated`` | The webhook token is invalid. Only applicable when ``token`` is provided. |
+            +----------------------+---------------------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve this webhook. |
+            +-----------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The webhook was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Webhook`
+            The retrieved webhook.
+        """
+        return await self.state.http.get_webhook(self.id, token=token or self._token())
+
 
 @define(slots=True)
 class PartialWebhook(BaseWebhook):

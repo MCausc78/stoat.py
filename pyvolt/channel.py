@@ -1324,6 +1324,63 @@ class BaseServerChannel(BaseChannel):
 
         return await self.close()
 
+    async def fetch_webhooks(self) -> list[Webhook]:
+        """|coro|
+
+        Retrieves all webhooks in a channel.
+
+        You must have :attr:`~Permissions.manage_webhooks` permission to do this.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                               |
+            +---------------------------+--------------------------------------------------------------------------------------+
+            | ``InvalidOperation``      | The channel was not type of :attr:`~ChannelType.group` or :attr:`~ChannelType.text`. |
+            +---------------------------+--------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                               |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to view webhooks that belong to this channel. |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`.Webhook`]
+            The webhooks for this channel.
+        """
+        return await self.state.http.get_channel_webhooks(self.id)
+
     async def set_role_permissions(
         self,
         role: ULIDOr[BaseRole],
