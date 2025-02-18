@@ -37,6 +37,7 @@ from .user import User
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from .bot import Bot
     from .channel import DMChannel, GroupChannel, Channel, ChannelVoiceStateContainer
     from .events import (
         ReadyEvent,
@@ -97,14 +98,6 @@ class CacheContextType(Enum):
     user_request = 'USER_REQUEST'
     library_request = 'LIBRARY_REQUEST'
 
-    emoji = 'EMOJI'
-    member = 'MEMBER'
-    message = 'MESSAGE'
-    role = 'ROLE'
-    server = 'SERVER'
-    user = 'USER'
-    webhook = 'WEBHOOK'
-
     ready_event = 'ReadyEvent'
     private_channel_create_event = 'PrivateChannelCreateEvent'
     server_channel_create_event = 'ServerChannelCreateEvent'
@@ -149,6 +142,8 @@ class CacheContextType(Enum):
     voice_channel_move_event = 'VoiceChannelMoveEvent'
     user_voice_state_update_event = 'UserVoiceStateUpdateEvent'
     authenticated_event = 'AuthenticatedEvent'
+
+    user_through_bot_owner = 'Bot.owner: User'
 
 
 @define(slots=True)
@@ -561,6 +556,24 @@ class AuthenticatedEventCacheContext(EventCacheContext):
     """:class:`.AuthenticatedEvent`: The event involved."""
 
 
+@define(slots=True)
+class EntityCacheContext(BaseCacheContext):
+    """Represents a cache context that involves an entity."""
+
+
+@define(slots=True)
+class BotCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.Bot` entity."""
+
+    bot: Bot = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.Bot`: The bot involved."""
+
+
+@define(slots=True)
+class UserThroughBotOwnerCacheContext(BotCacheContext):
+    """Represents a cache context that involves an :class:`.Bot` entity, wishing to retrieve bot's owner."""
+
+
 _UNDEFINED: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.undefined)
 _USER_REQUEST: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.user_request)
 _READY_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.ready_event)
@@ -689,51 +702,13 @@ _USER_VOICE_STATE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedC
 _AUTHENTICATED_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.authenticated_event
 )
+_USER_THROUGH_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_bot_owner,
+)
 
 ProvideCacheContextIn = typing.Literal[
-    'ReadyEvent',
-    'PrivateChannelCreateEvent',
-    'ServerChannelCreateEvent',
-    'ChannelUpdateEvent',
-    'ChannelDeleteEvent',
-    'GroupRecipientAddEvent',
-    'GroupRecipientRemoveEvent',
-    'ChannelStartTypingEvent',
-    'ChannelStopTypingEvent',
-    'MessageAckEvent',
-    'MessageCreateEvent',
-    'MessageUpdateEvent',
-    'MessageAppendEvent',
-    'MessageDeleteEvent',
-    'MessageReactEvent',
-    'MessageUnreactEvent',
-    'MessageClearReactionEvent',
-    'MessageDeleteBulkEvent',
-    'ServerCreateEvent',
-    'ServerEmojiCreateEvent',
-    'ServerEmojiDeleteEvent',
-    'ServerUpdateEvent',
-    'ServerDeleteEvent',
-    'ServerMemberJoinEvent',
-    'ServerMemberUpdateEvent',
-    'ServerMemberRemoveEvent',
-    'RawServerRoleUpdateEvent',
-    'ServerRoleDeleteEvent',
-    'ReportCreateEvent',
-    'UserUpdateEvent',
-    'UserRelationshipUpdateEvent',
-    'UserSettingsUpdateEvent',
-    'UserPlatformWipeEvent',
-    'WebhookCreateEvent',
-    'WebhookUpdateEvent',
-    'WebhookDeleteEvent',
-    'SessionCreateEvent',
-    'SessionDeleteEvent',
-    'SessionDeleteAllEvent',
-    'VoiceChannelJoinEvent',
-    'VoiceChannelLeaveEvent',
-    'UserVoiceStateUpdateEvent',
-    'AuthenticatedEvent',
+    'Bot.owner',
+    # TODO redo these below
     'DMChannel.recipients',
     'DMChannel.get_initiator',
     'DMChannel.get_target',
@@ -2095,6 +2070,9 @@ __all__ = (
     'VoiceChannelMoveEventCacheContext',
     'UserVoiceStateUpdateEventCacheContext',
     'AuthenticatedEventCacheContext',
+    'EntityCacheContext',
+    'BotCacheContext',
+    'UserThroughBotOwnerCacheContext',
     '_UNDEFINED',
     '_USER_REQUEST',
     '_READY_EVENT',
@@ -2141,6 +2119,7 @@ __all__ = (
     '_VOICE_CHANNEL_MOVE_EVENT',
     '_USER_VOICE_STATE_UPDATE_EVENT',
     '_AUTHENTICATED_EVENT',
+    '_USER_THROUGH_BOT_OWNER',
     'ProvideCacheContextIn',
     'Cache',
     'EmptyCache',

@@ -28,6 +28,7 @@ from attrs import define, field
 import typing
 
 from .base import Base
+from .cache import CacheContextType, UserThroughBotOwnerCacheContext, _USER_THROUGH_BOT_OWNER
 from .core import UNDEFINED, UndefinedOr
 from .flags import BotFlags
 
@@ -202,6 +203,24 @@ class Bot(BaseBot):
 
     user: User = field(repr=True, kw_only=True)
     """:class:`.User`: The user associated with this bot."""
+
+    def get_owner(self) -> typing.Optional[User]:
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughBotOwnerCacheContext(
+                type=CacheContextType.user_through_bot_owner,
+                bot=self,
+            )
+            if 'Bot.owner' in state.provide_cache_context_in
+            else _USER_THROUGH_BOT_OWNER
+        )
+
+        return cache.get_user(self.owner_id, ctx)
 
     @property
     def flags(self) -> BotFlags:
