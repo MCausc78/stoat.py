@@ -62,7 +62,7 @@ Bot Example
     from pyvolt.ext import commands
 
     # Pass `self_bot=True` to make your bot listen only to you
-    bot = commands.Bot(command_prefix='!', token=token)
+    bot = commands.Bot(command_prefix='!')
 
     @bot.command()
     async def ping(ctx):
