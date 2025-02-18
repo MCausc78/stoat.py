@@ -2365,7 +2365,7 @@ class Message(BaseMessage):
             return self.state.system
 
         state = self.state
-        if self.webhook:
+        if self.webhook is not None:
             webhook = self.webhook
             webhook_id = self.author_id
 
@@ -2404,21 +2404,21 @@ class Message(BaseMessage):
             )
 
         cache = state.cache
-        if not cache:
+        if cache is None:
             return None
 
         channel = self.channel
         if not isinstance(channel, ServerChannel):
             return cache.get_user(
                 self._author,
-                caching.MessageCacheContext(type=caching.CacheContextType.message, message=self)
+                caching.MessageCacheContext(type=caching.CacheContextType.undefined, message=self)
                 if 'Message.get_author' in state.provide_cache_context_in
                 else caching._UNDEFINED,
             )
         return cache.get_server_member(
             channel.server_id,
             self._author,
-            caching.MessageCacheContext(type=caching.CacheContextType.message, message=self)
+            caching.MessageCacheContext(type=caching.CacheContextType.undefined, message=self)
             if 'Message.get_author' in state.provide_cache_context_in
             else caching._UNDEFINED,
         )

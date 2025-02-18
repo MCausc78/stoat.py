@@ -29,8 +29,20 @@ import typing
 from attrs import define, field
 
 from .base import Base
+from .cache import (
+    CacheContextType,
+    UserThroughBaseEmojiCreatorCacheContext,
+    ServerThroughServerEmojiServerCacheContext,
+    _USER_THROUGH_BASE_EMOJI_CREATOR,
+    _SERVER_THROUGH_SERVER_EMOJI_SERVER,
+)
+
 from .cdn import AssetMetadata, Asset
 from .enums import AssetMetadataType
+
+if typing.TYPE_CHECKING:
+    from .server import Server
+    from .user import User
 
 
 @define(slots=True)
@@ -48,6 +60,26 @@ class BaseEmoji(Base):
 
     nsfw: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the emoji is marked as NSFW."""
+
+    def get_creator(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who uploaded this emoji."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughBaseEmojiCreatorCacheContext(
+                type=CacheContextType.user_through_base_emoji_creator,
+                emoji=self,
+            )
+            if state.provide_cache_context('BaseEmoji.creator')
+            else _USER_THROUGH_BASE_EMOJI_CREATOR
+        )
+
+        return cache.get_user(self.creator_id, ctx)
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseEmoji) and self.id == other.id
@@ -85,6 +117,26 @@ class ServerEmoji(BaseEmoji):
 
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID the emoji belongs to."""
+
+    def get_server(self) -> typing.Optional[Server]:
+        """Optional[:class:`.Server`]: The server the emoji belongs to."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ServerThroughServerEmojiServerCacheContext(
+                type=CacheContextType.server_through_server_emoji_server,
+                emoji=self,
+            )
+            if state.provide_cache_context('ServerEmoji.server')
+            else _SERVER_THROUGH_SERVER_EMOJI_SERVER
+        )
+
+        return cache.get_server(self.server_id, ctx)
 
     async def delete(self) -> None:
         """|coro|

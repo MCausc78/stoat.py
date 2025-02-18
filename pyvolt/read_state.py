@@ -27,6 +27,11 @@ from __future__ import annotations
 from attrs import define, field
 import typing
 
+from .cache import (
+    CacheContextType,
+    ChannelThroughReadStateChannelCacheContext,
+    _CHANNEL_THROUGH_READ_STATE_CHANNEL,
+)
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -34,8 +39,10 @@ from .core import (
     resolve_id,
     ZID,
 )
+from .errors import NoData
 
 if typing.TYPE_CHECKING:
+    from .channel import Channel
     from .message import BaseMessage
     from .state import State
 
@@ -58,6 +65,25 @@ class ReadState:
     mentioned_in: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The message's IDs that mention the user."""
 
+    def get_channel(self) -> typing.Optional[Channel]:
+        """Optional[:class:`.Channel`]: The channel the read state belongs to."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelThroughReadStateChannelCacheContext(
+                type=CacheContextType.channel_through_read_state_channel,
+                read_state=self,
+            )
+            if state.provide_cache_context('ReadState.channel')
+            else _CHANNEL_THROUGH_READ_STATE_CHANNEL
+        )
+
+        return cache.get_channel(self.channel_id, ctx)
+
     def __hash__(self) -> int:
         return hash((self.channel_id, self.user_id))
 
@@ -68,6 +94,14 @@ class ReadState:
             and self.channel_id == other.channel_id
             and self.user_id == self.user_id
         )
+
+    @property
+    def channel(self) -> Channel:
+        """:class:`.Channel`: The channel the read state belongs to."""
+        channel = self.get_channel()
+        if channel is None:
+            raise NoData(what=self.channel_id, type='ReadState.channel')
+        return channel
 
     async def edit(
         self,

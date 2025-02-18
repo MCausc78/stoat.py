@@ -373,7 +373,7 @@ class GroupPublicInvite(BaseInvite):
 
     @property
     def user_avatar(self) -> typing.Optional[Asset]:
-        """Optional[:class:`Asset`]: The user's avatar who created this invite."""
+        """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
         return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
     async def accept(self) -> GroupChannel:

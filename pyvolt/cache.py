@@ -47,6 +47,7 @@ if typing.TYPE_CHECKING:
         Channel,
         ChannelVoiceStateContainer,
     )
+    from .emoji import BaseEmoji
     from .events import (
         ReadyEvent,
         PrivateChannelCreateEvent,
@@ -171,6 +172,13 @@ class CacheContextType(Enum):
     channel_voice_state_container_through_voice_channel_voice_states = (
         'VoiceChannel.voice_states: ChannelVoiceStateContainer'
     )
+    user_through_base_emoji_creator = 'BaseEmoji.creator: User'
+    server_through_server_emoji_server = 'ServerEmoji.server: Server'
+    # TODO: Invite
+    # TODO: Message
+    channel_through_read_state_channel = 'ReadState.channel: Channel'
+    # TODO: Server
+    # TODO: Maybe User?
 
 
 @define(slots=True)
@@ -208,14 +216,6 @@ class ServerCacheContext(BaseCacheContext):
 
     server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`.Server`: The server involved."""
-
-
-@define(slots=True)
-class ServerEmojiCacheContext(BaseCacheContext):
-    """Represents a cache context that involves a server emoji."""
-
-    emoji: ServerEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerEmoji` The emoji involved."""
 
 
 @define(slots=True)
@@ -637,6 +637,31 @@ class VoiceChannelCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class BaseEmojiCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.BaseEmoji` entity."""
+
+    emoji: BaseEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.BaseEmoji`: The emoji involved."""
+
+
+@define(slots=True)
+class ServerEmojiCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.ServerEmoji` entity."""
+
+    emoji: ServerEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerEmoji`: The emoji involved."""
+
+
+# TODOs are in CacheContextType
+@define(slots=True)
+class ReadStateCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.ReadState` entity."""
+
+    read_state: ReadState = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ReadState`: The read state involved."""
+
+
+@define(slots=True)
 class UserThroughBotOwnerCacheContext(BotCacheContext):
     """Represents a cache context that involves an :class:`.Bot` entity, wishing to retrieve bot's owner."""
 
@@ -709,6 +734,21 @@ class ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext(TextCh
 @define(slots=True)
 class ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext(VoiceChannelCacheContext):
     """Represents a cache context that involves an :class:`.VoiceChannel`, wishing to retrieve channel's voice states."""
+
+
+@define(slots=True)
+class UserThroughBaseEmojiCreatorCacheContext(BaseEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.BaseEmoji`, wishing to retrieve emoji's creator."""
+
+
+@define(slots=True)
+class ServerThroughServerEmojiServerCacheContext(ServerEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's server."""
+
+
+@define(slots=True)
+class ChannelThroughReadStateChannelCacheContext(ReadStateCacheContext):
+    """Represents a cache context that involves an :class:`.ReadState`, wishing to retrieve read state's channel."""
 
 
 _UNDEFINED: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.undefined)
@@ -888,6 +928,15 @@ _CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES: typing.Final[
         type=CacheContextType.channel_voice_state_container_through_voice_channel_voice_states,
     )
 )
+_USER_THROUGH_BASE_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_base_emoji_creator,
+)
+_SERVER_THROUGH_SERVER_EMOJI_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_server_emoji_server,
+)
+_CHANNEL_THROUGH_READ_STATE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_read_state_channel,
+)
 
 ProvideCacheContextIn = typing.Literal[
     # Events
@@ -949,6 +998,9 @@ ProvideCacheContextIn = typing.Literal[
     'TextChannel.read_state',
     'TextChannel.voice_states',
     'VoiceChannel.voice_states',
+    'BaseEmoji.creator',
+    'ServerEmoji.server',
+    'ReadState.channel',
     # TODO redo these below
     'ServerEmoji.get_server',
     'BaseMessage.channel',
@@ -968,7 +1020,6 @@ ProvideCacheContextIn = typing.Literal[
     'MessagePinnedSystemEvent.get_by',
     'MessageUnpinnedSystemEvent.get_by',
     'Message.get_author',
-    'ReadState.get_channel',
     'BaseRole.get_server',
     'Server.get_owner',
     'BaseMember.get_server',
@@ -2258,8 +2309,8 @@ __all__ = (
     'DetachedEmojiCacheContext',
     'MessageCacheContext',
     'ServerCacheContext',
-    'ServerEmojiCacheContext',
     'UserCacheContext',
+    # Cache context above are deprecated
     'PrivateChannelCreateEventCacheContext',
     'ServerChannelCreateEventCacheContext',
     'ChannelUpdateEventCacheContext',
@@ -2308,6 +2359,8 @@ __all__ = (
     'DMChannelCacheContext',
     'GroupChannelCacheContext',
     'BaseServerChannelCacheContext',
+    'BaseEmojiCacheContext',
+    'ServerEmojiCacheContext',
     'UserThroughBotOwnerCacheContext',
     'UserThroughDMChannelInitiatorCacheContext',
     'MessageThroughDMChannelLastMessageCacheContext',
@@ -2323,6 +2376,9 @@ __all__ = (
     'ReadStateThroughTextChannelReadStateCacheContext',
     'ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext',
     'ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext',
+    'UserThroughBaseEmojiCreatorCacheContext',
+    'ServerThroughServerEmojiServerCacheContext',
+    'ChannelThroughReadStateChannelCacheContext',
     '_UNDEFINED',
     '_USER_REQUEST',
     '_READY_EVENT',
@@ -2384,6 +2440,9 @@ __all__ = (
     '_READ_STATE_THROUGH_TEXT_CHANNEL_READ_STATE',
     '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_TEXT_CHANNEL_VOICE_STATES',
     '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES',
+    '_USER_THROUGH_BASE_EMOJI_CREATOR',
+    '_SERVER_THROUGH_SERVER_EMOJI_SERVER',
+    '_CHANNEL_THROUGH_READ_STATE_CHANNEL',
     'ProvideCacheContextIn',
     'Cache',
     'EmptyCache',
