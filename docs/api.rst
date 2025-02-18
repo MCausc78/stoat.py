@@ -283,27 +283,6 @@ CacheContextType
     .. attribute:: library_request
 
         The library needs the object for internal purposes.
-    .. attribute:: emoji
-
-        The library asks for object to provide value for ``emoji.get_x()``."""
-    .. attribute:: member
-
-        The library asks for object to provide value for ``member.get_x()``."""
-    .. attribute:: message
-
-        The library asks for object to provide value for ``message.get_x()``."""
-    .. attribute:: role
-
-        The library asks for object to provide value for ``role.get_x()``."""
-    .. attribute:: server
-
-        The library asks for object to provide value for ``server.get_x()``."""
-    .. attribute:: user
-
-        The library asks for object to provide value for ``user.get_x()``."""
-    .. attribute:: webhook
-
-        The library asks for object to provide value for ``webhook.get_x()``."""
     .. attribute:: ready_event
 
         The context relates to :class:`.ReadyEvent` event.

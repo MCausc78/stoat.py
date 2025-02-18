@@ -30,6 +30,7 @@ import typing
 from .base import Base
 from .cache import CacheContextType, UserThroughBotOwnerCacheContext, _USER_THROUGH_BOT_OWNER
 from .core import UNDEFINED, UndefinedOr
+from .errors import NoData
 from .flags import BotFlags
 
 if typing.TYPE_CHECKING:
@@ -205,6 +206,7 @@ class Bot(BaseBot):
     """:class:`.User`: The user associated with this bot."""
 
     def get_owner(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who owns this bot."""
         state = self.state
         cache = state.cache
 
@@ -228,6 +230,14 @@ class Bot(BaseBot):
         ret = _new_bot_flags(BotFlags)
         ret.value = self.raw_flags
         return ret
+
+    @property
+    def owner(self) -> User:
+        """:class:`.User`: The user who owns this bot."""
+        owner = self.get_owner()
+        if owner is None:
+            raise NoData(what=self.owner_id, type='Bot.owner')
+        return owner
 
 
 @define(slots=True)
