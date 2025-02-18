@@ -179,6 +179,7 @@ class CacheContextType(Enum):
     channel_through_read_state_channel = 'ReadState.channel: Channel'
     # TODO: Server
     # TODO: Maybe User?
+    # TODO: Webhook
 
 
 @define(slots=True)
