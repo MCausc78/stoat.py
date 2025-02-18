@@ -7,7 +7,7 @@ A simple, flexible API wrapper for Revolt.
     This is beta software. Please report bugs on GitHub issues if you will find any.
 
 Key Features
--------------
+------------
 
 - Built on ``asyncio``.
 - Sane rate limit handling that prevents 429s
@@ -32,7 +32,7 @@ To install the library, you can just run the following command:
     py -3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
 
 Quick Example
---------------
+-------------
 
 .. code:: py
 
@@ -50,9 +50,28 @@ Quick Example
             if message.content == 'ping':
                 await message.channel.send('pong')
 
-    # You can pass ``bot=False`` to run as user account
+    # You can pass `bot=False` to run as user account
     client = MyClient(token='token')
     client.run()
+
+Bot Example
+-----------
+
+.. code:: py
+
+    from pyvolt.ext import commands
+
+    # Pass `self_bot=True` to make your bot listen only to you
+    bot = commands.Bot(command_prefix='!', token=token)
+
+    @bot.command()
+    async def ping(ctx):
+        await ctx.send('Pong!')
+
+    token = 'token'
+
+    # That's also allowed, just like in `discord.py`. Pass `bot=False` keyword argument if you want to run as user account.
+    bot.run(token)
 
 Links
 ------

@@ -38,7 +38,15 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .bot import Bot
-    from .channel import DMChannel, GroupChannel, Channel, ChannelVoiceStateContainer
+    from .channel import (
+        DMChannel,
+        GroupChannel,
+        BaseServerChannel,
+        TextChannel,
+        VoiceChannel,
+        Channel,
+        ChannelVoiceStateContainer,
+    )
     from .events import (
         ReadyEvent,
         PrivateChannelCreateEvent,
@@ -143,7 +151,26 @@ class CacheContextType(Enum):
     user_voice_state_update_event = 'UserVoiceStateUpdateEvent'
     authenticated_event = 'AuthenticatedEvent'
 
+    # Relationships
     user_through_bot_owner = 'Bot.owner: User'
+    user_through_dm_channel_initiator = 'DMChannel.initiator: User'
+    message_through_dm_channel_last_message = 'DMChannel.last_message: Optional[Message]'
+    read_state_through_dm_channel_read_state = 'DMChannel.read_state: ReadState'
+    user_through_dm_channel_recipient = 'DMChannel.recipient: User'
+    user_through_dm_channel_recipients = 'DMChannel.recipients: Tuple[User, User]'
+    message_through_group_channel_last_message = 'GroupChannel.last_message: Optional[Message]'
+    user_through_group_channel_owner = 'GroupChannel.owner: User'
+    read_state_through_group_channel_read_state = 'GroupChannel.read_state: ReadState'
+    user_through_group_channel_recipients = 'GroupChannel.recipients: List[User]'
+    server_through_server_channel = 'BaseServerChannel.server: Server'
+    message_through_text_channel_last_message = 'TextChannel.last_message: Optional[Message]'
+    read_state_through_text_channel_read_state = 'TextChannel.read_state: ReadState'
+    channel_voice_state_container_through_text_channel_voice_states = (
+        'TextChannel.voice_states: ChannelVoiceStateContainer'
+    )
+    channel_voice_state_container_through_voice_channel_voice_states = (
+        'VoiceChannel.voice_states: ChannelVoiceStateContainer'
+    )
 
 
 @define(slots=True)
@@ -570,154 +597,360 @@ class BotCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class DMChannelCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.DMChannel` entity."""
+
+    channel: DMChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.DMChannel`: The channel involved."""
+
+
+@define(slots=True)
+class GroupChannelCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.GroupChannel` entity."""
+
+    channel: GroupChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.GroupChannel`: The channel involved."""
+
+
+@define(slots=True)
+class BaseServerChannelCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServerChannel` entity."""
+
+    channel: BaseServerChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.BaseServerChannel`: The channel involved."""
+
+
+@define(slots=True)
+class TextChannelCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.TextChannel` entity."""
+
+    channel: TextChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.TextChannel`: The channel involved."""
+
+
+@define(slots=True)
+class VoiceChannelCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.VoiceChannel` entity."""
+
+    channel: VoiceChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.VoiceChannel`: The channel involved."""
+
+
+@define(slots=True)
 class UserThroughBotOwnerCacheContext(BotCacheContext):
     """Represents a cache context that involves an :class:`.Bot` entity, wishing to retrieve bot's owner."""
+
+
+@define(slots=True)
+class UserThroughDMChannelInitiatorCacheContext(DMChannelCacheContext):
+    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve DM channel's initiator."""
+
+
+@define(slots=True)
+class MessageThroughDMChannelLastMessageCacheContext(DMChannelCacheContext):
+    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve last DM channel's message."""
+
+
+@define(slots=True)
+class ReadStateThroughDMChannelReadStateCacheContext(DMChannelCacheContext):
+    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve DM channel's read state."""
+
+
+@define(slots=True)
+class UserThroughDMChannelRecipientCacheContext(DMChannelCacheContext):
+    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve DM channel's recipient."""
+
+
+@define(slots=True)
+class UserThroughDMChannelRecipientsCacheContext(DMChannelCacheContext):
+    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve DM channel's recipients."""
+
+
+@define(slots=True)
+class MessageThroughGroupChannelLastMessageCacheContext(GroupChannelCacheContext):
+    """Represents a cache context that involves an :class:`.GroupChannel`, wishing to retrieve last group channel's message."""
+
+
+@define(slots=True)
+class ReadStateThroughGroupChannelReadStateCacheContext(GroupChannelCacheContext):
+    """Represents a cache context that involves an :class:`.GroupChannel`, wishing to retrieve group channel's read state."""
+
+
+@define(slots=True)
+class UserThroughGroupChannelOwnerCacheContext(GroupChannelCacheContext):
+    """Represents a cache context that involves an :class:`.GroupChannel`, wishing to retrieve group channel's owner."""
+
+
+@define(slots=True)
+class UserThroughGroupChannelRecipientsCacheContext(GroupChannelCacheContext):
+    """Represents a cache context that involves an :class:`.GroupChannel`, wishing to retrieve group channel's recipients."""
+
+
+@define(slots=True)
+class ServerThroughServerChannelCacheContext(BaseServerChannelCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServerChannel`, wishing to retrieve server the channel belongs to."""
+
+
+@define(slots=True)
+class MessageThroughTextChannelLastMessageCacheContext(TextChannelCacheContext):
+    """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve last text channel's message."""
+
+
+@define(slots=True)
+class ReadStateThroughTextChannelReadStateCacheContext(TextChannelCacheContext):
+    """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve text channel's read state."""
+
+
+@define(slots=True)
+class ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext(TextChannelCacheContext):
+    """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve channel's voice states."""
+
+
+@define(slots=True)
+class ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext(VoiceChannelCacheContext):
+    """Represents a cache context that involves an :class:`.VoiceChannel`, wishing to retrieve channel's voice states."""
 
 
 _UNDEFINED: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.undefined)
 _USER_REQUEST: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.user_request)
 _READY_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.ready_event)
 _PRIVATE_CHANNEL_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.private_channel_create_event
+    type=CacheContextType.private_channel_create_event,
 )
 _SERVER_CHANNEL_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_channel_create_event
+    type=CacheContextType.server_channel_create_event,
 )
 _CHANNEL_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.channel_update_event
+    type=CacheContextType.channel_update_event,
 )
 _CHANNEL_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.channel_delete_event
+    type=CacheContextType.channel_delete_event,
 )
 _GROUP_RECIPIENT_ADD_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.group_recipient_add_event
+    type=CacheContextType.group_recipient_add_event,
 )
 _GROUP_RECIPIENT_REMOVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.group_recipient_remove_event
+    type=CacheContextType.group_recipient_remove_event,
 )
 _CHANNEL_START_TYPING_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.channel_start_typing_event
+    type=CacheContextType.channel_start_typing_event,
 )
 _CHANNEL_STOP_TYPING_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.channel_stop_typing_event
+    type=CacheContextType.channel_stop_typing_event,
 )
 _MESSAGE_ACK_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.message_ack_event)
 _MESSAGE_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.message_create_event
+    type=CacheContextType.message_create_event,
 )
 _MESSAGE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.message_update_event
+    type=CacheContextType.message_update_event,
 )
 _MESSAGE_APPEND_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.message_append_event
+    type=CacheContextType.message_append_event,
 )
 _MESSAGE_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.message_delete_event
+    type=CacheContextType.message_delete_event,
 )
 _MESSAGE_REACT_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.message_react_event
+    type=CacheContextType.message_react_event,
 )
 _MESSAGE_UNREACT_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.message_unreact_event
+    type=CacheContextType.message_unreact_event,
 )
 _MESSAGE_CLEAR_REACTION_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.message_clear_reaction_event
+    type=CacheContextType.message_clear_reaction_event,
 )
 _MESSAGE_DELETE_BULK_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.message_delete_bulk_event
+    type=CacheContextType.message_delete_bulk_event,
 )
 _SERVER_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_create_event
+    type=CacheContextType.server_create_event,
 )
 _SERVER_EMOJI_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_emoji_create_event
+    type=CacheContextType.server_emoji_create_event,
 )
 _SERVER_EMOJI_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_emoji_delete_event
+    type=CacheContextType.server_emoji_delete_event,
 )
 _SERVER_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_update_event
+    type=CacheContextType.server_update_event,
 )
 _SERVER_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_delete_event
+    type=CacheContextType.server_delete_event,
 )
 _SERVER_MEMBER_JOIN_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_member_join_event
+    type=CacheContextType.server_member_join_event,
 )
 _SERVER_MEMBER_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_member_update_event
+    type=CacheContextType.server_member_update_event,
 )
 _SERVER_MEMBER_REMOVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_member_remove_event
+    type=CacheContextType.server_member_remove_event,
 )
 _RAW_SERVER_ROLE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.raw_server_role_update_event
+    type=CacheContextType.raw_server_role_update_event,
 )
 _SERVER_ROLE_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_role_delete_event
+    type=CacheContextType.server_role_delete_event,
 )
 _REPORT_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.report_create_event
+    type=CacheContextType.report_create_event,
 )
 _USER_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.user_update_event)
 _USER_RELATIONSHIP_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_relationship_update_event
+    type=CacheContextType.user_relationship_update_event,
 )
 _USER_SETTINGS_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_settings_update_event
+    type=CacheContextType.user_settings_update_event,
 )
 _USER_PLATFORM_WIPE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_platform_wipe_event
+    type=CacheContextType.user_platform_wipe_event,
 )
 _WEBHOOK_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.webhook_create_event
+    type=CacheContextType.webhook_create_event,
 )
 _WEBHOOK_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.webhook_update_event
+    type=CacheContextType.webhook_update_event,
 )
 _WEBHOOK_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.webhook_delete_event
+    type=CacheContextType.webhook_delete_event,
 )
 _SESSION_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.session_create_event
+    type=CacheContextType.session_create_event,
 )
 _SESSION_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.session_delete_event
+    type=CacheContextType.session_delete_event,
 )
 _SESSION_DELETE_ALL_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.session_delete_all_event
+    type=CacheContextType.session_delete_all_event,
 )
 _VOICE_CHANNEL_JOIN_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.voice_channel_join_event
+    type=CacheContextType.voice_channel_join_event,
 )
 _VOICE_CHANNEL_LEAVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.voice_channel_leave_event
+    type=CacheContextType.voice_channel_leave_event,
 )
 _VOICE_CHANNEL_MOVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.voice_channel_move_event,
 )
 _USER_VOICE_STATE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_voice_state_update_event
+    type=CacheContextType.user_voice_state_update_event,
 )
 _AUTHENTICATED_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.authenticated_event
+    type=CacheContextType.authenticated_event,
 )
 _USER_THROUGH_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_bot_owner,
 )
+_USER_THROUGH_DM_CHANNEL_INITIATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_dm_channel_initiator,
+)
+_MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_through_dm_channel_last_message,
+)
+_READ_STATE_THROUGH_DM_CHANNEL_READ_STATE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.read_state_through_dm_channel_read_state,
+)
+_USER_THROUGH_DM_CHANNEL_RECIPIENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_dm_channel_recipient,
+)
+_USER_THROUGH_DM_CHANNEL_RECIPIENTS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_dm_channel_recipients,
+)
+_MESSAGE_THROUGH_GROUP_CHANNEL_LAST_MESSAGE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_through_group_channel_last_message,
+)
+_USER_THROUGH_GROUP_CHANNEL_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_group_channel_owner,
+)
+_READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.read_state_through_group_channel_read_state,
+)
+_USER_THROUGH_GROUP_CHANNEL_RECIPIENTS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_group_channel_recipients,
+)
+_SERVER_THROUGH_SERVER_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_server_channel,
+)
+_MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_through_text_channel_last_message,
+)
+_READ_STATE_THROUGH_TEXT_CHANNEL_READ_STATE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.read_state_through_text_channel_read_state,
+)
+_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_TEXT_CHANNEL_VOICE_STATES: typing.Final[UndefinedCacheContext] = (
+    UndefinedCacheContext(
+        type=CacheContextType.channel_voice_state_container_through_text_channel_voice_states,
+    )
+)
+_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES: typing.Final[UndefinedCacheContext] = (
+    UndefinedCacheContext(
+        type=CacheContextType.channel_voice_state_container_through_voice_channel_voice_states,
+    )
+)
 
 ProvideCacheContextIn = typing.Literal[
+    # Events
+    'ReadyEvent',
+    'PrivateChannelCreateEvent',
+    'ServerChannelCreateEvent',
+    'ChannelUpdateEvent',
+    'ChannelDeleteEvent',
+    'GroupRecipientAddEvent',
+    'GroupRecipientRemoveEvent',
+    'ChannelStartTypingEvent',
+    'ChannelStopTypingEvent',
+    'MessageAckEvent',
+    'MessageCreateEvent',
+    'MessageUpdateEvent',
+    'MessageAppendEvent',
+    'MessageDeleteEvent',
+    'MessageReactEvent',
+    'MessageUnreactEvent',
+    'MessageClearReactionEvent',
+    'MessageDeleteBulkEvent',
+    'ServerCreateEvent',
+    'ServerEmojiCreateEvent',
+    'ServerEmojiDeleteEvent',
+    'ServerUpdateEvent',
+    'ServerDeleteEvent',
+    'ServerMemberJoinEvent',
+    'ServerMemberUpdateEvent',
+    'ServerMemberRemoveEvent',
+    'RawServerRoleUpdateEvent',
+    'ServerRoleDeleteEvent',
+    'ReportCreateEvent',
+    'UserUpdateEvent',
+    'UserRelationshipUpdateEvent',
+    'UserSettingsUpdateEvent',
+    'UserPlatformWipeEvent',
+    'WebhookCreateEvent',
+    'WebhookUpdateEvent',
+    'WebhookDeleteEvent',
+    'SessionCreateEvent',
+    'SessionDeleteEvent',
+    'SessionDeleteAllEvent',
+    'VoiceChannelJoinEvent',
+    'VoiceChannelLeaveEvent',
+    'UserVoiceStateUpdateEvent',
+    'AuthenticatedEvent',
+    # Relationships
     'Bot.owner',
-    # TODO redo these below
+    'DMChannel.initiator',
+    'DMChannel.last_message',
+    'DMChannel.read_state',
+    'DMChannel.recipient',
     'DMChannel.recipients',
-    'DMChannel.get_initiator',
-    'DMChannel.get_target',
-    'GroupChannel.get_owner',
     'GroupChannel.last_message',
+    'GroupChannel.owner',
+    'GroupChannel.read_state',
     'GroupChannel.recipients',
-    'BaseServerChannel.get_server',
+    'BaseServerChannel.server',
+    'TextChannel.read_state',
+    'TextChannel.voice_states',
+    'VoiceChannel.voice_states',
+    # TODO redo these below
     'ServerEmoji.get_server',
-    # TODO: events
     'BaseMessage.channel',
     'UserAddedSystemEvent.get_user',
     'UserAddedSystemEvent.get_by',
@@ -2072,7 +2305,24 @@ __all__ = (
     'AuthenticatedEventCacheContext',
     'EntityCacheContext',
     'BotCacheContext',
+    'DMChannelCacheContext',
+    'GroupChannelCacheContext',
+    'BaseServerChannelCacheContext',
     'UserThroughBotOwnerCacheContext',
+    'UserThroughDMChannelInitiatorCacheContext',
+    'MessageThroughDMChannelLastMessageCacheContext',
+    'ReadStateThroughDMChannelReadStateCacheContext',
+    'UserThroughDMChannelRecipientCacheContext',
+    'UserThroughDMChannelRecipientsCacheContext',
+    'MessageThroughGroupChannelLastMessageCacheContext',
+    'ReadStateThroughGroupChannelReadStateCacheContext',
+    'UserThroughGroupChannelOwnerCacheContext',
+    'UserThroughGroupChannelRecipientsCacheContext',
+    'ServerThroughServerChannelCacheContext',
+    'MessageThroughTextChannelLastMessageCacheContext',
+    'ReadStateThroughTextChannelReadStateCacheContext',
+    'ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext',
+    'ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext',
     '_UNDEFINED',
     '_USER_REQUEST',
     '_READY_EVENT',
@@ -2120,6 +2370,20 @@ __all__ = (
     '_USER_VOICE_STATE_UPDATE_EVENT',
     '_AUTHENTICATED_EVENT',
     '_USER_THROUGH_BOT_OWNER',
+    '_USER_THROUGH_DM_CHANNEL_INITIATOR',
+    '_MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE',
+    '_READ_STATE_THROUGH_DM_CHANNEL_READ_STATE',
+    '_USER_THROUGH_DM_CHANNEL_RECIPIENT',
+    '_USER_THROUGH_DM_CHANNEL_RECIPIENTS',
+    '_MESSAGE_THROUGH_GROUP_CHANNEL_LAST_MESSAGE',
+    '_USER_THROUGH_GROUP_CHANNEL_OWNER',
+    '_READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE',
+    '_USER_THROUGH_GROUP_CHANNEL_RECIPIENTS',
+    '_SERVER_THROUGH_SERVER_CHANNEL',
+    '_MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE',
+    '_READ_STATE_THROUGH_TEXT_CHANNEL_READ_STATE',
+    '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_TEXT_CHANNEL_VOICE_STATES',
+    '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES',
     'ProvideCacheContextIn',
     'Cache',
     'EmptyCache',

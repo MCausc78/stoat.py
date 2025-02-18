@@ -27,10 +27,40 @@ from __future__ import annotations
 from attrs import define, field
 import typing
 
-from . import cache as caching
-
 from .abc import Messageable, Connectable
 from .base import Base
+from .cache import (
+    CacheContextType,
+    UserThroughDMChannelInitiatorCacheContext,
+    MessageThroughDMChannelLastMessageCacheContext,
+    ReadStateThroughDMChannelReadStateCacheContext,
+    UserThroughDMChannelRecipientCacheContext,
+    UserThroughDMChannelRecipientsCacheContext,
+    MessageThroughGroupChannelLastMessageCacheContext,
+    ReadStateThroughGroupChannelReadStateCacheContext,
+    UserThroughGroupChannelOwnerCacheContext,
+    UserThroughGroupChannelRecipientsCacheContext,
+    ServerThroughServerChannelCacheContext,
+    MessageThroughTextChannelLastMessageCacheContext,
+    ReadStateThroughTextChannelReadStateCacheContext,
+    ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext,
+    ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext,
+    _USER_THROUGH_DM_CHANNEL_INITIATOR,
+    _MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE,
+    _READ_STATE_THROUGH_DM_CHANNEL_READ_STATE,
+    _USER_THROUGH_DM_CHANNEL_RECIPIENT,
+    _USER_THROUGH_DM_CHANNEL_RECIPIENTS,
+    _MESSAGE_THROUGH_GROUP_CHANNEL_LAST_MESSAGE,
+    _USER_THROUGH_GROUP_CHANNEL_OWNER,
+    _READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE,
+    _USER_THROUGH_GROUP_CHANNEL_RECIPIENTS,
+    _SERVER_THROUGH_SERVER_CHANNEL,
+    _MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE,
+    _READ_STATE_THROUGH_TEXT_CHANNEL_READ_STATE,
+    _CHANNEL_VOICE_STATE_CONTAINER_THROUGH_TEXT_CHANNEL_VOICE_STATES,
+    _CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES,
+)
+
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -47,12 +77,13 @@ from .flags import (
     DEFAULT_SAVED_MESSAGES_PERMISSIONS,
     DEFAULT_DM_PERMISSIONS,
 )
+from .read_state import ReadState
 
 if typing.TYPE_CHECKING:
     from .bot import BaseBot
     from .cdn import StatelessAsset, Asset, ResolvableResource
     from .invite import Invite
-    from .message import BaseMessage
+    from .message import BaseMessage, Message
     from .permissions import PermissionOverride
     from .server import BaseRole, Role, Server, Member
     from .state import State
@@ -284,7 +315,7 @@ class PartialChannel(BaseChannel):
 
     @property
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
-        r"""UndefinedOr[Optional[:class:`Asset`]]: The new channel's icon, if applicable. Only for :class:`.GroupChannel` and :class:`.BaseServerChannel`\'s."""
+        r"""UndefinedOr[Optional[:class:`.Asset`]]: The new channel's icon, if applicable. Only for :class:`.GroupChannel` and :class:`.BaseServerChannel`\'s."""
         if self.internal_icon in (None, UNDEFINED):
             return self.internal_icon
         return self.internal_icon.attach_state(self.state, 'icons')
@@ -478,6 +509,186 @@ class DMChannel(BaseChannel, Connectable, Messageable):
     def get_channel_id(self) -> str:
         return self.id
 
+    def get_initiator(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user that initiated this PM."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughDMChannelInitiatorCacheContext(
+                type=CacheContextType.user_through_dm_channel_initiator,
+                channel=self,
+            )
+            if state.provide_cache_context('DMChannel.initiator')
+            else _USER_THROUGH_DM_CHANNEL_INITIATOR
+        )
+
+        return cache.get_user(self.initiator_id, ctx)
+
+    def get_last_message(self) -> typing.Optional[Message]:
+        """Optional[:class:`.Message`]: The last message sent in the channel."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        last_message_id = self.last_message_id
+
+        if last_message_id is None:
+            return None
+
+        ctx = (
+            MessageThroughDMChannelLastMessageCacheContext(
+                type=CacheContextType.message_through_dm_channel_last_message,
+                channel=self,
+            )
+            if state.provide_cache_context('DMChannel.last_message')
+            else _MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE
+        )
+
+        return cache.get_message(self.id, last_message_id, ctx)
+
+    @typing.overload
+    def get_read_state(
+        self,
+        *,
+        default_acked_message_id: typing.Optional[str] = None,
+        create_if_not_exists: typing.Literal[True] = ...,
+    ) -> ReadState: ...
+
+    @typing.overload
+    def get_read_state(
+        self,
+        *,
+        default_acked_message_id: typing.Optional[str] = None,
+        create_if_not_exists: typing.Literal[False] = ...,
+    ) -> typing.Optional[ReadState]: ...
+
+    def get_read_state(
+        self,
+        *,
+        default_acked_message_id: typing.Optional[str] = None,
+        create_if_not_exists: bool = True,
+    ) -> typing.Optional[ReadState]:
+        """Optional[:class:`.ReadState`]: Returns the channel's read state.
+
+        Parameters
+        ----------
+        default_acked_message_id: Optional[:class:`str`]
+            The default acked message ID to use if read state is not found.
+        create_if_not_exists: :class:`bool`
+            Whether to create a read state and store it if existing was not found.
+        """
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            if create_if_not_exists:
+                return ReadState(
+                    state=state,
+                    channel_id=self.id,
+                    user_id=state.my_id,
+                    last_acked_message_id=default_acked_message_id,
+                    mentioned_in=[],
+                )
+            return None
+
+        ctx = (
+            ReadStateThroughDMChannelReadStateCacheContext(
+                type=CacheContextType.read_state_through_dm_channel_read_state,
+                channel=self,
+            )
+            if state.provide_cache_context('DMChannel.read_state')
+            else _READ_STATE_THROUGH_DM_CHANNEL_READ_STATE
+        )
+
+        read_state = cache.get_read_state(self.id, ctx)
+        if read_state is None and create_if_not_exists:
+            read_state = ReadState(
+                state=state,
+                channel_id=self.id,
+                user_id=state.my_id,
+                last_acked_message_id=default_acked_message_id,
+                mentioned_in=[],
+            )
+            cache.store_read_state(read_state, ctx)
+        return read_state
+
+    def get_recipient(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The recipient."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughDMChannelRecipientCacheContext(
+                type=CacheContextType.user_through_dm_channel_recipient,
+                channel=self,
+            )
+            if state.provide_cache_context('DMChannel.recipient')
+            else _USER_THROUGH_DM_CHANNEL_RECIPIENT
+        )
+
+        return cache.get_user(self.initiator_id, ctx)
+
+    def get_recipients(
+        self,
+    ) -> tuple[
+        typing.Optional[User],
+        typing.Optional[User],
+    ]:
+        """Tuple[Optional[:class:`.User`], Optional[:class:`.User`]]: The recipient."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return (None, None)
+
+        ctx = (
+            UserThroughDMChannelRecipientsCacheContext(
+                type=CacheContextType.user_through_dm_channel_recipients,
+                channel=self,
+            )
+            if state.provide_cache_context('DMChannel.recipients')
+            else _USER_THROUGH_DM_CHANNEL_RECIPIENTS
+        )
+
+        a = cache.get_user(self.recipient_ids[0], ctx)
+        b = cache.get_user(self.recipient_ids[0], ctx)
+
+        return (a, b)
+
+    @property
+    def last_message(self) -> typing.Optional[Message]:
+        """Optional[:class:`.Message`]: The last message sent in the channel."""
+
+        message = self.get_last_message()
+        if message is None:
+            if self.last_message_id is None:
+                return None
+            raise NoData(what=self.last_message_id, type='DMChannel.last_message')
+        return message
+
+    @property
+    def read_state(self) -> ReadState:
+        """:class:`.ReadState`: Returns the channel's read state."""
+        return self.get_read_state()
+
+    @property
+    def recipient(self) -> User:
+        """:class:`.User`: The recipient."""
+        recipient = self.get_recipient()
+        if recipient is None:
+            raise NoData(what=self.recipient_id, type='DMChannel.recipient')
+        return recipient
+
     @property
     def initiator_id(self) -> str:
         """:class:`str`: The user's ID that started this PM."""
@@ -488,7 +699,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         """:class:`str`: The recipient's ID."""
         me = self.state.me
 
-        if not me:
+        if me is None:
             return ''
 
         a = self.recipient_ids[0]
@@ -589,6 +800,116 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
     def get_channel_id(self) -> str:
         return self.id
 
+    def get_last_message(self) -> typing.Optional[Message]:
+        """Optional[:class:`.Message`]: The last message sent in the channel."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        last_message_id = self.last_message_id
+
+        if last_message_id is None:
+            return None
+
+        ctx = (
+            MessageThroughGroupChannelLastMessageCacheContext(
+                type=CacheContextType.message_through_group_channel_last_message,
+                channel=self,
+            )
+            if state.provide_cache_context('GroupChannel.last_message')
+            else _MESSAGE_THROUGH_GROUP_CHANNEL_LAST_MESSAGE
+        )
+
+        return cache.get_message(self.id, last_message_id, ctx)
+
+    def get_owner(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who owns this group."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughGroupChannelOwnerCacheContext(
+                type=CacheContextType.user_through_dm_channel_recipient,
+                channel=self,
+            )
+            if state.provide_cache_context('GroupChannel.owner')
+            else _USER_THROUGH_GROUP_CHANNEL_OWNER
+        )
+
+        return cache.get_user(self.owner_id, ctx)
+
+    @typing.overload
+    def get_read_state(
+        self,
+        *,
+        default_acked_message_id: typing.Optional[str] = None,
+        create_if_not_exists: typing.Literal[True] = ...,
+    ) -> ReadState: ...
+
+    @typing.overload
+    def get_read_state(
+        self,
+        *,
+        default_acked_message_id: typing.Optional[str] = None,
+        create_if_not_exists: typing.Literal[False] = ...,
+    ) -> typing.Optional[ReadState]: ...
+
+    def get_read_state(
+        self,
+        *,
+        default_acked_message_id: typing.Optional[str] = None,
+        create_if_not_exists: bool = True,
+    ) -> typing.Optional[ReadState]:
+        """Optional[:class:`.ReadState`]: Returns the channel's read state.
+
+        Parameters
+        ----------
+        default_acked_message_id: Optional[:class:`str`]
+            The default acked message ID to use if read state is not found.
+        create_if_not_exists: :class:`bool`
+            Whether to create a read state and store it if existing was not found.
+        """
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            if create_if_not_exists:
+                return ReadState(
+                    state=state,
+                    channel_id=self.id,
+                    user_id=state.my_id,
+                    last_acked_message_id=default_acked_message_id,
+                    mentioned_in=[],
+                )
+            return None
+
+        ctx = (
+            ReadStateThroughGroupChannelReadStateCacheContext(
+                type=CacheContextType.read_state_through_group_channel_read_state,
+                channel=self,
+            )
+            if state.provide_cache_context('GroupChannel.read_state')
+            else _READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE
+        )
+
+        read_state = cache.get_read_state(self.id, ctx)
+        if read_state is None and create_if_not_exists:
+            read_state = ReadState(
+                state=state,
+                channel_id=self.id,
+                user_id=state.my_id,
+                last_acked_message_id=default_acked_message_id,
+                mentioned_in=[],
+            )
+            cache.store_read_state(read_state, ctx)
+        return read_state
+
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
 
@@ -640,6 +961,17 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
+    def last_message(self) -> typing.Optional[Message]:
+        """Optional[:class:`.Message`]: The last message sent in the channel."""
+
+        message = self.get_last_message()
+        if message is None:
+            if self.last_message_id is None:
+                return None
+            raise NoData(what=self.last_message_id, type='GroupChannel.last_message')
+        return message
+
+    @property
     def permissions(self) -> typing.Optional[Permissions]:
         """Optional[:class:`.Permissions`]: The permissions assigned to members of this group.
 
@@ -653,6 +985,19 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         return ret
 
     @property
+    def owner(self) -> User:
+        """:class:`.User`: The user who owns this group."""
+        owner = self.get_owner()
+        if owner is None:
+            raise NoData(what=self.owner_id, type='GroupChannel.owner')
+        return owner
+
+    @property
+    def read_state(self) -> ReadState:
+        """:class:`.ReadState`: Returns the channel's read state."""
+        return self.get_read_state()
+
+    @property
     def recipient_ids(self) -> list[str]:
         """List[:class:`str`]: The IDs of users participating in channel."""
         if self._recipients[0]:
@@ -664,14 +1009,27 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
     def recipients(self) -> list[User]:
         """List[:class:`.User`]: The users participating in channel."""
         if self._recipients[0]:
-            cache = self.state.cache
-            if not cache:
+            state = self.state
+            cache = state.cache
+
+            if cache is None:
                 return []
+
             recipient_ids: list[str] = self._recipients[1]  # type: ignore
             recipients = []
+
+            ctx = (
+                UserThroughGroupChannelRecipientsCacheContext(
+                    type=CacheContextType.user_through_group_channel_recipients,
+                    channel=self,
+                )
+                if state.provide_cache_context('GroupChannel.recipients')
+                else _USER_THROUGH_GROUP_CHANNEL_RECIPIENTS
+            )
+
             for recipient_id in recipient_ids:
-                user = cache.get_user(recipient_id, caching._USER_REQUEST)
-                if user:
+                user = cache.get_user(recipient_id, ctx)
+                if user is not None:
                     recipients.append(user)
             return recipients
         else:
@@ -1140,29 +1498,24 @@ class BaseServerChannel(BaseChannel):
     nsfw: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether this channel is marked as not safe for work."""
 
-    def locally_update(self, data: PartialChannel, /) -> None:
-        """Locally updates channel with provided data.
+    def get_server(self) -> typing.Optional[Server]:
+        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        state = self.state
+        cache = state.cache
 
-        .. warning::
-            This is called by library internally to keep cache up to date.
+        if cache is None:
+            return None
 
-        Parameters
-        ----------
-        data: :class:`.PartialChannel`
-            The data to update channel with.
-        """
-        if data.name is not UNDEFINED:
-            self.name = data.name
-        if data.description is not UNDEFINED:
-            self.description = data.description
-        if data.internal_icon is not UNDEFINED:
-            self.internal_icon = data.internal_icon
-        if data.nsfw is not UNDEFINED:
-            self.nsfw = data.nsfw
-        if data.role_permissions is not UNDEFINED:
-            self.role_permissions = data.role_permissions
-        if data.default_permissions is not UNDEFINED:
-            self.default_permissions = data.default_permissions
+        ctx = (
+            ServerThroughServerChannelCacheContext(
+                type=CacheContextType.server_through_server_channel,
+                channel=self,
+            )
+            if state.provide_cache_context('BaseServerChannel.server')
+            else _SERVER_THROUGH_SERVER_CHANNEL
+        )
+
+        return cache.get_server(self.server_id, ctx)
 
     @property
     def icon(self) -> typing.Optional[Asset]:
@@ -1176,13 +1529,6 @@ class BaseServerChannel(BaseChannel):
         if server is None:
             raise NoData(self.server_id, 'channel server')
         return server
-
-    def get_server(self) -> typing.Optional[Server]:
-        """Optional[:class:`.Server`]: The server that channel belongs to."""
-        cache = self.state.cache
-        if cache is None:
-            return None
-        return cache.get_server(self.server_id, caching._USER_REQUEST)
 
     async def create_invite(self) -> Invite:
         """|coro|
@@ -1431,6 +1777,30 @@ class BaseServerChannel(BaseChannel):
         result = await self.state.http.set_default_channel_permissions(self.id, permissions)
         return result  # type: ignore
 
+    def locally_update(self, data: PartialChannel, /) -> None:
+        """Locally updates channel with provided data.
+
+        .. warning::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`.PartialChannel`
+            The data to update channel with.
+        """
+        if data.name is not UNDEFINED:
+            self.name = data.name
+        if data.description is not UNDEFINED:
+            self.description = data.description
+        if data.internal_icon is not UNDEFINED:
+            self.internal_icon = data.internal_icon
+        if data.nsfw is not UNDEFINED:
+            self.nsfw = data.nsfw
+        if data.role_permissions is not UNDEFINED:
+            self.role_permissions = data.role_permissions
+        if data.default_permissions is not UNDEFINED:
+            self.default_permissions = data.default_permissions
+
     def permissions_for(
         self,
         target: typing.Union[User, Member],
@@ -1524,6 +1894,97 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
     def get_channel_id(self) -> str:
         return self.id
 
+    def get_last_message(self) -> typing.Optional[Message]:
+        """Optional[:class:`.Message`]: The last message sent in the channel."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        last_message_id = self.last_message_id
+
+        if last_message_id is None:
+            return None
+
+        ctx = (
+            MessageThroughTextChannelLastMessageCacheContext(
+                type=CacheContextType.message_through_text_channel_last_message,
+                channel=self,
+            )
+            if state.provide_cache_context('DMChannel.last_message')
+            else _MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE
+        )
+
+        return cache.get_message(self.id, last_message_id, ctx)
+
+    @typing.overload
+    def get_read_state(
+        self,
+        *,
+        default_acked_message_id: typing.Optional[str] = None,
+        create_if_not_exists: typing.Literal[True] = ...,
+    ) -> ReadState: ...
+
+    @typing.overload
+    def get_read_state(
+        self,
+        *,
+        default_acked_message_id: typing.Optional[str] = None,
+        create_if_not_exists: typing.Literal[False] = ...,
+    ) -> typing.Optional[ReadState]: ...
+
+    def get_read_state(
+        self,
+        *,
+        default_acked_message_id: typing.Optional[str] = None,
+        create_if_not_exists: bool = True,
+    ) -> typing.Optional[ReadState]:
+        """Optional[:class:`.ReadState`]: Returns the channel's read state.
+
+        Parameters
+        ----------
+        default_acked_message_id: Optional[:class:`str`]
+            The default acked message ID to use if read state is not found.
+        create_if_not_exists: :class:`bool`
+            Whether to create a read state and store it if existing was not found.
+        """
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            if create_if_not_exists:
+                return ReadState(
+                    state=state,
+                    channel_id=self.id,
+                    user_id=state.my_id,
+                    last_acked_message_id=default_acked_message_id,
+                    mentioned_in=[],
+                )
+            return None
+
+        ctx = (
+            ReadStateThroughTextChannelReadStateCacheContext(
+                type=CacheContextType.read_state_through_text_channel_read_state,
+                channel=self,
+            )
+            if state.provide_cache_context('TextChannel.read_state')
+            else _READ_STATE_THROUGH_TEXT_CHANNEL_READ_STATE
+        )
+
+        read_state = cache.get_read_state(self.id, ctx)
+        if read_state is None and create_if_not_exists:
+            read_state = ReadState(
+                state=state,
+                channel_id=self.id,
+                user_id=state.my_id,
+                last_acked_message_id=default_acked_message_id,
+                mentioned_in=[],
+            )
+            cache.store_read_state(read_state, ctx)
+        return read_state
+
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
 
@@ -1545,20 +2006,52 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         return ChannelType.text
 
     @property
+    def last_message(self) -> typing.Optional[Message]:
+        """Optional[:class:`.Message`]: The last message sent in the channel."""
+
+        message = self.get_last_message()
+        if message is None:
+            if self.last_message_id is None:
+                return None
+            raise NoData(what=self.last_message_id, type='TextChannel.last_message')
+        return message
+
+    @property
+    def read_state(self) -> ReadState:
+        """:class:`.ReadState`: Returns the channel's read state."""
+        return self.get_read_state()
+
+    @property
     def voice_states(self) -> ChannelVoiceStateContainer:
         """:class:`.ChannelVoiceStateContainer`: Returns all voice states in the channel."""
-        cache = self.state.cache
-        if cache:
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            res = None
+        else:
+            ctx = (
+                ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext(
+                    type=CacheContextType.channel_voice_state_container_through_text_channel_voice_states,
+                    channel=self,
+                )
+                if state.provide_cache_context('TextChannel.voice_states')
+                else _CHANNEL_VOICE_STATE_CONTAINER_THROUGH_TEXT_CHANNEL_VOICE_STATES
+            )
             res = cache.get_channel_voice_state(
                 self.id,
-                caching._USER_REQUEST,
+                ctx,
             )
-        else:
-            res = None
-        return res or ChannelVoiceStateContainer(
-            channel_id=self.id,
-            participants={},
-            node='',
+
+        return (
+            ChannelVoiceStateContainer(
+                channel_id=self.id,
+                participants={},
+                node='',
+            )
+            if res is None
+            else res
         )
 
     async def create_webhook(
@@ -1650,18 +2143,34 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
     @property
     def voice_states(self) -> ChannelVoiceStateContainer:
         """:class:`.ChannelVoiceStateContainer`: Returns all voice states in the channel."""
-        cache = self.state.cache
+
+        state = self.state
+        cache = state.cache
+
         if cache is None:
             res = None
         else:
+            ctx = (
+                ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext(
+                    type=CacheContextType.channel_voice_state_container_through_voice_channel_voice_states,
+                    channel=self,
+                )
+                if state.provide_cache_context('VoiceChannel.voice_states')
+                else _CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES
+            )
             res = cache.get_channel_voice_state(
                 self.id,
-                caching._USER_REQUEST,
+                ctx,
             )
-        return res or ChannelVoiceStateContainer(
-            channel_id=self.id,
-            participants={},
-            node='',
+
+        return (
+            ChannelVoiceStateContainer(
+                channel_id=self.id,
+                participants={},
+                node='',
+            )
+            if res is None
+            else res
         )
 
 

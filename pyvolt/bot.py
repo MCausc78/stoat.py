@@ -218,7 +218,7 @@ class Bot(BaseBot):
                 type=CacheContextType.user_through_bot_owner,
                 bot=self,
             )
-            if 'Bot.owner' in state.provide_cache_context_in
+            if state.provide_cache_context('Bot.owner')
             else _USER_THROUGH_BOT_OWNER
         )
 

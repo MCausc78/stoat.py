@@ -129,14 +129,14 @@ class Bot(Client, GroupMixin[None]):
     owner_ids: Set[:class:`str`]
         The bot owner's IDs.
     self_bot: :class:`bool`
-        Whether the bot should respond only to logged in user.
+        Whether the bot should listen only to logged in user.
     skip_check: Optional[MaybeAwaitableFunc[[:class:`.Context`], :class:`bool`]]
         A callable that checks whether the command should skipped.
     strip_after_prefix: :class:`bool`
         Whether to strip whitespace after prefix. Setting this to ``True`` allows
         using ``!    help``. Defaults to ``False``.
     user_bot: :class:`bool`
-        Whether the bot should respond to everyone, including themselves.
+        Whether the bot should listen to everyone, including themselves.
     """
 
     __slots__ = (

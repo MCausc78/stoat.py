@@ -380,7 +380,7 @@ class ChannelUpdateEvent(ShardEvent):
                     type=caching.CacheContextType.channel_update_event,
                     event=self,
                 )
-                if 'ChannelUpdateEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('ChannelUpdateEvent')
                 else caching._CHANNEL_UPDATE_EVENT,
             ),
             takes_self=True,
@@ -433,7 +433,7 @@ class ChannelDeleteEvent(ShardEvent):
                     type=caching.CacheContextType.channel_delete_event,
                     event=self,
                 )
-                if 'ChannelDeleteEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('ChannelDeleteEvent')
                 else caching._CHANNEL_DELETE_EVENT,
             ),
             takes_self=True,
@@ -496,7 +496,7 @@ class GroupRecipientAddEvent(ShardEvent):
                     type=caching.CacheContextType.group_recipient_add_event,
                     event=self,
                 )
-                if 'GroupRecipientAddEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('GroupRecipientAddEvent')
                 else caching._GROUP_RECIPIENT_ADD_EVENT,
             ),
             takes_self=True,
@@ -554,7 +554,7 @@ class GroupRecipientRemoveEvent(ShardEvent):
                     type=caching.CacheContextType.group_recipient_remove_event,
                     event=self,
                 )
-                if 'GroupRecipientRemoveEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('GroupRecipientRemoveEvent')
                 else caching._GROUP_RECIPIENT_REMOVE_EVENT,
             ),
             takes_self=True,
@@ -757,7 +757,7 @@ class MessageUpdateEvent(ShardEvent):
                     type=caching.CacheContextType.message_update_event,
                     event=self,
                 )
-                if 'MessageUpdateEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('MessageUpdateEvent')
                 else caching._MESSAGE_UPDATE_EVENT,
             ),
             takes_self=True,
@@ -811,7 +811,7 @@ class MessageAppendEvent(ShardEvent):
                     type=caching.CacheContextType.message_append_event,
                     event=self,
                 )
-                if 'MessageAppendEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('MessageAppendEvent')
                 else caching._MESSAGE_APPEND_EVENT,
             ),
             takes_self=True,
@@ -864,7 +864,7 @@ class MessageDeleteEvent(ShardEvent):
                     type=caching.CacheContextType.message_delete_event,
                     event=self,
                 )
-                if 'MessageDeleteEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('MessageDeleteEvent')
                 else caching._MESSAGE_DELETE_EVENT,
             ),
             takes_self=True,
@@ -921,7 +921,7 @@ class MessageReactEvent(ShardEvent):
                     type=caching.CacheContextType.message_react_event,
                     event=self,
                 )
-                if 'MessageReactEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('MessageReactEvent')
                 else caching._MESSAGE_REACT_EVENT,
             ),
             takes_self=True,
@@ -979,7 +979,7 @@ class MessageUnreactEvent(ShardEvent):
                     type=caching.CacheContextType.message_unreact_event,
                     event=self,
                 )
-                if 'MessageUnreactEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('MessageUnreactEvent')
                 else caching._MESSAGE_UNREACT_EVENT,
             ),
             takes_self=True,
@@ -1034,7 +1034,7 @@ class MessageClearReactionEvent(ShardEvent):
                     type=caching.CacheContextType.message_clear_reaction_event,
                     event=self,
                 )
-                if 'MessageClearReactionEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('MessageClearReactionEvent')
                 else caching._MESSAGE_CLEAR_REACTION_EVENT,
             ),
             takes_self=True,
@@ -1090,7 +1090,7 @@ class MessageDeleteBulkEvent(ShardEvent):
                     type=caching.CacheContextType.message_delete_bulk_event,
                     event=self,
                 )
-                if 'MessageDeleteBulkEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('MessageDeleteBulkEvent')
                 else caching._MESSAGE_DELETE_BULK_EVENT,
             ),
             takes_self=True,
@@ -1240,7 +1240,7 @@ class ServerEmojiDeleteEvent(ShardEvent):
                     type=caching.CacheContextType.server_emoji_delete_event,
                     event=self,
                 )
-                if 'ServerEmojiDeleteEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('ServerEmojiDeleteEvent')
                 else caching._SERVER_EMOJI_DELETE_EVENT,
             ),
             takes_self=True,
@@ -1293,7 +1293,7 @@ class ServerUpdateEvent(ShardEvent):
                     type=caching.CacheContextType.server_update_event,
                     event=self,
                 )
-                if 'ServerUpdateEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('ServerUpdateEvent')
                 else caching._SERVER_UPDATE_EVENT,
             ),
             takes_self=True,
@@ -1346,7 +1346,7 @@ class ServerDeleteEvent(ShardEvent):
                     type=caching.CacheContextType.server_delete_event,
                     event=self,
                 )
-                if 'ServerDeleteEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('ServerDeleteEvent')
                 else caching._SERVER_DELETE_EVENT,
             ),
             takes_self=True,
@@ -1434,7 +1434,7 @@ class ServerMemberUpdateEvent(ShardEvent):
                     type=caching.CacheContextType.server_member_update_event,
                     event=self,
                 )
-                if 'ServerMemberUpdateEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('ServerMemberUpdateEvent')
                 else caching._SERVER_MEMBER_UPDATE_EVENT,
             ),
             takes_self=True,
@@ -1493,7 +1493,7 @@ class ServerMemberRemoveEvent(ShardEvent):
                     type=caching.CacheContextType.server_member_remove_event,
                     event=self,
                 )
-                if 'ServerMemberRemoveEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('ServerMemberRemoveEvent')
                 else caching._SERVER_MEMBER_REMOVE_EVENT,
             ),
             takes_self=True,
@@ -1560,7 +1560,7 @@ class RawServerRoleUpdateEvent(ShardEvent):
                     type=caching.CacheContextType.raw_server_role_update_event,
                     event=self,
                 )
-                if 'RawServerRoleUpdateEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('RawServerRoleUpdateEvent')
                 else caching._RAW_SERVER_ROLE_UPDATE_EVENT,
             ),
             takes_self=True,
@@ -1626,7 +1626,7 @@ class ServerRoleDeleteEvent(ShardEvent):
                     type=caching.CacheContextType.server_role_delete_event,
                     event=self,
                 )
-                if 'ServerRoleDeleteEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('ServerRoleDeleteEvent')
                 else caching._SERVER_ROLE_DELETE_EVENT,
             ),
             takes_self=True,
@@ -1694,7 +1694,7 @@ class UserUpdateEvent(ShardEvent):
                     type=caching.CacheContextType.user_update_event,
                     event=self,
                 )
-                if 'UserUpdateEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('UserUpdateEvent')
                 else caching._USER_UPDATE_EVENT,
             ),
             takes_self=True,
@@ -1753,7 +1753,7 @@ class UserRelationshipUpdateEvent(ShardEvent):
                     type=caching.CacheContextType.user_relationship_update_event,
                     event=self,
                 )
-                if 'UserRelationshipUpdateEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('UserRelationshipUpdateEvent')
                 else caching._USER_RELATIONSHIP_UPDATE_EVENT,
             ),
             takes_self=True,
@@ -1867,7 +1867,7 @@ class UserPlatformWipeEvent(ShardEvent):
                     type=caching.CacheContextType.user_platform_wipe_event,
                     event=self,
                 )
-                if 'UserPlatformWipeEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('UserPlatformWipeEvent')
                 else caching._USER_PLATFORM_WIPE_EVENT,
             ),
             takes_self=True,
@@ -2030,6 +2030,7 @@ class VoiceChannelJoinEvent(ShardEvent):
             cs = ChannelVoiceStateContainer(
                 channel_id=self.channel_id,
                 participants={self.state.user_id: self.state},
+                node='',
             )
         cache.store_channel_voice_state(cs, ctx)
 
@@ -2062,7 +2063,7 @@ class VoiceChannelLeaveEvent(ShardEvent):
                     type=caching.CacheContextType.voice_channel_leave_event,
                     event=self,
                 )
-                if 'VoiceChannelLeaveEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('VoiceChannelLeaveEvent')
                 else caching._VOICE_CHANNEL_LEAVE_EVENT,
             ),
             takes_self=True,
@@ -2125,7 +2126,7 @@ class VoiceChannelMoveEvent(ShardEvent):
                     type=caching.CacheContextType.user_voice_state_update_event,
                     event=self,
                 )
-                if 'VoiceChannelMoveEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('VoiceChannelMoveEvent')
                 else caching._VOICE_CHANNEL_MOVE_EVENT,
             ),
             takes_self=True,
@@ -2161,6 +2162,7 @@ class VoiceChannelMoveEvent(ShardEvent):
             container = ChannelVoiceStateContainer(
                 channel_id=self.to,
                 participants={self.user_id: state},
+                node='',
             )
             cache.store_channel_voice_state(container, self.cache_context)
             self.new_container = container
@@ -2205,7 +2207,7 @@ class UserVoiceStateUpdateEvent(ShardEvent):
                     type=caching.CacheContextType.user_voice_state_update_event,
                     event=self,
                 )
-                if 'UserVoiceStateUpdateEvent' in self.shard.state.provide_cache_context_in
+                if self.shard.state.provide_cache_context('UserVoiceStateUpdateEvent')
                 else caching._USER_VOICE_STATE_UPDATE_EVENT,
             ),
             takes_self=True,

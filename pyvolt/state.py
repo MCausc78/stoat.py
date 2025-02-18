@@ -153,6 +153,14 @@ class State:
         return self._me
 
     @property
+    def my_id(self) -> str:
+        """:class:`str`: Returns the currently logged in user's ID, or empty string if unavailable."""
+        me = self.me
+        if me is None:
+            return ''
+        return me.id
+
+    @property
     def saved_notes(self) -> typing.Optional[SavedMessagesChannel]:
         """Optional[:class:`.SavedMessagesChannel`]: The Saved Notes channel."""
         return self._saved_notes
@@ -168,6 +176,9 @@ class State:
                 partial=True,
             )
         return self._settings
+
+    def provide_cache_context(self, place: ProvideCacheContextIn, /) -> bool:
+        return place in self.provide_cache_context_in
 
 
 __all__ = ('State',)
