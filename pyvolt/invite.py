@@ -34,6 +34,7 @@ if typing.TYPE_CHECKING:
     from .channel import GroupChannel
     from .server import Server
     from .state import State
+    from .user import User
 
 _new_server_flags = ServerFlags.__new__
 
@@ -256,6 +257,34 @@ class ServerPublicInvite(BaseInvite):
 
     member_count: int = field(repr=True, kw_only=True)
     """:class:`int`: The count of members in target server."""
+
+    def get_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The (guessed) user who created this invite.
+
+        This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
+        """
+        cache = self.state.cache
+        if cache is None:
+            return None
+
+        user_name = self.user_name
+        user_avatar_id = None if self.internal_user_avatar is None else self.internal_user_avatar.id
+
+        predicate = (
+            (lambda user, /: user.name == user_name and user.internal_avatar is None)
+            if user_avatar_id is None
+            else (
+                lambda user, /: user.name == user_name
+                and user.internal_avatar is not None
+                and user.internal_avatar.id == user_avatar_id
+            )
+        )
+
+        for user in cache.get_users_mapping().values():
+            if predicate(user):
+                return user
+
+        return None
 
     @property
     def server_flags(self) -> ServerFlags:

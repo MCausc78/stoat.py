@@ -28,12 +28,28 @@ from attrs import define, field
 from datetime import datetime, timedelta
 import typing
 
-from . import (
-    cache as caching,
-    utils,
-)
+from . import utils
 from .base import Base
 from .bot import BaseBot
+from .cache import (
+    CacheContextType,
+    EmojiThroughServerGetterCacheContext,
+    MemberThroughServerGetterCacheContext,
+    EmojisThroughServerGetterCacheContext,
+    MembersThroughServerGetterCacheContext,
+    ChannelThroughServerGetterCacheContext,
+    ChannelsThroughServerGetterCacheContext,
+    MemberThroughServerOwnerCacheContext,
+    UserThroughBaseMemberGetterCacheContext,
+    _EMOJI_THROUGH_SERVER_GETTER,
+    _MEMBER_THROUGH_SERVER_GETTER,
+    _EMOJIS_THROUGH_SERVER_GETTER,
+    _MEMBERS_THROUGH_SERVER_GETTER,
+    _CHANNEL_THROUGH_SERVER_GETTER,
+    _CHANNELS_THROUGH_SERVER_GETTER,
+    _MEMBER_THROUGH_SERVER_OWNER,
+    _USER_THROUGH_MEMBER_GETTER,
+)
 from .cdn import StatelessAsset, Asset, ResolvableResource
 from .core import (
     UNDEFINED,
@@ -481,12 +497,27 @@ class BaseServer(Base):
         Optional[:class:`.ServerEmoji`]
             The emoji or ``None`` if not found.
         """
-        cache = self.state.cache
-        if not cache:
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
             return
-        emoji = cache.get_emoji(emoji_id, caching._USER_REQUEST)
-        if emoji and isinstance(emoji, ServerEmoji) and emoji.server_id == self.id:
-            return emoji
+
+        ctx = (
+            EmojiThroughServerGetterCacheContext(
+                type=CacheContextType.emoji_through_server_getter,
+                server=self,
+            )
+            if state.provide_cache_context('Server.get_emoji()')
+            else _EMOJI_THROUGH_SERVER_GETTER
+        )
+        emoji = cache.get_emoji(emoji_id, ctx)
+
+        if emoji is not None:
+            assert isinstance(emoji, ServerEmoji)
+            if emoji.server_id != self.id:
+                return None
+        return emoji
 
     def get_member(self, user_id: str, /) -> typing.Optional[Member]:
         """Retrieves a server member from cache.
@@ -501,10 +532,21 @@ class BaseServer(Base):
         Optional[:class:`.Member`]
             The member or ``None`` if not found.
         """
-        cache = self.state.cache
-        if not cache:
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
             return
-        return cache.get_server_member(self.id, user_id, caching._USER_REQUEST)
+
+        ctx = (
+            MemberThroughServerGetterCacheContext(
+                type=CacheContextType.member_through_server_getter,
+                server=self,
+            )
+            if state.provide_cache_context('Server.get_member()')
+            else _MEMBER_THROUGH_SERVER_GETTER
+        )
+        return cache.get_server_member(self.id, user_id, ctx)
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseServer) and self.id == other.id
@@ -512,18 +554,42 @@ class BaseServer(Base):
     @property
     def emojis(self) -> Mapping[str, ServerEmoji]:
         """Mapping[:class:`str`, :class:`.ServerEmoji`]: Returns all emojis of this server."""
-        cache = self.state.cache
-        if cache:
-            return cache.get_server_emojis_mapping_of(self.id, caching._USER_REQUEST) or {}
-        return {}
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return {}
+
+        ctx = (
+            EmojisThroughServerGetterCacheContext(
+                type=CacheContextType.emojis_through_server_getter,
+                server=self,
+            )
+            if state.provide_cache_context('Server.emojis')
+            else _EMOJIS_THROUGH_SERVER_GETTER
+        )
+
+        return cache.get_server_emojis_mapping_of(self.id, ctx) or {}
 
     @property
     def members(self) -> Mapping[str, Member]:
         """Mapping[:class:`str`, :class:`.Member`]: Returns all members of this server."""
-        cache = self.state.cache
-        if cache:
-            return cache.get_server_members_mapping_of(self.id, caching._USER_REQUEST) or {}
-        return {}
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return {}
+
+        ctx = (
+            MembersThroughServerGetterCacheContext(
+                type=CacheContextType.members_through_server_getter,
+                server=self,
+            )
+            if state.provide_cache_context('Server.members')
+            else _MEMBERS_THROUGH_SERVER_GETTER
+        )
+
+        return cache.get_server_members_mapping_of(self.id, ctx) or {}
 
     async def add_bot(
         self,
@@ -2281,26 +2347,57 @@ class Server(BaseServer):
         Optional[:class:`.ServerChannel`]
             The channel or ``None`` if not found.
         """
-        cache = self.state.cache
-        if not cache:
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
             return
 
         from .channel import ServerChannel
 
-        channel = cache.get_channel(channel_id, caching._USER_REQUEST)
-        if channel and isinstance(channel, ServerChannel) and (channel.server_id == self.id or channel.server_id == ''):
+        ctx = (
+            ChannelThroughServerGetterCacheContext(
+                type=CacheContextType.channel_through_server_getter,
+                server=self,
+            )
+            if state.provide_cache_context('Server.get_channel()')
+            else _CHANNEL_THROUGH_SERVER_GETTER
+        )
+
+        channel = cache.get_channel(channel_id, ctx)
+        if channel is not None:
+            assert isinstance(channel, ServerChannel)
+            if channel.server_id != self.id and not len(channel.server_id):
+                return None
             return channel
 
-        if not self.internal_channels[0]:
-            for ch in self.internal_channels[1]:
-                t: ServerChannel = ch  # type: ignore
-                if t.id == channel_id:
-                    return t
+        if self.internal_channels[0]:
+            return None
 
-    @property
-    def icon(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The server icon."""
-        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
+        for ch in self.internal_channels[1]:
+            t: ServerChannel = ch  # type: ignore
+            if t.id == channel_id:
+                return t
+
+    def get_owner(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The server's owner."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return
+
+        ctx = (
+            MemberThroughServerOwnerCacheContext(
+                type=CacheContextType.member_through_server_owner,
+                server=self,
+            )
+            if state.provide_cache_context('Server.owner')
+            else _MEMBER_THROUGH_SERVER_OWNER
+        )
+
+        return cache.get_server_member(self.id, self.owner_id, ctx)
 
     @property
     def banner(self) -> typing.Optional[Asset]:
@@ -2317,21 +2414,32 @@ class Server(BaseServer):
 
     @property
     def channels(self) -> list[ServerChannel]:
-        """List[:class:`ServerChannel`]: The channels within this server."""
+        """List[:class:`.ServerChannel`]: The channels within this server."""
 
         if not self.internal_channels[0]:
             return self.internal_channels[1]  # type: ignore
 
-        cache = self.state.cache
+        state = self.state
+        cache = state.cache
+
         if cache is None:
             return []
 
         from .channel import TextChannel, VoiceChannel
 
+        ctx = (
+            ChannelsThroughServerGetterCacheContext(
+                type=CacheContextType.channels_through_server_getter,
+                server=self,
+            )
+            if state.provide_cache_context('Server.channels')
+            else _CHANNELS_THROUGH_SERVER_GETTER
+        )
+
         channels = []
         for channel_id in self.internal_channels[1]:
             id: str = channel_id  # type: ignore
-            channel = cache.get_channel(id, caching._USER_REQUEST)
+            channel = cache.get_channel(id, ctx)
 
             if channel:
                 if channel.__class__ not in (
@@ -2355,6 +2463,20 @@ class Server(BaseServer):
         ret = _new_server_flags(ServerFlags)
         ret.value = self.raw_flags
         return ret
+
+    @property
+    def icon(self) -> typing.Optional[Asset]:
+        """Optional[:class:`.Asset`]: The server icon."""
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
+
+    @property
+    def owner(self) -> Member:
+        """:class:`.Member`: The server's owner."""
+
+        owner = self.get_owner()
+        if owner is None:
+            raise NoData(what=self.owner_id, type='Server.owner')
+        return owner
 
     def is_verified(self) -> bool:
         """:class:`bool`: Whether the server is verified."""
@@ -2445,11 +2567,11 @@ class Server(BaseServer):
 
     def prepare_cached(self) -> list[ServerChannel]:
         """List[:class:`.ServerChannel`]: Prepares the server to be cached."""
-        if not self.internal_channels[0]:
-            channels = self.internal_channels[1]
-            self.internal_channels = (True, self.channel_ids)
-            return channels  # type: ignore
-        return []
+        if self.internal_channels[0]:
+            return []
+        channels = self.internal_channels[1]
+        self.internal_channels = (True, self.channel_ids)
+        return channels  # type: ignore
 
     def upsert_role(self, role: typing.Union[PartialRole, Role], /) -> None:
         """Locally upserts role into :attr:`Server.roles` mapping.
@@ -2512,10 +2634,23 @@ class BaseMember:
         """Optional[:class:`.User`]: Grabs the user from cache."""
         if isinstance(self._user, User):
             return self._user
-        cache = self.state.cache
-        if not cache:
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
             return None
-        return cache.get_user(self._user, caching._USER_REQUEST)
+
+        ctx = (
+            UserThroughBaseMemberGetterCacheContext(
+                type=CacheContextType.user_through_member_getter,
+                member=self,
+            )
+            if state.provide_cache_context('Member.user')
+            else _USER_THROUGH_MEMBER_GETTER
+        )
+
+        return cache.get_user(self._user, ctx)
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -2542,7 +2677,7 @@ class BaseMember:
         """:class:`.User`: The member user."""
         user = self.get_user()
         if user is None:
-            raise NoData(self.id, 'member user')
+            raise NoData(what=self.id, type='Member.user')
         return user
 
     @property
@@ -2694,19 +2829,90 @@ class BaseMember:
         ----------
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
-        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
-            The member's new avatar. Use ``None`` to remove the avatar. You can only change your own server avatar.
-        roles: UndefinedOr[Optional[List[:class:`BaseRole`]]]
+
+            To provide this, you must have :attr:`~Permissions.manage_nicknames` if changing other member's nick.
+            Otherwise, :attr:`~Permissions.change_nickname` is required instead.
+        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+            The member's new avatar. Use ``None`` to remove the avatar.
+
+            You can only change your own server avatar.
+
+            You must have :attr:`~Permissions.change_avatar` to provide this.
+        roles: UndefinedOr[Optional[List[ULIDOr[:class:`.BaseRole`]]]]
             The member's new list of roles. This *replaces* the roles.
-        timeout: UndefinedOr[Optional[Union[:class:`datetime`, :class:`timedelta`, :class:`float`, :class:`int`]]]
+
+            You must have :attr:`~Permissions.assign_roles` to provide this.
+        timeout: UndefinedOr[Optional[Union[:class:`~datetime.datetime`, :class:`~datetime.timedelta`, :class:`float`, :class:`int`]]]
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
-            This must be a timezone-aware datetime object. Consider using :func:`utils.utcnow()`.
+
+            This must be a timezone-aware datetime object. Consider using :func:`pyvolt.utils.utcnow()`.
+
+            You must have :attr:`~Permissions.timeout_members` to provide this.
         can_publish: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should send voice data.
+
+            You must have :attr:`~Permissions.mute_members` to provide this.
         can_receive: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should receive voice data.
-        voice: UndefinedOr[ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]]
+
+            You must have :attr:`~Permissions.deafen_members` to provide this.
+        voice: UndefinedOr[ULIDOr[Union[:class:`.TextChannel`, :class:`.VoiceChannel`]]]
             The voice channel to move the member to.
+
+            You must have :attr:`~Permissions.move_members` to provide this.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+-----------------------------------------------------------------------+
+            | Value                     | Reason                                                                |
+            +---------------------------+-----------------------------------------------------------------------+
+            | ``CannotTimeoutYourself`` | You tried to time out yourself.                                       |
+            +---------------------------+-----------------------------------------------------------------------+
+            | ``NotAVoiceChannel``      | The channel passed in ``voice`` parameter was not voice-like channel. |
+            +---------------------------+-----------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                           |
+            +-----------------------+----------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                      |
+            +-----------------------+----------------------------------------------------------------------------------+
+            | ``NotElevated``       | Ranking of one of roles you tried to add is lower than ranking of your top role. |
+            +-----------------------+----------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+--------------------------------------------------------------------+
+            | Value              | Reason                                                             |
+            +--------------------+--------------------------------------------------------------------+
+            | ``InvalidRole``    | One of provided roles passed in ``roles`` parameter was not found. |
+            +--------------------+--------------------------------------------------------------------+
+            | ``NotFound``       | The server/member was not found.                                   |
+            +--------------------+--------------------------------------------------------------------+
+            | ``UnknownChannel`` | The channel passed in ``voice`` parameter was not found.           |
+            +--------------------+--------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                              | Populated attributes                                                |
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.      | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during editing member. |                                                                     |
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------

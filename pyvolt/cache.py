@@ -96,7 +96,7 @@ if typing.TYPE_CHECKING:
     )
     from .message import Message
     from .read_state import ReadState
-    from .server import Server, Member
+    from .server import BaseServer, Server, BaseMember, Member
     from .webhook import Webhook
 
 _L = logging.getLogger(__name__)
@@ -178,7 +178,14 @@ class CacheContextType(Enum):
     # TODO: Invite
     # TODO: Message
     channel_through_read_state_channel = 'ReadState.channel: Channel'
-    # TODO: Server
+    emoji_through_server_getter = 'Server.get_emoji(): Optional[Emoji]'
+    member_through_server_getter = 'Server.get_member(): Optional[Member]'
+    emojis_through_server_getter = 'Server.emojis: Dict[str, Emoji]'
+    members_through_server_getter = 'Server.members: Dict[str, Member]'
+    channel_through_server_getter = 'Server.get_channel(): Optional[ServerChannel]'
+    channels_through_server_getter = 'Server.channels: List[ServerChannel]'
+    member_through_server_owner = 'Server.owner: Member'
+    user_through_member_getter = 'Member.user: Optional[User]'
     # TODO: Maybe User?
     user_through_webhook_creator = 'Webhook.creator: User'
     channel_through_webhook_channel = 'Webhook.channel: Union[GroupChannel, TextChannel]'
@@ -211,14 +218,6 @@ class MessageCacheContext(BaseCacheContext):
 
     message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`.Message`: The message involved."""
-
-
-@define(slots=True)
-class ServerCacheContext(BaseCacheContext):
-    """Represents a cache context that involves a server."""
-
-    server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.Server`: The server involved."""
 
 
 @define(slots=True)
@@ -665,11 +664,35 @@ class ReadStateCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class BaseServerCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServer` entity."""
+
+    server: BaseServer = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.BaseServer`: The server involved."""
+
+
+@define(slots=True)
+class BaseMemberCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember` entity."""
+
+    member: BaseMember = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.BaseMember`: The member involved."""
+
+
+@define(slots=True)
 class WebhookCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.Webhook` entity."""
 
     webhook: Webhook = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`.Webhook`: The webhook involved."""
+
+
+@define(slots=True)
+class ServerCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.Server` entity."""
+
+    server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.Server`: The server involved."""
 
 
 @define(slots=True)
@@ -760,6 +783,46 @@ class ServerThroughServerEmojiServerCacheContext(ServerEmojiCacheContext):
 @define(slots=True)
 class ChannelThroughReadStateChannelCacheContext(ReadStateCacheContext):
     """Represents a cache context that involves an :class:`.ReadState`, wishing to retrieve read state's channel."""
+
+
+@define(slots=True)
+class EmojiThroughServerGetterCacheContext(BaseServerCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server emoji."""
+
+
+@define(slots=True)
+class MemberThroughServerGetterCacheContext(BaseServerCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server member."""
+
+
+@define(slots=True)
+class EmojisThroughServerGetterCacheContext(BaseServerCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server's emojis."""
+
+
+@define(slots=True)
+class MembersThroughServerGetterCacheContext(BaseServerCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server's members."""
+
+
+@define(slots=True)
+class ChannelThroughServerGetterCacheContext(BaseServerCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server channel."""
+
+
+@define(slots=True)
+class ChannelsThroughServerGetterCacheContext(BaseServerCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server's channels."""
+
+
+@define(slots=True)
+class MemberThroughServerOwnerCacheContext(ServerCacheContext):
+    """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner."""
+
+
+@define(slots=True)
+class UserThroughBaseMemberGetterCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's user."""
 
 
 @define(slots=True)
@@ -958,6 +1021,30 @@ _SERVER_THROUGH_SERVER_EMOJI_SERVER: typing.Final[UndefinedCacheContext] = Undef
 _CHANNEL_THROUGH_READ_STATE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_read_state_channel,
 )
+_EMOJI_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.emoji_through_server_getter,
+)
+_MEMBER_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_server_getter,
+)
+_EMOJIS_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.emojis_through_server_getter,
+)
+_MEMBERS_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.members_through_server_getter,
+)
+_CHANNEL_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_server_getter,
+)
+_CHANNELS_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channels_through_server_getter,
+)
+_MEMBER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_server_owner,
+)
+_USER_THROUGH_MEMBER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_getter,
+)
 _USER_THROUGH_WEBHOOK_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_webhook_creator,
 )
@@ -1028,6 +1115,14 @@ ProvideCacheContextIn = typing.Literal[
     'BaseEmoji.creator',
     'ServerEmoji.server',
     'ReadState.channel',
+    'Server.get_emoji()',
+    'Server.get_member()',
+    'Server.emojis',
+    'Server.members',
+    'Server.get_channel()',
+    'Server.channels',
+    'Server.owner',
+    'Member.user',
     'Webhook.creator',
     'Webhook.channel',
     # TODO redo these below
@@ -2340,7 +2435,6 @@ __all__ = (
     'UndefinedCacheContext',
     'DetachedEmojiCacheContext',
     'MessageCacheContext',
-    'ServerCacheContext',
     'UserCacheContext',
     # Cache context above are deprecated
     'PrivateChannelCreateEventCacheContext',
@@ -2393,6 +2487,7 @@ __all__ = (
     'BaseServerChannelCacheContext',
     'BaseEmojiCacheContext',
     'ServerEmojiCacheContext',
+    'ServerCacheContext',
     'UserThroughBotOwnerCacheContext',
     'UserThroughDMChannelInitiatorCacheContext',
     'MessageThroughDMChannelLastMessageCacheContext',
@@ -2411,6 +2506,13 @@ __all__ = (
     'UserThroughBaseEmojiCreatorCacheContext',
     'ServerThroughServerEmojiServerCacheContext',
     'ChannelThroughReadStateChannelCacheContext',
+    'EmojiThroughServerGetterCacheContext',
+    'MemberThroughServerGetterCacheContext',
+    'EmojisThroughServerGetterCacheContext',
+    'MembersThroughServerGetterCacheContext',
+    'ChannelThroughServerGetterCacheContext',
+    'ChannelsThroughServerGetterCacheContext',
+    'UserThroughBaseMemberGetterCacheContext',
     'UserThroughWebhookCreatorCacheContext',
     'ChannelThroughWebhookChannelCacheContext',
     '_UNDEFINED',
@@ -2477,6 +2579,14 @@ __all__ = (
     '_USER_THROUGH_BASE_EMOJI_CREATOR',
     '_SERVER_THROUGH_SERVER_EMOJI_SERVER',
     '_CHANNEL_THROUGH_READ_STATE_CHANNEL',
+    '_EMOJI_THROUGH_SERVER_GETTER',
+    '_MEMBER_THROUGH_SERVER_GETTER',
+    '_EMOJIS_THROUGH_SERVER_GETTER',
+    '_MEMBERS_THROUGH_SERVER_GETTER',
+    '_CHANNEL_THROUGH_SERVER_GETTER',
+    '_CHANNELS_THROUGH_SERVER_GETTER',
+    '_MEMBER_THROUGH_SERVER_OWNER',
+    '_USER_THROUGH_MEMBER_GETTER',
     '_USER_THROUGH_WEBHOOK_CREATOR',
     '_CHANNEL_THROUGH_WEBHOOK_CHANNEL',
     'ProvideCacheContextIn',
