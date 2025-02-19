@@ -30,7 +30,6 @@ import typing
 
 from attrs import define, field
 
-from .emoji import DetachedEmoji, ServerEmoji, Emoji
 from .enums import Enum
 from .user import User
 
@@ -38,6 +37,7 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .bot import Bot
+    from .emoji import DetachedEmoji, ServerEmoji, Emoji
     from .channel import (
         DMChannel,
         GroupChannel,
@@ -2170,6 +2170,8 @@ class MapCache(Cache):
         self._server_emojis.pop(server_id, None)
 
     def store_emoji(self, emoji: Emoji, ctx: BaseCacheContext, /) -> None:
+        from .emoji import ServerEmoji
+
         if isinstance(emoji, ServerEmoji):
             server_id = emoji.server_id
             if _put0(self._server_emojis, server_id, self._server_emojis_max_size):
@@ -2182,6 +2184,8 @@ class MapCache(Cache):
         _put1(self._emojis, emoji.id, emoji, self._emojis_max_size)
 
     def delete_emoji(self, emoji_id: str, server_id: typing.Optional[str], ctx: BaseCacheContext, /) -> None:
+        from .emoji import ServerEmoji
+
         emoji = self._emojis.pop(emoji_id, None)
 
         server_ids: tuple[str, ...] = ()
