@@ -2407,6 +2407,8 @@ __all__ = (
     'UserThroughBaseEmojiCreatorCacheContext',
     'ServerThroughServerEmojiServerCacheContext',
     'ChannelThroughReadStateChannelCacheContext',
+    'UserThroughWebhookCreatorCacheContext',
+    'ChannelThroughWebhookChannelCacheContext',
     '_UNDEFINED',
     '_USER_REQUEST',
     '_READY_EVENT',
