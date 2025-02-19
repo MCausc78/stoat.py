@@ -97,6 +97,7 @@ if typing.TYPE_CHECKING:
     from .message import Message
     from .read_state import ReadState
     from .server import Server, Member
+    from .webhook import Webhook
 
 _L = logging.getLogger(__name__)
 
@@ -179,7 +180,8 @@ class CacheContextType(Enum):
     channel_through_read_state_channel = 'ReadState.channel: Channel'
     # TODO: Server
     # TODO: Maybe User?
-    # TODO: Webhook
+    user_through_webhook_creator = 'Webhook.creator: User'
+    channel_through_webhook_channel = 'Webhook.channel: Union[GroupChannel, TextChannel]'
 
 
 @define(slots=True)
@@ -663,6 +665,14 @@ class ReadStateCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class WebhookCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.Webhook` entity."""
+
+    webhook: Webhook = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.Webhook`: The webhook involved."""
+
+
+@define(slots=True)
 class UserThroughBotOwnerCacheContext(BotCacheContext):
     """Represents a cache context that involves an :class:`.Bot` entity, wishing to retrieve bot's owner."""
 
@@ -750,6 +760,16 @@ class ServerThroughServerEmojiServerCacheContext(ServerEmojiCacheContext):
 @define(slots=True)
 class ChannelThroughReadStateChannelCacheContext(ReadStateCacheContext):
     """Represents a cache context that involves an :class:`.ReadState`, wishing to retrieve read state's channel."""
+
+
+@define(slots=True)
+class UserThroughWebhookCreatorCacheContext(WebhookCacheContext):
+    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator."""
+
+
+@define(slots=True)
+class ChannelThroughWebhookChannelCacheContext(WebhookCacheContext):
+    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's channel."""
 
 
 _UNDEFINED: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.undefined)
@@ -938,6 +958,12 @@ _SERVER_THROUGH_SERVER_EMOJI_SERVER: typing.Final[UndefinedCacheContext] = Undef
 _CHANNEL_THROUGH_READ_STATE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_read_state_channel,
 )
+_USER_THROUGH_WEBHOOK_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_webhook_creator,
+)
+_CHANNEL_THROUGH_WEBHOOK_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_webhook_channel,
+)
 
 ProvideCacheContextIn = typing.Literal[
     # Events
@@ -1002,6 +1028,8 @@ ProvideCacheContextIn = typing.Literal[
     'BaseEmoji.creator',
     'ServerEmoji.server',
     'ReadState.channel',
+    'Webhook.creator',
+    'Webhook.channel',
     # TODO redo these below
     'ServerEmoji.get_server',
     'BaseMessage.channel',
@@ -1026,7 +1054,6 @@ ProvideCacheContextIn = typing.Literal[
     'BaseMember.get_server',
     'BaseUser.dm_channel_id',
     'BaseUser.dm_channel',
-    'Webhook.channel',
 ]
 
 
@@ -2444,6 +2471,8 @@ __all__ = (
     '_USER_THROUGH_BASE_EMOJI_CREATOR',
     '_SERVER_THROUGH_SERVER_EMOJI_SERVER',
     '_CHANNEL_THROUGH_READ_STATE_CHANNEL',
+    '_USER_THROUGH_WEBHOOK_CREATOR',
+    '_CHANNEL_THROUGH_WEBHOOK_CHANNEL',
     'ProvideCacheContextIn',
     'Cache',
     'EmptyCache',

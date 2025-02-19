@@ -29,12 +29,21 @@ import typing
 from attrs import define, field
 
 from .base import Base
+from .cache import (
+    CacheContextType,
+    UserThroughWebhookCreatorCacheContext,
+    ChannelThroughWebhookChannelCacheContext,
+    _USER_THROUGH_WEBHOOK_CREATOR,
+    _CHANNEL_THROUGH_WEBHOOK_CHANNEL,
+)
 from .cdn import StatelessAsset, Asset, ResolvableResource
+from .channel import GroupChannel, TextChannel
 from .core import (
     UNDEFINED,
     UndefinedOr,
     ULIDOr,
 )
+from .errors import NoData
 from .message import (
     Reply,
     MessageInteractions,
@@ -44,6 +53,9 @@ from .message import (
     Message,
 )
 from .permissions import Permissions
+
+if typing.TYPE_CHECKING:
+    from .user import User
 
 _new_permissions = Permissions.__new__
 
@@ -458,6 +470,51 @@ class Webhook(BaseWebhook):
     token: typing.Optional[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The webhook's private token."""
 
+    def get_creator(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]]: The user who created this webhook."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        creator_id = self.creator_id
+        if not creator_id:
+            return None
+
+        ctx = (
+            UserThroughWebhookCreatorCacheContext(
+                type=CacheContextType.user_through_webhook_creator,
+                webhook=self,
+            )
+            if state.provide_cache_context('Webhook.creator')
+            else _USER_THROUGH_WEBHOOK_CREATOR
+        )
+
+        return cache.get_user(creator_id, ctx)
+
+    def get_channel(self) -> typing.Optional[typing.Union[GroupChannel, TextChannel]]:
+        """Optional[Union[:class:`.GroupChannel`, :class:`.TextChannel`]]: The channel the webhook belongs to."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelThroughWebhookChannelCacheContext(
+                type=CacheContextType.channel_through_webhook_channel,
+                webhook=self,
+            )
+            if state.provide_cache_context('Webhook.channel')
+            else _CHANNEL_THROUGH_WEBHOOK_CHANNEL
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is not None:
+            assert isinstance(channel, (GroupChannel, TextChannel))
+        return channel
+
     def _token(self) -> typing.Optional[str]:
         return self.token
 
@@ -484,6 +541,22 @@ class Webhook(BaseWebhook):
     def avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The webhook's avatar."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
+
+    @property
+    def creator(self) -> User:
+        """:class:`.User`: The user who created this webhook."""
+        creator = self.get_creator()
+        if creator is None:
+            raise NoData(what=self.creator_id, type='Webhook.creator')
+        return creator
+
+    @property
+    def channel(self) -> typing.Union[GroupChannel, TextChannel]:
+        """Union[:class:`.GroupChannel`, :class:`.TextChannel`]: The channel the webhook belongs to."""
+        channel = self.get_channel()
+        if channel is None:
+            raise NoData(what=self.channel_id, type='Webhook.channel')
+        return channel
 
     @property
     def permissions(self) -> Permissions:
