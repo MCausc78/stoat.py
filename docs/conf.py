@@ -32,7 +32,13 @@ with open('../pyvolt/__init__.py', 'r') as fp:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE).group(1)  # type: ignore
 
 def get_latest_commit():
-    proc = subprocess.run("git log -n1 --format=%H", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.run([
+        'git',
+        'log',
+        '-n1',
+        '--format=%H',
+    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
     proc.check_returncode()
     return proc.stdout.decode().strip()
 

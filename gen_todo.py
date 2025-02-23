@@ -5,7 +5,7 @@ import sys
 
 
 def get_branch() -> str:
-    proc = subprocess.run("git status", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.run(['git', 'status'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     proc.check_returncode()
 
     RE_BRANCH = re.compile(rb"On branch ([0-9A-Za-z/]+)\n", re.MULTILINE)
@@ -19,7 +19,13 @@ def get_branch() -> str:
     return match.group(1).decode()
 
 def get_latest_commit():
-    proc = subprocess.run("git log -n1 --format=%H", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc = subprocess.run([
+        'git',
+        'log',
+        '-n1',
+        '--format=%H',
+    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
     proc.check_returncode()
     return proc.stdout.decode().strip()
 
