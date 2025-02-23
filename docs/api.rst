@@ -434,56 +434,6 @@ UndefinedCacheContext
     :members:
     :inherited-members:
 
-DetachedEmojiCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: DetachedEmojiCacheContext
-
-.. autoclass:: DetachedEmojiCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
-MessageCacheContext
-~~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: MessageCacheContext
-
-.. autoclass:: MessageCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
-ServerCacheContext
-~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: ServerCacheContext
-
-.. autoclass:: ServerCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
-ServerEmojiCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: ServerEmojiCacheContext
-
-.. autoclass:: ServerEmojiCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
-UserCacheContext
-~~~~~~~~~~~~~~~~
-
-.. attributetable:: UserCacheContext
-
-.. autoclass:: UserCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
 PrivateChannelCreateEventCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -910,6 +860,685 @@ AuthenticatedEventCacheContext
 .. attributetable:: AuthenticatedEventCacheContext
 
 .. autoclass:: AuthenticatedEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+EntityCacheContext
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: EntityCacheContext
+
+.. autoclass:: EntityCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+BotCacheContext
+~~~~~~~~~~~~~~~
+
+.. attributetable:: BotCacheContext
+
+.. autoclass:: BotCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+DMChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: DMChannelCacheContext
+
+.. autoclass:: DMChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+GroupChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: GroupChannelCacheContext
+
+.. autoclass:: GroupChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+BaseEmojiCacheContext
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: BaseEmojiCacheContext
+
+.. autoclass:: BaseEmojiCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerEmojiCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerEmojiCacheContext
+
+.. autoclass:: ServerEmojiCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+BaseMessageCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: BaseMessageCacheContext
+
+.. autoclass:: BaseMessageCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MessageCacheContext
+~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageCacheContext
+
+.. autoclass:: MessageCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ReadStateCacheContext
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ReadStateCacheContext
+
+.. autoclass:: ReadStateCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+BaseRoleCacheContext
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: BaseRoleCacheContext
+
+.. autoclass:: BaseRoleCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+BaseServerChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: BaseServerChannelCacheContext
+
+.. autoclass:: BaseServerChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+BaseMemberCacheContext
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: BaseMemberCacheContext
+
+.. autoclass:: BaseMemberCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerCacheContext
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerCacheContext
+
+.. autoclass:: ServerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+BaseUserCacheContext
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: BaseUserCacheContext
+
+.. autoclass:: BaseUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserCacheContext
+~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserCacheContext
+
+.. autoclass:: UserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+WebhookCacheContext
+~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: WebhookCacheContext
+
+.. autoclass:: WebhookCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughBotOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughBotOwnerCacheContext
+
+.. autoclass:: UserThroughBotOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughDMChannelInitiatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughDMChannelInitiatorCacheContext
+
+.. autoclass:: UserThroughDMChannelInitiatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MessageThroughDMChannelLastMessageCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageThroughDMChannelLastMessageCacheContext
+
+.. autoclass:: MessageThroughDMChannelLastMessageCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ReadStateThroughDMChannelReadStateCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ReadStateThroughDMChannelReadStateCacheContext
+
+.. autoclass:: ReadStateThroughDMChannelReadStateCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughDMChannelRecipientCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughDMChannelRecipientCacheContext
+
+.. autoclass:: UserThroughDMChannelRecipientCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughDMChannelRecipientsCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughDMChannelRecipientsCacheContext
+
+.. autoclass:: UserThroughDMChannelRecipientsCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MessageThroughGroupChannelLastMessageCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageThroughGroupChannelLastMessageCacheContext
+
+.. autoclass:: MessageThroughGroupChannelLastMessageCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ReadStateThroughGroupChannelReadStateCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ReadStateThroughGroupChannelReadStateCacheContext
+
+.. autoclass:: ReadStateThroughGroupChannelReadStateCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughGroupChannelOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughGroupChannelOwnerCacheContext
+
+.. autoclass:: UserThroughGroupChannelOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughGroupChannelRecipientsCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughGroupChannelRecipientsCacheContext
+
+.. autoclass:: UserThroughGroupChannelRecipientsCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughServerChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughServerChannelCacheContext
+
+.. autoclass:: ServerThroughServerChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MessageThroughTextChannelLastMessageCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageThroughTextChannelLastMessageCacheContext
+
+.. autoclass:: MessageThroughTextChannelLastMessageCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserAddedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserAddedSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserAddedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserAddedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserAddedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughUserAddedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserRemovedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserRemovedSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserRemovedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserRemovedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserRemovedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughUserRemovedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberOrUserThroughUserJoinedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughUserJoinedSystemEventUserCacheContext
+
+.. autoclass:: MemberOrUserThroughUserJoinedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberOrUserThroughUserLeftSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughUserLeftSystemEventUserCacheContext
+
+.. autoclass:: MemberOrUserThroughUserLeftSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberOrUserThroughUserKickedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughUserKickedSystemEventUserCacheContext
+
+.. autoclass:: MemberOrUserThroughUserKickedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberOrUserThroughUserBannedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughUserBannedSystemEventUserCacheContext
+
+.. autoclass:: MemberOrUserThroughUserBannedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughChannelRenamedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughChannelRenamedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughChannelRenamedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughChannelIconChangedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughChannelIconChangedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughChannelIconChangedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughChannelOwnershipChangedSystemEventFromCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughChannelOwnershipChangedSystemEventFromCacheContext
+
+.. autoclass:: UserThroughChannelOwnershipChangedSystemEventFromCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughChannelOwnershipChangedSystemEventToCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughChannelOwnershipChangedSystemEventToCacheContext
+
+.. autoclass:: UserThroughChannelOwnershipChangedSystemEventToCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext
+
+.. autoclass:: MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext
+
+.. autoclass:: MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext
+
+.. autoclass:: MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext
+
+.. autoclass:: MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughCallStartedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughCallStartedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughCallStartedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughMessageChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughMessageChannelCacheContext
+
+.. autoclass:: ChannelThroughMessageChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughMessageServerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughMessageServerCacheContext
+
+.. autoclass:: ServerThroughMessageServerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberOrUserThroughMessageAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughMessageAuthorCacheContext
+
+.. autoclass:: MemberOrUserThroughMessageAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ReadStateThroughTextChannelReadStateCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ReadStateThroughTextChannelReadStateCacheContext
+
+.. autoclass:: ReadStateThroughTextChannelReadStateCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughRoleServerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughRoleServerCacheContext
+
+.. autoclass:: ServerThroughRoleServerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext
+
+.. autoclass:: ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext
+
+.. autoclass:: ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughBaseEmojiCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughBaseEmojiCreatorCacheContext
+
+.. autoclass:: UserThroughBaseEmojiCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughServerEmojiServerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughServerEmojiServerCacheContext
+
+.. autoclass:: ServerThroughServerEmojiServerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughReadStateChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughReadStateChannelCacheContext
+
+.. autoclass:: ChannelThroughReadStateChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+EmojiThroughServerGetterCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: EmojiThroughServerGetterCacheContext
+
+.. autoclass:: EmojiThroughServerGetterCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughServerGetterCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughServerGetterCacheContext
+
+.. autoclass:: MemberThroughServerGetterCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+EmojisThroughServerGetterCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: EmojisThroughServerGetterCacheContext
+
+.. autoclass:: EmojisThroughServerGetterCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MembersThroughServerGetterCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MembersThroughServerGetterCacheContext
+
+.. autoclass:: MembersThroughServerGetterCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughServerGetterCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughServerGetterCacheContext
+
+.. autoclass:: ChannelThroughServerGetterCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelsThroughServerGetterCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelsThroughServerGetterCacheContext
+
+.. autoclass:: ChannelsThroughServerGetterCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughBaseMemberGetterCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughBaseMemberGetterCacheContext
+
+.. autoclass:: UserThroughBaseMemberGetterCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserBotOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserBotOwnerCacheContext
+
+.. autoclass:: UserThroughUserBotOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelIDThroughUserDMChannelIDCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelIDThroughUserDMChannelIDCacheContext
+
+.. autoclass:: ChannelIDThroughUserDMChannelIDCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughUserDMChannelIDCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughUserDMChannelIDCacheContext
+
+.. autoclass:: ChannelThroughUserDMChannelIDCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughWebhookCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughWebhookCreatorCacheContext
+
+.. autoclass:: UserThroughWebhookCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughWebhookChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughWebhookChannelCacheContext
+
+.. autoclass:: ChannelThroughWebhookChannelCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
