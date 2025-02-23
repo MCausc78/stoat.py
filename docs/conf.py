@@ -6,9 +6,15 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+from __future__ import annotations
+
+from importlib.util import find_spec
+from inspect import getsourcefile, getsourcelines, unwrap
 import os
 import re
+import subprocess
 import sys
+import typing
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -24,6 +30,13 @@ author = 'MCausc78'
 version = ''
 with open('../pyvolt/__init__.py', 'r') as fp:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE).group(1)  # type: ignore
+
+def get_latest_commit():
+    proc = subprocess.run("git log -n1 --format=%H", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    proc.check_returncode()
+    return proc.stdout.decode().strip()
+
+git_commit = get_latest_commit()
 
 # The full version, including alpha/beta/rc tags.
 release = version
@@ -62,6 +75,41 @@ napoleon_custom_sections = [('Raises', 'returns_style')]
 extlinks = {
     'issue': ('https://github.com/MCausc78/pyvolt/issues/%s', 'GH-%s'),
 }
+
+spec = find_spec('pyvolt')
+
+if spec is None or spec.origin is None:
+    raise RuntimeError("Unable to find module spec")
+
+module_path = os.path.dirname(spec.origin)
+
+def linkcode_resolve(domain: str, info: dict[str, typing.Any]) -> typing.Optional[str]:
+    if domain != 'py':
+        return None
+
+    try:
+        obj: typing.Any = sys.modules[info['module']]
+        
+        for part in info['fullname'].split('.'):
+            obj = getattr(obj, part)
+        
+        obj = unwrap(obj)
+
+        if isinstance(obj, property):
+            obj = unwrap(obj.fget)  # type: ignore
+
+        src_file = getsourcefile(obj)
+        if src_file is None:
+            return None
+        
+        path = os.path.relpath(src_file, start=module_path)
+        src, lineno = getsourcelines(obj)
+    except Exception:
+        return None
+
+    path = f'{path}#L{lineno}-L{lineno + len(src) - 1}'
+    return f'https://github.com/MCausc78/pyvolt/blob/' + git_commit + '/pyvolt/' + path
+
 
 # Links used for cross-referencing stuff in other documentation
 intersphinx_mapping = {
