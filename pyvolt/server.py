@@ -33,6 +33,7 @@ from .base import Base
 from .bot import BaseBot
 from .cache import (
     CacheContextType,
+    ServerThroughRoleServerCacheContext,
     EmojiThroughServerGetterCacheContext,
     MemberThroughServerGetterCacheContext,
     EmojisThroughServerGetterCacheContext,
@@ -41,6 +42,7 @@ from .cache import (
     ChannelsThroughServerGetterCacheContext,
     MemberThroughServerOwnerCacheContext,
     UserThroughBaseMemberGetterCacheContext,
+    _SERVER_THROUGH_ROLE_SERVER,
     _EMOJI_THROUGH_SERVER_GETTER,
     _MEMBER_THROUGH_SERVER_GETTER,
     _EMOJIS_THROUGH_SERVER_GETTER,
@@ -197,6 +199,26 @@ class BaseRole(Base):
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID the role belongs to."""
 
+    def get_server(self) -> typing.Optional[Server]:
+        """Optional[:class:`.Server`]: The server this role belongs to."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ServerThroughRoleServerCacheContext(
+                type=CacheContextType.server_through_role_server,
+                role=self,
+            )
+            if state.provide_cache_context('Role.server')
+            else _SERVER_THROUGH_ROLE_SERVER
+        )
+
+        return cache.get_server(self.server_id, ctx)
+
     def __hash__(self) -> int:
         return hash(self.id)
 
@@ -206,7 +228,7 @@ class BaseRole(Base):
     async def delete(self) -> None:
         """|coro|
 
-        Deletes a server role.
+        Deletes the role.
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
@@ -260,16 +282,12 @@ class BaseRole(Base):
     ) -> Role:
         """|coro|
 
-        Edits a role.
+        Edits the role.
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
-            The server the role in.
-        role: ULIDOr[:class:`.BaseRole`]
-            The role to edit.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
         color: UndefinedOr[Optional[:class:`str`]]
@@ -2629,6 +2647,15 @@ class BaseMember:
     """:class:`str`: The server's ID the member in."""
 
     _user: typing.Union[User, str] = field(repr=True, kw_only=True, alias='_user')
+
+    def get_server(self) -> typing.Optional[Server]:
+        """Optional[:class:`.Server`]: The server this member belongs to."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
 
     def get_user(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Grabs the user from cache."""

@@ -25,9 +25,9 @@ Use following order in models:
 @define(slots=True)
 class Foo(Base):
     # ... attrs properties
-    # ... getters (``get_x``)
+    # ... getters (``get_x`` or ``is_x``)
     # ... dunder methods (eq, hash, str), in alphabet order
-    # ... internal methods (`_update`, `_react`)
+    # ... internal methods (``_update``, ``_react``, ``locally_update``)
     # ... properties
     # ... async methods, in alphabet order
     # ... methods

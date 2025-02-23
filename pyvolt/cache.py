@@ -31,7 +31,7 @@ import typing
 from attrs import define, field
 
 from .enums import Enum
-from .user import User
+
 
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
@@ -112,8 +112,9 @@ if typing.TYPE_CHECKING:
         Message,
     )
     from .read_state import ReadState
-    from .server import BaseServer, Server, BaseMember, Member
+    from .server import BaseRole, BaseServer, Server, BaseMember, Member
     from .webhook import Webhook
+    from .user import BaseUser, User
 
 _L = logging.getLogger(__name__)
 
@@ -216,6 +217,7 @@ class CacheContextType(Enum):
     server_through_message_server = 'Message.server: Optional[Server]'
     member_or_user_through_message_author = 'Message.author: Union[Member, User]'
     channel_through_read_state_channel = 'ReadState.channel: Channel'
+    server_through_role_server = 'Role.server: Server'
     emoji_through_server_getter = 'Server.get_emoji(): Optional[Emoji]'
     member_through_server_getter = 'Server.get_member(): Optional[Member]'
     emojis_through_server_getter = 'Server.emojis: Dict[str, Emoji]'
@@ -223,8 +225,11 @@ class CacheContextType(Enum):
     channel_through_server_getter = 'Server.get_channel(): Optional[ServerChannel]'
     channels_through_server_getter = 'Server.channels: List[ServerChannel]'
     member_through_server_owner = 'Server.owner: Member'
-    user_through_member_getter = 'Member.user: Optional[User]'
-    # TODO: Maybe User?
+    server_through_member_server = 'Member.server: Server'
+    user_through_member_getter = 'Member.user: User'
+    user_through_user_bot_owner = 'User.bot_owner: User'
+    channel_id_through_user_dm_channel_id = 'User.dm_channel_id: Optional[str]'
+    channel_through_user_dm_channel = 'User.dm_channel: Optional[DMChannel]'
     user_through_webhook_creator = 'Webhook.creator: User'
     channel_through_webhook_channel = 'Webhook.channel: Union[GroupChannel, TextChannel]'
 
@@ -694,6 +699,14 @@ class ReadStateCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class BaseRoleCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.BaseRole` entity."""
+
+    role: BaseRole = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.BaseRole`: The role involved."""
+
+
+@define(slots=True)
 class BaseServerCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.BaseServer` entity."""
 
@@ -715,6 +728,14 @@ class ServerCacheContext(EntityCacheContext):
 
     server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`.Server`: The server involved."""
+
+
+@define(slots=True)
+class BaseUserCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.BaseUser` entity."""
+
+    user: BaseUser = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.BaseUser`: The user involved."""
 
 
 @define(slots=True)
@@ -1010,6 +1031,11 @@ class ReadStateThroughTextChannelReadStateCacheContext(TextChannelCacheContext):
 
 
 @define(slots=True)
+class ServerThroughRoleServerCacheContext(BaseRoleCacheContext):
+    """Represents a cache context that involves an :class:`.BaseRole`, wishing to retrieve role's server."""
+
+
+@define(slots=True)
 class ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext(TextChannelCacheContext):
     """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve channel's voice states."""
 
@@ -1072,6 +1098,21 @@ class MemberThroughServerOwnerCacheContext(ServerCacheContext):
 @define(slots=True)
 class UserThroughBaseMemberGetterCacheContext(BaseMemberCacheContext):
     """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's user."""
+
+
+@define(slots=True)
+class UserThroughUserBotOwnerCacheContext(UserCacheContext):
+    """Represents a cache context that involves an :class:`.User`, wishing to retrieve owner of bot user."""
+
+
+@define(slots=True)
+class ChannelIDThroughUserDMChannelIDCacheContext(BaseUserCacheContext):
+    """Represents a cache context that involves an :class:`.BaseUser`, wishing to retrieve ID of the DM channel with this user."""
+
+
+@define(slots=True)
+class ChannelThroughUserDMChannelIDCacheContext(BaseUserCacheContext):
+    """Represents a cache context that involves an :class:`.BaseUser`, wishing to retrieve the DM channel with this user."""
 
 
 @define(slots=True)
@@ -1224,6 +1265,9 @@ _MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE: typing.Final[UndefinedCacheContext] = 
 _READ_STATE_THROUGH_DM_CHANNEL_READ_STATE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.read_state_through_dm_channel_read_state,
 )
+_SERVER_THROUGH_ROLE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_role_server,
+)
 _USER_THROUGH_DM_CHANNEL_RECIPIENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_dm_channel_recipient,
 )
@@ -1358,6 +1402,15 @@ _CHANNELS_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = Undefined
 _MEMBER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_through_server_owner,
 )
+_USER_THROUGH_USER_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_bot_owner,
+)
+_CHANNEL_THROUGH_USER_DM_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_user_dm_channel,
+)
+_CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_id_through_user_dm_channel_id,
+)
 _USER_THROUGH_MEMBER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_member_getter,
 )
@@ -1452,6 +1505,7 @@ ProvideCacheContextIn = typing.Literal[
     'Message.server',
     'Message.author',
     'ReadState.channel',
+    'Role.server',
     'Server.get_emoji()',
     'Server.get_member()',
     'Server.emojis',
@@ -1459,15 +1513,13 @@ ProvideCacheContextIn = typing.Literal[
     'Server.get_channel()',
     'Server.channels',
     'Server.owner',
+    'Member.server',
     'Member.user',
+    'User.bot_owner',
+    'User.dm_channel_id',
+    'User.dm_channel',
     'Webhook.creator',
     'Webhook.channel',
-    # TODO redo these below
-    'BaseRole.get_server',
-    'Server.get_owner',
-    'BaseMember.get_server',
-    'BaseUser.dm_channel_id',
-    'BaseUser.dm_channel',
 ]
 
 
@@ -2515,6 +2567,7 @@ class MapCache(Cache):
 
     def store_message(self, message: Message, ctx: BaseCacheContext, /) -> None:
         from .server import Member
+        from .user import User
 
         author = message._author
         if isinstance(author, Member):
@@ -2674,6 +2727,8 @@ class MapCache(Cache):
         self._server_members[server_id] = members
 
     def store_server_member(self, member: Member, ctx: BaseCacheContext, /) -> None:
+        from .user import User
+
         if isinstance(member._user, User):
             self.store_user(member._user, ctx)
             member._user = member._user.id
@@ -2752,7 +2807,6 @@ __all__ = (
     'CacheContextType',
     'BaseCacheContext',
     'UndefinedCacheContext',
-    # Cache context above are deprecated
     'PrivateChannelCreateEventCacheContext',
     'ServerChannelCreateEventCacheContext',
     'ChannelUpdateEventCacheContext',
@@ -2805,8 +2859,11 @@ __all__ = (
     'BaseMessageCacheContext',
     'MessageCacheContext',
     'ReadStateCacheContext',
+    'BaseRoleCacheContext',
     'BaseServerChannelCacheContext',
+    'BaseMemberCacheContext',
     'ServerCacheContext',
+    'BaseUserCacheContext',
     'UserCacheContext',
     'WebhookCacheContext',
     'UserThroughBotOwnerCacheContext',
@@ -2843,6 +2900,7 @@ __all__ = (
     'ServerThroughMessageServerCacheContext',
     'MemberOrUserThroughMessageAuthorCacheContext',
     'ReadStateThroughTextChannelReadStateCacheContext',
+    'ServerThroughRoleServerCacheContext',
     'ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext',
     'ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext',
     'UserThroughBaseEmojiCreatorCacheContext',
@@ -2855,6 +2913,9 @@ __all__ = (
     'ChannelThroughServerGetterCacheContext',
     'ChannelsThroughServerGetterCacheContext',
     'UserThroughBaseMemberGetterCacheContext',
+    'UserThroughUserBotOwnerCacheContext',
+    'ChannelIDThroughUserDMChannelIDCacheContext',
+    'ChannelThroughUserDMChannelIDCacheContext',
     'UserThroughWebhookCreatorCacheContext',
     'ChannelThroughWebhookChannelCacheContext',
     '_UNDEFINED',
@@ -2907,6 +2968,7 @@ __all__ = (
     '_USER_THROUGH_DM_CHANNEL_INITIATOR',
     '_MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE',
     '_READ_STATE_THROUGH_DM_CHANNEL_READ_STATE',
+    '_SERVER_THROUGH_ROLE_SERVER',
     '_USER_THROUGH_DM_CHANNEL_RECIPIENT',
     '_USER_THROUGH_DM_CHANNEL_RECIPIENTS',
     '_MESSAGE_THROUGH_GROUP_CHANNEL_LAST_MESSAGE',
@@ -2949,6 +3011,9 @@ __all__ = (
     '_CHANNEL_THROUGH_SERVER_GETTER',
     '_CHANNELS_THROUGH_SERVER_GETTER',
     '_MEMBER_THROUGH_SERVER_OWNER',
+    '_USER_THROUGH_USER_BOT_OWNER',
+    '_CHANNEL_THROUGH_USER_DM_CHANNEL',
+    '_CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID',
     '_USER_THROUGH_MEMBER_GETTER',
     '_USER_THROUGH_WEBHOOK_CREATOR',
     '_CHANNEL_THROUGH_WEBHOOK_CHANNEL',

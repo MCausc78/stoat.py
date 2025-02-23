@@ -30,6 +30,15 @@ import typing
 from . import routes
 from .abc import Messageable, Connectable
 from .base import Base
+from .cache import (
+    CacheContextType,
+    UserThroughUserBotOwnerCacheContext,
+    ChannelThroughUserDMChannelIDCacheContext,
+    ChannelIDThroughUserDMChannelIDCacheContext,
+    _USER_THROUGH_USER_BOT_OWNER,
+    _CHANNEL_THROUGH_USER_DM_CHANNEL,
+    _CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID,
+)
 from .cdn import StatelessAsset, Asset, ResolvableResource, resolve_resource
 from .core import (
     UNDEFINED,
@@ -38,7 +47,7 @@ from .core import (
 )
 from .flags import UserPermissions, UserBadges, UserFlags
 from .enums import UserReportReason, Presence, RelationshipStatus
-
+from .errors import NoData
 
 if typing.TYPE_CHECKING:
     from . import raw
@@ -246,14 +255,6 @@ class Mutuals:
 class BaseUser(Base, Connectable, Messageable):
     """Represents a user on Revolt."""
 
-    async def fetch_channel_id(self) -> str:
-        channel_id = self.dm_channel_id
-        if channel_id:
-            return channel_id
-
-        channel = await self.open_dm()
-        return channel.id
-
     def get_channel_id(self) -> str:
         return self.dm_channel_id or ''
 
@@ -279,26 +280,56 @@ class BaseUser(Base, Connectable, Messageable):
     @property
     def dm_channel_id(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: The ID of the private channel with this user."""
-        cache = self.state.cache
-        if cache:
-            from .cache import _USER_REQUEST as USER_REQUEST
 
-            return cache.get_private_channel_by_user(self.id, USER_REQUEST)
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelIDThroughUserDMChannelIDCacheContext(
+                type=CacheContextType.channel_id_through_user_dm_channel_id,
+                user=self,
+            )
+            if state.provide_cache_context('User.dm_channel_id')
+            else _CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID
+        )
+
+        return cache.get_private_channel_by_user(self.id, ctx)
 
     pm_id = dm_channel_id
 
     @property
     def dm_channel(self) -> typing.Optional[DMChannel]:
         """Optional[:class:`.DMChannel`]: The private channel with this user."""
-        dm_channel_id = self.dm_channel_id
 
-        cache = self.state.cache
-        if cache and dm_channel_id:
-            from .cache import _USER_REQUEST as USER_REQUEST
+        state = self.state
+        cache = state.cache
 
-            channel = cache.get_channel(dm_channel_id, USER_REQUEST)
-            if isinstance(channel, DMChannel):
-                return channel
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelThroughUserDMChannelIDCacheContext(
+                type=CacheContextType.channel_through_user_dm_channel,
+                user=self,
+            )
+            if state.provide_cache_context('User.dm_channel')
+            else _CHANNEL_THROUGH_USER_DM_CHANNEL
+        )
+
+        channel_id = cache.get_private_channel_by_user(self.id, ctx)
+        if channel_id is None:
+            return None
+
+        channel = cache.get_channel(channel_id, ctx)
+        if channel is not None:
+            from .channel import DMChannel
+
+            assert isinstance(channel, DMChannel)
+
+        return channel
 
     pm = dm_channel
 
@@ -565,11 +596,6 @@ class BaseUser(Base, Connectable, Messageable):
 
         You must have :attr:`~UserPermissions.access` to do this.
 
-        Parameters
-        ----------
-        user: ULIDOr[:class:`.BaseUser`]
-            The user.
-
         Raises
         ------
         :class:`Unauthorized`
@@ -604,15 +630,18 @@ class BaseUser(Base, Connectable, Messageable):
         """
         return await self.state.http.get_user(self.id)
 
+    async def fetch_channel_id(self) -> str:
+        channel_id = self.dm_channel_id
+        if channel_id:
+            return channel_id
+
+        channel = await self.open_dm()
+        return channel.id
+
     async def fetch_default_avatar(self) -> bytes:
         """|coro|
 
         Return a default user avatar based on the given ID.
-
-        Parameters
-        ----------
-        user: ULIDOr[:class:`.BaseUser`]
-            The user to retrieve default avatar of.
 
         Returns
         -------
@@ -621,15 +650,10 @@ class BaseUser(Base, Connectable, Messageable):
         """
         return await self.state.http.get_default_avatar(self.id)
 
-    async def fetch_flags(self, user: ULIDOr[BaseUser], /) -> UserFlags:
+    async def fetch_flags(self) -> UserFlags:
         """|coro|
 
         Retrieves flags for user.
-
-        Parameters
-        ----------
-        user: ULIDOr[:class:`.BaseUser`]
-            The user to retrieve flags for.
 
         Returns
         -------
@@ -975,8 +999,6 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
-            The server to report.
         reason: :class:`.UserReportReason`
             The reason for reporting user.
         additional_context: Optional[:class:`str`]
@@ -1169,7 +1191,7 @@ class DisplayUser(BaseUser):
     async def send_friend_request(self) -> User:
         """|coro|
 
-        Sends a friend request to another user.
+        Sends a friend request to this user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1330,6 +1352,35 @@ class User(DisplayUser):
     online: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the user is currently online."""
 
+    def get_bot_owner(self) -> tuple[typing.Optional[User], str]:
+        """Returns the user who created this bot user.
+
+        Returns
+        -------
+        Tuple[Optional[:class:`.User`], :class:`str`]
+            The bot owner and their ID.
+        """
+        bot = self.bot
+        if bot is None:
+            return (None, '')
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return (None, bot.owner_id)
+
+        ctx = (
+            UserThroughUserBotOwnerCacheContext(
+                type=CacheContextType.user_through_user_bot_owner,
+                user=self,
+            )
+            if state.provide_cache_context('User.bot_owner')
+            else _USER_THROUGH_USER_BOT_OWNER
+        )
+
+        return (cache.get_user(bot.owner_id, ctx), bot.owner_id)
+
     def locally_update(self, data: PartialUser, /) -> None:
         """Locally updates user with provided data.
 
@@ -1353,7 +1404,7 @@ class User(DisplayUser):
                     text=status.text,
                     presence=status.presence,
                 )
-            elif self.status:
+            elif self.status is not None:
                 self.status.locally_update(status)
         if data.raw_flags is not UNDEFINED:
             self.raw_flags = data.raw_flags
@@ -1368,6 +1419,18 @@ class User(DisplayUser):
         ret = _new_user_badges(UserBadges)
         ret.value = self.raw_badges
         return ret
+
+    @property
+    def bot_owner(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Returns the user who created this bot user."""
+
+        bot_owner, bot_owner_id = self.get_bot_owner()
+        if bot_owner is None and len(bot_owner_id):
+            raise NoData(
+                what=bot_owner_id,
+                type='User.bot_owner',
+            )
+        return bot_owner
 
     @property
     def flags(self) -> UserFlags:

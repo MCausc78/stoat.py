@@ -289,13 +289,12 @@ class BaseMessage(Base):
         return channel
 
     def get_server(self) -> tuple[typing.Optional[Server], str]:
-        """Gets the server this message was sent in.
+        """Returns the server this message was sent in.
 
         Returns
         -------
         Tuple[Optional[:class:`.Server`], :class:`str`]
             The server and server ID.
-
         """
         state = self.state
         cache = state.cache
