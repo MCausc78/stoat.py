@@ -2506,7 +2506,7 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The message system event payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            The mapping of user IDs to member objects. Required for trying populating :attr:`StatelessUserRemovedSystemEvent.user` and :attr:`StatelessUserRemovedSystemEvent.by`.
+            Should be empty for :class:`StatelessUserRemovedSystemEvent`.
         users: Dict[:class:`str`, :class:`User`]
             The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessUserRemovedSystemEvent.user` and :attr:`StatelessUserRemovedSystemEvent.by`.
 
@@ -2520,8 +2520,8 @@ class Parser:
         by_id = payload['by']
 
         return StatelessUserRemovedSystemEvent(
-            internal_user=members.get(user_id, users.get(user_id, user_id)),
-            internal_by=members.get(by_id, users.get(by_id, by_id)),
+            internal_user=users.get(user_id, user_id),
+            internal_by=users.get(by_id, by_id),
         )
 
     def parse_message_webhook(self, payload: raw.MessageWebhook, /) -> MessageWebhook:

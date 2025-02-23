@@ -32,10 +32,17 @@ This example gear defines a ``Greetings`` category for your commands, with a sin
         @commands.Gear.listener()
         async def on_member_join(self, event: pyvolt.ServerMemberJoinEvent):
             member = event.member
+            server = member.server
 
-            channel = member.server.system_channel
-            if channel is not None:
-                await channel.send(f'Welcome {member.mention}.')
+            if server.system_messages is None:
+                return
+            
+            channel = server.system_messages.user_joined
+            
+            if channel is None:
+                return
+            
+            await member.state.http.send_message(channel, f'Welcome {member.mention}.')
 
         @commands.command()
         async def hello(self, ctx, *, member: typing.Optional[pyvolt.Member] = None):

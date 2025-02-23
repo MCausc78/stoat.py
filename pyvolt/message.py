@@ -29,9 +29,53 @@ from datetime import datetime
 import typing
 
 
-from . import cache as caching
 from .base import Base
-from .channel import BaseServerChannel, ServerChannel, TextableChannel, PartialMessageable
+from .cache import (
+    CacheContextType,
+    UserThroughUserAddedSystemEventUserCacheContext,
+    UserThroughUserAddedSystemEventAuthorCacheContext,
+    UserThroughUserRemovedSystemEventUserCacheContext,
+    UserThroughUserRemovedSystemEventAuthorCacheContext,
+    MemberOrUserThroughUserJoinedSystemEventUserCacheContext,
+    MemberOrUserThroughUserLeftSystemEventUserCacheContext,
+    MemberOrUserThroughUserKickedSystemEventUserCacheContext,
+    MemberOrUserThroughUserBannedSystemEventUserCacheContext,
+    UserThroughChannelRenamedSystemEventAuthorCacheContext,
+    UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext,
+    UserThroughChannelIconChangedSystemEventAuthorCacheContext,
+    UserThroughChannelOwnershipChangedSystemEventFromCacheContext,
+    UserThroughChannelOwnershipChangedSystemEventToCacheContext,
+    MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext,
+    MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext,
+    MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext,
+    MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext,
+    UserThroughCallStartedSystemEventAuthorCacheContext,
+    ChannelThroughMessageChannelCacheContext,
+    ServerThroughMessageServerCacheContext,
+    MemberOrUserThroughMessageAuthorCacheContext,
+    _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER,
+    _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_BY,
+    _USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER,
+    _USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_BY,
+    _MEMBER_OR_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER,
+    _MEMBER_OR_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER,
+    _MEMBER_OR_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER,
+    _MEMBER_OR_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER,
+    _USER_THROUGH_CHANNEL_RENAMED_SYSTEM_EVENT_BY,
+    _USER_THROUGH_CHANNEL_DESCRIPTION_CHANGED_SYSTEM_EVENT_BY,
+    _USER_THROUGH_CHANNEL_ICON_CHANGED_SYSTEM_EVENT_BY,
+    _USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_FROM,
+    _USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_TO,
+    _MESSAGE_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_PINNED_MESSAGE,
+    _MEMBER_OR_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY,
+    _MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE,
+    _MEMBER_OR_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY,
+    _USER_THROUGH_CALL_STARTED_SYSTEM_EVENT_BY,
+    _CHANNEL_THROUGH_MESSAGE_CHANNEL,
+    _SERVER_THROUGH_MESSAGE_SERVER,
+    _MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR,
+)
+from .channel import BaseServerChannel, TextableChannel, PartialMessageable
 from .cdn import AssetMetadata, StatelessAsset, Asset, ResolvableResource, resolve_resource
 from .core import (
     UNDEFINED,
@@ -219,6 +263,66 @@ class BaseMessage(Base):
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID this message was sent in."""
 
+    def get_channel(self) -> typing.Optional[TextableChannel]:
+        """Optional[:class:`.TextableChannel`]: The channel this message was sent in."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelThroughMessageChannelCacheContext(
+                type=CacheContextType.channel_through_message_channel,
+                message=self,
+            )
+            if state.provide_cache_context('Message.channel')
+            else _CHANNEL_THROUGH_MESSAGE_CHANNEL
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is None:
+            return None
+
+        assert isinstance(channel, TextableChannel)
+        return channel
+
+    def get_server(self) -> tuple[typing.Optional[Server], str]:
+        """Gets the server this message was sent in.
+
+        Returns
+        -------
+        Tuple[Optional[:class:`.Server`], :class:`str`]
+            The server and server ID.
+
+        """
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return (None, '')
+
+        ctx = (
+            ServerThroughMessageServerCacheContext(
+                type=CacheContextType.server_through_message_server,
+                message=self,
+            )
+            if state.provide_cache_context('Message.server')
+            else _SERVER_THROUGH_MESSAGE_SERVER
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is None:
+            return (None, '')
+
+        if isinstance(channel, BaseServerChannel):
+            server_id = channel.server_id
+
+            return cache.get_server(server_id, ctx), server_id
+
+        return (None, '')
+
     def __hash__(self) -> int:
         return hash((self.channel_id, self.id))
 
@@ -233,34 +337,23 @@ class BaseMessage(Base):
     @property
     def channel(self) -> typing.Union[TextableChannel, PartialMessageable]:
         """Union[:class:`.TextableChannel`, :class:`.PartialMessageable`]: The channel this message was sent in."""
+        channel = self.get_channel()
 
-        cache = self.state.cache
-        if not cache:
+        if channel is None:
             return PartialMessageable(state=self.state, id=self.channel_id)
 
-        channel = cache.get_channel(self.channel_id, caching._USER_REQUEST)
-        if channel:
-            assert isinstance(channel, TextableChannel), 'Cache returned non textable channel'
-            return channel
-
-        return PartialMessageable(state=self.state, id=self.channel_id)
+        return channel
 
     @property
     def server(self) -> typing.Optional[Server]:
         """Optional[:class:`.Server`]: The server this message was sent in."""
-
-        cache = self.state.cache
-        if cache is None:
-            return None
-
-        channel = cache.get_channel(self.channel_id, caching._USER_REQUEST)
-        if channel is None:
-            return None
-
-        if not isinstance(channel, BaseServerChannel):
-            return None
-
-        return cache.get_server(channel.server_id, caching._USER_REQUEST)
+        server, server_id = self.get_server()
+        if server is None and len(server_id):
+            raise NoData(
+                what=server_id,
+                type='Message.server',
+            )
+        return None
 
     async def ack(self) -> None:
         """|coro|
@@ -1096,7 +1189,18 @@ class TextSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class StatelessUserAddedSystemEvent(BaseSystemEvent):
-    _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
+    _user: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_user')
+    _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
+
+    def get_by(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that added this user."""
+        if isinstance(self._by, User):
+            return self._by
+
+    def get_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that was added."""
+        if isinstance(self._user, User):
+            return self._user
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1107,44 +1211,11 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
         )
 
     @property
-    def user_id(self) -> str:
-        """:class:`str`: The user's ID that was added."""
-        if isinstance(self._user, (User, Member)):
-            return self._user.id
-        return self._user
-
-    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was added."""
-        if isinstance(self._user, (User, Member)):
-            return self._user
-
-    _by: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_by')
-
-    @property
     def by_id(self) -> str:
         """:class:`str`: The user's ID that added this user."""
-        if isinstance(self._by, (User, Member)):
+        if isinstance(self._by, User):
             return self._by.id
         return self._by
-
-    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that added this user."""
-        if isinstance(self._by, (User, Member)):
-            return self._by
-
-    def attach_state(self, message: Message, /) -> UserAddedSystemEvent:
-        """:class:`.UserAddedSystemEvent`: Attach a state to system event.
-
-        Parameters
-        ----------
-        message: :class:`.Message`
-            The state to attach.
-        """
-        return UserAddedSystemEvent(
-            message=message,
-            internal_user=self._user,
-            internal_by=self._by,
-        )
 
     @property
     def system_content(self) -> str:
@@ -1160,70 +1231,120 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
 
         return f'{user} was added by {by}'
 
+    @property
+    def user_id(self) -> str:
+        """:class:`str`: The user's ID that was added."""
+        if isinstance(self._user, User):
+            return self._user.id
+        return self._user
+
+    def attach_state(self, message: Message, /) -> UserAddedSystemEvent:
+        """:class:`.UserAddedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
+        return UserAddedSystemEvent(
+            message=message,
+            internal_user=self._user,
+            internal_by=self._by,
+        )
+
 
 @define(slots=True)
 class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was added."""
-        if isinstance(self._user, (User, Member)):
-            return self._user
-        state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._user,
-                caching._UNDEFINED,
-            )
-        return state.cache.get_server_member(
-            channel.server_id,
-            self._user,
-            caching._UNDEFINED,
-        )
-
-    @property
-    def user(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that was added."""
-        user = self.get_user()
-        if not user:
-            raise NoData(self.user_id, 'added user')
-        return user
-
-    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that added this user."""
-        if isinstance(self._by, (User, Member)):
-            return self._by
-        state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._by,
-                caching._UNDEFINED,
-            )
-        return state.cache.get_server_member(
-            channel.server_id,
-            self._by,
-            caching._UNDEFINED,
-        )
-
     @property
     def by(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that added this user."""
+        """:class:`.User`: The user that added this user."""
         user = self.get_user()
-        if not user:
-            raise NoData(self.user_id, 'added user')
+        if user is None:
+            raise NoData(
+                what=self._by,  # type: ignore
+                type='UserAddedSystemEvent.by',
+            )
         return user
+
+    @property
+    def user(self) -> User:
+        """:class:`.User`: The user that was added."""
+        user = self.get_user()
+        if user is None:
+            raise NoData(
+                what=self._user,  # type: ignore
+                type='UserAddedSystemEvent.user',
+            )
+        return user
+
+    def get_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user that was added."""
+        if isinstance(self._user, User):
+            return self._user
+
+        state = self.message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughUserAddedSystemEventUserCacheContext(
+                type=CacheContextType.user_through_user_added_system_event_user,
+                system_message=self,
+            )
+            if state.provide_cache_context('UserAddedSystemEvent.user')
+            else _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER
+        )
+
+        return cache.get_user(
+            self._user,
+            ctx,
+        )
+
+    def get_by(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that added this user."""
+        if isinstance(self._by, User):
+            return self._by
+
+        state = self.message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughUserAddedSystemEventAuthorCacheContext(
+                type=CacheContextType.user_through_user_added_system_event_by,
+                system_message=self,
+            )
+            if state.provide_cache_context('UserAddedSystemEvent.by')
+            else _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_BY
+        )
+
+        return cache.get_user(
+            self._by,
+            ctx,
+        )
 
 
 @define(slots=True)
 class StatelessUserRemovedSystemEvent(BaseSystemEvent):
-    _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
+    _user: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_user')
+    _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
+
+    def get_by(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that removed this user."""
+        if isinstance(self._by, User):
+            return self._by
+
+    def get_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that was removed."""
+        if isinstance(self._user, User):
+            return self._user
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1234,44 +1355,11 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
         )
 
     @property
-    def user_id(self) -> str:
-        """:class:`str`: The user's ID that was removed."""
-        if isinstance(self._user, (User, Member)):
-            return self._user.id
-        return self._user
-
-    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was removed."""
-        if isinstance(self._user, (User, Member)):
-            return self._user
-
-    _by: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_by')
-
-    @property
     def by_id(self) -> str:
         """:class:`str`: The user's ID that removed this user."""
-        if isinstance(self._by, (User, Member)):
+        if isinstance(self._by, User):
             return self._by.id
         return self._by
-
-    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that removed this user."""
-        if isinstance(self._by, (User, Member)):
-            return self._by
-
-    def attach_state(self, message: Message, /) -> UserRemovedSystemEvent:
-        """:class:`.UserRemovedSystemEvent`: Attach a state to system event.
-
-        Parameters
-        ----------
-        message: :class:`.Message`
-            The state to attach.
-        """
-        return UserRemovedSystemEvent(
-            message=message,
-            internal_user=self._user,
-            internal_by=self._by,
-        )
 
     @property
     def system_content(self) -> str:
@@ -1287,64 +1375,103 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
 
         return f'{user} was removed by {by}'
 
+    @property
+    def user_id(self) -> str:
+        """:class:`str`: The user's ID that was removed."""
+        if isinstance(self._user, User):
+            return self._user.id
+        return self._user
+
+    def attach_state(self, message: Message, /) -> UserRemovedSystemEvent:
+        """:class:`.UserRemovedSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
+        return UserRemovedSystemEvent(
+            message=message,
+            internal_user=self._user,
+            internal_by=self._by,
+        )
+
 
 @define(slots=True)
 class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
-    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was removed."""
-        if isinstance(self._user, (User, Member)):
-            return self._user
+    def get_by(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that removed this user."""
+        if isinstance(self._by, User):
+            return self._by
+
         state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._user,
-                caching._UNDEFINED,
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughUserRemovedSystemEventAuthorCacheContext(
+                type=CacheContextType.user_through_user_removed_system_event_by,
+                system_message=self,
             )
-        return state.cache.get_server_member(
-            channel.server_id,
+            if state.provide_cache_context('UserRemovedSystemEvent.by')
+            else _USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_BY
+        )
+
+        return cache.get_user(
+            self._by,
+            ctx,
+        )
+
+    def get_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that was removed."""
+        if isinstance(self._user, User):
+            return self._user
+
+        state = self.message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughUserRemovedSystemEventUserCacheContext(
+                type=CacheContextType.user_through_user_removed_system_event_user,
+                system_message=self,
+            )
+            if state.provide_cache_context('UserRemovedSystemEvent.user')
+            else _USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER
+        )
+
+        return cache.get_user(
             self._user,
-            caching._UNDEFINED,
+            ctx,
         )
 
     @property
-    def user(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that was removed."""
+    def by(self) -> User:
+        """:class:`.User`: The user that removed this user."""
         user = self.get_user()
-        if not user:
-            raise NoData(self.user_id, 'removed user')
+        if user is None:
+            raise NoData(
+                what=self.user_id,
+                type='UserRemovedSystem.by',
+            )
         return user
 
-    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that removed this user."""
-        if isinstance(self._by, (User, Member)):
-            return self._by
-        state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._by,
-                caching._UNDEFINED,
-            )
-        return state.cache.get_server_member(
-            channel.server_id,
-            self._by,
-            caching._UNDEFINED,
-        )
-
     @property
-    def by(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that removed this user."""
+    def user(self) -> User:
+        """:class:`.User`: The user that was removed."""
         user = self.get_user()
-        if not user:
-            raise NoData(self.user_id, 'remover')
+        if user is None:
+            raise NoData(
+                what=self.user_id,
+                type='UserRemovedSystem.user',
+            )
         return user
 
 
@@ -1355,17 +1482,27 @@ class StatelessUserJoinedSystemEvent(BaseSystemEvent):
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserJoinedSystemEvent) and self.user_id == other.user_id
 
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that joined this server."""
+        if isinstance(self._user, (User, Member)):
+            return self._user
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        user = self.get_user()
+        if user is None:
+            user = '<Unknown User>'
+
+        return f'{user} joined'
+
     @property
     def user_id(self) -> str:
-        """:class:`str`: The user's ID that joined this server/group."""
+        """:class:`str`: The user's ID that joined this server."""
         if isinstance(self._user, (User, Member)):
             return self._user.id
         return self._user
-
-    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that joined this server/group."""
-        if isinstance(self._user, (User, Member)):
-            return self._user
 
     def attach_state(self, message: Message, /) -> UserJoinedSystemEvent:
         """:class:`.UserJoinedSystemEvent`: Attach a state to system event.
@@ -1380,47 +1517,52 @@ class StatelessUserJoinedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
         )
 
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        user = self.get_user()
-        if user is None:
-            user = '<Unknown User>'
-
-        return f'{user} joined'
-
 
 @define(slots=True)
 class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
     message: Message = field(repr=False, kw_only=True)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was added."""
         if isinstance(self._user, (User, Member)):
             return self._user
-        state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._user,
-                caching._UNDEFINED,
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughUserJoinedSystemEventUserCacheContext(
+                type=CacheContextType.member_or_user_through_user_joined_system_event_user,
+                system_message=self,
             )
-        return state.cache.get_server_member(
-            channel.server_id,
-            self._user,
-            caching._UNDEFINED,
+            if state.provide_cache_context('UserJoinedSystemEvent.user')
+            else _MEMBER_OR_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER
         )
+
+        channel = cache.get_channel(message.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            server_id = channel.server_id
+            ret = cache.get_server_member(server_id, self._user, ctx)
+        else:
+            ret = None
+
+        return ret or cache.get_user(self._user, ctx)
 
     @property
     def user(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that joined this server/group.."""
+        """Union[:class:`.User`, :class:`.Member`]: The user that joined this server."""
         user = self.get_user()
-        if not user:
-            raise NoData(self.user_id, 'joined user')
+        if user is None:
+            raise NoData(
+                what=self.user_id,
+                type='UserJoinedSystemEvent.user',
+            )
         return user
 
 
@@ -1476,27 +1618,42 @@ class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that left this server/group."""
         if isinstance(self._user, (User, Member)):
             return self._user
-        state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._user,
-                caching._UNDEFINED,
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughUserLeftSystemEventUserCacheContext(
+                type=CacheContextType.member_or_user_through_user_left_system_event_user,
+                system_message=self,
             )
-        return state.cache.get_server_member(
-            channel.server_id,
-            self._user,
-            caching._UNDEFINED,
+            if state.provide_cache_context('UserLeftSystemEvent.user')
+            else _MEMBER_OR_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER
         )
+
+        channel = cache.get_channel(message.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            server_id = channel.server_id
+            ret = cache.get_server_member(server_id, self._user, ctx)
+        else:
+            ret = None
+
+        return ret or cache.get_user(self._user, ctx)
 
     @property
     def user(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that left this server/group."""
+        """Union[:class:`.User`, :class:`.Member`]: The user that left this server/group."""
         user = self.get_user()
-        if not user:
-            raise NoData(self.user_id, 'left user')
+        if user is None:
+            raise NoData(
+                what=self.user_id,
+                type='UserLeftSystemEvent.user',
+            )
         return user
 
 
@@ -1504,8 +1661,23 @@ class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
 class StatelessUserKickedSystemEvent(BaseSystemEvent):
     _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
 
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was kicked from this server."""
+        if isinstance(self._user, (User, Member)):
+            return self._user
+
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserKickedSystemEvent) and self.user_id == other.user_id
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        user = self.get_user()
+        if user is None:
+            user = '<Unknown User>'
+
+        return f'{user} was kicked'
 
     @property
     def user_id(self) -> str:
@@ -1513,11 +1685,6 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
         if isinstance(self._user, (User, Member)):
             return self._user.id
         return self._user
-
-    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was kicked from this server."""
-        if isinstance(self._user, (User, Member)):
-            return self._user
 
     def attach_state(self, message: Message, /) -> UserKickedSystemEvent:
         """:class:`.UserKickedSystemEvent`: Attach a state to system event.
@@ -1532,16 +1699,6 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
         )
 
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        user = self.get_user()
-        if user is None:
-            user = '<Unknown User>'
-
-        return f'{user} was kicked'
-
 
 @define(slots=True)
 class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
@@ -1552,27 +1709,42 @@ class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was kicked from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
-        state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._user,
-                caching._UNDEFINED,
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughUserKickedSystemEventUserCacheContext(
+                type=CacheContextType.member_or_user_through_user_kicked_system_event_user,
+                system_message=self,
             )
-        return state.cache.get_server_member(
-            channel.server_id,
-            self._user,
-            caching._UNDEFINED,
+            if state.provide_cache_context('UserKickedSystemEvent.user')
+            else _MEMBER_OR_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER
         )
+
+        channel = cache.get_channel(message.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            server_id = channel.server_id
+            ret = cache.get_server_member(server_id, self._user, ctx)
+        else:
+            ret = None
+
+        return ret or cache.get_user(self._user, ctx)
 
     @property
     def user(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that was kicked from this server."""
+        """Union[:class:`.User`, :class:`.Member`]: The user that was kicked from this server."""
         user = self.get_user()
-        if not user:
-            raise NoData(self.user_id, 'kicked user')
+        if user is None:
+            raise NoData(
+                what=self.user_id,
+                type='UserKickedSystemEvent.user',
+            )
         return user
 
 
@@ -1580,8 +1752,23 @@ class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
 class StatelessUserBannedSystemEvent(BaseSystemEvent):
     _user: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_user')
 
+    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was banned from this server."""
+        if isinstance(self._user, (User, Member)):
+            return self._user
+
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessUserBannedSystemEvent) and self.user_id == other.user_id
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        user = self.get_user()
+        if user is None:
+            user = '<Unknown User>'
+
+        return f'{user} was banned'
 
     @property
     def user_id(self) -> str:
@@ -1589,11 +1776,6 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
         if isinstance(self._user, (User, Member)):
             return self._user.id
         return self._user
-
-    def get_user(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was banned from this server."""
-        if isinstance(self._user, (User, Member)):
-            return self._user
 
     def attach_state(self, message: Message, /) -> UserBannedSystemEvent:
         """:class:`.UserBannedSystemEvent`: Attach a state to system event.
@@ -1608,16 +1790,6 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
         )
 
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        user = self.get_user()
-        if user is None:
-            user = '<Unknown User>'
-
-        return f'{user} was banned'
-
 
 @define(slots=True)
 class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
@@ -1628,27 +1800,42 @@ class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that was banned from this server."""
         if isinstance(self._user, (User, Member)):
             return self._user
-        state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._user,
-                caching._UNDEFINED,
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughUserBannedSystemEventUserCacheContext(
+                type=CacheContextType.member_or_user_through_user_joined_system_event_user,
+                system_message=self,
             )
-        return state.cache.get_server_member(
-            channel.server_id,
-            self._user,
-            caching._UNDEFINED,
+            if state.provide_cache_context('UserBannedSystemEvent.user')
+            else _MEMBER_OR_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER
         )
+
+        channel = cache.get_channel(message.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            server_id = channel.server_id
+            ret = cache.get_server_member(server_id, self._user, ctx)
+        else:
+            ret = None
+
+        return ret or cache.get_user(self._user, ctx)
 
     @property
     def user(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that was banned from this server."""
+        """Union[:class:`.User`, :class:`.Member`]: The user that was banned from this server."""
         user = self.get_user()
-        if not user:
-            raise NoData(self.user_id, 'banned user')
+        if user is None:
+            raise NoData(
+                what=self.user_id,
+                type='UserBannedSystemEvent.user',
+            )
         return user
 
 
@@ -1658,6 +1845,11 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
     """:class:`str`: The new name of this group."""
 
     _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
+
+    def get_by(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that renamed this group."""
+        if isinstance(self._by, User):
+            return self._by
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1674,10 +1866,15 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Tries to get user that renamed this group."""
-        if isinstance(self._by, User):
-            return self._by
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} renamed the channel to {self.name}'
 
     def attach_state(self, message: Message, /) -> ChannelRenamedSystemEvent:
         """:class:`.ChannelRenamedSystemEvent`: Attach a state to system event.
@@ -1693,16 +1890,6 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
             internal_by=self._by,
         )
 
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        by = self.get_by()
-        if by is None:
-            by = '<Unknown User>'
-
-        return f'{by} renamed the channel to {self.name}'
-
 
 @define(slots=True)
 class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
@@ -1713,26 +1900,47 @@ class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
         """Optional[:class:`.User`: Tries to get user that renamed this group."""
         if isinstance(self._by, User):
             return self._by
+
         state = self.message.state
-        if not state.cache:
-            return
-        return state.cache.get_user(
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughChannelRenamedSystemEventAuthorCacheContext(
+                type=CacheContextType.user_through_channel_renamed_system_event_by,
+                system_message=self,
+            )
+            if state.provide_cache_context('ChannelRenamedSystemEvent.by')
+            else _USER_THROUGH_CHANNEL_RENAMED_SYSTEM_EVENT_BY
+        )
+
+        return cache.get_user(
             self._by,
-            caching._UNDEFINED,
+            ctx,
         )
 
     @property
     def by(self) -> User:
         """:class:`.User`: The user that renamed this group."""
         by = self.get_by()
-        if not by:
-            raise NoData(self.by_id, 'user')
+        if by is None:
+            raise NoData(
+                what=self.by_id,
+                type='ChannelRenamedSystemEvent.by',
+            )
         return by
 
 
 @define(slots=True)
 class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
     _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
+
+    def get_by(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that changed description of this group."""
+        if isinstance(self._by, User):
+            return self._by
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1748,10 +1956,15 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Tries to get user that changed description of this group."""
-        if isinstance(self._by, User):
-            return self._by
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} changed the channel description'
 
     def attach_state(self, message: Message, /) -> ChannelDescriptionChangedSystemEvent:
         """:class:`.ChannelDescriptionChangedSystemEvent`: Attach a state to system event.
@@ -1766,16 +1979,6 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
             internal_by=self._by,
         )
 
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        by = self.get_by()
-        if by is None:
-            by = '<Unknown User>'
-
-        return f'{by} changed the channel description'
-
 
 @define(slots=True)
 class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSystemEvent):
@@ -1786,26 +1989,47 @@ class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSys
         """Optional[:class:`.User`]: Tries to get user that changed description of this group."""
         if isinstance(self._by, User):
             return self._by
+
         state = self.message.state
-        if not state.cache:
-            return
-        return state.cache.get_user(
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext(
+                type=CacheContextType.user_through_channel_description_changed_system_event_by,
+                system_message=self,
+            )
+            if state.provide_cache_context('ChannelDescriptionChangedSystemEvent.by')
+            else _USER_THROUGH_CHANNEL_DESCRIPTION_CHANGED_SYSTEM_EVENT_BY
+        )
+
+        return cache.get_user(
             self._by,
-            caching._UNDEFINED,
+            ctx,
         )
 
     @property
     def by(self) -> User:
         """:class:`.User`: The user that changed description of this group."""
         by = self.get_by()
-        if not by:
-            raise NoData(self.by_id, 'user')
+        if by is None:
+            raise NoData(
+                what=self.by_id,
+                type='ChannelDescriptionChangedSystemEvent.by',
+            )
         return by
 
 
 @define(slots=True)
 class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
     _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
+
+    def get_by(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that changed icon of this group."""
+        if isinstance(self._by, User):
+            return self._by
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessChannelIconChangedSystemEvent) and self.by_id == other.by_id
@@ -1817,10 +2041,15 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Tries to get user that changed icon of this group."""
-        if isinstance(self._by, User):
-            return self._by
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} changed the channel icon'
 
     def attach_state(self, message: Message, /) -> ChannelIconChangedSystemEvent:
         """:class:`.ChannelIconChangedSystemEvent`: Attach a state to system event.
@@ -1835,40 +2064,46 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
             internal_by=self._by,
         )
 
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        by = self.get_by()
-        if by is None:
-            by = '<Unknown User>'
-
-        return f'{by} changed the channel icon'
-
 
 @define(slots=True)
 class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
     message: Message = field(repr=False, kw_only=True, eq=False)
-    """The message that holds this system event."""
+    """:class:`.Message`: The message that holds this system event."""
 
     def get_by(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that changed icon of this group."""
         if isinstance(self._by, User):
             return self._by
+
         state = self.message.state
-        if not state.cache:
-            return
-        return state.cache.get_user(
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughChannelIconChangedSystemEventAuthorCacheContext(
+                type=CacheContextType.user_through_channel_icon_changed_system_event_by,
+                system_message=self,
+            )
+            if state.provide_cache_context('ChannelIconChangedSystemEvent.by')
+            else _USER_THROUGH_CHANNEL_ICON_CHANGED_SYSTEM_EVENT_BY
+        )
+
+        return cache.get_user(
             self._by,
-            caching._UNDEFINED,
+            ctx,
         )
 
     @property
     def by(self) -> User:
         """:class:`.User`: The user that changed icon of this group."""
         by = self.get_by()
-        if not by:
-            raise NoData(self.by_id, 'user')
+        if by is None:
+            raise NoData(
+                what=self.by_id,
+                type='ChannelIconChangedSystemEvent.by',
+            )
         return by
 
 
@@ -1876,6 +2111,16 @@ class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
 class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
     _from: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_from')
     _to: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_to')
+
+    def get_from(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that was previous owner of this group."""
+        if isinstance(self._from, User):
+            return self._from
+
+    def get_to(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Tries to get user that became owner of this group."""
+        if isinstance(self._from, User):
+            return self._from
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -1892,11 +2137,6 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
             return self._from.id
         return self._from
 
-    def get_from(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Tries to get user that was previous owner of this group."""
-        if isinstance(self._from, User):
-            return self._from
-
     @property
     def to_id(self) -> str:
         """:class:`str`: The user's ID that became owner of this group."""
@@ -1904,10 +2144,18 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
             return self._from.id
         return self._from
 
-    def get_to(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Tries to get user that became owner of this group."""
-        if isinstance(self._from, User):
-            return self._from
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        before = self.get_from()
+        if before is None:
+            before = '<Unknown User>'
+        after = self.get_to()
+        if after is None:
+            after = '<Unknown User>'
+
+        return f'{before} gave {after} group ownership'
 
     def attach_state(self, message: Message, /) -> ChannelOwnershipChangedSystemEvent:
         """:class:`.ChannelOwnershipChangedSystemEvent`: Attach a state to system event.
@@ -1923,19 +2171,6 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
             internal_to=self._to,
         )
 
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        before = self.get_from()
-        if before is None:
-            before = '<Unknown User>'
-        after = self.get_to()
-        if after is None:
-            after = '<Unknown User>'
-
-        return f'{before} gave {after} group ownership'
-
 
 @define(slots=True)
 class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemEvent):
@@ -1946,41 +2181,73 @@ class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemE
         """Optional[:class:`.User`]: Tries to get user that was previous owner of this group."""
         if isinstance(self._from, User):
             return self._from
+
         state = self.message.state
-        if not state.cache:
-            return
-        return state.cache.get_user(
-            self._from,
-            caching._UNDEFINED,
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughChannelOwnershipChangedSystemEventFromCacheContext(
+                type=CacheContextType.user_through_channel_ownership_changed_system_event_from,
+                system_message=self,
+            )
+            if state.provide_cache_context('ChannelOwnershipChangedSystemEvent.from_')
+            else _USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_FROM
         )
 
-    @property
-    def from_(self) -> User:
-        """:class:`.User`: The user that was previous owner of this group."""
-        from_ = self.get_from()
-        if not from_:
-            raise NoData(self.from_id, 'user')
-        return from_
+        return cache.get_user(
+            self._from,
+            ctx,
+        )
 
     def get_to(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: Tries to get user that became owner of this group."""
         if isinstance(self._to, User):
             return self._to
+
         state = self.message.state
-        if not state.cache:
-            return
-        return state.cache.get_user(
-            self._to,
-            caching._UNDEFINED,
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughChannelOwnershipChangedSystemEventToCacheContext(
+                type=CacheContextType.user_through_channel_ownership_changed_system_event_to,
+                system_message=self,
+            )
+            if state.provide_cache_context('ChannelOwnershipChangedSystemEvent.to')
+            else _USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_TO
         )
+
+        return cache.get_user(
+            self._to,
+            ctx,
+        )
+
+    @property
+    def from_(self) -> User:
+        """:class:`.User`: The user that was previous owner of this group."""
+        user = self.get_from()
+        if user is None:
+            raise NoData(
+                what=self.from_id,
+                type='ChannelOwnershipChangedSystemEvent.from_',
+            )
+        return user
 
     @property
     def to(self) -> User:
         """:class:`.User`: The user that became owner of this group."""
-        to = self.get_from()
-        if not to:
-            raise NoData(self.to_id, 'user')
-        return to
+        user = self.get_from()
+        if user is None:
+            raise NoData(
+                what=self.from_id,
+                type='ChannelOwnershipChangedSystemEvent.to',
+            )
+        return user
 
 
 @define(slots=True)
@@ -1989,6 +2256,11 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
     """:class:`str`: The ID of the message that was pinned."""
 
     _by: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_by')
+
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that pinned a message."""
+        if isinstance(self._by, (User, Member)):
+            return self._by
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -2005,10 +2277,15 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that pinned a message."""
-        if isinstance(self._by, (User, Member)):
-            return self._by
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} pinned a message to this channel'
 
     def attach_state(self, message: Message, /) -> MessagePinnedSystemEvent:
         """:class:`.MessagePinnedSystemEvent`: Attach a state to system event.
@@ -2024,16 +2301,6 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
             internal_by=self._by,
         )
 
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        by = self.get_by()
-        if by is None:
-            by = '<Unknown User>'
-
-        return f'{by} pinned a message to this channel'
-
 
 @define(slots=True)
 class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
@@ -2044,28 +2311,64 @@ class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that pinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
-        state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._by,
-                caching._UNDEFINED,
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext(
+                type=CacheContextType.member_or_user_through_message_pinned_system_event_by,
+                system_message=self,
             )
-        return state.cache.get_server_member(
-            channel.server_id,
-            self._by,
-            caching._UNDEFINED,
+            if state.provide_cache_context('MessagePinnedSystemEvent.by')
+            else _MEMBER_OR_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY
         )
+
+        channel = cache.get_channel(message.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            server_id = channel.server_id
+            ret = cache.get_server_member(server_id, self._by, ctx)
+        else:
+            ret = None
+
+        return ret or cache.get_user(self._by, ctx)
+
+    def get_pinned_message(self) -> typing.Optional[Message]:
+        """Optional[:class:`.Message`]: Tries to get message that was pinned in this channel."""
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext(
+                type=CacheContextType.message_through_message_pinned_system_event_pinned_message,
+                system_message=self,
+            )
+            if state.provide_cache_context('MessagePinnedSystemEvent.pinned_message')
+            else _MESSAGE_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_PINNED_MESSAGE
+        )
+
+        return cache.get_message(message.channel_id, self.pinned_message_id, ctx)
 
     @property
     def by(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that pinned a message."""
-        by = self.get_by()
-        if not by:
-            raise NoData(self.by_id, 'user')
-        return by
+        """Union[:class:`.User`, :class:`.Member`]: The user that pinned a message."""
+        user = self.get_by()
+        if user is None:
+            raise NoData(
+                what=self.by_id,
+                type='user',
+            )
+        return user
 
 
 @define(slots=True)
@@ -2074,6 +2377,11 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
     """:class:`str`: The ID of the message that was unpinned."""
 
     _by: typing.Union[User, Member, str] = field(repr=False, kw_only=True, alias='internal_by')
+
+    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
+        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that unpinned a message."""
+        if isinstance(self._by, (User, Member)):
+            return self._by
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -2089,11 +2397,6 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
         if isinstance(self._by, (User, Member)):
             return self._by.id
         return self._by
-
-    def get_by(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that unpinned a message."""
-        if isinstance(self._by, (User, Member)):
-            return self._by
 
     def attach_state(self, message: Message, /) -> MessageUnpinnedSystemEvent:
         """:class:`.MessageUnpinnedSystemEvent`: Attach a state to system event.
@@ -2119,28 +2422,64 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
         """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get user that unpinned a message."""
         if isinstance(self._by, (User, Member)):
             return self._by
-        state = self.message.state
-        if not state.cache:
-            return
-        channel = self.message.channel
-        if not isinstance(channel, ServerChannel):
-            return state.cache.get_user(
-                self._by,
-                caching._UNDEFINED,
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext(
+                type=CacheContextType.member_or_user_through_message_unpinned_system_event_by,
+                system_message=self,
             )
-        return state.cache.get_server_member(
-            channel.server_id,
-            self._by,
-            caching._UNDEFINED,
+            if state.provide_cache_context('MessageUnpinnedSystemEvent.by')
+            else _MEMBER_OR_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY
         )
+
+        channel = cache.get_channel(message.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            server_id = channel.server_id
+            ret = cache.get_server_member(server_id, self._by, ctx)
+        else:
+            ret = None
+
+        return ret or cache.get_user(self._by, ctx)
+
+    def get_unpinned_message(self) -> typing.Optional[Message]:
+        """Optional[:class:`.Message`]: Tries to get message that was unpinned from this channel."""
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext(
+                type=CacheContextType.message_through_message_unpinned_system_event_unpinned_message,
+                system_message=self,
+            )
+            if state.provide_cache_context('MessageUnpinnedSystemEvent.unpinned_message')
+            else _MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE
+        )
+
+        return cache.get_message(message.channel_id, self.unpinned_message_id, ctx)
 
     @property
     def by(self) -> typing.Union[User, Member]:
-        """Union[:class:`.User`, class:`Member`]: The user that unpinned a message."""
-        by = self.get_by()
-        if not by:
-            raise NoData(self.by_id, 'user')
-        return by
+        """Union[:class:`.User`, :class:`.Member`]: The user that unpinned a message."""
+        user = self.get_by()
+        if user is None:
+            raise NoData(
+                what=self.by_id,
+                type='MessageUnpinnedSystemEvent.by',
+            )
+        return user
 
     @property
     def system_content(self) -> str:
@@ -2205,21 +2544,36 @@ class CallStartedSystemEvent(StatelessCallStartedSystemEvent):
         """Optional[:class:`.User`]: Tries to get user that started call."""
         if isinstance(self._by, User):
             return self._by
+
         state = self.message.state
-        if not state.cache:
-            return
-        return state.cache.get_user(
+        cache = state.cache
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughCallStartedSystemEventAuthorCacheContext(
+                type=CacheContextType.user_through_call_started_system_event_by,
+                system_message=self,
+            )
+            if state.provide_cache_context('CallStartedSystemEvent.by')
+            else _USER_THROUGH_CALL_STARTED_SYSTEM_EVENT_BY
+        )
+
+        return cache.get_user(
             self._by,
-            caching._UNDEFINED,
+            ctx,
         )
 
     @property
     def by(self) -> User:
         """:class:`.User`: The user that started a call."""
-        by = self.get_by()
-        if not by:
-            raise NoData(self.by_id, 'user')
-        return by
+        user = self.get_by()
+        if user is None:
+            raise NoData(
+                what=self.by_id,
+                type='CallStartedSystemEvent.by',
+            )
+        return user
 
 
 StatelessSystemEvent = typing.Union[
@@ -2365,6 +2719,7 @@ class Message(BaseMessage):
             return self.state.system
 
         state = self.state
+
         if self.webhook is not None:
             webhook = self.webhook
             webhook_id = self.author_id
@@ -2374,7 +2729,9 @@ class Message(BaseMessage):
                 id=webhook_id,
                 name=webhook.name,
                 discriminator='0000',
-                internal_avatar=StatelessAsset(
+                internal_avatar=None
+                if webhook.avatar is None
+                else StatelessAsset(
                     id=webhook.avatar,
                     filename='',
                     metadata=AssetMetadata(
@@ -2390,9 +2747,7 @@ class Message(BaseMessage):
                     user_id=webhook_id,
                     server_id=None,
                     object_id=webhook_id,
-                )
-                if webhook.avatar
-                else None,
+                ),
                 display_name=None,
                 raw_badges=0,
                 status=None,
@@ -2407,21 +2762,24 @@ class Message(BaseMessage):
         if cache is None:
             return None
 
-        channel = self.channel
-        if not isinstance(channel, ServerChannel):
-            return cache.get_user(
-                self._author,
-                caching.MessageCacheContext(type=caching.CacheContextType.undefined, message=self)
-                if 'Message.get_author' in state.provide_cache_context_in
-                else caching._UNDEFINED,
+        ctx = (
+            MemberOrUserThroughMessageAuthorCacheContext(
+                type=CacheContextType.member_or_user_through_message_author,
+                message=self,
             )
-        return cache.get_server_member(
-            channel.server_id,
-            self._author,
-            caching.MessageCacheContext(type=caching.CacheContextType.undefined, message=self)
-            if 'Message.get_author' in state.provide_cache_context_in
-            else caching._UNDEFINED,
+            if state.provide_cache_context('Message.author')
+            else _MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR
         )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            server_id = channel.server_id
+            ret = cache.get_server_member(server_id, self._author, ctx)
+        else:
+            ret = None
+
+        return ret or cache.get_user(self._author, ctx)
 
     @property
     def attachments(self) -> list[Asset]:
@@ -2432,8 +2790,11 @@ class Message(BaseMessage):
     def author(self) -> typing.Union[User, Member]:
         """Union[:class:`.User`, :class:`.Member`]: The user that sent this message."""
         author = self.get_author()
-        if not author:
-            raise NoData(self.author_id, 'message author')
+        if author is None:
+            raise NoData(
+                what=typing.cast('str', self._author),
+                type='Message.author',
+            )
         return author
 
     @property
@@ -2468,8 +2829,9 @@ class Message(BaseMessage):
     @property
     def system_event(self) -> typing.Optional[SystemEvent]:
         """Optional[:class:`.SystemEvent`]: The system event information, occured in this message, if any."""
-        if self.internal_system_event:
-            return self.internal_system_event.attach_state(self)
+        if self.internal_system_event is None:
+            return None
+        return self.internal_system_event.attach_state(self)
 
     def is_silent(self) -> bool:
         """:class:`bool`: Whether the message suppresses push notifications."""

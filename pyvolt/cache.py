@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .bot import Bot
-    from .emoji import DetachedEmoji, ServerEmoji, Emoji
+    from .emoji import ServerEmoji, Emoji
     from .channel import (
         DMChannel,
         GroupChannel,
@@ -94,7 +94,23 @@ if typing.TYPE_CHECKING:
         UserVoiceStateUpdateEvent,
         AuthenticatedEvent,
     )
-    from .message import Message
+    from .message import (
+        BaseMessage,
+        StatelessUserAddedSystemEvent,
+        StatelessUserRemovedSystemEvent,
+        StatelessUserJoinedSystemEvent,
+        StatelessUserLeftSystemEvent,
+        StatelessUserKickedSystemEvent,
+        StatelessUserBannedSystemEvent,
+        StatelessChannelRenamedSystemEvent,
+        StatelessChannelDescriptionChangedSystemEvent,
+        StatelessChannelIconChangedSystemEvent,
+        StatelessChannelOwnershipChangedSystemEvent,
+        StatelessMessagePinnedSystemEvent,
+        StatelessMessageUnpinnedSystemEvent,
+        StatelessCallStartedSystemEvent,
+        Message,
+    )
     from .read_state import ReadState
     from .server import BaseServer, Server, BaseMember, Member
     from .webhook import Webhook
@@ -176,7 +192,29 @@ class CacheContextType(Enum):
     user_through_base_emoji_creator = 'BaseEmoji.creator: User'
     server_through_server_emoji_server = 'ServerEmoji.server: Server'
     # TODO: Invite
-    # TODO: Message
+    user_through_user_added_system_event_user = 'UserAddedSystemEvent.user: User'
+    user_through_user_added_system_event_by = 'UserAddedSystemEvent.by: User'
+    user_through_user_removed_system_event_user = 'UserRemovedSystemEvent.user: User'
+    user_through_user_removed_system_event_by = 'UserRemovedSystemEvent.by: User'
+    member_or_user_through_user_joined_system_event_user = 'UserJoinedSystemEvent.user: Union[Member, User]'
+    member_or_user_through_user_left_system_event_user = 'UserLeftSystemEvent.user: Union[Member, User]'
+    member_or_user_through_user_kicked_system_event_user = 'UserKickedSystemEvent.user: Union[Member, User]'
+    member_or_user_through_user_banned_system_event_user = 'UserBannedSystemEvent.user: Union[Member, User]'
+    user_through_channel_renamed_system_event_by = 'ChannelRenamedSystemEvent.by: User'
+    user_through_channel_description_changed_system_event_by = 'ChannelDescriptionChangedSystemEvent.by: User'
+    user_through_channel_icon_changed_system_event_by = 'ChannelIconChangedSystemEvent.by: User'
+    user_through_channel_ownership_changed_system_event_from = 'ChannelOwnershipChangedSystemEvent.from_: User'
+    user_through_channel_ownership_changed_system_event_to = 'ChannelOwnershipChangedSystemEvent.to: User'
+    message_through_message_pinned_system_event_pinned_message = 'MessagePinnedSystemEvent.pinned_message: Message'
+    member_or_user_through_message_pinned_system_event_by = 'MessagePinnedSystemEvent.by: Union[Member, User]'
+    message_through_message_unpinned_system_event_unpinned_message = (
+        'MessageUnpinnedSystemEvent.unpinned_message: Message'
+    )
+    member_or_user_through_message_unpinned_system_event_by = 'MessageUnpinnedSystemEvent.by: Union[Member, User]'
+    user_through_call_started_system_event_by = 'CallStartedSystemEvent.by: User'
+    channel_through_message_channel = 'Message.channel: Channel'
+    server_through_message_server = 'Message.server: Optional[Server]'
+    member_or_user_through_message_author = 'Message.author: Union[Member, User]'
     channel_through_read_state_channel = 'ReadState.channel: Channel'
     emoji_through_server_getter = 'Server.get_emoji(): Optional[Emoji]'
     member_through_server_getter = 'Server.get_member(): Optional[Member]'
@@ -202,30 +240,6 @@ class BaseCacheContext:
 @define(slots=True)
 class UndefinedCacheContext(BaseCacheContext):
     """Represents a undefined cache context."""
-
-
-@define(slots=True)
-class DetachedEmojiCacheContext(BaseCacheContext):
-    """Represents a cache context that involves a detached emoji."""
-
-    emoji: DetachedEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.DetachedEmoji`: The detached emoji involved."""
-
-
-@define(slots=True)
-class MessageCacheContext(BaseCacheContext):
-    """Represents a cache context that involves a message."""
-
-    message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.Message`: The message involved."""
-
-
-@define(slots=True)
-class UserCacheContext(BaseCacheContext):
-    """Represents a cache context that involves a user."""
-
-    user: User = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.User`: The user involved."""
 
 
 @define(slots=True)
@@ -654,6 +668,22 @@ class ServerEmojiCacheContext(EntityCacheContext):
     """:class:`.ServerEmoji`: The emoji involved."""
 
 
+@define(slots=True)
+class BaseMessageCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMessage` entity."""
+
+    message: BaseMessage = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.BaseMessage`: The message involved."""
+
+
+@define(slots=True)
+class MessageCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.Message` entity."""
+
+    message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.Message`: The message involved."""
+
+
 # TODOs are in CacheContextType
 @define(slots=True)
 class ReadStateCacheContext(EntityCacheContext):
@@ -680,6 +710,22 @@ class BaseMemberCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class ServerCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.Server` entity."""
+
+    server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.Server`: The server involved."""
+
+
+@define(slots=True)
+class UserCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.User` entity."""
+
+    user: User = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.User`: The user involved."""
+
+
+@define(slots=True)
 class WebhookCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.Webhook` entity."""
 
@@ -688,11 +734,107 @@ class WebhookCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
-class ServerCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.Server` entity."""
+class UserAddedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserAddedSystemEvent` entity."""
 
-    server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.Server`: The server involved."""
+    system_message: StatelessUserAddedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessUserAddedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class UserRemovedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserRemovedSystemEvent` entity."""
+
+    system_message: StatelessUserRemovedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessUserRemovedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class UserJoinedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessStatelessUserJoinedSystemEvent` entity."""
+
+    system_message: StatelessUserJoinedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessUserJoinedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class UserLeftSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent` entity."""
+
+    system_message: StatelessUserLeftSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessUserLeftSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class UserKickedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent` entity."""
+
+    system_message: StatelessUserKickedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessUserKickedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class UserBannedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent` entity."""
+
+    system_message: StatelessUserBannedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessUserBannedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class ChannelRenamedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessChannelRenamedSystemEvent` entity."""
+
+    system_message: StatelessChannelRenamedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessChannelRenamedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class ChannelDescriptionChangedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessChannelDescriptionChangedSystemEvent` entity."""
+
+    system_message: StatelessChannelDescriptionChangedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessChannelDescriptionChangedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class ChannelIconChangedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessChannelIconChangedSystemEvent` entity."""
+
+    system_message: StatelessChannelIconChangedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessChannelIconChangedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class ChannelOwnershipChangedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessChannelOwnershipChangedSystemEvent` entity."""
+
+    system_message: StatelessChannelOwnershipChangedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessChannelOwnershipChangedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class MessagePinnedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent` entity."""
+
+    system_message: StatelessMessagePinnedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessMessagePinnedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class MessageUnpinnedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent` entity."""
+
+    system_message: StatelessMessageUnpinnedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessMessageUnpinnedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class CallStartedSystemEventCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessCallStartedSystemEvent` entity."""
+
+    system_message: StatelessCallStartedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.StatelessCallStartedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
@@ -753,6 +895,113 @@ class ServerThroughServerChannelCacheContext(BaseServerChannelCacheContext):
 @define(slots=True)
 class MessageThroughTextChannelLastMessageCacheContext(TextChannelCacheContext):
     """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve last text channel's message."""
+
+
+@define(slots=True)
+class UserThroughUserAddedSystemEventUserCacheContext(UserAddedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserAddedSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class UserThroughUserAddedSystemEventAuthorCacheContext(UserAddedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserAddedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class UserThroughUserRemovedSystemEventUserCacheContext(UserRemovedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserRemovedSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class UserThroughUserRemovedSystemEventAuthorCacheContext(UserRemovedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserRemovedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class MemberOrUserThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class MemberOrUserThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class MemberOrUserThroughUserKickedSystemEventUserCacheContext(UserKickedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class MemberOrUserThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class UserThroughChannelRenamedSystemEventAuthorCacheContext(ChannelRenamedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessChannelRenamedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext(
+    ChannelDescriptionChangedSystemEventCacheContext
+):
+    """Represents a cache context that involves an :class:`.StatelessChannelDescriptionChangedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class UserThroughChannelIconChangedSystemEventAuthorCacheContext(ChannelIconChangedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessChannelIconChangedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class UserThroughChannelOwnershipChangedSystemEventFromCacheContext(ChannelOwnershipChangedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessChannelOwnershipChangedSystemEvent`, wishing to retrieve system message's old group owner."""
+
+
+@define(slots=True)
+class UserThroughChannelOwnershipChangedSystemEventToCacheContext(ChannelOwnershipChangedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessChannelOwnershipChangedSystemEvent`, wishing to retrieve system message's new group owner."""
+
+
+@define(slots=True)
+class MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext(MessagePinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's pinned message."""
+
+
+@define(slots=True)
+class MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext(MessageUnpinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's pinned message."""
+
+
+@define(slots=True)
+class MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class UserThroughCallStartedSystemEventAuthorCacheContext(CallStartedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessCallStartedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class ChannelThroughMessageChannelCacheContext(BaseMessageCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMessage`, wishing to retrieve message's channel."""
+
+
+@define(slots=True)
+class ServerThroughMessageServerCacheContext(BaseMessageCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMessage`, wishing to retrieve message's server."""
+
+
+@define(slots=True)
+class MemberOrUserThroughMessageAuthorCacheContext(MessageCacheContext):
+    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's author."""
 
 
 @define(slots=True)
@@ -1018,6 +1267,73 @@ _USER_THROUGH_BASE_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = Undefine
 _SERVER_THROUGH_SERVER_EMOJI_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_server_emoji_server,
 )
+_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_added_system_event_user,
+)
+_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_added_system_event_by,
+)
+_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_removed_system_event_user,
+)
+_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_removed_system_event_by,
+)
+_MEMBER_OR_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_user_joined_system_event_user,
+)
+_MEMBER_OR_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_user_left_system_event_user,
+)
+_MEMBER_OR_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_user_kicked_system_event_user,
+)
+_MEMBER_OR_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_user_banned_system_event_user,
+)
+_USER_THROUGH_CHANNEL_RENAMED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_channel_renamed_system_event_by,
+)
+_USER_THROUGH_CHANNEL_DESCRIPTION_CHANGED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_channel_description_changed_system_event_by,
+)
+_USER_THROUGH_CHANNEL_ICON_CHANGED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_channel_icon_changed_system_event_by,
+)
+_USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_FROM: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_channel_ownership_changed_system_event_from,
+)
+_USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_TO: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_channel_ownership_changed_system_event_to,
+)
+_MESSAGE_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_PINNED_MESSAGE: typing.Final[UndefinedCacheContext] = (
+    UndefinedCacheContext(
+        type=CacheContextType.message_through_message_pinned_system_event_pinned_message,
+    )
+)
+_MEMBER_OR_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_message_pinned_system_event_by,
+)
+_MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE: typing.Final[UndefinedCacheContext] = (
+    UndefinedCacheContext(
+        type=CacheContextType.message_through_message_unpinned_system_event_unpinned_message,
+    )
+)
+_MEMBER_OR_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_message_unpinned_system_event_by,
+)
+_USER_THROUGH_CALL_STARTED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_call_started_system_event_by,
+)
+_CHANNEL_THROUGH_MESSAGE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_message_channel,
+)
+_SERVER_THROUGH_MESSAGE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_message_server,
+)
+_MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_message_author,
+)
 _CHANNEL_THROUGH_READ_STATE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_read_state_channel,
 )
@@ -1114,6 +1430,27 @@ ProvideCacheContextIn = typing.Literal[
     'VoiceChannel.voice_states',
     'BaseEmoji.creator',
     'ServerEmoji.server',
+    'UserAddedSystemEvent.user',
+    'UserAddedSystemEvent.by',
+    'UserRemovedSystemEvent.user',
+    'UserRemovedSystemEvent.by',
+    'UserJoinedSystemEvent.user',
+    'UserLeftSystemEvent.user',
+    'UserKickedSystemEvent.user',
+    'UserBannedSystemEvent.user',
+    'ChannelRenamedSystemEvent.by',
+    'ChannelDescriptionChangedSystemEvent.by',
+    'ChannelIconChangedSystemEvent.by',
+    'ChannelOwnershipChangedSystemEvent.from_',
+    'ChannelOwnershipChangedSystemEvent.to',
+    'MessagePinnedSystemEvent.pinned_message',
+    'MessagePinnedSystemEvent.by',
+    'MessageUnpinnedSystemEvent.unpinned_message',
+    'MessageUnpinnedSystemEvent.by',
+    'CallStartedSystemEvent.by',
+    'Message.channel',
+    'Message.server',
+    'Message.author',
     'ReadState.channel',
     'Server.get_emoji()',
     'Server.get_member()',
@@ -1126,24 +1463,6 @@ ProvideCacheContextIn = typing.Literal[
     'Webhook.creator',
     'Webhook.channel',
     # TODO redo these below
-    'ServerEmoji.get_server',
-    'BaseMessage.channel',
-    'UserAddedSystemEvent.get_user',
-    'UserAddedSystemEvent.get_by',
-    'UserRemovedSystemEvent.get_user',
-    'UserRemovedSystemEvent.get_by',
-    'UserJoinedSystemEvent.get_user',
-    'UserLeftSystemEvent.get_user',
-    'UserKickedSystemEvent.get_user',
-    'UserBannedSystemEvent.get_user',
-    'ChannelRenamedSystemEvent.get_by',
-    'ChannelDescriptionChangedSystemEvent.get_by',
-    'ChannelIconChangedSystemEvent.get_by',
-    'ChannelOwnershipChangedSystemEvent.get_from',
-    'ChannelOwnershipChangedSystemEvent.get_to',
-    'MessagePinnedSystemEvent.get_by',
-    'MessageUnpinnedSystemEvent.get_by',
-    'Message.get_author',
     'BaseRole.get_server',
     'Server.get_owner',
     'BaseMember.get_server',
@@ -2433,9 +2752,6 @@ __all__ = (
     'CacheContextType',
     'BaseCacheContext',
     'UndefinedCacheContext',
-    'DetachedEmojiCacheContext',
-    'MessageCacheContext',
-    'UserCacheContext',
     # Cache context above are deprecated
     'PrivateChannelCreateEventCacheContext',
     'ServerChannelCreateEventCacheContext',
@@ -2484,10 +2800,15 @@ __all__ = (
     'BotCacheContext',
     'DMChannelCacheContext',
     'GroupChannelCacheContext',
-    'BaseServerChannelCacheContext',
     'BaseEmojiCacheContext',
     'ServerEmojiCacheContext',
+    'BaseMessageCacheContext',
+    'MessageCacheContext',
+    'ReadStateCacheContext',
+    'BaseServerChannelCacheContext',
     'ServerCacheContext',
+    'UserCacheContext',
+    'WebhookCacheContext',
     'UserThroughBotOwnerCacheContext',
     'UserThroughDMChannelInitiatorCacheContext',
     'MessageThroughDMChannelLastMessageCacheContext',
@@ -2500,6 +2821,27 @@ __all__ = (
     'UserThroughGroupChannelRecipientsCacheContext',
     'ServerThroughServerChannelCacheContext',
     'MessageThroughTextChannelLastMessageCacheContext',
+    'UserThroughUserAddedSystemEventUserCacheContext',
+    'UserThroughUserAddedSystemEventAuthorCacheContext',
+    'UserThroughUserRemovedSystemEventUserCacheContext',
+    'UserThroughUserRemovedSystemEventAuthorCacheContext',
+    'MemberOrUserThroughUserJoinedSystemEventUserCacheContext',
+    'MemberOrUserThroughUserLeftSystemEventUserCacheContext',
+    'MemberOrUserThroughUserKickedSystemEventUserCacheContext',
+    'MemberOrUserThroughUserBannedSystemEventUserCacheContext',
+    'UserThroughChannelRenamedSystemEventAuthorCacheContext',
+    'UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext',
+    'UserThroughChannelIconChangedSystemEventAuthorCacheContext',
+    'UserThroughChannelOwnershipChangedSystemEventFromCacheContext',
+    'UserThroughChannelOwnershipChangedSystemEventToCacheContext',
+    'MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext',
+    'MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext',
+    'MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext',
+    'MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext',
+    'UserThroughCallStartedSystemEventAuthorCacheContext',
+    'ChannelThroughMessageChannelCacheContext',
+    'ServerThroughMessageServerCacheContext',
+    'MemberOrUserThroughMessageAuthorCacheContext',
     'ReadStateThroughTextChannelReadStateCacheContext',
     'ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext',
     'ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext',
@@ -2578,6 +2920,27 @@ __all__ = (
     '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES',
     '_USER_THROUGH_BASE_EMOJI_CREATOR',
     '_SERVER_THROUGH_SERVER_EMOJI_SERVER',
+    '_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_BY',
+    '_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_BY',
+    '_MEMBER_OR_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER',
+    '_MEMBER_OR_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER',
+    '_MEMBER_OR_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER',
+    '_MEMBER_OR_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_CHANNEL_RENAMED_SYSTEM_EVENT_BY',
+    '_USER_THROUGH_CHANNEL_DESCRIPTION_CHANGED_SYSTEM_EVENT_BY',
+    '_USER_THROUGH_CHANNEL_ICON_CHANGED_SYSTEM_EVENT_BY',
+    '_USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_FROM',
+    '_USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_TO',
+    '_MESSAGE_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_PINNED_MESSAGE',
+    '_MEMBER_OR_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY',
+    '_MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE',
+    '_MEMBER_OR_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY',
+    '_USER_THROUGH_CALL_STARTED_SYSTEM_EVENT_BY',
+    '_CHANNEL_THROUGH_MESSAGE_CHANNEL',
+    '_SERVER_THROUGH_MESSAGE_SERVER',
+    '_MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR',
     '_CHANNEL_THROUGH_READ_STATE_CHANNEL',
     '_EMOJI_THROUGH_SERVER_GETTER',
     '_MEMBER_THROUGH_SERVER_GETTER',
