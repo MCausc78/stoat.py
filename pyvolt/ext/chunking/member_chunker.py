@@ -24,9 +24,10 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
+import asyncio
 import typing
 
-from pyvolt import BaseFlags, Forbidden, ReadyEvent, ServerCreateEvent, ServerMemberJoinEvent, doc_flags, flag
+from pyvolt import BaseFlags, Enum, Forbidden, ReadyEvent, ServerCreateEvent, ServerMemberJoinEvent, doc_flags, flag
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
@@ -65,14 +66,26 @@ class MemberChunkerFlags(BaseFlags):
     def subscribe_to_events(self) -> int:
         return (1 << 0) | (1 << 1) | (1 << 2)
 
+    @flag()
+    def chunk_only_servers(self) -> int:
+        return 1 << 10
+
+
+class MemberChunkingStrategy(Enum):
+    normal = 'NORMAL'
+    defer_prioritized = 'DEFER_PRIORITIZED'
+
 
 class MemberChunker:
     """Represents a member chunker."""
 
     __slots__ = (
+        '_tasks',
         'client',
         'flags',
-        'priorities',
+        'prioritize',
+        'servers',
+        'strategy',
     )
 
     def __init__(
@@ -80,17 +93,25 @@ class MemberChunker:
         client: Client,
         *,
         flags: typing.Optional[MemberChunkerFlags] = None,
-        priorities: typing.Optional[dict[str, int]] = None,
+        prioritize: typing.Optional[dict[str, int]] = None,
+        servers: typing.Optional[list[str]] = None,
+        strategy: MemberChunkingStrategy = MemberChunkingStrategy.normal,
     ) -> None:
         if flags is None:
             flags = MemberChunkerFlags.default()
 
-        if priorities is None:
-            priorities = {}
+        if prioritize is None:
+            prioritize = {}
 
+        if servers is None:
+            servers = []
+
+        self._tasks: dict[str, asyncio.Task[None]] = {}
         self.client: Client = client
         self.flags: MemberChunkerFlags = flags
-        self.priorities: dict[str, int] = priorities
+        self.prioritize: dict[str, int] = prioritize
+        self.servers: list[str] = servers
+        self.strategy: MemberChunkingStrategy = strategy
 
         if self.flags.subscribe_to_ready:
             client.subscribe(ReadyEvent, self.process_ready)
@@ -101,32 +122,54 @@ class MemberChunker:
         if self.flags.subscribe_to_server_member_join:
             client.subscribe(ServerMemberJoinEvent, self.process_server_member_join)
 
-    async def process_ready(self, event: ReadyEvent, /) -> None:
-        """Process a :class:`.ReadyEvent`.
+    def is_chunking_completed(self) -> bool:
+        """:class:`bool`: Returns whether chunking process was completed after receiving :class:`~pyvolt.ReadyEvent`."""
 
-        Parameters
-        ----------
-        event: :class:`.ReadyEvent`
-            The event to process.
-        """
+        if '' in self._tasks:
+            return self._tasks[''].done()
+        return True
+
+    async def can_chunk(self, server: Server, /) -> bool:
+        """:class:`bool`: Whether the server should be chunked."""
+
+        return (server.id in self.servers) ^ self.flags.chunk_only_servers
+
+    async def _chunk_servers(self, servers: list[Server], cache_contest: BaseCacheContext, /) -> None:
         pass
 
-    async def process_server_create(self, event: ServerCreateEvent, /) -> None:
-        """Process a :class:`.ServerCreateEvent`.
+    async def process_ready(self, event: ReadyEvent, /) -> None:
+        """Process a :class:`~pyvolt.ReadyEvent`.
 
         Parameters
         ----------
-        event: :class:`.ServerCreateEvent`
+        event: :class:`~pyvolt.ReadyEvent`
             The event to process.
         """
-        await self.chunk(event.server, event.cache_context)
+        if '' in self._tasks:
+            self._tasks[''].cancel()
+        task = asyncio.create_task(self._chunk_servers(event.servers, event.cache_context))
+        self._tasks[''] = task
+        await task
 
-    async def process_server_member_join(self, event: ServerMemberJoinEvent, /) -> None:
-        """Process a :class:`.ServerMemberJoinEvent`.
+    async def process_server_create(self, event: ServerCreateEvent, /) -> None:
+        """Process a :class:`~pyvolt.ServerCreateEvent`.
 
         Parameters
         ----------
-        event: :class:`.ServerMemberJoinEvent`
+        event: :class:`~pyvolt.ServerCreateEvent`
+            The event to process.
+        """
+        server = event.server
+
+        if await self.can_chunk(server):
+            await self.chunk(server, event.cache_context)
+
+    async def process_server_member_join(self, event: ServerMemberJoinEvent, /) -> None:
+        """Process a :class:`~pyvolt.ServerMemberJoinEvent`.
+
+        Parameters
+        ----------
+        event: :class:`~pyvolt.ServerMemberJoinEvent`
             The event to process.
         """
         state = event.shard.state

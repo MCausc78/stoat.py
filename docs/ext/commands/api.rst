@@ -1,7 +1,7 @@
 .. currentmodule:: pyvolt
 
 API Reference
-===============
+=============
 
 The following section outlines the API of pyvolt's command extension module.
 

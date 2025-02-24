@@ -195,6 +195,26 @@ class ReadyEvent(ShardEvent):
     voice_states: list[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
     """List[:class:`.ChannelVoiceStateContainer`]: The voice states of the text/voice channels."""
 
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ReadyEventCacheContext] = field(
+        default=Factory(
+            lambda self: _cast(
+                'typing.Any',
+                caching.ReadyEventCacheContext(
+                    type=caching.CacheContextType.ready_event,
+                    event=self,
+                )
+                if self.shard.state.provide_cache_context('ReadyEvent')
+                else caching._READY_EVENT,
+            ),
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`.UndefinedCacheContext`, :class:`.ReadyEventCacheContext`]: The cache context used."""
+
     def before_dispatch(self) -> None:
         # People expect bot.me to be available upon `ReadyEvent` dispatching
         state = self.shard.state
@@ -208,14 +228,7 @@ class ReadyEvent(ShardEvent):
         if cache is None:
             return False
 
-        ctx = (
-            caching.ReadyEventCacheContext(
-                type=caching.CacheContextType.ready_event,
-                event=self,
-            )
-            if state.provide_cache_context('ReadyEvent')
-            else caching._READY_EVENT
-        )
+        ctx = self.cache_context
 
         for u in self.users:
             cache.store_user(u, ctx)
