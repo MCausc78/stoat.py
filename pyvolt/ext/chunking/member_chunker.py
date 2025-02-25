@@ -195,7 +195,7 @@ class MemberChunker:
     async def can_chunk(self, server: Server, /) -> bool:
         """:class:`bool`: Whether the server should be chunked."""
 
-        return (server.id in self.servers) ^ self.flags.chunk_only_servers
+        return (server.id not in self.servers) ^ self.flags.chunk_only_servers
 
     async def _chunk_servers(self, servers: list[Server], cache_context: BaseCacheContext, /) -> None:
         flags = self.flags
