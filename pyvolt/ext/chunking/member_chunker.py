@@ -81,8 +81,8 @@ class MemberChunkerFlags(BaseFlags):
         return 1 << 11
 
     @flag()
-    def synchronously_chunk_prioritized_servers(self) -> int:
-        """:class:`bool`: Whether to synchronously chunk prioritized servers or not."""
+    def asynchronously_chunk_prioritized_servers(self) -> int:
+        """:class:`bool`: Whether to asynchronously chunk prioritized servers or not."""
         return 1 << 12
 
     @flag()
@@ -92,7 +92,32 @@ class MemberChunkerFlags(BaseFlags):
 
 
 class MemberChunker:
-    """Represents a member chunker."""
+    """Represents a member chunker.
+
+    Parameters
+    ----------
+    client: :class:`~pyvolt.Client`
+        The client.
+    flags: Optional[:class:`MemberChunkerFlags`]
+        The flags to use when chunking.
+    prioritize: Optional[Dict[:class:`str`, :class:`int`]]
+        The prioritized servers to chunk.
+    servers: Optional[List[:class:`str`]]
+        The list of servers to only chunk if :attr:`MemberChunkerFlags.chunk_only_servers` is ``True``,
+        or exclude them otherwise.
+
+    Attributes
+    ----------
+    client: :class:`~pyvolt.Client`
+        The client.
+    flags: :class:`MemberChunkerFlags`
+        The flags to use when chunking.
+    prioritize: Dict[:class:`str`, :class:`int`]
+        The prioritized servers to chunk.
+    servers: List[:class:`str`]
+        The list of servers to only chunk if :attr:`MemberChunkerFlags.chunk_only_servers` is ``True``,
+        or exclude them otherwise.
+    """
 
     __slots__ = (
         '_tasks',
@@ -147,8 +172,6 @@ class MemberChunker:
         return (server.id in self.servers) ^ self.flags.chunk_only_servers
 
     async def _chunk_servers(self, servers: list[Server], cache_context: BaseCacheContext, /) -> None:
-        # TODO: Respect self.servers and chunk_only_servers flag
-
         flags = self.flags
 
         chunking_servers = sorted(
@@ -182,6 +205,7 @@ class MemberChunker:
             ]
         )
 
+        tasks = []
         for group, is_prioritized in groups:
             for server in group:
                 can = await self.can_chunk(server)
@@ -191,10 +215,17 @@ class MemberChunker:
                 task = asyncio.create_task(self.chunk(server, cache_context))
                 self._tasks[server.id] = task
                 if is_prioritized:
-                    if flags.synchronously_chunk_prioritized_servers:
+                    if flags.asynchronously_chunk_prioritized_servers:
+                        tasks.append(task)
+                    else:
                         await task
                 elif flags.synchronously_chunk_unprioritized_servers:
                     await task
+                else:
+                    tasks.append(task)
+
+        if tasks:
+            await asyncio.gather(*tasks)
 
     async def process_ready(self, event: ReadyEvent, /) -> None:
         """Process a :class:`~pyvolt.ReadyEvent`.

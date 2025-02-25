@@ -12,3 +12,14 @@ For this reason, ``pyvolt`` comes with it's own extension to handle this.
     :maxdepth: 2
 
     api
+
+Example
+-------
+
+.. code:: py
+
+    from pyvolt.ext.chunking import MemberChunker
+
+    MemberChunker(bot)
+
+That's it. Now the cache will be always populated.

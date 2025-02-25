@@ -28,7 +28,7 @@ Is this your first time using the library? This is the place to get started!
 - **Examples:** Many examples are available in the :resource:`repository <examples>`
 
 Getting help
---------------
+------------
 
 If you're having trouble with something, these resources might help.
 
