@@ -410,4 +410,8 @@ def get_mutual_servers(cache: Cache, user_id: str, /) -> list[str]:
     return ret
 
 
-__all__ = ('MemberChunker',)
+__all__ = (
+    'MemberChunkerFlags',
+    'MemberChunker',
+    'get_mutual_servers',
+)
