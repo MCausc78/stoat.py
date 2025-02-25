@@ -44,6 +44,7 @@ from .cache import (
 )
 from .errors import (
     CommandError,
+    ConversionError,
     BadArgument,
     MemberNotFound,
     ServerNotFound,
