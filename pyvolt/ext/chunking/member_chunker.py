@@ -27,7 +27,7 @@ from __future__ import annotations
 import asyncio
 import typing
 
-from pyvolt import BaseFlags, Enum, Forbidden, ReadyEvent, ServerCreateEvent, ServerMemberJoinEvent, doc_flags, flag
+from pyvolt import BaseFlags, Forbidden, ReadyEvent, ServerCreateEvent, ServerMemberJoinEvent, doc_flags, flag
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
@@ -52,28 +52,43 @@ class MemberChunkerFlags(BaseFlags):
 
     @flag()
     def subscribe_to_ready(self) -> int:
+        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ReadyEvent`."""
         return 1 << 0
 
     @flag()
     def subscribe_to_server_create(self) -> int:
+        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ServerCreateEvent`."""
         return 1 << 1
 
     @flag()
     def subscribe_to_server_member_join(self) -> int:
+        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ServerMemberJoinEvent`."""
         return 1 << 2
 
     @flag()
     def subscribe_to_events(self) -> int:
+        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ReadyEvent`, :class:`~pyvolt.ServerCreateEvent`, and :class:`~pyvolt.ServerMemberJoinEvent`."""
         return (1 << 0) | (1 << 1) | (1 << 2)
 
     @flag()
     def chunk_only_servers(self) -> int:
+        """:class:`bool`: Whether to chunk only provided servers in constructor, not exclude them."""
         return 1 << 10
 
+    @flag()
+    def defer_prioritized(self) -> int:
+        """:class:`bool`: Whether to defer prioritized servers for chunking."""
+        return 1 << 11
 
-class MemberChunkingStrategy(Enum):
-    normal = 'NORMAL'
-    defer_prioritized = 'DEFER_PRIORITIZED'
+    @flag()
+    def synchronously_chunk_prioritized_servers(self) -> int:
+        """:class:`bool`: Whether to synchronously chunk prioritized servers or not."""
+        return 1 << 12
+
+    @flag()
+    def synchronously_chunk_unprioritized_servers(self) -> int:
+        """:class:`bool`: Whether to synchronously chunk unprioritized servers or not."""
+        return 1 << 13
 
 
 class MemberChunker:
@@ -85,7 +100,6 @@ class MemberChunker:
         'flags',
         'prioritize',
         'servers',
-        'strategy',
     )
 
     def __init__(
@@ -95,7 +109,6 @@ class MemberChunker:
         flags: typing.Optional[MemberChunkerFlags] = None,
         prioritize: typing.Optional[dict[str, int]] = None,
         servers: typing.Optional[list[str]] = None,
-        strategy: MemberChunkingStrategy = MemberChunkingStrategy.normal,
     ) -> None:
         if flags is None:
             flags = MemberChunkerFlags.default()
@@ -106,12 +119,11 @@ class MemberChunker:
         if servers is None:
             servers = []
 
-        self._tasks: dict[str, asyncio.Task[None]] = {}
+        self._tasks: dict[str, asyncio.Task] = {}
         self.client: Client = client
         self.flags: MemberChunkerFlags = flags
         self.prioritize: dict[str, int] = prioritize
         self.servers: list[str] = servers
-        self.strategy: MemberChunkingStrategy = strategy
 
         if self.flags.subscribe_to_ready:
             client.subscribe(ReadyEvent, self.process_ready)
@@ -134,8 +146,55 @@ class MemberChunker:
 
         return (server.id in self.servers) ^ self.flags.chunk_only_servers
 
-    async def _chunk_servers(self, servers: list[Server], cache_contest: BaseCacheContext, /) -> None:
-        pass
+    async def _chunk_servers(self, servers: list[Server], cache_context: BaseCacheContext, /) -> None:
+        # TODO: Respect self.servers and chunk_only_servers flag
+
+        flags = self.flags
+
+        chunking_servers = sorted(
+            [(server, self.prioritize.get(server.id, 0)) for server in servers],
+        )
+
+        prioritized = []
+        servers = []
+
+        excluded = False
+
+        for server, priority in chunking_servers:
+            excluded = (server.id in self.servers) ^ flags.chunk_only_servers
+            if excluded:
+                continue
+
+            if priority > 0:
+                prioritized.append(server)
+            else:
+                servers.append(server)
+
+        groups = (
+            [
+                (servers, False),
+                (prioritized, True),
+            ]
+            if flags.defer_prioritized
+            else [
+                (prioritized, True),
+                (servers, False),
+            ]
+        )
+
+        for group, is_prioritized in groups:
+            for server in group:
+                can = await self.can_chunk(server)
+                if not can:
+                    continue
+
+                task = asyncio.create_task(self.chunk(server, cache_context))
+                self._tasks[server.id] = task
+                if is_prioritized:
+                    if flags.synchronously_chunk_prioritized_servers:
+                        await task
+                elif flags.synchronously_chunk_unprioritized_servers:
+                    await task
 
     async def process_ready(self, event: ReadyEvent, /) -> None:
         """Process a :class:`~pyvolt.ReadyEvent`.

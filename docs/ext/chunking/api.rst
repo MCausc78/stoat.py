@@ -31,11 +31,11 @@ MemberChunkingStrategy
 
 .. class:: MemberChunkingStrategy
 
-    Represents a strategy to chunk server members.
+    Strategy how to chunk server members.
     
     .. attribute:: normal
         
-        Chunk servers normally.
+        Chunk prioritized servers first, then chunk rest of servers.
     .. attribute:: defer_prioritized
         
-        Defer prioritized servers.
+        Chunk prioritized servers last, after chunking all of unprioritized servers.
