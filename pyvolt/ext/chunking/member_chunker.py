@@ -202,6 +202,7 @@ class MemberChunker:
 
         chunking_servers = sorted(
             [(server, self.prioritize.get(server.id, 0)) for server in servers],
+            key=lambda pair, /: pair[1],
         )
 
         prioritized = []
