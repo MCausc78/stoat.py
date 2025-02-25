@@ -43,8 +43,9 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from pyvolt import (
-        Client,
         BaseCacheContext,
+        Cache,
+        Client,
         MemberList,
         Server,
     )
@@ -109,6 +110,11 @@ class MemberChunkerFlags(BaseFlags):
     def synchronously_chunk_unprioritized_servers(self) -> int:
         """:class:`bool`: Whether to synchronously chunk unprioritized servers or not."""
         return 1 << 13
+
+    @flag()
+    def keep_users_with_no_mutual_servers(self) -> int:
+        """:class:`bool`: Whether to keep users cache if they no longer have mutual servers or not."""
+        return 1 << 14
 
 
 class MemberChunker:
@@ -332,12 +338,25 @@ class MemberChunker:
         """
         my_id = event.shard.state.my_id
 
-        if event.user_id != my_id:
+        if event.user_id == my_id:
+            task = self._tasks.pop(event.server_id, None)
+            if task is not None:
+                task.cancel()
             return
 
-        task = self._tasks.pop(event.server_id, None)
-        if task is not None:
-            task.cancel()
+        if self.flags.keep_users_with_no_mutual_servers:
+            return
+
+        cache = event.shard.state.cache
+        if cache is None:
+            return
+
+        server_ids = get_mutual_servers(cache, event.user_id)
+
+        if len(server_ids) == 0 or (len(server_ids) == 1 and server_ids[0] == event.server_id):
+            cache.delete_user(event.user_id, event.cache_context)
+
+        return
 
     async def chunk(self, server: Server, cache_context: BaseCacheContext, /) -> MemberList:
         """Chunks a server.
@@ -373,3 +392,16 @@ class MemberChunker:
         self._tasks.pop(server.id, None)
 
         return data
+
+
+def get_mutual_servers(cache: Cache, user_id: str, /) -> list[str]:
+    ret = []
+
+    for server_id, members in cache.get_servers_member_mapping().items():
+        if user_id in members:
+            ret.append(server_id)
+
+    return ret
+
+
+__all__ = ('MemberChunker',)
