@@ -27,7 +27,17 @@ from __future__ import annotations
 import asyncio
 import typing
 
-from pyvolt import BaseFlags, Forbidden, ReadyEvent, ServerCreateEvent, ServerMemberJoinEvent, doc_flags, flag
+from pyvolt import (
+    BaseFlags,
+    Forbidden,
+    ReadyEvent,
+    ServerCreateEvent,
+    ServerDeleteEvent,
+    ServerMemberJoinEvent,
+    ServerMemberRemoveEvent,
+    doc_flags,
+    flag,
+)
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
@@ -61,14 +71,24 @@ class MemberChunkerFlags(BaseFlags):
         return 1 << 1
 
     @flag()
-    def subscribe_to_server_member_join(self) -> int:
-        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ServerMemberJoinEvent`."""
+    def subscribe_to_server_delete(self) -> int:
+        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ServerDeleteEvent`."""
         return 1 << 2
 
     @flag()
+    def subscribe_to_server_member_join(self) -> int:
+        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ServerMemberJoinEvent`."""
+        return 1 << 3
+
+    @flag()
+    def subscribe_to_server_member_remove(self) -> int:
+        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ServerMemberRemoveEvent`."""
+        return 1 << 4
+
+    @flag()
     def subscribe_to_events(self) -> int:
-        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ReadyEvent`, :class:`~pyvolt.ServerCreateEvent`, and :class:`~pyvolt.ServerMemberJoinEvent`."""
-        return (1 << 0) | (1 << 1) | (1 << 2)
+        """:class:`bool`: Whether to auto subscribe to :class:`~pyvolt.ReadyEvent`, :class:`~pyvolt.ServerCreateEvent`, :class:`~pyvolt.ServerDeleteEvent`, :class:`~pyvolt.ServerMemberJoinEvent` and :class:`~pyvolt.ServerMemberRemoveEvent`."""
+        return (1 << 0) | (1 << 1) | (1 << 2) | (1 << 3) | (1 << 4)
 
     @flag()
     def chunk_only_servers(self) -> int:
@@ -151,13 +171,19 @@ class MemberChunker:
         self.servers: list[str] = servers
 
         if self.flags.subscribe_to_ready:
-            client.subscribe(ReadyEvent, self.process_ready)
+            self.client.subscribe(ReadyEvent, self.process_ready)
 
         if self.flags.subscribe_to_server_create:
-            client.subscribe(ServerCreateEvent, self.process_server_create)
+            self.client.subscribe(ServerCreateEvent, self.process_server_create)
+
+        if self.flags.subscribe_to_server_delete:
+            self.client.subscribe(ServerDeleteEvent, self.process_server_delete)
 
         if self.flags.subscribe_to_server_member_join:
-            client.subscribe(ServerMemberJoinEvent, self.process_server_member_join)
+            self.client.subscribe(ServerMemberJoinEvent, self.process_server_member_join)
+
+        if self.flags.subscribe_to_server_member_remove:
+            self.client.subscribe(ServerMemberRemoveEvent, self.process_server_member_remove)
 
     def is_chunking_completed(self) -> bool:
         """:class:`bool`: Returns whether chunking process was completed after receiving :class:`~pyvolt.ReadyEvent`."""
@@ -254,6 +280,18 @@ class MemberChunker:
         if await self.can_chunk(server):
             await self.chunk(server, event.cache_context)
 
+    async def process_server_delete(self, event: ServerDeleteEvent, /) -> None:
+        """Process a :class:`~pyvolt.ServerDeleteEvent`.
+
+        Parameters
+        ----------
+        event: :class:`~pyvolt.ServerDeleteEvent`
+            The event to process.
+        """
+        task = self._tasks.pop(event.server_id, None)
+        if task is not None:
+            task.cancel()
+
     async def process_server_member_join(self, event: ServerMemberJoinEvent, /) -> None:
         """Process a :class:`~pyvolt.ServerMemberJoinEvent`.
 
@@ -282,6 +320,23 @@ class MemberChunker:
                 pass
             else:
                 cache.store_user(user, cache_context)
+
+    async def process_server_member_remove(self, event: ServerMemberRemoveEvent, /) -> None:
+        """Process a :class:`~pyvolt.ServerMemberRemoveEvent`.
+
+        Parameters
+        ----------
+        event: :class:`~pyvolt.ServerMemberRemoveEvent`
+            The event to process.
+        """
+        my_id = event.shard.state.my_id
+
+        if event.user_id != my_id:
+            return
+
+        task = self._tasks.pop(event.server_id, None)
+        if task is not None:
+            task.cancel()
 
     async def chunk(self, server: Server, cache_context: BaseCacheContext, /) -> MemberList:
         """Chunks a server.
@@ -313,5 +368,7 @@ class MemberChunker:
 
         cache.bulk_store_server_members(server.id, members, cache_context)
         cache.bulk_store_users(users, cache_context)
+
+        self._tasks.pop(server.id, None)
 
         return data
