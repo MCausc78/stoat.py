@@ -26,4 +26,4 @@ That's it. Now the cache will be always populated.
 
 .. note::
     
-    If passing ``flags`` parameter to constructor, make sure you have :attr:`MemberChunkerFlags.subscribe_to_events` flag.
+    If passing ``flags`` parameter to constructor, make sure you have :attr:`~pyvolt.ext.chunking.MemberChunkerFlags.subscribe_to_events` flag.

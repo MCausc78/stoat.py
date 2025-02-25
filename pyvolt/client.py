@@ -641,7 +641,7 @@ class Client:
         '_handlers',
         '_i',
         '_state',
-        '_token',
+        'token',
         '_types',
         'bot',
         'closed',
@@ -703,9 +703,11 @@ class Client:
                 dict[int, typing.Union[TemporarySubscription[BaseEvent], TemporarySubscriptionList[BaseEvent]]],
             ],
         ] = {}
+        self._i = 0
+        self.token: str = token
         # {Type[BaseEvent]: Tuple[Type[BaseEvent], ...]}
         self._types: dict[type[BaseEvent], tuple[type[BaseEvent], ...]] = {}
-        self._i = 0
+        self.bot: bool = bot
 
         self.extra = {}
         if state:
@@ -763,8 +765,6 @@ class Client:
                     )
                 )
             )
-        self._token: str = token
-        self.bot: bool = bot
 
     def _get_i(self) -> int:
         self._i += 1
@@ -1716,7 +1716,7 @@ class Client:
 
             self.http.with_credentials(token, bot=bot)
             self.shard.with_credentials(token, bot=bot)
-        elif not self._token:
+        elif not self.token:
             raise TypeError('No token was provided')
 
         async def runner():

@@ -149,7 +149,7 @@ class MemberChunker:
         '_tasks',
         'client',
         'flags',
-        'prioritize',
+        'priorities',
         'servers',
     )
 
@@ -158,14 +158,14 @@ class MemberChunker:
         client: Client,
         *,
         flags: typing.Optional[MemberChunkerFlags] = None,
-        prioritize: typing.Optional[dict[str, int]] = None,
+        priorities: typing.Optional[dict[str, int]] = None,
         servers: typing.Optional[list[str]] = None,
     ) -> None:
         if flags is None:
             flags = MemberChunkerFlags.default()
 
-        if prioritize is None:
-            prioritize = {}
+        if priorities is None:
+            priorities = {}
 
         if servers is None:
             servers = []
@@ -173,7 +173,7 @@ class MemberChunker:
         self._tasks: dict[str, asyncio.Task] = {}
         self.client: Client = client
         self.flags: MemberChunkerFlags = flags
-        self.prioritize: dict[str, int] = prioritize
+        self.priorities: dict[str, int] = priorities
         self.servers: list[str] = servers
 
         if self.flags.subscribe_to_ready:
@@ -198,6 +198,11 @@ class MemberChunker:
             return self._tasks[''].done()
         return True
 
+    async def get_priorities(self) -> dict[str, int]:
+        """Dict[:class:`str`, :class:`int`]: Retrieve server priorities."""
+
+        return self.priorities
+
     async def can_chunk(self, server: Server, /) -> bool:
         """:class:`bool`: Whether the server should be chunked."""
 
@@ -206,8 +211,9 @@ class MemberChunker:
     async def _chunk_servers(self, servers: list[Server], cache_context: BaseCacheContext, /) -> None:
         flags = self.flags
 
+        priorities = await self.get_priorities()
         chunking_servers = sorted(
-            [(server, self.prioritize.get(server.id, 0)) for server in servers],
+            [(server, priorities.get(server.id, 0)) for server in servers],
             key=lambda pair, /: pair[1],
         )
 
