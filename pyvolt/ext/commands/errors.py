@@ -36,6 +36,7 @@ if typing.TYPE_CHECKING:
     from .bot import Bot
     from .context import Context
     from .cooldown import BucketType, Cooldown
+    from .converter import Converter
     from .core import Parameter
 
 
@@ -46,7 +47,7 @@ class CommandError(PyvoltException):
 
     This exception and exceptions inherited from it are handled
     in a special way as they are caught and passed into a special event
-    from :class:`.Bot`\, :func:`.on_command_error`.
+    from :class:`.Bot`\, :class:`CommandErrorEvent`.
     """
 
     __slots__ = ()
@@ -56,6 +57,25 @@ class CommandError(PyvoltException):
             super().__init__(message, *args)
         else:
             super().__init__(*args)
+
+
+class ConversionError(CommandError):
+    """Exception raised when a Converter class raises non-CommandError.
+
+    This inherits from :exc:`CommandError`.
+
+    Attributes
+    ----------
+    converter: :class:`pyvolt.ext.commands.Converter`
+        The converter that failed.
+    original: :exc:`Exception`
+        The original exception that was raised. You can also get this via
+        the ``__cause__`` attribute.
+    """
+
+    def __init__(self, *, converter: Converter[typing.Any], original: Exception) -> None:
+        self.converter: Converter[typing.Any] = converter
+        self.original: Exception = original
 
 
 class UserInputError(CommandError):
@@ -590,7 +610,7 @@ class CommandInvokeError(CommandError):
 class CommandOnCooldown(CommandError):
     """Exception raised when the command being invoked is on cooldown.
 
-    This inherits from :exc:`.CommandError`
+    This inherits from :exc:`.CommandError`.
 
     Attributes
     -----------
@@ -1065,6 +1085,7 @@ class CommandRegistrationError(PyvoltException):
 
 __all__ = (
     'CommandError',
+    'ConversionError',
     'UserInputError',
     'MissingRequiredArgument',
     'MissingRequiredAttachment',
@@ -1095,6 +1116,8 @@ __all__ = (
     'RangeError',
     'DisabledCommand',
     'CommandInvokeError',
+    'CommandOnCooldown',
+    'MaxConcurrencyReached',
     'CommandNotFound',
     'MissingRole',
     'BotMissingRole',

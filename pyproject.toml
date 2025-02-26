@@ -103,6 +103,7 @@ packages = [
     "pyvolt",
     "pyvolt.raw",
     "pyvolt.ext",
+    "pyvolt.ext.chunking",
     "pyvolt.ext.commands",
 ]
 include-package-data = true

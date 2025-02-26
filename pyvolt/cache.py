@@ -2032,6 +2032,11 @@ class Cache(ABC):
         """
         ...
 
+    @abstractmethod
+    def get_servers_member_mapping(self) -> Mapping[str, Mapping[str, Member]]:
+        """Mapping[:class:`str`, Mapping[:class:`str`, :class:`.Member`]]: Retrieves all available server members as mapping."""
+        ...
+
     #########
     # Users #
     #########
@@ -2073,6 +2078,24 @@ class Cache(ABC):
             The user to store.
         ctx: :class:`.BaseCacheContext`
             The context.
+        """
+        ...
+
+    @abstractmethod
+    def delete_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[User]:
+        """Removes an user from cache.
+
+        Parameters
+        ----------
+        user_id: :class:`str`
+            The ID of the user to remove from cache.
+        ctx: :class:`.BaseCacheContext`
+            The context.
+
+        Returns
+        -------
+        Optional[:class:`.User`]
+            The removed user.
         """
         ...
 
@@ -2355,6 +2378,9 @@ class EmptyCache(Cache):
     def delete_server_members_of(self, server_id: str, ctx: BaseCacheContext, /) -> None:
         pass
 
+    def get_servers_member_mapping(self) -> Mapping[str, Mapping[str, Member]]:
+        return {}
+
     #########
     # Users #
     #########
@@ -2366,6 +2392,9 @@ class EmptyCache(Cache):
         return {}
 
     def store_user(self, user: User, ctx: BaseCacheContext, /) -> None:
+        return None
+
+    def delete_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[User]:
         return None
 
     def bulk_store_users(self, users: dict[str, User], ctx: BaseCacheContext, /) -> None:
@@ -2748,6 +2777,9 @@ class MapCache(Cache):
     def delete_server_members_of(self, server_id: str, ctx: BaseCacheContext, /) -> None:
         self._server_members.pop(server_id, None)
 
+    def get_servers_member_mapping(self) -> Mapping[str, Mapping[str, Member]]:
+        return self._server_members
+
     #########
     # Users #
     #########
@@ -2760,6 +2792,9 @@ class MapCache(Cache):
 
     def store_user(self, user: User, ctx: BaseCacheContext, /) -> None:
         _put1(self._users, user.id, user, self._users_max_size)
+
+    def delete_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[User]:
+        return self._users.pop(user_id, None)
 
     def bulk_store_users(self, users: Mapping[str, User], ctx: BaseCacheContext, /) -> None:
         self._users.update(users)

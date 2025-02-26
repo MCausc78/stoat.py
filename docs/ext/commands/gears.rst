@@ -20,7 +20,7 @@ It should be noted that gears are typically used alongside with :ref:`ext_comman
 Quick Example
 -------------
 
-This example gear defines a ``Greetings`` category for your commands, with a single :ref:`command <ext_commands_commands>` named ``hello`` as well as a listener to listen to an :ref:`Event <pyvolt-api-events>`.
+This example gear defines a ``Greetings`` category for your commands, with a single :ref:`command <ext_commands_commands>` named ``hello`` as well as a listener to listen to an :ref:`Event <revolt-api-events>`.
 
 .. code-block:: python3
 

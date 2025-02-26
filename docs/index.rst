@@ -28,7 +28,7 @@ Is this your first time using the library? This is the place to get started!
 - **Examples:** Many examples are available in the :resource:`repository <examples>`
 
 Getting help
---------------
+------------
 
 If you're having trouble with something, these resources might help.
 
@@ -46,6 +46,7 @@ These extensions help you during development when it comes to common tasks.
 .. toctree::
   :maxdepth: 1
 
+  ext/chunking/index.rst
   ext/commands/index.rst
 
 Manuals
@@ -57,4 +58,5 @@ These pages go into great detail about everything the API can do.
   :maxdepth: 1
 
   api
+  pyvolt.ext.chunking API reference <ext/chunking/api.rst>
   pyvolt.ext.commands API reference <ext/commands/api.rst>

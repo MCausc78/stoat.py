@@ -1,7 +1,7 @@
 .. currentmodule:: pyvolt
 
 API Reference
-===============
+=============
 
 The following section outlines the API of pyvolt's command extension module.
 
@@ -538,21 +538,6 @@ Exceptions
     :members:
 
 .. autoexception:: pyvolt.ext.commands.NSFWChannelRequired
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.FlagError
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.BadFlagArgument
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.MissingFlagArgument
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.TooManyFlags
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.MissingRequiredFlag
     :members:
 
 .. autoexception:: pyvolt.ext.commands.ExtensionError

@@ -1,7 +1,7 @@
 .. _pyvolt_ext_commands:
 
 ``pyvolt.ext.commands`` -- Bot commands framework
-====================================================
+=================================================
 
 ``pyvolt`` offers a lower level aspect on interacting with Revolt. Often times, the library is used for the creation of
 bots. However this task can be daunting and confusing to get correctly the first time. Many times there comes a repetition in
