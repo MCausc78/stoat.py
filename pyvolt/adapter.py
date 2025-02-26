@@ -29,17 +29,84 @@ from inspect import isawaitable
 import typing
 
 import aiohttp
+from aiohttp.helpers import reify
 
 if typing.TYPE_CHECKING:
-    from .utils import MaybeAwaitableFunc
+    from multidict import CIMultiDict, CIMultiDictProxy
+
+    from .utils import MaybeAwaitable, MaybeAwaitableFunc
+
+
+@typing.runtime_checkable
+class HTTPResponse(typing.Protocol):
+    status: int
+
+    @reify
+    def headers(self) -> CIMultiDictProxy[str]:
+        """CIMultiDictProxy[:class:`str`]: The response headers."""
+        ...
+
+    def close(self) -> MaybeAwaitable[None]:
+        """Release request resources."""
+        ...
+
+    async def read(self) -> bytes:
+        """:class:`bytes`: Read the response body."""
+        ...
+
+    async def text(self, *, encoding: typing.Optional[str] = None, errors: str = 'strict') -> str:
+        """:class:`str`: Read the response body as string."""
+        ...
 
 
 class HTTPAdapter(ABC):
+    """Represents a HTTP adapter."""
+
     __slots__ = ()
+
+    async def request(
+        self,
+        method: str,
+        url: str,
+        *,
+        headers: CIMultiDict[typing.Any],
+        **kwargs,
+    ) -> HTTPResponse:
+        """Perform an actual HTTP request.
+
+        .. note::
+            You should not perform Revolt API error and ratelimit handling in this method if you're overriding it.
+
+        Parameters
+        ----------
+        method: :class:`str`
+            The HTTP method.
+        url: :class:`str`
+            The URL to send HTTP request to.
+        headers: CIMultiDict[Any]
+            The HTTP headers.
+        \\*\\*kwargs
+            The keyword arguments to pass to requester function.
+
+            Usually these are passed:
+
+            - ``json``
+            - ``params``
+            - ``proxy``
+            - ``proxy_auth``
+
+        Returns
+        -------
+        :class:`.HTTPResponse`
+            The response.
+        """
+        ...
 
 
 # horrible name please PR a better name
 class AIOHTTPAdapter(HTTPAdapter):
+    """Represents a HTTP adapter using :doc:`aiohtpt`."""
+
     __slots__ = ('_session',)
 
     _session: typing.Optional[
@@ -71,6 +138,44 @@ class AIOHTTPAdapter(HTTPAdapter):
             self._session = ret
 
         return self._session
+
+    async def request(
+        self,
+        method: str,
+        url: str,
+        *,
+        headers: CIMultiDict[typing.Any],
+        **kwargs,
+    ) -> HTTPResponse:
+        """Perform an actual HTTP request.
+
+        .. note::
+            You should not perform Revolt API error and ratelimit handling in this method if you're overriding it.
+
+        Parameters
+        ----------
+        method: :class:`str`
+            The HTTP method.
+        url: :class:`str`
+            The URL to send HTTP request to.
+        headers: CIMultiDict[Any]
+            The HTTP headers.
+        \\*\\*kwargs
+            The keyword arguments to pass to :meth:`aiohttp.ClientSession.request`.
+
+        Returns
+        -------
+        :class:`aiohttp.ClientResponse`
+            The response.
+        """
+        session = await self.get_session()
+
+        return await session.request(
+            method,
+            url,
+            headers=headers,
+            **kwargs,
+        )
 
 
 __all__ = (

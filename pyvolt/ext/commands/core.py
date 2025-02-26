@@ -497,7 +497,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         .. seealso:: The :func:`~pyvolt.ext.commands.check` decorator
 
         Parameters
-        -----------
+        ----------
         func
             The function that will be used as a check.
         """
@@ -512,7 +512,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
 
 
         Parameters
-        -----------
+        ----------
         func
             The function to remove from the checks.
         """
@@ -570,7 +570,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         """Creates a copy of this command.
 
         Returns
-        --------
+        -------
         :class:`.Command`
             A new instance of this command.
         """
@@ -1161,13 +1161,18 @@ class GroupMixin(typing.Generic[GearT]):
     similar to :class:`.Group` and are allowed to register commands.
 
     Attributes
-    -----------
+    ----------
     all_commands: :class:`dict`
         A mapping of command name to :class:`.Command`
         objects.
     case_insensitive: :class:`bool`
         Whether the commands should be case insensitive. Defaults to ``False``.
     """
+
+    __slots__ = (
+        'all_commands',
+        'case_insensitive',
+    )
 
     def __init__(self, /, *args: typing.Any, **kwargs: typing.Any) -> None:
         case_insensitive = kwargs.get('case_insensitive', False)
@@ -1230,30 +1235,30 @@ class GroupMixin(typing.Generic[GearT]):
         This could also be used as a way to remove aliases.
 
         Parameters
-        -----------
+        ----------
         name: :class:`str`
             The name of the command to remove.
 
         Returns
-        --------
+        -------
         Optional[:class:`.Command`]
             The command that was removed. If the name is not valid then
             ``None`` is returned instead.
         """
         command = self.all_commands.pop(name, None)
 
-        # does not exist
+        # The command didn't exist...
         if command is None:
             return None
 
         if name in command.aliases:
-            # we're removing an alias so we don't want to remove the rest
+            # We're removing an alias so we don't want to remove the rest
             return command
 
-        # we're not removing the alias so let's delete the rest of them.
+        # We're not removing the alias so let's delete the rest of them.
         for alias in command.aliases:
             cmd = self.all_commands.pop(alias, None)
-            # in the case of a CommandRegistrationError, an alias might conflict
+            # In the case of a CommandRegistrationError, an alias might conflict
             # with an already existing command. If this is the case, we want to
             # make sure the pre-existing command is not removed.
             if cmd is not None and cmd != command:
@@ -1284,12 +1289,12 @@ class GroupMixin(typing.Generic[GearT]):
         subcommand is not found then ``None`` is returned just as usual.
 
         Parameters
-        -----------
+        ----------
         name: :class:`str`
             The name of the command to get.
 
         Returns
-        --------
+        -------
         Optional[:class:`.Command`]
             The command that was requested. If not found, returns ``None``.
         """
@@ -1358,7 +1363,7 @@ class GroupMixin(typing.Generic[GearT]):
         the internal command list via :meth:`~.GroupMixin.add_command`.
 
         Returns
-        --------
+        -------
         Callable[..., :class:`.Command`]
             A decorator that converts the provided method into a Command, adds it to the bot, then returns it.
         """
@@ -1416,7 +1421,7 @@ class GroupMixin(typing.Generic[GearT]):
         the internal command list via :meth:`~.GroupMixin.add_command`.
 
         Returns
-        --------
+        -------
         Callable[..., :class:`.Group`]
             A decorator that converts the provided method into a Group, adds it to the bot, then returns it.
         """
@@ -1438,7 +1443,7 @@ class Group(GroupMixin[GearT], Command[GearT, P, T]):
     valid in :class:`.Command` are valid in here as well.
 
     Attributes
-    -----------
+    ----------
     invoke_without_command: :class:`bool`
         Indicates if the group callback should begin parsing and
         invocation only if no subcommand was found. Useful for
@@ -1453,6 +1458,8 @@ class Group(GroupMixin[GearT], Command[GearT, P, T]):
         Defaults to ``False``.
     """
 
+    __slots__ = ()
+
     def __init__(self, /, *args: typing.Any, **attrs: typing.Any) -> None:
         self.invoke_without_command: bool = attrs.pop('invoke_without_command', False)
         super().__init__(*args, **attrs)
@@ -1461,7 +1468,7 @@ class Group(GroupMixin[GearT], Command[GearT, P, T]):
         """Creates a copy of this :class:`.Group`.
 
         Returns
-        --------
+        -------
         :class:`.Group`
             A new instance of this group.
         """

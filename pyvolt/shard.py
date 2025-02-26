@@ -589,7 +589,7 @@ class ShardImpl(Shard):
         i = 0
         _L.debug('Connecting to %s, format=%s', self.base_url, self.format)
 
-        headers = self.get_headers()
+        headers: dict[str, str] = self.get_headers()
         while True:
             if i >= self.retries:
                 break

@@ -140,6 +140,12 @@ class Bot(Client, GroupMixin[None]):
     """
 
     __slots__ = (
+        '__extensions',
+        '__gears',
+        '_after_invoke',
+        '_before_invoke',
+        '_check_once',
+        '_checks',
         'all_commands',
         'command_prefix',
         'description',

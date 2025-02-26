@@ -21,6 +21,7 @@ from . import (
     utils as utils,
 )
 
+from .adapter import *
 from .authentication import *
 from .base import *
 from .bot import *

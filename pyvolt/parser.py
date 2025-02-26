@@ -4059,9 +4059,7 @@ class Parser:
                 else (UNDEFINED if avatar is None else self.parse_asset(avatar)),
                 raw_badges=data.get('badges', UNDEFINED),
                 status=UNDEFINED if status is None else self.parse_user_status_edit(status, clear),
-                # internal_profile=(
-                #     self.parse_partial_user_profile(profile, clear) if profile is not None else UNDEFINED
-                # ),
+                # internal_profile=UNDEFINED is profile is None else self.parse_partial_user_profile(profile, clear),
                 raw_flags=data.get('flags', UNDEFINED),
                 bot=UNDEFINED if bot is None else self.parse_bot_user_metadata(bot),
                 online=data.get('online', UNDEFINED),
