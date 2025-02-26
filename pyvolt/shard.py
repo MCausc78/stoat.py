@@ -108,6 +108,53 @@ class Shard(ABC):
         """:class:`bool`: Whether the connection is closed."""
         ...
 
+    @property
+    @abstractmethod
+    def base_url(self) -> str:
+        """:class:`str`: The base WebSocket URL."""
+        ...
+
+    @property
+    @abstractmethod
+    def bot(self) -> bool:
+        """:class:`bool`: Whether the token belongs to bot account."""
+        ...
+
+    @property
+    @abstractmethod
+    def format(self) -> ShardFormat:
+        """:class:`.ShardFormat`: The message format to use when communicating with Revolt WebSocket."""
+        ...
+
+    @property
+    @abstractmethod
+    def handler(self) -> typing.Optional[EventHandler]:
+        """Optional[:class:`.EventHandler`]: The handler that receives events. Defaults to ``None`` if not provided."""
+        ...
+
+    @property
+    @abstractmethod
+    def last_ping_at(self) -> typing.Optional[datetime]:
+        """Optional[:class:`~datetime.datetime`]: When the shard sent ping."""
+        ...
+
+    @property
+    @abstractmethod
+    def last_pong_at(self) -> typing.Optional[datetime]:
+        """Optional[:class:`~datetime.datetime`]: When the shard received response to ping."""
+        ...
+
+    @property
+    @abstractmethod
+    def logged_out(self) -> bool:
+        """:class:`bool`: Whether the shard got logged out."""
+        ...
+
+    @property
+    @abstractmethod
+    def token(self) -> str:
+        """:class:`str`: The shard token. May be empty if not started."""
+
     @abstractmethod
     async def cleanup(self) -> None:
         """Closes the aiohttp session."""
@@ -242,25 +289,25 @@ class ShardImpl(Shard):
     _socket: typing.Optional[aiohttp.ClientWebSocketResponse]
 
     __slots__ = (
+        '_base_url',
+        '_bot',
         '_closed',
+        '_format',
+        '_handler',
         '_heartbeat_sequence',
         '_last_close_code',
+        '_last_ping_at',
+        '_last_pong_at',
+        '_logged_out',
         '_sequence',
         '_session',
         '_socket',
-        'base_url',
-        'bot',
+        '_token',
         'connect_delay',
-        'format',
-        'handler',
-        'last_ping_at',
-        'last_pong_at',
-        'logged_out',
         'reconnect_on_timeout',
         'request_user_settings',
         'retries',
         'state',
-        'token',
         'user_agent',
         'recv',
         'send',
@@ -276,34 +323,35 @@ class ShardImpl(Shard):
         format: ShardFormat = ShardFormat.json,
         handler: typing.Optional[EventHandler] = None,
         reconnect_on_timeout: bool = True,
-        request_user_settings: list[str] | None = None,
+        request_user_settings: typing.Optional[list[str]] = None,
         retries: typing.Optional[int] = None,
-        session: utils.MaybeAwaitableFunc[[Shard], aiohttp.ClientSession] | aiohttp.ClientSession,
+        session: typing.Union[utils.MaybeAwaitableFunc[[Shard], aiohttp.ClientSession], aiohttp.ClientSession],
         state: State,
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if format is ShardFormat.msgpack and not _HAS_MSGPACK:
             raise TypeError('Cannot use msgpack format without dependency')
 
+        self._base_url: str = base_url or 'wss://ws.revolt.chat/'
+        self._bot: bool = bot
         self._closed: bool = False
+        self._format: ShardFormat = format
+        self._handler: typing.Optional[EventHandler] = handler
         self._heartbeat_sequence: int = 1
         self._last_close_code: typing.Optional[int] = None
+        self._last_ping_at: typing.Optional[datetime] = None
+        self._last_pong_at: typing.Optional[datetime] = None
+        self._logged_out: bool = False
         self._sequence: int = 0
         self._session = session
         self._socket: typing.Optional[aiohttp.ClientWebSocketResponse] = None
-        self.base_url: str = base_url or 'wss://ws.revolt.chat/'
-        self.bot: bool = bot
+        self._token: str = token
+
         self.connect_delay: typing.Optional[float] = connect_delay
-        self.format: ShardFormat = format
-        self.handler: typing.Optional[EventHandler] = handler
-        self.last_ping_at: typing.Optional[datetime] = None
-        self.last_pong_at: typing.Optional[datetime] = None
-        self.logged_out: bool = False
         self.reconnect_on_timeout: bool = reconnect_on_timeout
         self.request_user_settings = request_user_settings
         self.retries: int = retries or 150
         self.state: State = state
-        self.token: str = token
         self.user_agent: str = user_agent or DEFAULT_SHARD_USER_AGENT
 
         self.recv = self._recv_json if format is ShardFormat.json else self._recv_msgpack
@@ -311,6 +359,38 @@ class ShardImpl(Shard):
 
     def is_closed(self) -> bool:
         return self._closed and not self._socket
+
+    @property
+    def base_url(self) -> str:
+        return self._base_url
+
+    @property
+    def bot(self) -> bool:
+        return self._bot
+
+    @property
+    def format(self) -> ShardFormat:
+        return self._format
+
+    @property
+    def handler(self) -> typing.Optional[EventHandler]:
+        return self._handler
+
+    @property
+    def last_ping_at(self) -> typing.Optional[datetime]:
+        return self._last_ping_at
+
+    @property
+    def last_pong_at(self) -> typing.Optional[datetime]:
+        return self._last_pong_at
+
+    @property
+    def logged_out(self) -> bool:
+        return self._logged_out
+
+    @property
+    def token(self) -> str:
+        return self._token
 
     async def cleanup(self) -> None:
         """|coro|
@@ -338,8 +418,8 @@ class ShardImpl(Shard):
         return self._socket
 
     def with_credentials(self, token: str, *, bot: bool = True) -> None:
-        self.token = token
-        self.bot = bot
+        self._token = token
+        self._bot = bot
 
     async def authenticate(self) -> None:
         payload: raw.ServerAuthenticateEvent = {
@@ -355,7 +435,7 @@ class ShardImpl(Shard):
             'data': self._heartbeat_sequence,
         }
         await self.send(payload)
-        self.last_ping_at = utils.utcnow()
+        self._last_ping_at = utils.utcnow()
 
     async def begin_typing(self, channel: ULIDOr[TextableChannel], /) -> None:
         payload: raw.ServerBeginTypingEvent = {'type': 'BeginTyping', 'channel': resolve_id(channel)}
@@ -568,7 +648,7 @@ class ShardImpl(Shard):
                 if message['type'] != 'Authenticated':
                     raise AuthenticationError(message)  # type: ignore
 
-                self.logged_out = False
+                self._logged_out = False
                 await self._handle(message)
                 message = None
             except:
@@ -646,7 +726,7 @@ class ShardImpl(Shard):
                         extra,
                     )
                 return not self.reconnect_on_timeout
-            self.last_pong_at = utils.utcnow()
+            self._last_pong_at = utils.utcnow()
         elif payload['type'] == 'Logout':
             authenticated = False
 
