@@ -46,7 +46,7 @@ from .events import BaseEvent
 from .http import HTTPClient
 from .parser import Parser
 from .server import Server
-from .shard import EventHandler, Shard
+from .shard import EventHandler, Shard, ShardImpl
 from .state import State
 from .user import BaseUser, User, OwnUser
 
@@ -755,9 +755,9 @@ class Client:
                 shard=(
                     shard(self, state)
                     if shard
-                    else Shard(
+                    else ShardImpl(
                         token,
-                        base=websocket_base,
+                        base_url=websocket_base,
                         handler=ClientEventHandler(self),
                         request_user_settings=request_user_settings,
                         session=_session_factory,

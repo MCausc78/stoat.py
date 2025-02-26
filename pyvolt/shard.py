@@ -98,12 +98,120 @@ class EventHandler(ABC):
 DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/pyvolt, {__version__})'
 
 
-class Shard:
+class Shard(ABC):
+    __slots__ = ('send',)
+
+    state: State
+
+    @abstractmethod
+    def is_closed(self) -> bool:
+        """:class:`bool`: Whether the connection is closed."""
+        ...
+
+    @abstractmethod
+    async def cleanup(self) -> None:
+        """Closes the aiohttp session."""
+        ...
+
+    @abstractmethod
+    async def close(self) -> None:
+        """Closes the connection to Revolt."""
+        ...
+
+    @property
+    @abstractmethod
+    def socket(self) -> aiohttp.ClientWebSocketResponse:
+        """:class:`aiohttp.ClientWebSocketResponse`: The current WebSocket connection."""
+        ...
+
+    @abstractmethod
+    def with_credentials(self, token: str, *, bot: bool = True) -> None:
+        """Modifies HTTP request credentials.
+
+        Parameters
+        ----------
+        token: :class:`str`
+            The authentication token.
+        bot: :class:`bool`
+            Whether the token belongs to bot account or not.
+        """
+        ...
+
+    @abstractmethod
+    async def authenticate(self) -> None:
+        """|coro|
+
+        Authenticates the currently connected WebSocket. This is called right after successful WebSocket handshake.
+        """
+        ...
+
+    @abstractmethod
+    async def ping(self) -> None:
+        """|coro|
+
+        Pings the WebSocket.
+        """
+        ...
+
+    @abstractmethod
+    async def begin_typing(self, channel: ULIDOr[TextableChannel], /) -> None:
+        """|coro|
+
+        Begins typing in a channel.
+
+        Parameters
+        ----------
+        channel: ULIDOr[:class:`TextableChannel`]
+            The channel to begin typing in.
+        """
+        ...
+
+    @abstractmethod
+    async def end_typing(self, channel: ULIDOr[TextableChannel], /) -> None:
+        """|coro|
+
+        Ends typing in a channel.
+
+        Parameters
+        ----------
+        channel: ULIDOr[:class:`.TextableChannel`]
+            The channel to end typing in.
+        """
+        ...
+
+    @abstractmethod
+    async def subscribe_to(self, server: ULIDOr[BaseServer], /) -> None:
+        """|coro|
+
+        Subscribes user to a server. After calling this method, you will begin
+        receiving :class:`.UserUpdateEvent`'s for members of the subscribed server.
+
+        .. note::
+
+            Calling this method has no effect on bot tokens. Additionally:
+            - Server subscriptions automatically expire within 15 minutes.
+            - You may have up only to 5 active subscriptions.
+            - This command should only be sent if application/client is in focus.
+            - You should aim to call this method at most every 10 minutes per server.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`.BaseServer`]
+            The server to subscribe to.
+        """
+        ...
+
+    @abstractmethod
+    async def connect(self) -> None:
+        """Starts the WebSocket lifecycle."""
+
+
+class ShardImpl(Shard):
     """Implements Revolt WebSocket client.
 
     Attributes
     ----------
-    base: :class:`str`
+    base_url: :class:`str`
         The base WebSocket URL.
     bot: :class:`bool`
         Whether the token belongs to bot account. Defaults to ``True``.
@@ -140,7 +248,7 @@ class Shard:
         '_sequence',
         '_session',
         '_socket',
-        'base',
+        'base_url',
         'bot',
         'connect_delay',
         'format',
@@ -162,7 +270,7 @@ class Shard:
         self,
         token: str,
         *,
-        base: typing.Optional[str] = None,
+        base_url: typing.Optional[str] = None,
         bot: bool = True,
         connect_delay: typing.Optional[float] = 2,
         format: ShardFormat = ShardFormat.json,
@@ -183,7 +291,7 @@ class Shard:
         self._sequence: int = 0
         self._session = session
         self._socket: typing.Optional[aiohttp.ClientWebSocketResponse] = None
-        self.base: str = base or 'wss://ws.revolt.chat/'
+        self.base_url: str = base_url or 'wss://ws.revolt.chat/'
         self.bot: bool = bot
         self.connect_delay: typing.Optional[float] = connect_delay
         self.format: ShardFormat = format
@@ -225,29 +333,15 @@ class Shard:
 
     @property
     def socket(self) -> aiohttp.ClientWebSocketResponse:
-        """:class:`aiohttp.ClientWebSocketResponse`: The current WebSocket connection."""
         if self._socket is None:
             raise TypeError('No websocket')
         return self._socket
 
     def with_credentials(self, token: str, *, bot: bool = True) -> None:
-        """Modifies HTTP request credentials.
-
-        Parameters
-        ----------
-        token: :class:`str`
-            The authentication token.
-        bot: :class:`bool`
-            Whether the token belongs to bot account or not.
-        """
         self.token = token
         self.bot = bot
 
     async def authenticate(self) -> None:
-        """|coro|
-
-        Authenticates the currently connected WebSocket. This is called right after successful WebSocket handshake.
-        """
         payload: raw.ServerAuthenticateEvent = {
             'type': 'Authenticate',
             'token': self.token,
@@ -255,10 +349,6 @@ class Shard:
         await self.send(payload)
 
     async def ping(self) -> None:
-        """|coro|
-
-        Pings the WebSocket.
-        """
         self._heartbeat_sequence += 1
         payload: raw.ServerPingEvent = {
             'type': 'Ping',
@@ -268,50 +358,14 @@ class Shard:
         self.last_ping_at = utils.utcnow()
 
     async def begin_typing(self, channel: ULIDOr[TextableChannel], /) -> None:
-        """|coro|
-
-        Begins typing in a channel.
-
-        Parameters
-        ----------
-        channel: ULIDOr[:class:`TextableChannel`]
-            The channel to begin typing in.
-        """
         payload: raw.ServerBeginTypingEvent = {'type': 'BeginTyping', 'channel': resolve_id(channel)}
         await self.send(payload)
 
     async def end_typing(self, channel: ULIDOr[TextableChannel], /) -> None:
-        """|coro|
-
-        Ends typing in a channel.
-
-        Parameters
-        ----------
-        channel: ULIDOr[:class:`TextableChannel`]
-            The channel to end typing in.
-        """
         payload: raw.ServerEndTypingEvent = {'type': 'EndTyping', 'channel': resolve_id(channel)}
         await self.send(payload)
 
     async def subscribe_to(self, server: ULIDOr[BaseServer], /) -> None:
-        """|coro|
-
-        Subscribes user to a server. After calling this method, you will begin
-        receiving :class:`UserUpdateEvent`'s for members of the subscribed server.
-
-        .. note::
-
-            Calling this method has no effect on bot tokens. Additionally:
-            - Server subscriptions automatically expire within 15 minutes.
-            - You may have up only to 5 active subscriptions.
-            - This command should only be sent if application/client is in focus.
-            - You should aim to call this method at most every 10 minutes per server.
-
-        Parameters
-        ----------
-        server: ULIDOr[:class:`BaseServer`]
-            The server to subscribe to.
-        """
         payload: raw.ServerSubscribeEvent = {'type': 'Subscribe', 'server_id': resolve_id(server)}
         await self.send(payload)
 
@@ -453,7 +507,7 @@ class Shard:
         errors = []
 
         i = 0
-        _L.debug('Connecting to %s, format=%s', self.base, self.format)
+        _L.debug('Connecting to %s, format=%s', self.base_url, self.format)
 
         headers = self.get_headers()
         while True:
@@ -462,7 +516,7 @@ class Shard:
             try:
                 return await self.ws_connect(
                     session,
-                    self.base,
+                    self.base_url,
                     headers=headers,
                     params=params,  # type: ignore # Not true
                 )
@@ -487,10 +541,6 @@ class Shard:
         raise ConnectError(self.retries, errors)
 
     async def connect(self) -> None:
-        """|coro|
-
-        Starts the WebSocket lifecycle.
-        """
         if self._socket:
             raise PyvoltException('The connection is already open.')
         while not self._closed:
@@ -608,4 +658,11 @@ class Shard:
         return authenticated
 
 
-__all__ = ('Close', 'Reconnect', 'EventHandler', 'DEFAULT_SHARD_USER_AGENT', 'Shard')
+__all__ = (
+    'Close',
+    'Reconnect',
+    'EventHandler',
+    'DEFAULT_SHARD_USER_AGENT',
+    'Shard',
+    'ShardImpl',
+)
