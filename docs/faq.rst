@@ -10,9 +10,6 @@ Frequently Asked Questions
 This is a list of Frequently Asked Questions regarding using ``pyvolt`` and its extension modules. Feel free to suggest a
 new question or submit one via pull requests.
 
-.. contents:: Questions
-    :local:
-
 Coroutines
 ----------
 
