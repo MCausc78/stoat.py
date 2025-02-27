@@ -56,6 +56,11 @@ class HTTPResponse(typing.Protocol):
         """CIMultiDictProxy[:class:`str`]: The response headers."""
         ...
 
+    @property
+    def closed(self) -> bool:
+        """:class:`bool`: Whether the request resources were released."""
+        ...
+
     def close(self) -> MaybeAwaitable[None]:
         """Release request resources."""
         ...
@@ -274,12 +279,13 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
         """
         session = await self.get_session()
 
-        return await session.request(
+        response = await session.request(
             method,
             url,
             headers=headers,
             **kwargs,
         )
+        return response
 
     async def websocket(
         self,
