@@ -463,8 +463,13 @@ class DiscoveryClient:
     async def request(self, method: str, path: str, /, **kwargs) -> typing.Any:
         response = await self.raw_request(method, path, **kwargs)
         result = await utils._json_or_text(response)
-        _L.debug('received from %s %s: %s', method, path, result)
-        response.close()
+        _L.debug('%s %s has received %s', method, path, result)
+
+        if not response.closed:
+            tmp = response.close()
+            if isawaitable(tmp):
+                await tmp
+
         return result
 
     async def servers(self) -> DiscoverableServersPage:
