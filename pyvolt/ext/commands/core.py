@@ -1169,10 +1169,10 @@ class GroupMixin(typing.Generic[GearT]):
         Whether the commands should be case insensitive. Defaults to ``False``.
     """
 
-    __slots__ = (
-        'all_commands',
-        'case_insensitive',
-    )
+    # __slots__ = (
+    #     'all_commands',
+    #     'case_insensitive',
+    # )
 
     def __init__(self, /, *args: typing.Any, **kwargs: typing.Any) -> None:
         case_insensitive = kwargs.get('case_insensitive', False)
