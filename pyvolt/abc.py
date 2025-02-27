@@ -47,6 +47,20 @@ if typing.TYPE_CHECKING:
 
 
 class Messageable:
+    """An ABC that allows derived instances to send messages.
+
+    The following classes implement this ABC:
+
+    - :class:`.SavedMessagesChannel`
+    - :class:`.DMChannel`
+    - :class:`.GroupChannel`
+    - :class:`.TextChannel`
+    - :class:`.VoiceChannel`
+    - :class:`.User`
+    - :class:`.PartialMessageable`
+    - :class:`pyvolt.ext.commands.Context`
+    """
+
     __slots__ = ()
 
     state: State
@@ -444,6 +458,17 @@ class Messageable:
 
 
 class Connectable:
+    """An ABC that allows derived instances to connect to voice call.
+
+    The following classes implement this ABC:
+
+    - :class:`.DMChannel`
+    - :class:`.GroupChannel`
+    - :class:`.TextChannel`
+    - :class:`.VoiceChannel`
+    - :class:`.User`
+    """
+
     __slots__ = ()
 
     state: State

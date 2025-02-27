@@ -344,7 +344,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
     __original_kwargs__: dict[str, typing.Any]
 
     def __new__(cls, /, *_: typing.Any, **kwargs: typing.Any) -> Self:
-        # if you're wondering why this is done, it's because we need to ensure
+        # If you're wondering why this is done, it's because we need to ensure
         # we have a complete original copy of **kwargs even for classes that
         # mess with it by popping before delegating to the subclass __init__.
         # In order to do this, we need to control the instance creation and
@@ -352,7 +352,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         # inside __init__.
         self = super().__new__(cls)
 
-        # we do a shallow copy because it's probably the most common use case.
+        # We do a shallow copy because it's probably the most common use case.
         # this could potentially break if someone modifies a list or something
         # while it's in movement, but for now this is the cheapest and
         # fastest way to do what we want.

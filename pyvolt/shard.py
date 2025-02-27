@@ -25,13 +25,16 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import aiohttp
 import asyncio
 from inspect import isawaitable
 import logging
 import typing
 
+import aiohttp
+from multidict import CIMultiDict
+
 from . import __version__, utils
+from .adapter import HTTPWebSocket, HTTPAdapter, AIOHTTPAdapter
 from .core import ULIDOr, resolve_id
 from .enums import ShardFormat
 from .errors import PyvoltException, ShardClosedError, AuthenticationError, ConnectError
@@ -84,12 +87,12 @@ class EventHandler(ABC):
         """Called before connecting to Revolt."""
         ...
 
-    def after_connect(self, shard: Shard, socket: aiohttp.ClientWebSocketResponse, /) -> utils.MaybeAwaitable[None]:
+    def after_connect(self, shard: Shard, socket: HTTPWebSocket, /) -> utils.MaybeAwaitable[None]:
         """Called when successfully connected to Revolt WebSocket.
 
         Parameters
         ----------
-        socket: :class:`aiohttp.ClientWebSocketResponse`
+        socket: :class:`.HTTPWebSocket`
             The connected WebSocket.
         """
         ...
@@ -167,8 +170,8 @@ class Shard(ABC):
 
     @property
     @abstractmethod
-    def socket(self) -> aiohttp.ClientWebSocketResponse:
-        """:class:`aiohttp.ClientWebSocketResponse`: The current WebSocket connection."""
+    def socket(self) -> HTTPWebSocket:
+        """:class:`.HTTPWebSocket`: The current WebSocket connection."""
         ...
 
     @abstractmethod
@@ -286,9 +289,8 @@ class ShardImpl(Shard):
         The HTTP user agent used when connecting to WebSocket.
     """
 
-    _socket: typing.Optional[aiohttp.ClientWebSocketResponse]
-
     __slots__ = (
+        '_adapter',
         '_base_url',
         '_bot',
         '_closed',
@@ -300,7 +302,6 @@ class ShardImpl(Shard):
         '_last_pong_at',
         '_logged_out',
         '_sequence',
-        '_session',
         '_socket',
         '_token',
         'connect_delay',
@@ -317,6 +318,7 @@ class ShardImpl(Shard):
         self,
         token: str,
         *,
+        adapter: typing.Optional[typing.Union[utils.MaybeAwaitableFunc[[Shard], HTTPAdapter], HTTPAdapter]] = None,
         base_url: typing.Optional[str] = None,
         bot: bool = True,
         connect_delay: typing.Optional[float] = 2,
@@ -325,13 +327,16 @@ class ShardImpl(Shard):
         reconnect_on_timeout: bool = True,
         request_user_settings: typing.Optional[list[str]] = None,
         retries: typing.Optional[int] = None,
-        session: typing.Union[utils.MaybeAwaitableFunc[[Shard], aiohttp.ClientSession], aiohttp.ClientSession],
+        # session: typing.Union[utils.MaybeAwaitableFunc[[Shard], aiohttp.ClientSession], aiohttp.ClientSession],
         state: State,
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if format is ShardFormat.msgpack and not _HAS_MSGPACK:
             raise TypeError('Cannot use msgpack format without dependency')
 
+        self._adapter: typing.Optional[typing.Union[utils.MaybeAwaitableFunc[[Shard], HTTPAdapter], HTTPAdapter]] = (
+            adapter
+        )
         self._base_url: str = base_url or 'wss://ws.revolt.chat/'
         self._bot: bool = bot
         self._closed: bool = False
@@ -343,8 +348,7 @@ class ShardImpl(Shard):
         self._last_pong_at: typing.Optional[datetime] = None
         self._logged_out: bool = False
         self._sequence: int = 0
-        self._session = session
-        self._socket: typing.Optional[aiohttp.ClientWebSocketResponse] = None
+        self._socket: typing.Optional[HTTPWebSocket] = None
         self._token: str = token
 
         self.connect_delay: typing.Optional[float] = connect_delay
@@ -392,27 +396,53 @@ class ShardImpl(Shard):
     def token(self) -> str:
         return self._token
 
+    async def get_adapter(self) -> HTTPAdapter:
+        if self._adapter is None:
+            adapter = AIOHTTPAdapter()
+            self._adapter = adapter
+            return adapter
+
+        if callable(self._adapter):
+            ret = self._adapter(self)
+            if isawaitable(ret):
+                ret = await ret
+            self._adapter = ret
+            return ret
+        return self._adapter
+
+    def maybe_get_adapter(self) -> typing.Optional[HTTPAdapter]:
+        if self._adapter is None or not isinstance(self._adapter, HTTPAdapter):
+            return None
+        return self._adapter
+
+    @property
+    def adapter(self) -> HTTPAdapter:
+        if self._adapter is None or (callable(self._adapter) and not isinstance(self._adapter, HTTPAdapter)):
+            raise TypeError('No adapter is available')
+        return self._adapter
+
     async def cleanup(self) -> None:
         """|coro|
 
         Closes the aiohttp session.
         """
-        if not callable(self._session):
-            await self._session.close()
+        adapter = self.maybe_get_adapter()
+        if adapter is not None:
+            await adapter.close()
 
     async def close(self) -> None:
         """|coro|
 
         Closes the connection to Revolt.
         """
-        if self._socket:
+        if self._socket is not None:
             if self._closed:
                 raise ShardClosedError('Already closed')
             self._closed = True
             await self._socket.close(code=1000)
 
     @property
-    def socket(self) -> aiohttp.ClientWebSocketResponse:
+    def socket(self) -> HTTPWebSocket:
         if self._socket is None:
             raise TypeError('No websocket')
         return self._socket
@@ -462,69 +492,65 @@ class ShardImpl(Shard):
 
     async def _recv_json(self) -> raw.ClientEvent:
         try:
-            message = await self.socket.receive()
+            frame = await self.socket.receive()
         except (KeyboardInterrupt, asyncio.CancelledError):
             raise Close
 
-        if message.type in (
-            aiohttp.WSMsgType.CLOSE,
-            aiohttp.WSMsgType.CLOSED,
-            aiohttp.WSMsgType.CLOSING,
-        ):
+        adapter = self.adapter
+
+        if adapter.is_close_frame(frame):
             self._last_close_code = data = self.socket.close_code
             _L.debug('WebSocket closed with %s (closed: %s)', data, self._closed)
             if self._closed:
                 raise Close
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.25)
             raise Reconnect
 
-        if message.type is aiohttp.WSMsgType.ERROR:
+        if adapter.is_error_frame(frame):
             _L.debug('Received invalid WebSocket payload. Reconnecting.')
             raise Reconnect
 
-        if message.type is not aiohttp.WSMsgType.TEXT:
+        if not adapter.is_text_frame(frame):
             _L.debug(
-                'Received unknown message type: %s (expected TEXT). Reconnecting.',
-                message.type,
+                'Received unknown frame type: %s (expected TEXT). Reconnecting.',
+                frame,
             )
             raise Reconnect
 
-        k = utils.from_json(message.data)
+        k = utils.from_json(adapter.payload_from_frame(frame))
         if k['type'] != 'Ready':
             _L.debug('Received %s', k)
         return k
 
     async def _recv_msgpack(self) -> raw.ClientEvent:
         try:
-            message = await self.socket.receive()
+            frame = await self.socket.receive()
         except (KeyboardInterrupt, asyncio.CancelledError):
             raise Close
 
-        if message.type in (
-            aiohttp.WSMsgType.CLOSE,
-            aiohttp.WSMsgType.CLOSED,
-            aiohttp.WSMsgType.CLOSING,
-        ):
+        adapter = self.adapter
+
+        if adapter.is_close_frame(frame):
             self._last_close_code = data = self.socket.close_code
-            _L.debug('WebSocket closed with %s (was closed: %s)', data, self._closed)
+            _L.debug('WebSocket closed with %s (closed: %s)', data, self._closed)
             if self._closed:
                 raise Close
-            await asyncio.sleep(0.2)
+            await asyncio.sleep(0.25)
             raise Reconnect
 
-        if message.type is aiohttp.WSMsgType.ERROR:
+        if adapter.is_error_frame(frame):
             _L.debug('Received invalid WebSocket payload. Reconnecting.')
             raise Reconnect
 
-        if message.type is not aiohttp.WSMsgType.BINARY:
+        if not adapter.is_binary_frame(frame):
             _L.debug(
-                'Received unknown message type: %s (expected BINARY). Reconnecting.',
-                message.type,
+                'Received unknown frame type: %s (expected BINARY). Reconnecting.',
+                frame,
             )
             raise Reconnect
 
         # `msgpack` wont be unbound here
-        k: raw.ClientEvent = msgpack.unpackb(message.data, use_list=True)  # type: ignore
+        k: raw.ClientEvent = msgpack.unpackb(adapter.payload_from_frame(frame), use_list=True)  # type: ignore
         if k['type'] != 'Ready':
             _L.debug('Received %s', k)
         return k
@@ -538,44 +564,8 @@ class ShardImpl(Shard):
             await asyncio.sleep(30.0)
             await self.ping()
 
-    async def ws_connect(
-        self, session: aiohttp.ClientSession, url: str, /, *, headers: dict[str, str], params: dict[str, str]
-    ) -> aiohttp.ClientWebSocketResponse:
-        """|coro|
-
-        Start a WebSocket connection.
-
-        Parameters
-        ----------
-        session: :class:`aiohttp.ClientSession`
-            The session to use when connecting.
-        url: :class:`str`
-            The URL to connect to.
-        headers: Dict[:class:`str`, :class:`str`]
-            The HTTP headers.
-        params: Dict[:class:`str`, :class:`str`]
-            The HTTP query string parameters.
-
-        Returns
-        -------
-        :class:`aiohttp.ClientWebSocketResponse`
-            The WebSocket connection.
-        """
-        return await session.ws_connect(
-            url,
-            headers=headers,
-            params=params,
-        )
-
-    async def _socket_connect(self) -> aiohttp.ClientWebSocketResponse:
-        session = self._session
-        if callable(session):
-            session = await utils.maybe_coroutine(session, self)
-            # detect recursion
-            if callable(session):
-                raise TypeError(f'Expected aiohttp.ClientSession, not {type(session)!r}')
-            # Do not call factory on future requests
-            self._session = session
+    async def _socket_connect(self) -> HTTPWebSocket[typing.Any]:
+        adapter = await self.get_adapter()
 
         params: raw.BonfireConnectionParameters = {
             'version': '1',
@@ -594,10 +584,9 @@ class ShardImpl(Shard):
             if i >= self.retries:
                 break
             try:
-                return await self.ws_connect(
-                    session,
+                return await adapter.websocket(
                     self.base_url,
-                    headers=headers,
+                    headers=CIMultiDict(headers),
                     params=params,  # type: ignore # Not true
                 )
             except OSError as exc:
@@ -621,8 +610,9 @@ class ShardImpl(Shard):
         raise ConnectError(self.retries, errors)
 
     async def connect(self) -> None:
-        if self._socket:
+        if self._socket is not None:
             raise PyvoltException('The connection is already open.')
+
         while not self._closed:
             if self.handler:
                 r = self.handler.before_connect(self)

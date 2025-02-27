@@ -24,7 +24,7 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from inspect import isawaitable
 import typing
 
@@ -36,9 +36,19 @@ if typing.TYPE_CHECKING:
 
     from .utils import MaybeAwaitable, MaybeAwaitableFunc
 
+F = typing.TypeVar('F')
+
+
+class WebSocketConnectionRetry(Exception):
+    """Signal to retry connecting to WebSocket."""
+
+    __slots__ = ()
+
 
 @typing.runtime_checkable
 class HTTPResponse(typing.Protocol):
+    """A HTTP response."""
+
     status: int
 
     @reify
@@ -59,11 +69,34 @@ class HTTPResponse(typing.Protocol):
         ...
 
 
-class HTTPAdapter(ABC):
+@typing.runtime_checkable
+class HTTPWebSocket(typing.Generic[F], typing.Protocol):  # type: ignore
+    """A HTTP WebSocket connection."""
+
+    @property
+    def close_code(self) -> typing.Optional[int]: ...
+
+    @property
+    def closed(self) -> bool: ...
+
+    async def close(self, *, code: int = 1000, message: bytes = b'') -> bool: ...
+
+    async def receive(self, timeout: typing.Optional[float] = None) -> F: ...
+
+    async def send_bytes(self, data: bytes, compress: typing.Optional[int] = None) -> None: ...
+
+    async def send_str(self, data: str, compress: typing.Optional[int] = None) -> None: ...
+
+
+class HTTPAdapter(ABC, typing.Generic[F]):
     """Represents a HTTP adapter."""
 
     __slots__ = ()
 
+    async def close(self) -> None:
+        """Release all underlying resources."""
+
+    @abstractmethod
     async def request(
         self,
         method: str,
@@ -102,10 +135,70 @@ class HTTPAdapter(ABC):
         """
         ...
 
+    @abstractmethod
+    async def websocket(
+        self,
+        url: str,
+        *,
+        headers: CIMultiDict[typing.Any],
+        **kwargs,
+    ) -> HTTPWebSocket[F]:
+        """Creates a WebSocket connection.
+
+        .. note::
+            You **should** perform basic WebSocket handshake validation in this method if you're overriding it.
+
+            However you **should not** validate frames sent by Revolt itself.
+
+        Parameters
+        ----------
+        url: :class:`str`
+            The URL to create WebSocket connection to.
+        headers: CIMultiDict[Any]
+            The HTTP headers.
+        \\*\\*kwargs
+            The keyword arguments to pass to requester function.
+
+            Usually these are passed:
+
+            - ``proxy``
+            - ``proxy_auth``
+
+        Returns
+        -------
+        :class:`.HTTPWebSocket`
+            The response.
+        """
+        ...
+
+    @abstractmethod
+    def is_close_frame(self, frame: F, /) -> bool:
+        """:class:`bool`: Returns whether the provided message is a CLOSE/CLOSED/CLOSING frame."""
+        ...
+
+    @abstractmethod
+    def is_error_frame(self, frame: F, /) -> bool:
+        """:class:`bool`: Returns whether the provided message is a ERROR pseudo-frame."""
+        ...
+
+    @abstractmethod
+    def is_binary_frame(self, frame: F, /) -> bool:
+        """:class:`bool`: Returns whether the provided message is a BINARY frame."""
+        ...
+
+    @abstractmethod
+    def is_text_frame(self, frame: F, /) -> bool:
+        """:class:`bool`: Returns whether the provided message is a TEXT frame."""
+        ...
+
+    @abstractmethod
+    def payload_from_frame(self, frame: F, /) -> typing.Any:
+        """Any: Returns frame payload."""
+
 
 # horrible name please PR a better name
-class AIOHTTPAdapter(HTTPAdapter):
-    """Represents a HTTP adapter using :doc:`aiohtpt`."""
+class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
+    """Represents a HTTP adapter using :class:`aiohttp.ClientSession`."""
 
     __slots__ = ('_session',)
 
@@ -118,7 +211,7 @@ class AIOHTTPAdapter(HTTPAdapter):
         *,
         session: typing.Optional[
             typing.Union[aiohttp.ClientSession, MaybeAwaitableFunc[[AIOHTTPAdapter], aiohttp.ClientSession]]
-        ],
+        ] = None,
     ) -> None:
         self._session: typing.Optional[
             typing.Union[aiohttp.ClientSession, MaybeAwaitableFunc[[AIOHTTPAdapter], aiohttp.ClientSession]]
@@ -138,6 +231,17 @@ class AIOHTTPAdapter(HTTPAdapter):
             self._session = ret
 
         return self._session
+
+    def maybe_get_session(self) -> typing.Optional[aiohttp.ClientSession]:
+        if self._session is None or not isinstance(self._session, aiohttp.ClientSession):
+            return None
+        return self._session
+
+    async def close(self) -> None:
+        """Release all underlying resources."""
+        session = self.maybe_get_session()
+        if session is not None:
+            await session.close()
 
     async def request(
         self,
@@ -177,8 +281,72 @@ class AIOHTTPAdapter(HTTPAdapter):
             **kwargs,
         )
 
+    async def websocket(
+        self,
+        url: str,
+        *,
+        headers: CIMultiDict[typing.Any],
+        **kwargs,
+    ) -> HTTPWebSocket:
+        """Creates a WebSocket connection.
+
+        .. note::
+            You **should** perform basic WebSocket handshake validation in this method if you're overriding it.
+
+            However you **should not** validate frames sent by Revolt itself.
+
+        Parameters
+        ----------
+        url: :class:`str`
+            The URL to create WebSocket connection to.
+        headers: CIMultiDict[Any]
+            The HTTP headers.
+        \\*\\*kwargs
+            The keyword arguments to pass to requester function.
+
+            Usually these are passed:
+
+            - ``proxy``
+            - ``proxy_auth``
+
+        Returns
+        -------
+        :class:`.HTTPWebSocket`
+            The response.
+        """
+        session = await self.get_session()
+        connection = await session.ws_connect(url, headers=headers, **kwargs)
+        return connection
+
+    def is_close_frame(self, frame: aiohttp.WSMessage, /) -> bool:
+        """:class:`bool`: Returns whether the provided frame is a close frame."""
+        return frame.type in (
+            aiohttp.WSMsgType.CLOSE,
+            aiohttp.WSMsgType.CLOSED,
+            aiohttp.WSMsgType.CLOSING,
+        )
+
+    def is_error_frame(self, frame: aiohttp.WSMessage, /) -> bool:
+        """:class:`bool`: Returns whether the provided message is a ERROR pseudo-frame."""
+        return frame.type is aiohttp.WSMsgType.ERROR
+
+    def is_binary_frame(self, frame: aiohttp.WSMessage, /) -> bool:
+        """:class:`bool`: Returns whether the provided message is a BINARY frame."""
+        return frame.type is aiohttp.WSMsgType.BINARY
+
+    def is_text_frame(self, frame: aiohttp.WSMessage, /) -> bool:
+        """:class:`bool`: Returns whether the provided message is a TEXT frame."""
+        return frame.type is aiohttp.WSMsgType.TEXT
+
+    def payload_from_frame(self, frame: aiohttp.WSMessage, /) -> typing.Any:
+        """Any: Returns frame payload."""
+        return frame.data
+
 
 __all__ = (
+    'WebSocketConnectionRetry',
+    'HTTPResponse',
+    'HTTPWebSocket',
     'HTTPAdapter',
     'AIOHTTPAdapter',
 )

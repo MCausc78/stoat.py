@@ -57,6 +57,7 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from . import raw
+    from .adapter import HTTPWebSocket
     from .cdn import ResolvableResource
     from .events import (
         AuthenticatedEvent,
@@ -392,7 +393,7 @@ class ClientEventHandler(EventHandler):
 
         return self.dispatch(BeforeConnectEvent(shard=shard))
 
-    def after_connect(self, shard: Shard, socket: aiohttp.ClientWebSocketResponse, /) -> utils.MaybeAwaitable[None]:
+    def after_connect(self, shard: Shard, socket: HTTPWebSocket, /) -> utils.MaybeAwaitable[None]:
         from .events import AfterConnectEvent
 
         return self.dispatch(AfterConnectEvent(shard=shard, socket=socket))
@@ -760,7 +761,6 @@ class Client:
                         base_url=websocket_base,
                         handler=ClientEventHandler(self),
                         request_user_settings=request_user_settings,
-                        session=_session_factory,
                         state=state,
                     )
                 )
@@ -1681,7 +1681,7 @@ class Client:
             called after this function call will not execute until it returns.
 
         Parameters
-        -----------
+        ----------
         log_handler: Optional[:class:`logging.Handler`]
             The log handler to use for the library's logger. If this is ``None``
             then the library will not set up anything logging related. Logging

@@ -66,8 +66,7 @@ from .user import (
 )
 
 if typing.TYPE_CHECKING:
-    import aiohttp
-
+    from .adapter import HTTPWebSocket
     from .authentication import Session
     from .client import Client
     from .flags import UserFlags
@@ -2306,8 +2305,8 @@ class AfterConnectEvent(ShardEvent):
 
     event_name: typing.ClassVar[str] = 'after_connect'
 
-    socket: aiohttp.ClientWebSocketResponse = field(repr=True, kw_only=True)
-    """:class:`aiohttp.ClientWebSocketResponse`: The connected WebSocket."""
+    socket: HTTPWebSocket = field(repr=True, kw_only=True)
+    """:class:`.HTTPWebSocket`: The connected WebSocket."""
 
 
 __all__ = (

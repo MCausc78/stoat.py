@@ -144,14 +144,6 @@ DefaultRateLimitBlocker
 .. autoclass:: DefaultRateLimitBlocker
     :members:
 
-_NoopRateLimitBlocker
-~~~~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: _NoopRateLimitBlocker
-
-.. autoclass:: _NoopRateLimitBlocker
-    :members:
-
 DefaultRateLimiter
 ~~~~~~~~~~~~~~~~~~
 
