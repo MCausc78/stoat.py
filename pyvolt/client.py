@@ -746,7 +746,6 @@ class Client:
                         token,
                         base=http_base,
                         bot=bot,
-                        session=_session_factory,
                         state=state,
                     )
                 ),

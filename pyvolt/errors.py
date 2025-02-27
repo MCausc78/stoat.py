@@ -27,7 +27,7 @@ from __future__ import annotations
 import typing
 
 if typing.TYPE_CHECKING:
-    from aiohttp import ClientResponse as Response
+    from .adapter import HTTPResponse
 
 
 # Thanks Rapptz/discord.py for docs
@@ -47,9 +47,8 @@ class HTTPException(PyvoltException):
 
     Attributes
     ----------
-    response: :class:`aiohttp.ClientResponse`
-        The response of the failed HTTP request. This is an
-        instance of :class:`aiohttp.ClientResponse`.
+    response: :class:`.HTTPResponse`
+        The response of the failed HTTP request.
     data: Union[Dict[:class:`str`, Any], Any]
         The data of the error. Could be an empty string.
     status: :class:`int`
@@ -103,7 +102,7 @@ class HTTPException(PyvoltException):
         - ``'features.mass_mentions_enabled'``
     """
 
-    # response: Response
+    # response: HTTPResponse
     # type: str
     # retry_after: typing.Optional[float]
     # error: typing.Optional[str]
@@ -131,11 +130,11 @@ class HTTPException(PyvoltException):
 
     def __init__(
         self,
-        response: Response,
+        response: HTTPResponse,
         data: typing.Union[dict[str, typing.Any], str],
         /,
     ) -> None:
-        self.response: Response = response
+        self.response: HTTPResponse = response
         self.data: typing.Union[dict[str, typing.Any], str] = data
         self.status: int = response.status
 
@@ -310,12 +309,12 @@ class DiscoverError(PyvoltException):
 
     def __init__(
         self,
-        response: Response,
+        response: HTTPResponse,
         status: int,
         data: str,
         /,
     ) -> None:
-        self.response: Response = response
+        self.response: HTTPResponse = response
         self.status: int = status
         self.data: str = data
         super().__init__(status, data)

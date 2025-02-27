@@ -29,10 +29,10 @@ from inspect import isawaitable
 import typing
 
 import aiohttp
-from aiohttp.helpers import reify
 
 if typing.TYPE_CHECKING:
-    from multidict import CIMultiDict, CIMultiDictProxy
+    from multidict import MultiMapping, CIMultiDict
+    from yarl import URL
 
     from .utils import MaybeAwaitable, MaybeAwaitableFunc
 
@@ -49,16 +49,29 @@ class WebSocketConnectionRetry(Exception):
 class HTTPResponse(typing.Protocol):
     """A HTTP response."""
 
-    status: int
+    @property
+    def method(self) -> str:
+        """:class:`str`: The HTTP request method."""
+        ...
 
-    @reify
-    def headers(self) -> CIMultiDictProxy[str]:
-        """CIMultiDictProxy[:class:`str`]: The response headers."""
+    @property
+    def status(self) -> int:
+        """:class:`int`: The HTTP response status code."""
+        ...
+
+    @property
+    def headers(self) -> MultiMapping[str]:
+        """MultiMapping[:class:`str`]: The response headers."""
         ...
 
     @property
     def closed(self) -> bool:
         """:class:`bool`: Whether the request resources were released."""
+        ...
+
+    @property
+    def url(self) -> URL:
+        """:class:`yarl.URL`: The request URL."""
         ...
 
     def close(self) -> MaybeAwaitable[None]:
@@ -69,9 +82,55 @@ class HTTPResponse(typing.Protocol):
         """:class:`bytes`: Read the response body."""
         ...
 
-    async def text(self, *, encoding: typing.Optional[str] = None, errors: str = 'strict') -> str:
+    async def text(self, encoding: typing.Optional[str] = None, errors: str = 'strict') -> str:
         """:class:`str`: Read the response body as string."""
         ...
+
+
+class AIOHTTPResponseWrapper:
+    """A wrapper around :class:`aiohttp.ClientResponse`."""
+
+    __slots__ = ('underlying',)
+
+    def __init__(self, underlying: aiohttp.ClientResponse, /) -> None:
+        self.underlying: aiohttp.ClientResponse = underlying
+
+    @property
+    def method(self) -> str:
+        """:class:`str`: The HTTP request method."""
+        return self.underlying.method
+
+    @property
+    def status(self) -> int:
+        """:class:`int`: The HTTP response status code."""
+        return self.underlying.status
+
+    @property
+    def headers(self) -> MultiMapping[str]:
+        """MultiMapping[:class:`str`]: The response headers."""
+        return self.underlying.headers
+
+    @property
+    def closed(self) -> bool:
+        """:class:`bool`: Whether the request resources were released."""
+        return self.underlying.closed
+
+    @property
+    def url(self) -> URL:
+        """:class:`yarl.URL`: The request URL."""
+        return self.underlying.url
+
+    def close(self) -> MaybeAwaitable[None]:
+        """Release request resources."""
+        return self.underlying.close()
+
+    async def read(self) -> bytes:
+        """:class:`bytes`: Read the response body."""
+        return await self.underlying.read()
+
+    async def text(self, encoding: typing.Optional[str] = None, errors: str = 'strict') -> str:
+        """:class:`str`: Read the response body as string."""
+        return await self.underlying.text(encoding=encoding, errors=errors)
 
 
 @typing.runtime_checkable
@@ -274,7 +333,7 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
 
         Returns
         -------
-        :class:`aiohttp.ClientResponse`
+        :class:`.AIOHTTPResponseWrapper`
             The response.
         """
         session = await self.get_session()
@@ -285,7 +344,7 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
             headers=headers,
             **kwargs,
         )
-        return response
+        return AIOHTTPResponseWrapper(response)
 
     async def websocket(
         self,
@@ -352,6 +411,7 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
 __all__ = (
     'WebSocketConnectionRetry',
     'HTTPResponse',
+    'AIOHTTPResponseWrapper',
     'HTTPWebSocket',
     'HTTPAdapter',
     'AIOHTTPAdapter',

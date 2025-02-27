@@ -41,8 +41,6 @@ import sys
 import types
 import typing
 
-import aiohttp
-
 try:
     import orjson  # type: ignore
 except ModuleNotFoundError:
@@ -53,12 +51,13 @@ else:
 if typing.TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Iterable, Sequence
 
+    from .adapter import HTTPResponse
+
     P = typing.ParamSpec('P')
     T = typing.TypeVar('T')
 
     MaybeAwaitable = typing.Union[T, Awaitable[T]]
     MaybeAwaitableFunc = Callable[P, MaybeAwaitable[T]]
-
 
 from .core import UNDEFINED, UndefinedOr
 
@@ -159,7 +158,7 @@ def decode_bool(
     return None
 
 
-async def _json_or_text(response: aiohttp.ClientResponse) -> typing.Any:
+async def _json_or_text(response: HTTPResponse, /) -> typing.Any:
     text = await response.text(encoding='utf-8')
     try:
         if response.headers['content-type'].startswith('application/json'):

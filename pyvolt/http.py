@@ -31,10 +31,10 @@ from inspect import isawaitable
 import logging
 import typing
 
-import aiohttp
 from multidict import CIMultiDict
 
 from . import __version__, routes, utils
+from .adapter import HTTPResponse, HTTPAdapter, AIOHTTPAdapter
 from .authentication import (
     PartialAccount,
     MFATicket,
@@ -155,7 +155,7 @@ class RateLimit(ABC):
         ...
 
     @abstractmethod
-    def on_response(self, route: routes.CompiledRoute, response: aiohttp.ClientResponse, /) -> None:
+    def on_response(self, route: routes.CompiledRoute, response: HTTPResponse, /) -> None:
         """Called when any response from Revolt API is received.
 
         This has same note as :meth:`RateLimiter.on_response`.
@@ -192,7 +192,7 @@ class RateLimiter(ABC):
         ...
 
     @abstractmethod
-    async def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None:
+    async def on_response(self, route: routes.CompiledRoute, path: str, response: HTTPResponse, /) -> None:
         """Called when any response from Revolt API is received.
 
         .. note::
@@ -203,7 +203,7 @@ class RateLimiter(ABC):
 
     @abstractmethod
     def on_bucket_update(
-        self, response: aiohttp.ClientResponse, route: routes.CompiledRoute, old_bucket: str, new_bucket: str, /
+        self, response: HTTPResponse, route: routes.CompiledRoute, old_bucket: str, new_bucket: str, /
     ) -> None:
         """Called when route updates their bucket key.
 
@@ -212,7 +212,7 @@ class RateLimiter(ABC):
 
         Parameters
         ----------
-        response: :class:`aiohttp.ClientResponse`
+        response: :class:`.HTTPResponse`
             The response.
         route: :class:`~routes.CompiledRoute`
             The route.
@@ -259,7 +259,7 @@ class DefaultRateLimit(RateLimit):
         return (self._expires_at - utils.utcnow()).total_seconds() <= 0
 
     @utils.copy_doc(RateLimit.on_response)
-    def on_response(self, route: routes.CompiledRoute, response: aiohttp.ClientResponse, /) -> None:
+    def on_response(self, route: routes.CompiledRoute, response: HTTPResponse, /) -> None:
         headers = response.headers
         bucket = headers['x-ratelimit-bucket']
         if self.bucket != bucket:
@@ -367,7 +367,7 @@ class DefaultRateLimiter(RateLimiter):
             return blocker
 
     @utils.copy_doc(RateLimiter.on_response)
-    async def on_response(self, route: routes.CompiledRoute, path: str, response: aiohttp.ClientResponse, /) -> None:
+    async def on_response(self, route: routes.CompiledRoute, path: str, response: HTTPResponse, /) -> None:
         headers = response.headers
 
         try:
@@ -397,7 +397,7 @@ class DefaultRateLimiter(RateLimiter):
 
     @utils.copy_doc(RateLimiter.on_bucket_update)
     def on_bucket_update(
-        self, response: aiohttp.ClientResponse, route: routes.CompiledRoute, old_bucket: str, new_bucket: str, /
+        self, response: HTTPResponse, route: routes.CompiledRoute, old_bucket: str, new_bucket: str, /
     ) -> None:
         self._ratelimits[new_bucket] = self._ratelimits.pop(old_bucket)
         self._routes_to_bucket[self.get_ratelimit_key_for(route)] = new_bucket
@@ -454,8 +454,8 @@ class HTTPClient:
     # To prevent unexpected 200's with HTML page the user must pass cookie with ``cf_clearance`` key.
 
     __slots__ = (
+        '_adapter',
         '_base',
-        '_session',
         'bot',
         'cookie',
         'max_retries',
@@ -469,6 +469,7 @@ class HTTPClient:
         self,
         token: typing.Optional[str] = None,
         *,
+        adapter: typing.Optional[typing.Union[utils.MaybeAwaitableFunc[[HTTPClient], HTTPAdapter], HTTPAdapter]] = None,
         base: typing.Optional[str] = None,
         bot: bool = True,
         cookie: typing.Optional[str] = None,
@@ -477,16 +478,16 @@ class HTTPClient:
             typing.Optional[typing.Union[Callable[[HTTPClient], typing.Optional[RateLimiter]], RateLimiter]]
         ] = UNDEFINED,
         state: State,
-        session: typing.Union[utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession], aiohttp.ClientSession],
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if base is None:
             base = 'https://api.revolt.chat/0.8'
+
+        self._adapter: typing.Optional[
+            typing.Union[utils.MaybeAwaitableFunc[[HTTPClient], HTTPAdapter], HTTPAdapter]
+        ] = adapter
         self._base: str = base.rstrip('/')
         self.bot: bool = bot
-        self._session: typing.Union[
-            utils.MaybeAwaitableFunc[[HTTPClient], aiohttp.ClientSession], aiohttp.ClientSession
-        ] = session
         self.cookie: typing.Optional[str] = cookie
         self.max_retries: int = max_retries or 3
 
@@ -534,8 +535,31 @@ class HTTPClient:
         self.token = token
         self.bot = bot
 
-    # In future I want to add something like "HTTP adapters" which allow to use different HTTP clients like ``curl_cffi``,
-    # but not now.
+    async def get_adapter(self) -> HTTPAdapter:
+        if self._adapter is None:
+            adapter = AIOHTTPAdapter()
+            self._adapter = adapter
+            return adapter
+
+        if callable(self._adapter):
+            ret = self._adapter(self)
+            if isawaitable(ret):
+                ret = await ret
+            self._adapter = ret
+            return ret
+        return self._adapter
+
+    def maybe_get_adapter(self) -> typing.Optional[HTTPAdapter]:
+        if self._adapter is None or not isinstance(self._adapter, HTTPAdapter):
+            return None
+        return self._adapter
+
+    @property
+    def adapter(self) -> HTTPAdapter:
+        if self._adapter is None or (callable(self._adapter) and not isinstance(self._adapter, HTTPAdapter)):
+            raise TypeError('No adapter is available')
+        return self._adapter
+
     def add_headers(
         self,
         headers: CIMultiDict[typing.Any],
@@ -613,22 +637,18 @@ class HTTPClient:
 
     async def send_request(
         self,
-        session: aiohttp.ClientSession,
-        /,
-        *,
         method: str,
         url: str,
+        *,
         headers: CIMultiDict[typing.Any],
         **kwargs,
-    ) -> aiohttp.ClientResponse:
+    ) -> HTTPResponse:
         """Perform an actual HTTP request.
 
         This is different from :meth:`.raw_request` as latter performs complete error and ratelimit handling.
 
         Parameters
         ----------
-        session: :class:`aiohttp.ClientSession`
-            The session to use to send request.
         method: :class:`str`
             The HTTP method.
         url: :class:`str`
@@ -636,14 +656,15 @@ class HTTPClient:
         headers: CIMultiDict[Any]
             The HTTP headers.
         \\*\\*kwargs
-            The keyword arguments to pass to :meth:`aiohttp.ClientSession.request`.
+            The keyword arguments to pass to :meth:`HTTPAdapter.request`.
 
         Returns
         -------
-        :class:`aiohttp.ClientResponse`
+        :class:`.HTTPResponse`
             The response.
         """
-        return await session.request(
+        adapter = await self.get_adapter()
+        return await adapter.request(
             method,
             url,
             headers=headers,
@@ -662,7 +683,7 @@ class HTTPClient:
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
-    ) -> aiohttp.ClientResponse:
+    ) -> HTTPResponse:
         """|coro|
 
         Perform a HTTP request, with ratelimiting and errors handling.
@@ -695,8 +716,8 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`aiohttp.ClientResponse`
-            The aiohttp response.
+        :class:`HTTPResponse`
+            The HTTP response.
         """
         headers: CIMultiDict[str]
 
@@ -748,18 +769,8 @@ class HTTPClient:
 
             _L.debug('Sending request to %s %s with %s', method, path, kwargs.get('data'))
 
-            session = self._session
-            if callable(session):
-                session = await utils.maybe_coroutine(session, self)
-                # detect recursion
-                if callable(session):
-                    raise TypeError(f'Expected aiohttp.ClientSession, not {type(session)!r}')
-                # Do not call factory on future requests
-                self._session = session
-
             try:
                 response = await self.send_request(
-                    session,
                     method=method,
                     url=url,
                     headers=headers,
@@ -888,13 +899,13 @@ class HTTPClient:
         result = await utils._json_or_text(response)
 
         if log:
-            method = response.request_info.method
-            url = response.request_info.url
+            method = response.method
+            url = response.url
 
             _L.debug('%s %s has received %s %s', method, url, response.status, result)
         else:
-            method = response.request_info.method
-            url = response.request_info.url
+            method = response.method
+            url = response.url
 
             _L.debug('%s %s has received %s [too large response]', method, url, response.status)
 
@@ -904,10 +915,11 @@ class HTTPClient:
     async def cleanup(self) -> None:
         """|coro|
 
-        Closes the aiohttp session.
+        Closes the HTTP session.
         """
-        if not callable(self._session):
-            await self._session.close()
+        adapter = self.maybe_get_adapter()
+        if adapter is not None:
+            await adapter.close()
 
     async def query_node(self) -> Instance:
         """|coro|
