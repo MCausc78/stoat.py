@@ -29,12 +29,11 @@ import logging
 import re
 import typing
 
-import aiohttp
 from attrs import define, field
-
 from multidict import CIMultiDict
 
 from . import __version__, utils
+from .adapter import HTTPResponse, HTTPAdapter, AIOHTTPAdapter
 from .bot import BaseBot
 from .core import UNDEFINED, UndefinedOr
 from .errors import DiscoverError, InvalidData
@@ -293,8 +292,8 @@ RE_DISCOVERY_BUILD_ID: re.Pattern = re.compile(r'"buildId":\s*"([0-9A-Za-z_-]+)"
 
 class DiscoveryClient:
     __slots__ = (
+        '_adapter',
         '_base',
-        'session',
         'state',
         'user_agent',
     )
@@ -302,15 +301,44 @@ class DiscoveryClient:
     def __init__(
         self,
         *,
+        adapter: typing.Optional[
+            typing.Union[utils.MaybeAwaitableFunc[[DiscoveryClient], HTTPAdapter], HTTPAdapter]
+        ] = None,
         base: typing.Optional[str] = None,
-        session: aiohttp.ClientSession,
         state: State,
         user_agent: str = '',
     ) -> None:
+        self._adapter: typing.Optional[
+            typing.Union[utils.MaybeAwaitableFunc[[DiscoveryClient], HTTPAdapter], HTTPAdapter]
+        ] = adapter
         self._base: str = f'https://rvlt.gg/_next/data/{DISCOVERY_BUILD_ID}' if base is None else base.rstrip('/')
-        self.session: aiohttp.ClientSession = session
         self.state: State = state
         self.user_agent: str = user_agent or DEFAULT_DISCOVERY_USER_AGENT
+
+    async def get_adapter(self) -> HTTPAdapter:
+        if self._adapter is None:
+            adapter = AIOHTTPAdapter()
+            self._adapter = adapter
+            return adapter
+
+        if callable(self._adapter):
+            ret = self._adapter(self)
+            if isawaitable(ret):
+                ret = await ret
+            self._adapter = ret
+            return ret
+        return self._adapter
+
+    def maybe_get_adapter(self) -> typing.Optional[HTTPAdapter]:
+        if self._adapter is None or not isinstance(self._adapter, HTTPAdapter):
+            return None
+        return self._adapter
+
+    @property
+    def adapter(self) -> HTTPAdapter:
+        if self._adapter is None or (callable(self._adapter) and not isinstance(self._adapter, HTTPAdapter)):
+            raise TypeError('No adapter is available')
+        return self._adapter
 
     def with_base(self, base: str, /) -> None:
         self._base = base.rstrip('/')
@@ -335,45 +363,60 @@ class DiscoveryClient:
         :class:`str`
             The build ID.
         """
-        async with self.session.get('https://rvlt.gg/discover/servers') as response:
+        adapter = await self.get_adapter()
+
+        headers = CIMultiDict()
+        tmp = self.add_headers(headers, 'GET', None)
+        if isawaitable(tmp):
+            await tmp
+
+        response = await adapter.request('GET', 'https://rvlt.gg/discover/servers', headers=headers)
+        data = await utils._json_or_text(response)
+
+        if not response.closed:
+            tmp = response.close()
+            if isawaitable(tmp):
+                await tmp
+
+        if response.status != 200:
             data = await utils._json_or_text(response)
-            if response.status != 200:
-                data = await utils._json_or_text(response)
-                raise DiscoverError(response, response.status, data)
-            match = RE_DISCOVERY_BUILD_ID.search(data)
-            if match is None:
-                raise InvalidData(
-                    f'Unable to find build ID. Please file an issue on https://github.com/MCausc78/pyvolt with following data: {data}'
-                )
-            return match.group(1)
+            raise DiscoverError(response, response.status, data)
+
+        match = RE_DISCOVERY_BUILD_ID.search(data)
+        if match is None:
+            raise InvalidData(
+                f'Unable to find build ID. Please file an issue on https://github.com/MCausc78/pyvolt with following data: {data}'
+            )
+
+        return match.group(1)
 
     def add_headers(
         self,
         headers: CIMultiDict[typing.Any],
         method: str,
-        path: str,
+        path: typing.Optional[str],
         /,
     ) -> utils.MaybeAwaitable[None]:
         headers['User-Agent'] = self.user_agent
 
     async def send_request(
         self,
-        session: aiohttp.ClientSession,
         method: str,
         url: str,
-        /,
         *,
         headers: CIMultiDict[typing.Any],
         **kwargs,
-    ) -> aiohttp.ClientResponse:
-        return await session.request(
+    ) -> HTTPResponse:
+        adapter = await self.get_adapter()
+
+        return await adapter.request(
             method,
             url,
             headers=headers,
             **kwargs,
         )
 
-    async def raw_request(self, method: str, path: str, /, **kwargs) -> aiohttp.ClientResponse:
+    async def raw_request(self, method: str, path: str, /, **kwargs) -> HTTPResponse:
         _L.debug('Sending %s to %s params=%s', method, path, kwargs.get('params'))
 
         headers: CIMultiDict[typing.Any] = CIMultiDict(kwargs.pop('headers', {}))
@@ -384,7 +427,7 @@ class DiscoveryClient:
         url = self._base + path
 
         for i in range(2):
-            response = await self.send_request(self.session, method, url, headers=headers, **kwargs)
+            response = await self.send_request(method, url, headers=headers, **kwargs)
             if response.status >= 400:
                 data = await utils._json_or_text(response)
                 if (

@@ -716,7 +716,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`HTTPResponse`
+        :class:`.HTTPResponse`
             The HTTP response.
         """
         headers: CIMultiDict[str]

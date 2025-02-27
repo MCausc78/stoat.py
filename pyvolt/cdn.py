@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from inspect import isawaitable
 import io
 import logging
 import typing
@@ -35,13 +36,14 @@ from attrs import define, field
 from multidict import CIMultiDict
 
 from . import __version__, utils
+from .adapter import HTTPResponse, HTTPAdapter, AIOHTTPAdapter
 from .errors import HTTPException
 
 if typing.TYPE_CHECKING:
+    from typing_extensions import Self
+
     from .enums import AssetMetadataType
     from .state import State
-
-    from typing_extensions import Self
 
 
 _L = logging.getLogger(__name__)
@@ -391,8 +393,8 @@ class CDNClient:
     """
 
     __slots__ = (
+        '_adapter',
         '_base',
-        '_session',
         'state',
         'user_agent',
     )
@@ -401,19 +403,44 @@ class CDNClient:
         self,
         *,
         base: typing.Optional[str] = None,
-        session: typing.Union[utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession], aiohttp.ClientSession],
+        adapter: typing.Optional[typing.Union[utils.MaybeAwaitableFunc[[CDNClient], HTTPAdapter], HTTPAdapter]] = None,
         state: State,
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if base is None:
             base = 'https://autumn.revolt.chat'
 
+        self._adapter: typing.Optional[
+            typing.Union[utils.MaybeAwaitableFunc[[CDNClient], HTTPAdapter], HTTPAdapter]
+        ] = adapter
         self._base = base.rstrip('/')
-        self._session: typing.Union[
-            utils.MaybeAwaitableFunc[[CDNClient], aiohttp.ClientSession], aiohttp.ClientSession
-        ] = session
         self.state: State = state
         self.user_agent: str = user_agent or DEFAULT_CDN_USER_AGENT
+
+    async def get_adapter(self) -> HTTPAdapter:
+        if self._adapter is None:
+            adapter = AIOHTTPAdapter()
+            self._adapter = adapter
+            return adapter
+
+        if callable(self._adapter):
+            ret = self._adapter(self)
+            if isawaitable(ret):
+                ret = await ret
+            self._adapter = ret
+            return ret
+        return self._adapter
+
+    def maybe_get_adapter(self) -> typing.Optional[HTTPAdapter]:
+        if self._adapter is None or not isinstance(self._adapter, HTTPAdapter):
+            return None
+        return self._adapter
+
+    @property
+    def adapter(self) -> HTTPAdapter:
+        if self._adapter is None or (callable(self._adapter) and not isinstance(self._adapter, HTTPAdapter)):
+            raise TypeError('No adapter is available')
+        return self._adapter
 
     @property
     def base(self) -> str:
@@ -430,7 +457,7 @@ class CDNClient:
         """:class:`str`: The token in use. May be empty if not started."""
         return self.state.http.token
 
-    async def request(self, method: str, route: str, /, **kwargs) -> aiohttp.ClientResponse:
+    async def request(self, method: str, route: str, /, **kwargs) -> HTTPResponse:
         headers: CIMultiDict[str]
 
         try:
@@ -451,18 +478,11 @@ class CDNClient:
 
         url = self._base + route
 
-        session = self._session
-        if callable(session):
-            session = await utils.maybe_coroutine(session, self)
-            # detect recursion
-            if callable(session):
-                raise TypeError(f'Expected aiohttp.ClientSession, not {type(session)!r}')
-            # Do not call factory on future requests
-            self._session = session
-
         _L.debug('Sending request to %s', route)
 
-        response = await session.request(
+        adapter = await self.get_adapter()
+
+        response = await adapter.request(
             method,
             url,
             headers=headers,
@@ -507,7 +527,10 @@ class CDNClient:
     ) -> bytes:
         response = await self.request('GET', f'/{quote(tag)}/{quote(id)}')
         data = await response.read()
-        response.close()
+        if not response.closed:
+            ret = response.close()
+            if isawaitable(ret):
+                await ret
         return data
 
     async def upload(
@@ -516,8 +539,11 @@ class CDNClient:
         data: aiohttp.FormData,
     ) -> str:
         response = await self.request('POST', f'/{quote(tag)}', data=data)
-        rd = await response.json(loads=utils.from_json)
-        response.close()
+        rd = await utils._json_or_text(response)
+        if not response.closed:
+            ret = response.close()
+            if isawaitable(ret):
+                await ret
         return rd['id']
 
 
