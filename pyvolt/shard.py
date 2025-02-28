@@ -30,11 +30,10 @@ from inspect import isawaitable
 import logging
 import typing
 
-import aiohttp
 from multidict import CIMultiDict
 
 from . import __version__, utils
-from .adapter import HTTPWebSocket, HTTPAdapter, AIOHTTPAdapter
+from .adapter import WebSocketConnectionFailure, HTTPWebSocket, HTTPAdapter, AIOHTTPAdapter
 from .core import ULIDOr, resolve_id
 from .enums import ShardFormat
 from .errors import PyvoltException, ShardClosedError, AuthenticationError, ConnectError
@@ -44,6 +43,7 @@ if typing.TYPE_CHECKING:
 
     from . import raw
     from .channel import TextableChannel
+    from .message import BaseMessage
     from .server import BaseServer
     from .state import State
 
@@ -248,6 +248,36 @@ class Shard(ABC):
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to subscribe to.
+        """
+        ...
+
+    @abstractmethod
+    async def begin_editing(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+        """|coro|
+
+        Begins editing a message.
+
+        Parameters
+        ----------
+        channel: ULIDOr[:class:`.TextableChannel`]
+            The channel the message was sent in.
+        message: ULIDOr[:class:`.BaseMessage`]
+            The message to begin editing.
+        """
+        ...
+
+    @abstractmethod
+    async def stop_editing(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+        """|coro|
+
+        Stops editing a message.
+
+        Parameters
+        ----------
+        channel: ULIDOr[:class:`.TextableChannel`]
+            The channel the message was sent in.
+        message: ULIDOr[:class:`.BaseMessage`]
+            The message to stop editing.
         """
         ...
 
@@ -479,12 +509,28 @@ class ShardImpl(Shard):
         payload: raw.ServerSubscribeEvent = {'type': 'Subscribe', 'server_id': resolve_id(server)}
         await self.send(payload)
 
+    async def begin_editing(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+        payload: raw.ServerBeginEditingEvent = {
+            'type': 'BeginEditing',
+            'channel': resolve_id(channel),
+            'message': resolve_id(message),
+        }
+        await self.send(payload)
+
+    async def stop_editing(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+        payload: raw.ServerStopEditingEvent = {
+            'type': 'StopEditing',
+            'channel': resolve_id(channel),
+            'message': resolve_id(message),
+        }
+        await self.send(payload)
+
     async def _send_json(self, d: raw.ServerEvent, /) -> None:
-        _L.debug('sending %s', d)
+        _L.debug('Sending %s', d)
         await self.socket.send_str(utils.to_json(d))
 
     async def _send_msgpack(self, d: raw.ServerEvent, /) -> None:
-        _L.debug('sending %s', d)
+        _L.debug('Sending %s', d)
 
         # Will never none according to stubs: https://github.com/sbdchd/msgpack-types/blob/a9ab1c861933fa11aff706b21c303ee52a2ee359/msgpack-stubs/__init__.pyi#L40-L49
         payload: bytes = msgpack.packb(d)  # type: ignore
@@ -595,9 +641,9 @@ class ShardImpl(Shard):
                 if exc.errno == 11001:
                     await asyncio.sleep(1)
                 i += 1
-            except aiohttp.WSServerHandshakeError as exc:
-                _L.debug('Server replied with %i', exc.code)
-                if exc.code in (502, 525):
+            except WebSocketConnectionFailure as exc:
+                _L.debug('Server replied with %i', exc.status)
+                if exc.status in (502, 525):
                     await asyncio.sleep(1.5)
                     continue
                 raise exc from None

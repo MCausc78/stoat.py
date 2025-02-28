@@ -39,10 +39,13 @@ if typing.TYPE_CHECKING:
 F = typing.TypeVar('F')
 
 
-class WebSocketConnectionRetry(Exception):
-    """Signal to retry connecting to WebSocket."""
+class WebSocketConnectionFailure(Exception):
+    """Signal that WebSocket endpoint did not return "101 Switching Protocols" status code."""
 
-    __slots__ = ()
+    __slots__ = ('status',)
+
+    def __init__(self, *, status: int) -> None:
+        self.status: int = status
 
 
 @typing.runtime_checkable
@@ -237,22 +240,22 @@ class HTTPAdapter(ABC, typing.Generic[F]):
 
     @abstractmethod
     def is_close_frame(self, frame: F, /) -> bool:
-        """:class:`bool`: Returns whether the provided message is a CLOSE/CLOSED/CLOSING frame."""
+        """:class:`bool`: Returns whether the provided frame is a CLOSE/CLOSED/CLOSING frame."""
         ...
 
     @abstractmethod
     def is_error_frame(self, frame: F, /) -> bool:
-        """:class:`bool`: Returns whether the provided message is a ERROR pseudo-frame."""
+        """:class:`bool`: Returns whether the provided frame is a ERROR pseudo-frame."""
         ...
 
     @abstractmethod
     def is_binary_frame(self, frame: F, /) -> bool:
-        """:class:`bool`: Returns whether the provided message is a BINARY frame."""
+        """:class:`bool`: Returns whether the provided frame is a BINARY frame."""
         ...
 
     @abstractmethod
     def is_text_frame(self, frame: F, /) -> bool:
-        """:class:`bool`: Returns whether the provided message is a TEXT frame."""
+        """:class:`bool`: Returns whether the provided frame is a TEXT frame."""
         ...
 
     @abstractmethod
@@ -380,7 +383,12 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
             The response.
         """
         session = await self.get_session()
-        connection = await session.ws_connect(url, headers=headers, **kwargs)
+
+        try:
+            connection = await session.ws_connect(url, headers=headers, **kwargs)
+        except aiohttp.WSServerHandshakeError as exc:
+            raise WebSocketConnectionFailure(status=exc.status) from exc
+
         return connection
 
     def is_close_frame(self, frame: aiohttp.WSMessage, /) -> bool:
@@ -392,15 +400,15 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
         )
 
     def is_error_frame(self, frame: aiohttp.WSMessage, /) -> bool:
-        """:class:`bool`: Returns whether the provided message is a ERROR pseudo-frame."""
+        """:class:`bool`: Returns whether the provided frame is a ERROR pseudo-frame."""
         return frame.type is aiohttp.WSMsgType.ERROR
 
     def is_binary_frame(self, frame: aiohttp.WSMessage, /) -> bool:
-        """:class:`bool`: Returns whether the provided message is a BINARY frame."""
+        """:class:`bool`: Returns whether the provided frame is a BINARY frame."""
         return frame.type is aiohttp.WSMsgType.BINARY
 
     def is_text_frame(self, frame: aiohttp.WSMessage, /) -> bool:
-        """:class:`bool`: Returns whether the provided message is a TEXT frame."""
+        """:class:`bool`: Returns whether the provided frame is a TEXT frame."""
         return frame.type is aiohttp.WSMsgType.TEXT
 
     def payload_from_frame(self, frame: aiohttp.WSMessage, /) -> typing.Any:
@@ -409,7 +417,7 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
 
 
 __all__ = (
-    'WebSocketConnectionRetry',
+    'WebSocketConnectionFailure',
     'HTTPResponse',
     'AIOHTTPResponseWrapper',
     'HTTPWebSocket',

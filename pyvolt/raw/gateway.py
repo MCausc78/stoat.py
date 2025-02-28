@@ -293,6 +293,20 @@ class ClientChannelStopTypingEvent(typing.TypedDict):
     user: str
 
 
+class ClientMessageStartEditingEvent(typing.TypedDict):
+    type: typing.Literal['MessageStartEditing']
+    id: str
+    channel: str
+    user: str
+
+
+class ClientMessageStopEditingEvent(typing.TypedDict):
+    type: typing.Literal['MessageStopEditing']
+    id: str
+    channel: str
+    user: str
+
+
 class ClientChannelAckEvent(typing.TypedDict):
     type: typing.Literal['ChannelAck']
     id: str
@@ -400,6 +414,8 @@ ClientEvent = typing.Union[
     ClientChannelGroupLeaveEvent,
     ClientChannelStartTypingEvent,
     ClientChannelStopTypingEvent,
+    ClientMessageStartEditingEvent,
+    ClientMessageStopEditingEvent,
     ClientChannelAckEvent,
     ClientWebhookCreateEvent,
     ClientWebhookUpdateEvent,
@@ -427,6 +443,18 @@ class ServerEndTypingEvent(typing.TypedDict):
     channel: str
 
 
+class ServerBeginEditingEvent(typing.TypedDict):
+    type: typing.Literal['BeginEditing']
+    channel: str
+    message: str
+
+
+class ServerStopEditingEvent(typing.TypedDict):
+    type: typing.Literal['StopEditing']
+    channel: str
+    message: str
+
+
 class ServerSubscribeEvent(typing.TypedDict):
     type: typing.Literal['Subscribe']
     server_id: str
@@ -442,6 +470,8 @@ ServerEvent = typing.Union[
     ServerBeginTypingEvent,
     ServerEndTypingEvent,
     ServerSubscribeEvent,
+    ServerBeginEditingEvent,
+    ServerStopEditingEvent,
     ServerPingEvent,
 ]
 
