@@ -2509,7 +2509,7 @@ class HTTPClient:
         nearby: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message to search around.
 
-            Providing this parameter will discrd ``before``, ``after`` and ``sort`` parameters.
+            Providing this parameter will discard ``before``, ``after`` and ``sort`` parameters.
 
             It will also take half of limit rounded as the limits to each side. It also fetches the message specified.
         populate_users: :class:`bool`

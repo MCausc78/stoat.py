@@ -236,6 +236,96 @@ class Messageable:
         channel = await self.fetch_channel_id()
         return await self.state.http.get_message(channel, message)
 
+    async def history(
+        self,
+        *,
+        limit: typing.Optional[int] = None,
+        before: typing.Optional[ULIDOr[BaseMessage]] = None,
+        after: typing.Optional[ULIDOr[BaseMessage]] = None,
+        sort: typing.Optional[MessageSort] = None,
+        nearby: typing.Optional[ULIDOr[BaseMessage]] = None,
+        populate_users: typing.Optional[bool] = None,
+    ) -> list[Message]:
+        """|coro|
+
+        Retrieve message history of a textable channel.
+
+        You must have :attr:`~pyvolt.Permissions.read_message_history` to do this.
+
+        Parameters
+        ----------
+        channel: ULIDOr[:class:`~pyvolt.TextableChannel`]
+            The channel to retrieve messages from.
+        limit: Optional[:class:`int`]
+            The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
+
+            If ``nearby`` is provided, then this is ``(limit + 2)``.
+        before: Optional[ULIDOr[:class:`~pyvolt.BaseMessage`]]
+            The message before which messages should be fetched.
+        after: Optional[ULIDOr[:class:`~pyvolt.BaseMessage`]]
+            The message after which messages should be fetched.
+        sort: Optional[:class:`~pyvolt.MessageSort`]
+            The message sort direction. Defaults to :attr:`~pyvolt.MessageSort.latest`
+        nearby: Optional[ULIDOr[:class:`~pyvolt.BaseMessage`]]
+            The message to search around.
+
+            Providing this parameter will discard ``before``, ``after`` and ``sort`` parameters.
+
+            It will also take half of limit rounded as the limits to each side. It also fetches the message specified.
+        populate_users: :class:`bool`
+            Whether to populate user (and member, if server channel) objects.
+
+        Raises
+        ------
+        :class:`~pyvolt.Unauthorized`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`~pyvolt.Forbidden`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------------+
+            | Value                 | Reason                                                              |
+            +-----------------------+---------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to read the message history. |
+            +-----------------------+---------------------------------------------------------------------+
+        :class:`~pyvolt.NotFound`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`~pyvolt.InternalServerError`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                              |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~pyvolt.HTTPException.collection`, :attr:`~pyvolt.HTTPException.operation` |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`~pyvolt.Message`]
+            The messages retrieved.
+        """
+        channel = await self.fetch_channel_id()
+        return await self.state.http.get_messages(
+            channel,
+            limit=limit,
+            before=before,
+            after=after,
+            sort=sort,
+            nearby=nearby,
+            populate_users=populate_users,
+        )
+
     async def search(
         self,
         query: typing.Optional[str] = None,
