@@ -180,6 +180,62 @@ class Messageable:
 
         await state.http.acknowledge_message(channel_id, message)
 
+    async def fetch_message(self, message: ULIDOr[BaseMessage], /) -> Message:
+        """|coro|
+
+        Retrieves a message.
+
+        Parameters
+        ----------
+        channel: ULIDOr[:class:`.TextableChannel`]
+            The channel the message is in.
+        message: ULIDOr[:class:`.BaseMessage`]
+            The message to retrieve.
+
+        Raises
+        ------
+        :class:`~pyvolt.Unauthorized`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`~pyvolt.Forbidden`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the channel. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`~pyvolt.NotFound`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +--------------+------------------------------------+
+            | Value        | Reason                             |
+            +--------------+------------------------------------+
+            | ``NotFound`` | The channel/message was not found. |
+            +--------------+------------------------------------+
+        :class:`~pyvolt.InternalServerError`
+            Possible values for :attr:`~pyvolt.HTTPException.type`:
+
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                              |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~pyvolt.HTTPException.collection`, :attr:`~pyvolt.HTTPException.operation` |
+            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Message`
+            The retrieved message.
+        """
+
+        channel = await self.fetch_channel_id()
+        return await self.state.http.get_message(channel, message)
+
     async def search(
         self,
         query: typing.Optional[str] = None,
