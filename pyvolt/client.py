@@ -735,7 +735,6 @@ class Client:
                     if cdn_client
                     else CDNClient(
                         base=cdn_base,
-                        session=_session_factory,
                         state=state,
                     )
                 ),
