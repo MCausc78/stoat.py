@@ -36,6 +36,7 @@ from .enums import Enum
 if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from .abc import Messageable
     from .bot import Bot
     from .emoji import ServerEmoji, Emoji
     from .channel import (
@@ -171,6 +172,8 @@ class CacheContextType(Enum):
     authenticated_event = 'AuthenticatedEvent'
 
     # Relationships
+    message_through_messageable_getter = 'Messageable.get_message(): Optional[Message]'
+    messages_through_messageable_getter = 'Messageable.messages: Dict[str, Message]'
     user_through_bot_owner = 'Bot.owner: User'
     user_through_dm_channel_initiator = 'DMChannel.initiator: User'
     message_through_dm_channel_last_message = 'DMChannel.last_message: Optional[Message]'
@@ -610,6 +613,13 @@ class EntityCacheContext(BaseCacheContext):
 
 
 @define(slots=True)
+class MessageableCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`~pyvolt.abc.Messageable` entity."""
+
+    entity: Messageable = field(repr=True, hash=True, kw_only=True, eq=True)
+
+
+@define(slots=True)
 class BotCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.Bot` entity."""
 
@@ -856,6 +866,16 @@ class CallStartedSystemEventCacheContext(EntityCacheContext):
 
     system_message: StatelessCallStartedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`.StatelessCallStartedSystemEvent`: The system message involved."""
+
+
+@define(slots=True)
+class MessageThroughMessageableGetterCacheContext(MessageableCacheContext):
+    """Represents a cache context that involves an :class:`~pyvolt.abc.Messageable` entity, wishing to retrieve single message from target."""
+
+
+@define(slots=True)
+class MessagesThroughMessageableGetterCacheContext(MessageableCacheContext):
+    """Represents a cache context that involves an :class:`~pyvolt.abc.Messageable` entity, wishing to retrieve all messages in target."""
 
 
 @define(slots=True)
@@ -1253,6 +1273,12 @@ _USER_VOICE_STATE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedC
 _AUTHENTICATED_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.authenticated_event,
 )
+_MESSAGE_THROUGH_MESSAGEABLE_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.message_through_messageable_getter,
+)
+_MESSAGES_THROUGH_MESSAGEABLE_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.messages_through_messageable_getter,
+)
 _USER_THROUGH_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_bot_owner,
 )
@@ -1467,6 +1493,8 @@ ProvideCacheContextIn = typing.Literal[
     'UserVoiceStateUpdateEvent',
     'AuthenticatedEvent',
     # Relationships
+    'Messageable.get_message()',
+    'Messageable.messages',
     'Bot.owner',
     'DMChannel.initiator',
     'DMChannel.last_message',
@@ -2886,6 +2914,7 @@ __all__ = (
     'UserVoiceStateUpdateEventCacheContext',
     'AuthenticatedEventCacheContext',
     'EntityCacheContext',
+    'MessageableCacheContext',
     'BotCacheContext',
     'DMChannelCacheContext',
     'GroupChannelCacheContext',
@@ -2901,6 +2930,9 @@ __all__ = (
     'BaseUserCacheContext',
     'UserCacheContext',
     'WebhookCacheContext',
+    'MessageThroughMessageableGetterCacheContext',
+    'MessagesThroughMessageableGetterCacheContext',
+    # 'MessageableMessagesGetterCacheContext',
     'UserThroughBotOwnerCacheContext',
     'UserThroughDMChannelInitiatorCacheContext',
     'MessageThroughDMChannelLastMessageCacheContext',
@@ -2999,6 +3031,8 @@ __all__ = (
     '_VOICE_CHANNEL_MOVE_EVENT',
     '_USER_VOICE_STATE_UPDATE_EVENT',
     '_AUTHENTICATED_EVENT',
+    '_MESSAGE_THROUGH_MESSAGEABLE_GETTER',
+    '_MESSAGES_THROUGH_MESSAGEABLE_GETTER',
     '_USER_THROUGH_BOT_OWNER',
     '_USER_THROUGH_DM_CHANNEL_INITIATOR',
     '_MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE',
