@@ -103,6 +103,7 @@ from .server import (
 
 if typing.TYPE_CHECKING:
     from collections.abc import Callable, Sequence
+    from typing_extensions import Self
 
     from . import raw
     from .bot import BaseBot, Bot, PublicBot
@@ -513,6 +514,22 @@ class HTTPClient:
         del tb
 
         await self.cleanup()
+
+    def attach(self, state: State, /) -> Self:
+        """Attach this HTTP client to state.
+
+        Parameters
+        ----------
+        state: :class:`.State`
+            The state to attach this HTTP client to.
+
+        Returns
+        -------
+        Self
+            This HTTP client for chaining.
+        """
+        state.setup(http=self)
+        return self
 
     @property
     def base(self) -> str:
