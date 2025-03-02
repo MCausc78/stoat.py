@@ -502,6 +502,18 @@ class HTTPClient:
         self.token: str = token or ''
         self.user_agent: str = user_agent or DEFAULT_HTTP_USER_AGENT
 
+    async def __aenter__(self) -> None:
+        adapter = self.maybe_get_adapter()
+        if adapter is not None:
+            await adapter.startup()
+
+    async def __aexit__(self, exc_type, exc_value, tb, /) -> None:
+        del exc_type
+        del exc_value
+        del tb
+
+        await self.cleanup()
+
     @property
     def base(self) -> str:
         """:class:`str`: The base URL used for API requests."""

@@ -160,6 +160,9 @@ class HTTPAdapter(ABC, typing.Generic[F]):
 
     __slots__ = ()
 
+    async def startup(self) -> None:
+        """Sets up adapter."""
+
     async def close(self) -> None:
         """Release all underlying resources."""
 
