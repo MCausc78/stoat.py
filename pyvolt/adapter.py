@@ -263,7 +263,6 @@ class HTTPAdapter(ABC, typing.Generic[F]):
         """Any: Returns frame payload."""
 
 
-# horrible name please PR a better name
 class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
     """Represents a HTTP adapter using :class:`aiohttp.ClientSession`."""
 

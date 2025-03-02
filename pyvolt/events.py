@@ -628,6 +628,38 @@ class ChannelStopTypingEvent(ShardEvent):
 
 
 @define(slots=True)
+class MessageStartEditingEvent(ShardEvent):
+    """Dispatched when someone starts editing an message."""
+
+    event_name: typing.ClassVar[typing.Literal['message_start_editing']] = 'message_start_editing'
+
+    channel_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The channel's ID where user started editing message in."""
+
+    message_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The message's ID that started to be edited."""
+
+    user_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The user's ID who started editing."""
+
+
+@define(slots=True)
+class MessageStopEditingEvent(ShardEvent):
+    """Dispatched when someone stops editing an message."""
+
+    event_name: typing.ClassVar[typing.Literal['message_stop_editing']] = 'message_stop_editing'
+
+    channel_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The channel's ID where user stopped editing message in."""
+
+    message_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The message's ID that stopped to be edited."""
+
+    user_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The user's ID who stopped editing."""
+
+
+@define(slots=True)
 class MessageAckEvent(ShardEvent):
     """Dispatched when the connected user acknowledges the message in a channel (usually from remote device)."""
 
@@ -2028,14 +2060,14 @@ class SessionDeleteAllEvent(AuthifierEvent):
 class LogoutEvent(ShardEvent):
     """Dispatched when the connected user got logged out."""
 
-    event_name: typing.ClassVar[str] = 'logout'
+    event_name: typing.ClassVar[typing.Literal['logout']] = 'logout'
 
 
 @define(slots=True)
 class VoiceChannelJoinEvent(ShardEvent):
     """Dispatched when a user joins a voice channel."""
 
-    event_name: typing.ClassVar[str] = 'voice_channel_join'
+    event_name: typing.ClassVar[typing.Literal['voice_channel_join']] = 'voice_channel_join'
 
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID the user joined to."""
@@ -2077,7 +2109,7 @@ class VoiceChannelJoinEvent(ShardEvent):
 class VoiceChannelLeaveEvent(ShardEvent):
     """Dispatched when a user left voice channel."""
 
-    event_name: typing.ClassVar[str] = 'voice_channel_leave'
+    event_name: typing.ClassVar[typing.Literal['voice_channel_leave']] = 'voice_channel_leave'
 
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID the user left from."""
@@ -2137,7 +2169,7 @@ class VoiceChannelLeaveEvent(ShardEvent):
 class VoiceChannelMoveEvent(ShardEvent):
     """Dispatched when a user is moved from voice channel to another voice channel."""
 
-    event_name: typing.ClassVar[str] = 'voice_channel_move'
+    event_name: typing.ClassVar[typing.Literal['voice_channel_move']] = 'voice_channel_move'
 
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who was moved between two voice channels."""
@@ -2153,6 +2185,9 @@ class VoiceChannelMoveEvent(ShardEvent):
 
     new_container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
     """Optional[:class:`.ChannelVoiceStateContainer`]: The voice state container for the voice channel the user is in."""
+
+    state: UserVoiceState = field(repr=True, kw_only=True)
+    """:class:`.UserVoiceState`: The user's voice state."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.VoiceChannelMoveEventCacheContext] = field(
         default=Factory(
@@ -2190,25 +2225,18 @@ class VoiceChannelMoveEvent(ShardEvent):
             return False
 
         if self.new_container is None:
-            state = self.old_container.locally_remove(self.user_id)
-            if state is None:
-                # If we somehow get here then something went wrong
-                return False
+            self.old_container.locally_remove(self.user_id)
 
             container = ChannelVoiceStateContainer(
                 channel_id=self.to,
-                participants={self.user_id: state},
+                participants={self.user_id: self.state},
                 node='',
             )
             cache.store_channel_voice_state(container, self.cache_context)
             self.new_container = container
         else:
-            state = self.old_container.locally_remove(self.user_id)
-            if state is None:
-                # ditto
-                return False
-
-            self.new_container.locally_add(state)
+            self.old_container.locally_remove(self.user_id)
+            self.new_container.locally_add(self.state)
             cache.store_channel_voice_state(self.new_container, self.cache_context)
 
         return True
@@ -2218,7 +2246,7 @@ class VoiceChannelMoveEvent(ShardEvent):
 class UserVoiceStateUpdateEvent(ShardEvent):
     """Dispatched when a user's voice state is updated."""
 
-    event_name: typing.ClassVar[str] = 'user_voice_state_update'
+    event_name: typing.ClassVar[typing.Literal['user_voice_state_update']] = 'user_voice_state_update'
 
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID the user's voice state is in."""
@@ -2286,6 +2314,19 @@ class UserVoiceStateUpdateEvent(ShardEvent):
 
 
 @define(slots=True)
+class UserMoveVoiceChannelEvent(ShardEvent):
+    """Dispatched when the current user was moved from voice channel and needs to reconnect to another node."""
+
+    event_name: typing.ClassVar[typing.Literal['user_move_voice_channel']] = 'user_move_voice_channel'
+
+    node: str = field(repr=True, kw_only=True)
+    """The node's name to connect to."""
+
+    token: str = field(repr=True, kw_only=True)
+    """The token for this node."""
+
+
+@define(slots=True)
 class AuthenticatedEvent(ShardEvent):
     """Dispatched when the WebSocket was successfully authenticated."""
 
@@ -2323,6 +2364,8 @@ __all__ = (
     'GroupRecipientRemoveEvent',
     'ChannelStartTypingEvent',
     'ChannelStopTypingEvent',
+    'MessageStartEditingEvent',
+    'MessageStopEditingEvent',
     'MessageAckEvent',
     'MessageCreateEvent',
     'MessageUpdateEvent',
@@ -2359,6 +2402,7 @@ __all__ = (
     'VoiceChannelLeaveEvent',
     'VoiceChannelMoveEvent',
     'UserVoiceStateUpdateEvent',
+    'UserMoveVoiceChannelEvent',
     'AuthenticatedEvent',
     'BeforeConnectEvent',
     'AfterConnectEvent',

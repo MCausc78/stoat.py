@@ -169,6 +169,8 @@ class ClientEventHandler(EventHandler):
             'ChannelGroupLeave': self.handle_channel_group_leave,
             'ChannelStartTyping': self.handle_channel_start_typing,
             'ChannelStopTyping': self.handle_channel_stop_typing,
+            'MessageStartEditing': self.handle_message_start_editing,
+            'MessageStopEditing': self.handle_message_stop_editing,
             'ChannelAck': self.handle_channel_ack,
             'WebhookCreate': self.handle_webhook_create,
             'WebhookUpdate': self.handle_webhook_update,
@@ -178,6 +180,7 @@ class ClientEventHandler(EventHandler):
             'VoiceChannelLeave': self.handle_voice_channel_leave,
             'VoiceChannelMove': self.handle_voice_channel_move,
             'UserVoiceStateUpdate': self.handle_user_voice_state_update,
+            'UserMoveVoiceChannel': self.handle_user_move_voice_channel,
         }
 
     async def handle_bulk(self, shard: Shard, payload: raw.ClientBulkEvent, /) -> None:
@@ -319,6 +322,14 @@ class ClientEventHandler(EventHandler):
         event = self._state.parser.parse_channel_stop_typing_event(shard, payload)
         self.dispatch(event)
 
+    def handle_message_start_editing(self, shard: Shard, payload: raw.ClientMessageStartEditingEvent, /) -> None:
+        event = self._state.parser.parse_message_start_edting(shard, payload)
+        self.dispatch(event)
+
+    def handle_message_stop_editing(self, shard: Shard, payload: raw.ClientMessageStopEditingEvent, /) -> None:
+        event = self._state.parser.parse_message_stop_edting(shard, payload)
+        self.dispatch(event)
+
     def handle_channel_ack(self, shard: Shard, payload: raw.ClientChannelAckEvent, /) -> None:
         event = self._state.parser.parse_channel_ack_event(shard, payload)
         self.dispatch(event)
@@ -353,6 +364,10 @@ class ClientEventHandler(EventHandler):
 
     def handle_user_voice_state_update(self, shard: Shard, payload: raw.ClientUserVoiceStateUpdateEvent, /) -> None:
         event = self._state.parser.parse_user_voice_state_update_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_user_move_voice_channel(self, shard: Shard, payload: raw.ClientUserMoveVoiceChannelEvent, /) -> None:
+        event = self._state.parser.parse_user_move_voice_channel_event(shard, payload)
         self.dispatch(event)
 
     async def _handle_library_error(self, shard: Shard, payload: raw.ClientEvent, exc: Exception, name: str, /) -> None:

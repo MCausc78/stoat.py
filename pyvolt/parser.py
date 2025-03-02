@@ -109,6 +109,8 @@ from .events import (
     GroupRecipientRemoveEvent,
     ChannelStartTypingEvent,
     ChannelStopTypingEvent,
+    MessageStartEditingEvent,
+    MessageStopEditingEvent,
     MessageAckEvent,
     MessageCreateEvent,
     MessageUpdateEvent,
@@ -146,6 +148,7 @@ from .events import (
     VoiceChannelLeaveEvent,
     VoiceChannelMoveEvent,
     UserVoiceStateUpdateEvent,
+    UserMoveVoiceChannelEvent,
 )
 from .instance import (
     InstanceCaptchaFeature,
@@ -2234,6 +2237,56 @@ class Parser:
             reason=ContentReportReason(payload['report_reason']),
         )
 
+    def parse_message_start_edting(
+        self, shard: Shard, payload: raw.ClientMessageStartEditingEvent, /
+    ) -> MessageStartEditingEvent:
+        """Parses a message start editing event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`MessageStartEditingEvent`
+            The parsed message start editing event object.
+        """
+
+        return MessageStartEditingEvent(
+            shard=shard,
+            channel_id=payload['channel'],
+            message_id=payload['id'],
+            user_id=payload['user'],
+        )
+
+    def parse_message_stop_edting(
+        self, shard: Shard, payload: raw.ClientMessageStopEditingEvent, /
+    ) -> MessageStopEditingEvent:
+        """Parses a message stop editing event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`MessageStopEditingEvent`
+            The parsed message stop editing event object.
+        """
+
+        return MessageStopEditingEvent(
+            shard=shard,
+            channel_id=payload['channel'],
+            message_id=payload['id'],
+            user_id=payload['user'],
+        )
+
     def parse_message_system_event(
         self,
         payload: raw.SystemMessage,
@@ -3832,6 +3885,33 @@ class Parser:
             online=payload['online'],
         )
 
+    def parse_user_move_voice_channel_event(
+        self,
+        shard: Shard,
+        payload: raw.ClientUserMoveVoiceChannelEvent,
+        /,
+    ) -> UserMoveVoiceChannelEvent:
+        """Parses a UserMoveVoiceChannel event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`UserMoveVoiceChannelEvent`
+            The parsed user move voice channel event object.
+        """
+
+        return UserMoveVoiceChannelEvent(
+            shard=shard,
+            node=payload['node'],
+            token=payload['token'],
+        )
+
     def parse_user_platform_wipe_event(
         self, shard: Shard, payload: raw.ClientUserPlatformWipeEvent, /
     ) -> UserPlatformWipeEvent:
@@ -4252,6 +4332,7 @@ class Parser:
             to=payload['to'],
             old_container=None,
             new_container=None,
+            state=self.parse_user_voice_state(payload['state']),
         )
 
     def parse_voice_information(self, payload: raw.VoiceInformation, /) -> ChannelVoiceMetadata:

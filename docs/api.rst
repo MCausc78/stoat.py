@@ -866,6 +866,16 @@ EntityCacheContext
     :members:
     :inherited-members:
 
+MessageableCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageableCacheContext
+
+.. autoclass:: MessageableCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 BotCacheContext
 ~~~~~~~~~~~~~~~
 
@@ -1012,6 +1022,26 @@ WebhookCacheContext
 .. attributetable:: WebhookCacheContext
 
 .. autoclass:: WebhookCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MessageThroughMessageableGetterCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageThroughMessageableGetterCacheContext
+
+.. autoclass:: MessageThroughMessageableGetterCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MessagesThroughMessageableGetterCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessagesThroughMessageableGetterCacheContext
+
+.. autoclass:: MessagesThroughMessageableGetterCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1668,6 +1698,24 @@ ChannelStopTypingEvent
     :members:
     :inherited-members:
 
+MessageStartEditingEvent
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageStartEditingEvent
+
+.. autoclass:: MessageStartEditingEvent
+    :members:
+    :inherited-members:
+
+MessageStopEditingEvent
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MessageStopEditingEvent
+
+.. autoclass:: MessageStopEditingEvent
+    :members:
+    :inherited-members:
+
 MessageAckEvent
 ~~~~~~~~~~~~~~~
 
@@ -1992,6 +2040,15 @@ UserVoiceStateUpdateEvent
 .. attributetable:: UserVoiceStateUpdateEvent
 
 .. autoclass:: UserVoiceStateUpdateEvent
+    :members:
+    :inherited-members:
+
+UserMoveVoiceChannelEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserMoveVoiceChannelEvent
+
+.. autoclass:: UserMoveVoiceChannelEvent
     :members:
     :inherited-members:
 

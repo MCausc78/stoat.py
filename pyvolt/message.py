@@ -77,6 +77,7 @@ from .cache import (
 )
 from .channel import BaseServerChannel, TextableChannel, PartialMessageable
 from .cdn import AssetMetadata, StatelessAsset, Asset, ResolvableResource, resolve_resource
+from .context_managers import Editing
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -613,6 +614,15 @@ class BaseMessage(Base):
         """
 
         return await self.state.http.edit_message(self.channel_id, self.id, content=content, embeds=embeds)
+
+    def editing(self) -> Editing:
+        """:class:`Typing`: Returns an asynchronous context manager that allows you to send an editing indicator for a message in channel for an indefinite period of time."""
+
+        return Editing(
+            channel_id=self.channel_id,
+            message_id=self.id,
+            shard=self.state.shard,
+        )
 
     async def fetch(self) -> Message:
         """|coro|

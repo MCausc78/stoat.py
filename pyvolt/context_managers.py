@@ -60,7 +60,29 @@ class Typing(contextlib.AbstractAsyncContextManager):
             self.channel_id = await self.destination.fetch_channel_id()
 
         await self.shard.end_typing(self.channel_id)
-        return
 
 
-__all__ = ('Typing',)
+class Editing(contextlib.AbstractAsyncContextManager):
+    __slots__ = (
+        'channel_id',
+        'message_id',
+        'shard',
+    )
+
+    def __init__(self, *, channel_id: str, message_id: str, shard: Shard) -> None:
+        self.channel_id: str = channel_id
+        self.message_id: str = message_id
+        self.shard: Shard = shard
+
+    async def __aenter__(self) -> None:
+        await self.shard.begin_editing(self.channel_id, self.message_id)
+
+    async def __aexit__(self, exc_type, exc_value, tb, /) -> None:
+        del exc_type
+        del exc_value
+        del tb
+
+        await self.shard.stop_editing(self.channel_id, self.message_id)
+
+
+__all__ = ('Typing', 'Editing')
