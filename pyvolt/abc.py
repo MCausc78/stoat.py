@@ -26,6 +26,13 @@ from __future__ import annotations
 
 import typing
 
+from .cache import (
+    CacheContextType,
+    MessageThroughMessageableGetterCacheContext,
+    MessagesThroughMessageableGetterCacheContext,
+    _MESSAGE_THROUGH_MESSAGEABLE_GETTER,
+    _MESSAGES_THROUGH_MESSAGEABLE_GETTER,
+)
 from .context_managers import Typing
 from .core import (
     UNDEFINED,
@@ -39,7 +46,6 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping
     from livekit.rtc import Room  # type: ignore
 
-    from . import cache as caching
     from .cdn import ResolvableResource
     from .enums import MessageSort
     from .message import Reply, MessageInteractions, MessageMasquerade, SendableEmbed, BaseMessage, Message
@@ -91,17 +97,46 @@ class Messageable:
         """
         state = self._get_state()
         cache = state.cache
-        if not cache:
-            return
-        return cache.get_message(self.get_channel_id(), message_id, caching._USER_REQUEST)
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MessageThroughMessageableGetterCacheContext(
+                type=CacheContextType.message_through_messageable_getter,
+                entity=self,
+            )
+            if state.provide_cache_context('Messageable.get_message()')
+            else _MESSAGE_THROUGH_MESSAGEABLE_GETTER
+        )
+
+        return cache.get_message(self.get_channel_id(), message_id, ctx)
 
     @property
     def messages(self) -> Mapping[str, Message]:
         """Mapping[:class:`str`, :class:`~pyvolt.Message`]: Returns all messages in this channel."""
-        cache = self.state.cache
-        if cache:
-            return cache.get_messages_mapping_of(self.get_channel_id(), caching._USER_REQUEST) or {}
-        return {}
+
+        state = self._get_state()
+        cache = state.cache
+
+        if cache is None:
+            return {}
+
+        ctx = (
+            MessagesThroughMessageableGetterCacheContext(
+                type=CacheContextType.messages_through_messageable_getter,
+                entity=self,
+            )
+            if state.provide_cache_context('Messageable.messages')
+            else _MESSAGES_THROUGH_MESSAGEABLE_GETTER
+        )
+
+        messages = cache.get_messages_mapping_of(self.get_channel_id(), ctx)
+
+        if messages is None:
+            return {}
+
+        return messages
 
     async def begin_typing(self) -> None:
         """Begins typing in channel, until :meth:`~.end_typing` is called."""
