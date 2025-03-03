@@ -48,7 +48,7 @@ if typing.TYPE_CHECKING:
     from .user import StatelessUserProfile, UserProfile
 
 _L = logging.getLogger(__name__)
-DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt Discovery client (https://github.com/MCausc78/pyvolt, {__version__})'
+DEFAULT_DISCOVERY_USER_AGENT = f'pyvolt (https://github.com/MCausc78/pyvolt, {__version__})'
 
 _new_server_flags = ServerFlags.__new__
 

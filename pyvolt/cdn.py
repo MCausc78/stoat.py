@@ -186,7 +186,7 @@ class Resource(ABC):
 
 _cdn_session: typing.Optional[aiohttp.ClientSession] = None
 
-DEFAULT_CDN_USER_AGENT = f'pyvolt CDN client (https://github.com/MCausc78/pyvolt, {__version__})'
+DEFAULT_CDN_USER_AGENT = f'pyvolt (https://github.com/MCausc78/pyvolt, {__version__})'
 
 
 def _get_session() -> aiohttp.ClientSession:

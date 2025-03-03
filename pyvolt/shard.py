@@ -98,7 +98,7 @@ class EventHandler(ABC):
         ...
 
 
-DEFAULT_SHARD_USER_AGENT = f'pyvolt Shard client (https://github.com/MCausc78/pyvolt, {__version__})'
+DEFAULT_SHARD_USER_AGENT = f'pyvolt (https://github.com/MCausc78/pyvolt, {__version__})'
 
 
 class Shard(ABC):
