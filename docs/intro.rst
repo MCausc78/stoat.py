@@ -94,7 +94,7 @@ A quick example to showcase how events work:
 
     import pyvolt
 
-    class MyClient(discord.Client):
+    class MyClient(pyvolt.Client):
         __slots__ = ()
         
         async def on_ready(self, event, /):
