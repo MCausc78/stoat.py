@@ -616,7 +616,7 @@ class BaseMessage(Base):
         return await self.state.http.edit_message(self.channel_id, self.id, content=content, embeds=embeds)
 
     def editing(self) -> Editing:
-        """:class:`Typing`: Returns an asynchronous context manager that allows you to send an editing indicator for a message in channel for an indefinite period of time."""
+        """:class:`Editing`: Returns an asynchronous context manager that allows you to send an editing indicator for a message in channel for an indefinite period of time."""
 
         return Editing(
             channel_id=self.channel_id,
@@ -871,7 +871,7 @@ class BaseMessage(Base):
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
+            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` but :attr:`.MessageInteractions.reactions` was empty. |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``IsBot``              | The current token belongs to bot account.                                                                          |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+

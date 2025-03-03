@@ -1246,13 +1246,16 @@ class BaseServer(Base):
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+-------------------------------------------+
-            | Value                | Reason                                    |
-            +----------------------+-------------------------------------------+
-            | ``FailedValidation`` | The payload was invalid.                  |
-            +----------------------+-------------------------------------------+
-            | ``InvalidOperation`` | More than 2 categories had same channel.  |
-            +----------------------+-------------------------------------------+
+            +----------------------+--------------------------------------------+
+            | Value                | Reason                                     |
+            +----------------------+--------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                   |
+            +----------------------+--------------------------------------------+
+            | ``InvalidOperation`` | One of these:                              |
+            |                      |                                            |
+            |                      | - More than 2 categories had same channel. |
+            |                      | - You tried to transfer ownership to bot.  |
+            +----------------------+--------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -1264,15 +1267,15 @@ class BaseServer(Base):
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+-------------------------------------------------------------------------------------------+
-            | Value                 | Reason                                                                                    |
-            +-----------------------+-------------------------------------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to edit server details.                            |
-            +-----------------------+-------------------------------------------------------------------------------------------+
-            | ``NotOwner``          | You provided ``owner`` parameter and you didn't own the server or wasn't privileged user. |
-            +-----------------------+-------------------------------------------------------------------------------------------+
-            | ``NotPrivileged``     | You provided ``discoverable`` or ``flags`` parameters and you wasn't privileged user.     |
-            +-----------------------+-------------------------------------------------------------------------------------------+
+            +-----------------------+----------------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                       |
+            +-----------------------+----------------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit server details.                               |
+            +-----------------------+----------------------------------------------------------------------------------------------+
+            | ``NotOwner``          | You provided ``owner`` parameter but you do not own the server or are not a privileged user. |
+            +-----------------------+----------------------------------------------------------------------------------------------+
+            | ``NotPrivileged``     | You provided ``discoverable`` or ``flags`` parameters but you are not a privileged user.     |
+            +-----------------------+----------------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 

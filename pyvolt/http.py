@@ -2890,7 +2890,7 @@ class HTTPClient:
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
+            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` but :attr:`.MessageInteractions.reactions` was empty. |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``IsBot``              | The current token belongs to bot account.                                                                          |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
@@ -5911,13 +5911,16 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+-------------------------------------------+
-            | Value                | Reason                                    |
-            +----------------------+-------------------------------------------+
-            | ``FailedValidation`` | The payload was invalid.                  |
-            +----------------------+-------------------------------------------+
-            | ``InvalidOperation`` | More than 2 categories had same channel.  |
-            +----------------------+-------------------------------------------+
+            +----------------------+--------------------------------------------+
+            | Value                | Reason                                     |
+            +----------------------+--------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                   |
+            +----------------------+--------------------------------------------+
+            | ``InvalidOperation`` | One of these:                              |
+            |                      |                                            |
+            |                      | - More than 2 categories had same channel. |
+            |                      | - You tried to transfer ownership to bot.  |
+            +----------------------+--------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5929,15 +5932,15 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+-------------------------------------------------------------------------------------------+
-            | Value                 | Reason                                                                                    |
-            +-----------------------+-------------------------------------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to edit server details.                            |
-            +-----------------------+-------------------------------------------------------------------------------------------+
-            | ``NotOwner``          | You provided ``owner`` parameter and you didn't own the server or wasn't privileged user. |
-            +-----------------------+-------------------------------------------------------------------------------------------+
-            | ``NotPrivileged``     | You provided ``discoverable`` or ``flags`` parameters and you wasn't privileged user.     |
-            +-----------------------+-------------------------------------------------------------------------------------------+
+            +-----------------------+----------------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                       |
+            +-----------------------+----------------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit server details.                               |
+            +-----------------------+----------------------------------------------------------------------------------------------+
+            | ``NotOwner``          | You provided ``owner`` parameter but you do not own the server or are not a privileged user. |
+            +-----------------------+----------------------------------------------------------------------------------------------+
+            | ``NotPrivileged``     | You provided ``discoverable`` or ``flags`` parameters but you are not a privileged user.     |
+            +-----------------------+----------------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -7449,7 +7452,7 @@ class HTTPClient:
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
+            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` but :attr:`.MessageInteractions.reactions` was empty. |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``PayloadTooLarge``    | The message was too large.                                                                                         |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
@@ -7862,7 +7865,7 @@ class HTTPClient:
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
             | ``InvalidInvite``       | The provided instance invite was not found.                                                                                                                                                                        |
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``MissingInvite``       | The instance requires a invite to register, and you did not provide it.                                                                                                                                            |
+            | ``MissingInvite``       | The instance requires a invite to register, but you did not provide it.                                                                                                                                            |
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
             | ``ShortPassword``       | The provided password was less than 8 characters long.                                                                                                                                                             |
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -8293,7 +8296,7 @@ class HTTPClient:
             +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
             | ``DatabaseError``   | Something went wrong during querying database.               | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
             +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
-            | ``OperationFailed`` | You was authenticated and provided ``mfa_ticket`` parameter. |                                                                |
+            | ``OperationFailed`` | You was authenticated but provided ``mfa_ticket`` parameter. |                                                                |
             +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
 
         Returns
@@ -8361,7 +8364,7 @@ class HTTPClient:
             +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
             | ``DatabaseError``   | Something went wrong during querying database.               | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
             +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
-            | ``OperationFailed`` | You was authenticated and provided ``mfa_ticket`` parameter. |                                                                |
+            | ``OperationFailed`` | You was authenticated but provided ``mfa_ticket`` parameter. |                                                                |
             +---------------------+--------------------------------------------------------------+----------------------------------------------------------------+
 
         Returns

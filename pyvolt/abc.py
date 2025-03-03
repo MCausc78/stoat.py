@@ -557,7 +557,7 @@ class Messageable:
             +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
             | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`~pyvolt.MessageInteractions.reactions` elements was invalid.                    |
             +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidProperty``    | :attr:`~pyvolt.MessageInteractions.restrict_reactions` was ``True`` and :attr:`~pyvolt.MessageInteractions.reactions` was empty. |
+            | ``InvalidProperty``    | :attr:`~pyvolt.MessageInteractions.restrict_reactions` was ``True`` but :attr:`~pyvolt.MessageInteractions.reactions` was empty. |
             +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
             | ``IsBot``              | The current token belongs to bot account.                                                                                        |
             +------------------------+----------------------------------------------------------------------------------------------------------------------------------+

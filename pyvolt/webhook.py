@@ -276,7 +276,7 @@ class BaseWebhook(Base):
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`.MessageInteractions.reactions` elements was invalid.             |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` and :attr:`.MessageInteractions.reactions` was empty. |
+            | ``InvalidProperty``    | :attr:`.MessageInteractions.restrict_reactions` was ``True`` but :attr:`.MessageInteractions.reactions` was empty. |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``PayloadTooLarge``    | The message was too large.                                                                                         |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
