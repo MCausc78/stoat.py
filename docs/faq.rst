@@ -43,3 +43,9 @@ Why my :attr:`pyvolt.Server.members` is empty/does not match reality?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You either disabled member cache, or did not setup chunking. See `this page <ext/chunking/index.rst>` for how to do this.
+
+Why :attr:`pyvolt.Client.servers` is empty when I access it through :class:`~pyvolt.ReadyEvent`?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Unlike discord.py, this library does not populate cache during dispatching an event. Consider using
+:attr:`pyvolt.ReadyEvent.servers` to retrieve servers in :class:`~pyvolt.ReadyEvent`.
