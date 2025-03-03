@@ -122,6 +122,7 @@ class DataEditServer(typing.TypedDict):
     flags: typing_extensions.NotRequired[int]
     discoverable: typing_extensions.NotRequired[bool]
     analytics: typing_extensions.NotRequired[bool]
+    owner: typing_extensions.NotRequired[str]
     remove: typing_extensions.NotRequired[list[FieldsServer]]
 
 

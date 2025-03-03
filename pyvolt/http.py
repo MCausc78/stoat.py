@@ -5865,6 +5865,7 @@ class HTTPClient:
         flags: UndefinedOr[ServerFlags] = UNDEFINED,
         discoverable: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
+        owner: UndefinedOr[typing.Union[str, BaseUser, BaseMember]] = UNDEFINED,
     ) -> Server:
         """|coro|
 
@@ -5898,6 +5899,12 @@ class HTTPClient:
             The new server flags. You must be a privileged user to provide this.
         analytics: UndefinedOr[:class:`bool`]
             Whether analytics should be collected for this server. Must be enabled in order to show up on `Revolt Discover <https://rvlt.gg>`_.
+        owner: UndefinedOr[Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]]
+            The member to transfer ownership to.
+
+            You must own the server, or be a privileged user to provide this.
+
+            The target user must be not a bot.
 
         Raises
         ------
@@ -5922,13 +5929,15 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+---------------------------------------------------------------------------------------+
-            | Value                 | Reason                                                                                |
-            +-----------------------+---------------------------------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to edit server details.                        |
-            +-----------------------+---------------------------------------------------------------------------------------+
-            | ``NotPrivileged``     | You provided ``discoverable`` or ``flags`` parameters and you wasn't privileged user. |
-            +-----------------------+---------------------------------------------------------------------------------------+
+            +-----------------------+-------------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                    |
+            +-----------------------+-------------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit server details.                            |
+            +-----------------------+-------------------------------------------------------------------------------------------+
+            | ``NotOwner``          | You provided ``owner`` parameter and you didn't own the server or wasn't privileged user. |
+            +-----------------------+-------------------------------------------------------------------------------------------+
+            | ``NotPrivileged``     | You provided ``discoverable`` or ``flags`` parameters and you wasn't privileged user.     |
+            +-----------------------+-------------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5998,6 +6007,9 @@ class HTTPClient:
 
         if analytics is not UNDEFINED:
             payload['analytics'] = analytics
+
+        if owner is not UNDEFINED:
+            payload['owner'] = _resolve_member_id(owner)
 
         if len(remove) > 0:
             payload['remove'] = remove
