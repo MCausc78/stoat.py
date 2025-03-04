@@ -172,7 +172,7 @@ class MemberConverter(IDConverter[pyvolt.Member]):
 
     1. Lookup by ID.
     2. Lookup by mention.
-    3. Lookup by username#discriminator (deprecated).
+    3. Lookup by username#discriminator.
     5. Lookup by user name.
     6. Lookup by global name.
     7. Lookup by server nickname.
@@ -332,10 +332,9 @@ class UserConverter(IDConverter[pyvolt.User]):
 
     1. Lookup by ID.
     2. Lookup by mention.
-    3. Lookup by username#discriminator (deprecated).
-    4. Lookup by username#0 (deprecated, only gets users that migrated from their discriminator).
-    5. Lookup by user name.
-    6. Lookup by global name.
+    3. Lookup by username#discriminator.
+    4. Lookup by user name.
+    5. Lookup by global name.
     """
 
     async def convert(self, ctx: Context[BotT], argument: str, /) -> pyvolt.User:
@@ -371,7 +370,7 @@ class UserConverter(IDConverter[pyvolt.User]):
         if not username:
             discriminator, username = username, discriminator
 
-        if discriminator == '0' or (len(discriminator) == 4 and discriminator.isdigit()):
+        if len(discriminator) == 4 and discriminator.isdigit():
             predicate = lambda u, /: u.name == username and u.discriminator == discriminator
         else:
             predicate = lambda u, /: u.name == argument or u.global_name == argument

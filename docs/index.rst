@@ -24,7 +24,7 @@ Getting Started
 Is this your first time using the library? This is the place to get started!
 
 - **First steps:** :doc:`intro` | :doc:`quickstart` | :doc:`logging`
-- **Working with Revolt:** :doc:`authenticating` | :doc:`server_subscriptions`
+- **Working with Revolt:** :doc:`authenticating` | :doc:`revolt` | :doc:`server_subscriptions`
 - **Examples:** Many examples are available in the :resource:`repository <examples>`
 
 Getting help

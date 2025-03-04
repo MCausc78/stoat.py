@@ -926,6 +926,56 @@ ServerEmojiCacheContext
     :members:
     :inherited-members:
 
+ServerPublicInviteCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerPublicInviteCacheContext
+
+.. autoclass:: ServerPublicInviteCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+GroupPublicInviteCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: GroupPublicInviteCacheContext
+
+.. autoclass:: GroupPublicInviteCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+PrivateBaseInviteCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PrivateBaseInviteCacheContext
+
+.. autoclass:: PrivateBaseInviteCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+GroupInviteCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: GroupInviteCacheContext
+
+.. autoclass:: GroupInviteCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerInviteCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerInviteCacheContext
+
+.. autoclass:: ServerInviteCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 BaseMessageCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1432,6 +1482,96 @@ ServerThroughServerEmojiServerCacheContext
 .. attributetable:: ServerThroughServerEmojiServerCacheContext
 
 .. autoclass:: ServerThroughServerEmojiServerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughServerPublicInviteServerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughServerPublicInviteServerCacheContext
+
+.. autoclass:: ServerThroughServerPublicInviteServerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughServerPublicInviteChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughServerPublicInviteChannelCacheContext
+
+.. autoclass:: ChannelThroughServerPublicInviteChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughServerPublicInviteUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughServerPublicInviteUserCacheContext
+
+.. autoclass:: UserThroughServerPublicInviteUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughGroupPublicInviteChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughGroupPublicInviteChannelCacheContext
+
+.. autoclass:: ChannelThroughGroupPublicInviteChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughGroupPublicInviteUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughGroupPublicInviteUserCacheContext
+
+.. autoclass:: UserThroughGroupPublicInviteUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughPrivateBaseInviteCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughPrivateBaseInviteCreatorCacheContext
+
+.. autoclass:: UserThroughPrivateBaseInviteCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughGroupInviteChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughGroupInviteChannelCacheContext
+
+.. autoclass:: ChannelThroughGroupInviteChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughServerInviteServerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughServerInviteServerCacheContext
+
+.. autoclass:: ServerThroughServerInviteServerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughServerInviteChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughServerInviteChannelCacheContext
+
+.. autoclass:: ChannelThroughServerInviteChannelCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

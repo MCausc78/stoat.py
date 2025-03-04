@@ -21,7 +21,7 @@ Creating a Bot account is a pretty straightforward process.
 
 4. Give the bot a name and click "Create".
 
-    .. image:: /images/revolt_create_app_form.png
+    .. image:: /images/revolt_create_bot_form.png
         :alt: The new bot form filled in.
 
 5. Click on the "Edit" button to configure bot's profile.

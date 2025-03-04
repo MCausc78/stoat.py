@@ -27,11 +27,29 @@ from __future__ import annotations
 from attrs import define, field
 import typing
 
+from .cache import (
+    CacheContextType,
+    ServerThroughServerPublicInviteServerCacheContext,
+    ChannelThroughServerPublicInviteChannelCacheContext,
+    ChannelThroughGroupPublicInviteChannelCacheContext,
+    UserThroughPrivateBaseInviteCreatorCacheContext,
+    ChannelThroughGroupInviteChannelCacheContext,
+    ServerThroughServerInviteServerCacheContext,
+    ChannelThroughServerInviteChannelCacheContext,
+    _SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER,
+    _CHANNEL_THROUGH_SERVER_PUBLIC_INVITE_CHANNEL,
+    _CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL,
+    _USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR,
+    _CHANNEL_THROUGH_GROUP_INVITE_CHANNEL,
+    _SERVER_THROUGH_SERVER_INVITE_SERVER,
+    _CHANNEL_THROUGH_SERVER_INVITE_CHANNEL,
+)
+from .channel import GroupChannel, ServerChannel
 from .cdn import StatelessAsset, Asset
+from .errors import NoData
 from .flags import ServerFlags
 
 if typing.TYPE_CHECKING:
-    from .channel import GroupChannel
     from .server import Server
     from .state import State
     from .user import User
@@ -258,6 +276,49 @@ class ServerPublicInvite(BaseInvite):
     member_count: int = field(repr=True, kw_only=True)
     """:class:`int`: The count of members in target server."""
 
+    def get_server(self) -> typing.Optional[Server]:
+        """Optional[:class:`.Server`]: The server this invite points to."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ServerThroughServerPublicInviteServerCacheContext(
+                type=CacheContextType.server_through_server_public_invite_server,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerPublicInvite.server')
+            else _SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER
+        )
+
+        return cache.get_server(self.server_id, ctx)
+
+    def get_channel(self) -> typing.Optional[ServerChannel]:
+        """Optional[:class:`.ServerChannel`]: The destination channel."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelThroughServerPublicInviteChannelCacheContext(
+                type=CacheContextType.channel_through_server_public_invite_channel,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerPublicInvite.channel')
+            else _CHANNEL_THROUGH_SERVER_PUBLIC_INVITE_CHANNEL
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is not None:
+            assert isinstance(channel, ServerChannel)
+        return channel
+
     def get_user(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: The (guessed) user who created this invite.
 
@@ -287,6 +348,18 @@ class ServerPublicInvite(BaseInvite):
         return None
 
     @property
+    def server(self) -> Server:
+        """:class:`.Server`: The server this invite points to."""
+
+        server = self.get_server()
+        if server is None:
+            raise NoData(
+                what=self.server_id,
+                type='ServerPublicInvite.server',
+            )
+        return server
+
+    @property
     def server_flags(self) -> ServerFlags:
         """:class:`.ServerFlags`: The server's flags."""
         ret = _new_server_flags(ServerFlags)
@@ -302,6 +375,33 @@ class ServerPublicInvite(BaseInvite):
     def server_banner(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The banner of the server."""
         return self.internal_server_banner and self.internal_server_banner.attach_state(self.state, 'banners')
+
+    @property
+    def channel(self) -> ServerChannel:
+        """:class:`.ServerChannel`: The destination channel."""
+
+        channel = self.get_channel()
+        if channel is None:
+            raise NoData(
+                what=self.channel_id,
+                type='ServerPublicInvite.channel',
+            )
+        return channel
+
+    @property
+    def user(self) -> User:
+        """:class:`.User`: The (guessed) user who created this invite.
+
+        This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
+        """
+
+        user = self.get_user()
+        if user is None:
+            raise NoData(
+                what='',
+                type='ServerPublicInvite.user',
+            )
+        return user
 
     @property
     def user_avatar(self) -> typing.Optional[Asset]:
@@ -400,6 +500,84 @@ class GroupPublicInvite(BaseInvite):
     internal_user_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The user's stateless avatar who created this invite."""
 
+    def get_channel(self) -> typing.Optional[GroupChannel]:
+        """Optional[:class:`.GroupChannel`]: The destination channel."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelThroughGroupPublicInviteChannelCacheContext(
+                type=CacheContextType.channel_through_group_public_invite_channel,
+                invite=self,
+            )
+            if state.provide_cache_context('GroupPublicInvite.channel')
+            else _CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is not None:
+            assert isinstance(channel, GroupChannel)
+        return channel
+
+    def get_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The (guessed) user who created this invite.
+
+        This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
+        """
+        cache = self.state.cache
+        if cache is None:
+            return None
+
+        user_name = self.user_name
+        user_avatar_id = None if self.internal_user_avatar is None else self.internal_user_avatar.id
+
+        predicate = (
+            (lambda user, /: user.name == user_name and user.internal_avatar is None)
+            if user_avatar_id is None
+            else (
+                lambda user, /: user.name == user_name
+                and user.internal_avatar is not None
+                and user.internal_avatar.id == user_avatar_id
+            )
+        )
+
+        for user in cache.get_users_mapping().values():
+            if predicate(user):
+                return user
+
+        return None
+
+    @property
+    def channel(self) -> GroupChannel:
+        """:class:`.GroupChannel`: The destination channel."""
+
+        channel = self.get_channel()
+        if channel is None:
+            raise NoData(
+                what=self.channel_id,
+                type='GroupPublicInvite.channel',
+            )
+        return channel
+
+    @property
+    def user(self) -> User:
+        """:class:`.User`: The (guessed) user who created this invite.
+
+        This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
+        """
+
+        user = self.get_user()
+        if user is None:
+            raise NoData(
+                what='',
+                type='GroupPublicInvite.user',
+            )
+        return user
+
     @property
     def user_avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
@@ -491,13 +669,79 @@ class PrivateBaseInvite(BaseInvite):
     creator_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who created this invite."""
 
+    def get_creator(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who created this invite."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughPrivateBaseInviteCreatorCacheContext(
+                type=CacheContextType.user_through_private_base_invite_creator,
+                invite=self,
+            )
+            if state.provide_cache_context('PrivateBaseInvite.creator')
+            else _USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR
+        )
+
+        return cache.get_user(self.creator_id, ctx)
+
+    @property
+    def creator(self) -> User:
+        """:class:`.User`: The user who created this invite."""
+
+        creator = self.get_creator()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='PrivateBaseInvite.creator',
+            )
+        return creator
+
 
 @define(slots=True)
 class GroupInvite(PrivateBaseInvite):
     """Represents a group invite on Revolt."""
 
     channel_id: str = field(repr=True, kw_only=True)
-    """:class:`str`: The group's ID this invite points to."""
+    """:class:`str`: The group channel's ID this invite points to."""
+
+    def get_channel(self) -> typing.Optional[GroupChannel]:
+        """Optional[:class:`.GroupChannel`]: The group channel this invite points to."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelThroughGroupInviteChannelCacheContext(
+                type=CacheContextType.channel_through_group_invite_channel,
+                invite=self,
+            )
+            if state.provide_cache_context('GroupInvite.channel')
+            else _CHANNEL_THROUGH_GROUP_INVITE_CHANNEL
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is not None:
+            assert isinstance(channel, GroupChannel)
+        return channel
+
+    @property
+    def channel(self) -> GroupChannel:
+        """:class:`.GroupChannel`: The group channel this invite points to."""
+
+        channel = self.get_channel()
+        if channel is None:
+            raise NoData(
+                what=self.channel_id,
+                type='GroupInvite.channel',
+            )
+        return channel
 
     async def accept(self) -> GroupChannel:
         """|coro|
@@ -575,7 +819,74 @@ class ServerInvite(PrivateBaseInvite):
     """:class:`str`: The server's ID this invite points to."""
 
     channel_id: str = field(repr=True, kw_only=True)
-    """:class:`str`: The channel's ID this invite points to."""
+    """:class:`str`: The server channel's ID this invite points to."""
+
+    def get_server(self) -> typing.Optional[Server]:
+        """Optional[:class:`.Server`]: The server this invite points to."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ServerThroughServerInviteServerCacheContext(
+                type=CacheContextType.server_through_server_invite_server,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerInvite.server')
+            else _SERVER_THROUGH_SERVER_INVITE_SERVER
+        )
+
+        return cache.get_server(self.server_id, ctx)
+
+    def get_channel(self) -> typing.Optional[ServerChannel]:
+        """Optional[:class:`.ServerChannel`]: The server channel this invite points to."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelThroughServerInviteChannelCacheContext(
+                type=CacheContextType.channel_through_server_invite_channel,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerInvite.channel')
+            else _CHANNEL_THROUGH_SERVER_INVITE_CHANNEL
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is not None:
+            assert isinstance(channel, ServerChannel)
+        return channel
+
+    @property
+    def server(self) -> Server:
+        """:class:`.Server`: The server this invite points to."""
+
+        server = self.get_server()
+        if server is None:
+            raise NoData(
+                what=self.server_id,
+                type='ServerInvite.server',
+            )
+        return server
+
+    @property
+    def channel(self) -> ServerChannel:
+        """:class:`.ServerChannel`: The server channel this invite points to."""
+
+        channel = self.get_channel()
+        if channel is None:
+            raise NoData(
+                what=self.channel_id,
+                type='ServerInvite.channel',
+            )
+        return channel
 
     async def accept(self) -> Server:
         """|coro|

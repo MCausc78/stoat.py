@@ -95,6 +95,13 @@ if typing.TYPE_CHECKING:
         UserVoiceStateUpdateEvent,
         AuthenticatedEvent,
     )
+    from .invite import (
+        ServerPublicInvite,
+        GroupPublicInvite,
+        PrivateBaseInvite,
+        GroupInvite,
+        ServerInvite,
+    )
     from .message import (
         BaseMessage,
         StatelessUserAddedSystemEvent,
@@ -195,7 +202,15 @@ class CacheContextType(Enum):
     )
     user_through_base_emoji_creator = 'BaseEmoji.creator: User'
     server_through_server_emoji_server = 'ServerEmoji.server: Server'
-    # TODO: Invite
+    server_through_server_public_invite_server = 'ServerPublicInvite.server: Server'
+    channel_through_server_public_invite_channel = 'ServerPublicInvite.channel: ServerChannel'
+    user_through_server_public_invite_user = 'ServerPublicInvite.user: User'
+    channel_through_group_public_invite_channel = 'GroupPublicInvite.channel: GroupChannel'
+    user_through_group_public_invite_user = 'GroupPublicInvite.user: User'
+    user_through_private_base_invite_creator = 'PrivateBaseInvite.creator: User'
+    channel_through_group_invite_channel = 'GroupInvite.channel: GroupChannel'
+    server_through_server_invite_server = 'ServerInvite.server: Server'
+    channel_through_server_invite_channel = 'ServerInvite.channel: ServerChannel'
     user_through_user_added_system_event_user = 'UserAddedSystemEvent.user: User'
     user_through_user_added_system_event_by = 'UserAddedSystemEvent.by: User'
     user_through_user_removed_system_event_user = 'UserRemovedSystemEvent.user: User'
@@ -684,6 +699,46 @@ class ServerEmojiCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class ServerPublicInviteCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.ServerPublicInvite` entity."""
+
+    invite: ServerPublicInvite = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerPublicInvite`: The invite involved."""
+
+
+@define(slots=True)
+class GroupPublicInviteCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.GroupPublicInvite` entity."""
+
+    invite: GroupPublicInvite = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.GroupPublicInvite`: The invite involved."""
+
+
+@define(slots=True)
+class PrivateBaseInviteCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.PrivateBaseInvite` entity."""
+
+    invite: PrivateBaseInvite = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.PrivateBaseInvite`: The invite involved."""
+
+
+@define(slots=True)
+class GroupInviteCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.GroupInvite` entity."""
+
+    invite: GroupInvite = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.GroupInvite`: The invite involved."""
+
+
+@define(slots=True)
+class ServerInviteCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.ServerInvite` entity."""
+
+    invite: ServerInvite = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerInvite`: The invite involved."""
+
+
+@define(slots=True)
 class BaseMessageCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.BaseMessage` entity."""
 
@@ -1076,6 +1131,51 @@ class ServerThroughServerEmojiServerCacheContext(ServerEmojiCacheContext):
 
 
 @define(slots=True)
+class ServerThroughServerPublicInviteServerCacheContext(ServerPublicInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerPublicInvite`, wishing to retrieve destination server."""
+
+
+@define(slots=True)
+class ChannelThroughServerPublicInviteChannelCacheContext(ServerPublicInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerPublicInvite`, wishing to retrieve destination channel."""
+
+
+@define(slots=True)
+class UserThroughServerPublicInviteUserCacheContext(ServerPublicInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerPublicInvite`, wishing to retrieve invite's creator."""
+
+
+@define(slots=True)
+class ChannelThroughGroupPublicInviteChannelCacheContext(GroupPublicInviteCacheContext):
+    """Represents a cache context that involves an :class:`.GroupPublicInviteCacheContext`, wishing to retrieve destination group channel."""
+
+
+@define(slots=True)
+class UserThroughGroupPublicInviteUserCacheContext(GroupPublicInviteCacheContext):
+    """Represents a cache context that involves an :class:`.GroupPublicInviteCacheContext`, wishing to retrieve invite's creator.."""
+
+
+@define(slots=True)
+class UserThroughPrivateBaseInviteCreatorCacheContext(PrivateBaseInviteCacheContext):
+    """Represents a cache context that involves an :class:`.PrivateBaseInviteCacheContext`, wishing to retrieve invite's creator."""
+
+
+@define(slots=True)
+class ChannelThroughGroupInviteChannelCacheContext(GroupInviteCacheContext):
+    """Represents a cache context that involves an :class:`.GroupInviteCacheContext`, wishing to retrieve destination group channel."""
+
+
+@define(slots=True)
+class ServerThroughServerInviteServerCacheContext(ServerInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerInviteCacheContext`, wishing to retrieve destination server."""
+
+
+@define(slots=True)
+class ChannelThroughServerInviteChannelCacheContext(ServerInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerInviteCacheContext`, wishing to retrieve destination server channel."""
+
+
+@define(slots=True)
 class ChannelThroughReadStateChannelCacheContext(ReadStateCacheContext):
     """Represents a cache context that involves an :class:`.ReadState`, wishing to retrieve read state's channel."""
 
@@ -1337,6 +1437,33 @@ _USER_THROUGH_BASE_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = Undefine
 _SERVER_THROUGH_SERVER_EMOJI_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_server_emoji_server,
 )
+_SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_server_public_invite_server,
+)
+_CHANNEL_THROUGH_SERVER_PUBLIC_INVITE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_server_public_invite_channel,
+)
+_USER_THROUGH_SERVER_PUBLIC_INVITE_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_server_public_invite_user,
+)
+_CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_group_public_invite_channel,
+)
+_USER_THROUGH_GROUP_PUBLIC_INVITE_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_group_public_invite_user,
+)
+_USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_private_base_invite_creator,
+)
+_CHANNEL_THROUGH_GROUP_INVITE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_group_invite_channel,
+)
+_SERVER_THROUGH_SERVER_INVITE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_server_invite_server,
+)
+_CHANNEL_THROUGH_SERVER_INVITE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_server_invite_channel,
+)
 _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_user_added_system_event_user,
 )
@@ -1511,6 +1638,15 @@ ProvideCacheContextIn = typing.Literal[
     'VoiceChannel.voice_states',
     'BaseEmoji.creator',
     'ServerEmoji.server',
+    'ServerPublicInvite.server',
+    'ServerPublicInvite.channel',
+    'ServerPublicInvite.user',
+    'GroupPublicInvite.channel',
+    'GroupPublicInvite.user',
+    'PrivateBaseInvite.creator',
+    'GroupInvite.channel',
+    'ServerInvite.server',
+    'ServerInvite.channel',
     'UserAddedSystemEvent.user',
     'UserAddedSystemEvent.by',
     'UserRemovedSystemEvent.user',
@@ -2920,6 +3056,11 @@ __all__ = (
     'GroupChannelCacheContext',
     'BaseEmojiCacheContext',
     'ServerEmojiCacheContext',
+    'ServerPublicInviteCacheContext',
+    'GroupPublicInviteCacheContext',
+    'PrivateBaseInviteCacheContext',
+    'GroupInviteCacheContext',
+    'ServerInviteCacheContext',
     'BaseMessageCacheContext',
     'MessageCacheContext',
     'ReadStateCacheContext',
@@ -2972,6 +3113,15 @@ __all__ = (
     'ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext',
     'UserThroughBaseEmojiCreatorCacheContext',
     'ServerThroughServerEmojiServerCacheContext',
+    'ServerThroughServerPublicInviteServerCacheContext',
+    'ChannelThroughServerPublicInviteChannelCacheContext',
+    'UserThroughServerPublicInviteUserCacheContext',
+    'ChannelThroughGroupPublicInviteChannelCacheContext',
+    'UserThroughGroupPublicInviteUserCacheContext',
+    'UserThroughPrivateBaseInviteCreatorCacheContext',
+    'ChannelThroughGroupInviteChannelCacheContext',
+    'ServerThroughServerInviteServerCacheContext',
+    'ChannelThroughServerInviteChannelCacheContext',
     'ChannelThroughReadStateChannelCacheContext',
     'EmojiThroughServerGetterCacheContext',
     'MemberThroughServerGetterCacheContext',
@@ -3051,6 +3201,15 @@ __all__ = (
     '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES',
     '_USER_THROUGH_BASE_EMOJI_CREATOR',
     '_SERVER_THROUGH_SERVER_EMOJI_SERVER',
+    '_SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER',
+    '_CHANNEL_THROUGH_SERVER_PUBLIC_INVITE_CHANNEL',
+    '_USER_THROUGH_SERVER_PUBLIC_INVITE_USER',
+    '_CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL',
+    '_USER_THROUGH_GROUP_PUBLIC_INVITE_USER',
+    '_USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR',
+    '_CHANNEL_THROUGH_GROUP_INVITE_CHANNEL',
+    '_SERVER_THROUGH_SERVER_INVITE_SERVER',
+    '_CHANNEL_THROUGH_SERVER_INVITE_CHANNEL',
     '_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER',
     '_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_BY',
     '_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER',
