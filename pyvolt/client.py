@@ -32,8 +32,25 @@ import typing
 
 import aiohttp
 
-from . import cache as caching, utils
-from .cache import Cache, MapCache
+from . import utils
+from .cache import (
+    CacheContextType,
+    ClientCacheContext,
+    _CHANNELS_THROUGH_CLIENT_GETTER,
+    _EMOJIS_THROUGH_CLIENT_GETTER,
+    _SERVERS_THROUGH_CLIENT_GETTER,
+    _USERS_THROUGH_CLIENT_GETTER,
+    _USER_IDS_THROUGH_CLIENT_DM_CHANNELS,
+    _CHANNELS_THROUGH_CLIENT_DM_CHANNELS,
+    _CHANNELS_THROUGH_CLIENT_PRIVATE_CHANNELS,
+    _CHANNEL_THROUGH_CLIENT_GETTER,
+    _EMOJI_THROUGH_CLIENT_GETTER,
+    _READ_STATE_THROUGH_CLIENT_GETTER,
+    _SERVER_THROUGH_CLIENT_GETTER,
+    _USER_THROUGH_CLIENT_GETTER,
+    Cache,
+    MapCache,
+)
 from .cdn import CDNClient
 from .channel import SavedMessagesChannel, DMChannel, GroupChannel, Channel
 from .core import (
@@ -1332,54 +1349,125 @@ class Client:
     @property
     def channels(self) -> Mapping[str, Channel]:
         """Mapping[:class:`str`, :class:`~pyvolt.Channel`]: Mapping of cached channels."""
-        cache = self._state.cache
+        state = self.state
+        cache = state.cache
+
         if cache is None:
             return {}
-        return cache.get_channels_mapping()
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.channels_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.channels')
+            else _CHANNELS_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_channels_mapping(ctx)
 
     @property
     def emojis(self) -> Mapping[str, Emoji]:
         """Mapping[:class:`str`, :class:`~pyvolt.Emoji`]: Mapping of cached emojis."""
-        cache = self._state.cache
+        state = self.state
+        cache = state.cache
+
         if cache is None:
             return {}
-        return cache.get_emojis_mapping()
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.emojis_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.emojis')
+            else _EMOJIS_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_emojis_mapping(ctx)
 
     @property
     def servers(self) -> Mapping[str, Server]:
         """Mapping[:class:`str`, :class:`~pyvolt.Server`]: Mapping of cached servers."""
-        cache = self._state.cache
+        state = self.state
+        cache = state.cache
+
         if cache is None:
             return {}
-        return cache.get_servers_mapping()
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.servers_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.servers')
+            else _SERVERS_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_servers_mapping(ctx)
 
     @property
     def users(self) -> Mapping[str, User]:
         """Mapping[:class:`str`, :class:`~pyvolt.User`]: Mapping of cached users."""
-        cache = self._state.cache
+        state = self.state
+        cache = state.cache
+
         if cache is None:
             return {}
-        return cache.get_users_mapping()
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.users_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.users')
+            else _USERS_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_users_mapping(ctx)
 
     @property
     def dm_channel_ids(self) -> Mapping[str, str]:
         """Mapping[:class:`str`, :class:`str`]: Mapping of user IDs to cached DM channel IDs."""
-        cache = self._state.cache
+        state = self.state
+        cache = state.cache
+
         if cache is None:
             return {}
-        return cache.get_private_channels_by_users_mapping()
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.user_ids_through_client_dm_channel_ids,
+                client=self,
+            )
+            if state.provide_cache_context('Client.dm_channel_ids')
+            else _USER_IDS_THROUGH_CLIENT_DM_CHANNELS
+        )
+
+        return cache.get_private_channels_by_users_mapping(ctx)
 
     @property
     def dm_channels(self) -> Mapping[str, DMChannel]:
         """Mapping[:class:`str`, :class:`~pyvolt.DMChannel`]: Mapping of user IDs to cached DM channels."""
 
-        cache = self._state.cache
+        state = self.state
+        cache = state.cache
+
         if cache is None:
             return {}
 
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.channels_through_client_dm_channels,
+                client=self,
+            )
+            if state.provide_cache_context('Client.dm_channels')
+            else _CHANNELS_THROUGH_CLIENT_DM_CHANNELS
+        )
+
         result: dict[str, DMChannel] = {}
-        for k, v in self.dm_channel_ids.items():
-            channel = cache.get_channel(v, caching._USER_REQUEST)
+        for k, v in cache.get_private_channels_by_users_mapping(ctx).items():
+            channel = cache.get_channel(v, ctx)
             if channel and isinstance(channel, DMChannel):
                 result[k] = channel
         return result
@@ -1387,10 +1475,22 @@ class Client:
     @property
     def private_channels(self) -> Mapping[str, typing.Union[DMChannel, GroupChannel]]:
         """Mapping[:class:`str`, Union[:class:`~pyvolt.DMChannel`, :class:`~pyvolt.GroupChannel`]]: Mapping of channel IDs to private channels."""
-        cache = self._state.cache
+        state = self.state
+        cache = state.cache
+
         if cache is None:
             return {}
-        return cache.get_private_channels_mapping()
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.channels_through_client_private_channels,
+                client=self,
+            )
+            if state.provide_cache_context('Client.private_channels')
+            else _CHANNELS_THROUGH_CLIENT_PRIVATE_CHANNELS
+        )
+
+        return cache.get_private_channels_mapping(ctx)
 
     @property
     def ordered_private_channels_old(self) -> list[typing.Union[DMChannel, GroupChannel]]:
@@ -1415,9 +1515,22 @@ class Client:
         Optional[:class:`~pyvolt.Channel`]
             The channel or ``None`` if not found.
         """
-        cache = self._state.cache
-        if cache:
-            return cache.get_channel(channel_id, caching._USER_REQUEST)
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.channel_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.get_channel()')
+            else _CHANNEL_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_channel(channel_id, ctx)
 
     async def fetch_channel(self, channel_id: str, /) -> Channel:
         """|coro|
@@ -1481,9 +1594,22 @@ class Client:
         Optional[:class:`~pyvolt.Emoji`]
             The emoji or ``None`` if not found.
         """
-        cache = self._state.cache
-        if cache:
-            return cache.get_emoji(emoji_id, caching._USER_REQUEST)
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.emoji_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.get_emoji()')
+            else _EMOJI_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_emoji(emoji_id, ctx)
 
     async def fetch_emoji(self, emoji_id: str, /) -> Emoji:
         """|coro|
@@ -1529,9 +1655,22 @@ class Client:
         Optional[:class:`~pyvolt.ReadState`]
             The read state or ``None`` if not found.
         """
-        cache = self._state.cache
-        if cache:
-            return cache.get_read_state(channel_id, caching._USER_REQUEST)
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.read_state_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.get_read_state()')
+            else _READ_STATE_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_read_state(channel_id, ctx)
 
     def get_server(self, server_id: str, /) -> typing.Optional[Server]:
         """Retrieves a server from cache.
@@ -1546,9 +1685,22 @@ class Client:
         Optional[:class:`~pyvolt.Server`]
             The server or ``None`` if not found.
         """
-        cache = self._state.cache
-        if cache:
-            return cache.get_server(server_id, caching._USER_REQUEST)
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.server_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.get_server()')
+            else _SERVER_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_server(server_id, ctx)
 
     async def fetch_server(self, server_id: str, *, populate_channels: typing.Optional[bool] = None) -> Server:
         """|coro|
@@ -1603,9 +1755,22 @@ class Client:
         Optional[:class:`~pyvolt.User`]
             The user or ``None`` if not found.
         """
-        cache = self._state.cache
-        if cache:
-            return cache.get_user(user_id, caching._USER_REQUEST)
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.user_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.get_user()')
+            else _USER_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_user(user_id, ctx)
 
     async def fetch_user(self, user_id: str, /) -> User:
         """|coro|

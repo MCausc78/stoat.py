@@ -25,7 +25,6 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-import logging
 import typing
 
 from attrs import define, field
@@ -48,6 +47,7 @@ if typing.TYPE_CHECKING:
         Channel,
         ChannelVoiceStateContainer,
     )
+    from .client import Client
     from .emoji import BaseEmoji
     from .events import (
         ReadyEvent,
@@ -124,8 +124,6 @@ if typing.TYPE_CHECKING:
     from .webhook import Webhook
     from .user import BaseUser, User
 
-_L = logging.getLogger(__name__)
-
 
 class CacheContextType(Enum):
     custom = 'CUSTOM'
@@ -200,6 +198,19 @@ class CacheContextType(Enum):
     channel_voice_state_container_through_voice_channel_voice_states = (
         'VoiceChannel.voice_states: ChannelVoiceStateContainer'
     )
+
+    channels_through_client_getter = 'Client.channels: Mapping[str, Channel]'
+    emojis_through_client_getter = 'Client.emojis: Mapping[str, Emoji]'
+    servers_through_client_getter = 'Client.servers: Mapping[str, Server]'
+    users_through_client_getter = 'Client.users: Mapping[str, User]'
+    user_ids_through_client_dm_channel_ids = 'Client.dm_channel_ids: Mapping[str, str]'
+    channels_through_client_dm_channels = 'Client.dm_channels: Mapping[str, DMChannel]'
+    channels_through_client_private_channels = 'Client.private_channels: Mapping[str, PrivateChannel]'
+    channel_through_client_getter = 'Client.get_channel(): Optional[Channel]'
+    emoji_through_client_getter = 'Client.get_emoji(): Optional[Emoji]'
+    read_state_through_client_getter = 'Client.get_read_state(): Optional[ReadState]'
+    server_through_client_getter = 'Client.get_server(): Optional[Server]'
+    user_through_client_getter = 'Client.get_user(): Optional[User]'
     user_through_base_emoji_creator = 'BaseEmoji.creator: User'
     server_through_server_emoji_server = 'ServerEmoji.server: Server'
     server_through_server_public_invite_server = 'ServerPublicInvite.server: Server'
@@ -699,6 +710,14 @@ class ServerEmojiCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class ClientCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.Client`."""
+
+    client: Client = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.Client`: The client involved."""
+
+
+@define(slots=True)
 class ServerPublicInviteCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.ServerPublicInvite` entity."""
 
@@ -754,7 +773,6 @@ class MessageCacheContext(EntityCacheContext):
     """:class:`.Message`: The message involved."""
 
 
-# TODOs are in CacheContextType
 @define(slots=True)
 class ReadStateCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.ReadState` entity."""
@@ -1431,6 +1449,43 @@ _CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES: typing.Final[
         type=CacheContextType.channel_voice_state_container_through_voice_channel_voice_states,
     )
 )
+
+_CHANNELS_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channels_through_client_getter,
+)
+_EMOJIS_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.emojis_through_client_getter,
+)
+_SERVERS_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.servers_through_client_getter,
+)
+_USERS_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.users_through_client_getter,
+)
+_USER_IDS_THROUGH_CLIENT_DM_CHANNELS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_ids_through_client_dm_channel_ids,
+)
+_CHANNELS_THROUGH_CLIENT_DM_CHANNELS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channels_through_client_dm_channels,
+)
+_CHANNELS_THROUGH_CLIENT_PRIVATE_CHANNELS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channels_through_client_private_channels,
+)
+_CHANNEL_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channels_through_client_private_channels,
+)
+_EMOJI_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.emoji_through_client_getter,
+)
+_READ_STATE_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.read_state_through_client_getter,
+)
+_SERVER_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_client_getter,
+)
+_USER_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_client_getter,
+)
 _USER_THROUGH_BASE_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_base_emoji_creator,
 )
@@ -1638,6 +1693,18 @@ ProvideCacheContextIn = typing.Literal[
     'VoiceChannel.voice_states',
     'BaseEmoji.creator',
     'ServerEmoji.server',
+    'Client.channels',
+    'Client.emojis',
+    'Client.servers',
+    'Client.users',
+    'Client.dm_channel_ids',
+    'Client.dm_channels',
+    'Client.private_channels',
+    'Client.get_channel()',
+    'Client.get_emoji()',
+    'Client.get_read_state()',
+    'Client.get_server()',
+    'Client.get_user()',
     'ServerPublicInvite.server',
     'ServerPublicInvite.channel',
     'ServerPublicInvite.user',
@@ -1722,11 +1789,17 @@ class Cache(ABC):
         ctx: :class:`.BaseCacheContext`
             The context.
         """
-        return list(self.get_channels_mapping().values())
+        return list(self.get_channels_mapping(ctx).values())
 
     @abstractmethod
-    def get_channels_mapping(self) -> Mapping[str, Channel]:
-        """Mapping[:class:`str`, :class:`.Channel`]: Retrieves all available channels as mapping."""
+    def get_channels_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Channel]:
+        """Mapping[:class:`str`, :class:`.Channel`]: Retrieves all available channels as mapping.
+
+        Parameters
+        ----------
+        ctx: :class:`.BaseCacheContext`
+            The context.
+        """
         ...
 
     @abstractmethod
@@ -1757,8 +1830,16 @@ class Cache(ABC):
         ...
 
     @abstractmethod
-    def get_private_channels_mapping(self) -> Mapping[str, typing.Union[DMChannel, GroupChannel]]:
-        """Mapping[:class:`str`, Union[:class:`.DMChannel`, :class:`.GroupChannel`]]: Retrieve all private channels as mapping."""
+    def get_private_channels_mapping(
+        self, ctx: BaseCacheContext, /
+    ) -> Mapping[str, typing.Union[DMChannel, GroupChannel]]:
+        """Mapping[:class:`str`, Union[:class:`.DMChannel`, :class:`.GroupChannel`]]: Retrieve all private channels as mapping.
+
+        Parameters
+        ----------
+        ctx: :class:`.BaseCacheContext`
+            The context.
+        """
         ...
 
     ####################
@@ -1874,11 +1955,17 @@ class Cache(ABC):
         ctx: :class:`.BaseCacheContext`
             The context.
         """
-        return list(self.get_read_states_mapping().values())
+        return list(self.get_read_states_mapping(ctx).values())
 
     @abstractmethod
-    def get_read_states_mapping(self) -> Mapping[str, ReadState]:
-        """Mapping[:class:`str`, :class:`.ReadState`]: Retrieves all available read states as mapping."""
+    def get_read_states_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, ReadState]:
+        """Mapping[:class:`str`, :class:`.ReadState`]: Retrieves all available read states as mapping.
+
+        Parameters
+        ----------
+        ctx: :class:`.BaseCacheContext`
+            The context.
+        """
         ...
 
     @abstractmethod
@@ -1932,11 +2019,17 @@ class Cache(ABC):
         ctx: :class:`.BaseCacheContext`
             The context.
         """
-        return list(self.get_emojis_mapping().values())
+        return list(self.get_emojis_mapping(ctx).values())
 
     @abstractmethod
-    def get_emojis_mapping(self) -> Mapping[str, Emoji]:
-        """Mapping[:class:`str`, :class:`.Emoji`]: Retrieves all available emojis as mapping."""
+    def get_emojis_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Emoji]:
+        """Mapping[:class:`str`, :class:`.Emoji`]: Retrieves all available emojis as mapping.
+
+        Parameters
+        ----------
+        ctx: :class:`.BaseCacheContext`
+            The context.
+        """
         ...
 
     @abstractmethod
@@ -2027,11 +2120,17 @@ class Cache(ABC):
         ctx: :class:`.BaseCacheContext`
             The context.
         """
-        return list(self.get_servers_mapping().values())
+        return list(self.get_servers_mapping(ctx).values())
 
     @abstractmethod
-    def get_servers_mapping(self) -> Mapping[str, Server]:
-        """Mapping[:class:`str`, :class:`.Server`]: Retrieves all available servers as mapping."""
+    def get_servers_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Server]:
+        """Mapping[:class:`str`, :class:`.Server`]: Retrieves all available servers as mapping.
+
+        Parameters
+        ----------
+        ctx: :class:`.BaseCacheContext`
+            The context.
+        """
         ...
 
     @abstractmethod
@@ -2197,8 +2296,14 @@ class Cache(ABC):
         ...
 
     @abstractmethod
-    def get_servers_member_mapping(self) -> Mapping[str, Mapping[str, Member]]:
-        """Mapping[:class:`str`, Mapping[:class:`str`, :class:`.Member`]]: Retrieves all available server members as mapping."""
+    def get_servers_member_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Mapping[str, Member]]:
+        """Mapping[:class:`str`, Mapping[:class:`str`, :class:`.Member`]]: Retrieves all available server members as mapping.
+
+        Parameters
+        ----------
+        ctx: :class:`.BaseCacheContext`
+            The context.
+        """
         ...
 
     #########
@@ -2225,11 +2330,17 @@ class Cache(ABC):
         ctx: :class:`.BaseCacheContext`
             The context.
         """
-        return list(self.get_users_mapping().values())
+        return list(self.get_users_mapping(ctx).values())
 
     @abstractmethod
-    def get_users_mapping(self) -> Mapping[str, User]:
-        """Mapping[:class:`str`, :class:`.User`]: Retrieves all available users as mapping."""
+    def get_users_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, User]:
+        """Mapping[:class:`str`, :class:`.User`]: Retrieves all available users as mapping.
+
+        Parameters
+        ----------
+        ctx: :class:`.BaseCacheContext`
+            The context.
+        """
         ...
 
     @abstractmethod
@@ -2300,11 +2411,17 @@ class Cache(ABC):
         ctx: :class:`.BaseCacheContext`
             The context.
         """
-        return list(self.get_private_channels_by_users_mapping().values())
+        return list(self.get_private_channels_by_users_mapping(ctx).values())
 
     @abstractmethod
-    def get_private_channels_by_users_mapping(self) -> Mapping[str, str]:
-        """Mapping[:class:`str`, :class:`str`]: Retrieves all available DM channel IDs as mapping of user IDs."""
+    def get_private_channels_by_users_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, str]:
+        """Mapping[:class:`str`, :class:`str`]: Retrieves all available DM channel IDs as mapping of user IDs.
+
+        Parameters
+        ----------
+        ctx: :class:`.BaseCacheContext`
+            The context.
+        """
         ...
 
     @abstractmethod
@@ -2351,11 +2468,17 @@ class Cache(ABC):
         ctx: :class:`.BaseCacheContext`
             The context.
         """
-        return list(self.get_channel_voice_states_mapping().values())
+        return list(self.get_channel_voice_states_mapping(ctx).values())
 
     @abstractmethod
-    def get_channel_voice_states_mapping(self) -> Mapping[str, ChannelVoiceStateContainer]:
-        """Mapping[:class:`str`, :class:`.ChannelVoiceStateContainer`]: Retrieves all available channel voice state containers as mapping of channel IDs."""
+    def get_channel_voice_states_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, ChannelVoiceStateContainer]:
+        """Mapping[:class:`str`, :class:`.ChannelVoiceStateContainer`]: Retrieves all available channel voice state containers as mapping of channel IDs.
+
+        Parameters
+        ----------
+        ctx: :class:`.BaseCacheContext`
+            The context.
+        """
         ...
 
     @abstractmethod
@@ -2412,7 +2535,7 @@ class EmptyCache(Cache):
     def get_channel(self, channel_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Channel]:
         return None
 
-    def get_channels_mapping(self) -> dict[str, Channel]:
+    def get_channels_mapping(self, ctx: BaseCacheContext, /) -> dict[str, Channel]:
         return {}
 
     def store_channel(self, channel: Channel, ctx: BaseCacheContext, /) -> None:
@@ -2421,7 +2544,9 @@ class EmptyCache(Cache):
     def delete_channel(self, channel_id: str, ctx: BaseCacheContext, /) -> None:
         pass
 
-    def get_private_channels_mapping(self) -> dict[str, typing.Union[DMChannel, GroupChannel]]:
+    def get_private_channels_mapping(
+        self, ctx: BaseCacheContext, /
+    ) -> dict[str, typing.Union[DMChannel, GroupChannel]]:
         return {}
 
     ####################
@@ -2450,7 +2575,7 @@ class EmptyCache(Cache):
     def get_read_state(self, channel_id: str, ctx: BaseCacheContext, /) -> typing.Optional[ReadState]:
         return None
 
-    def get_read_states_mapping(self) -> dict[str, ReadState]:
+    def get_read_states_mapping(self, ctx: BaseCacheContext, /) -> dict[str, ReadState]:
         return {}
 
     def store_read_state(self, read_state: ReadState, ctx: BaseCacheContext, /) -> None:
@@ -2466,7 +2591,7 @@ class EmptyCache(Cache):
     def get_emoji(self, emoji_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Emoji]:
         return None
 
-    def get_emojis_mapping(self) -> dict[str, Emoji]:
+    def get_emojis_mapping(self, ctx: BaseCacheContext, /) -> dict[str, Emoji]:
         return {}
 
     def get_server_emojis_mapping(
@@ -2495,7 +2620,7 @@ class EmptyCache(Cache):
     def get_server(self, server_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Server]:
         return None
 
-    def get_servers_mapping(self) -> dict[str, Server]:
+    def get_servers_mapping(self, ctx: BaseCacheContext, /) -> dict[str, Server]:
         return {}
 
     def store_server(self, server: Server, ctx: BaseCacheContext, /) -> None:
@@ -2542,7 +2667,7 @@ class EmptyCache(Cache):
     def delete_server_members_of(self, server_id: str, ctx: BaseCacheContext, /) -> None:
         pass
 
-    def get_servers_member_mapping(self) -> Mapping[str, Mapping[str, Member]]:
+    def get_servers_member_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Mapping[str, Member]]:
         return {}
 
     #########
@@ -2552,7 +2677,7 @@ class EmptyCache(Cache):
     def get_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[User]:
         return None
 
-    def get_users_mapping(self) -> dict[str, User]:
+    def get_users_mapping(self, ctx: BaseCacheContext, /) -> dict[str, User]:
         return {}
 
     def store_user(self, user: User, ctx: BaseCacheContext, /) -> None:
@@ -2570,7 +2695,7 @@ class EmptyCache(Cache):
     def get_private_channel_by_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[str]:
         return None
 
-    def get_private_channels_by_users_mapping(self) -> dict[str, str]:
+    def get_private_channels_by_users_mapping(self, ctx: BaseCacheContext, /) -> dict[str, str]:
         return {}
 
     def store_private_channel_by_user(self, channel: DMChannel, ctx: BaseCacheContext, /) -> None:
@@ -2587,7 +2712,7 @@ class EmptyCache(Cache):
     ) -> typing.Optional[ChannelVoiceStateContainer]:
         return None
 
-    def get_channel_voice_states_mapping(self) -> Mapping[str, ChannelVoiceStateContainer]:
+    def get_channel_voice_states_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, ChannelVoiceStateContainer]:
         return {}
 
     def store_channel_voice_state(self, container: ChannelVoiceStateContainer, ctx: BaseCacheContext, /) -> None:
@@ -2727,7 +2852,7 @@ class MapCache(Cache):
     def get_channel(self, channel_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Channel]:
         return self._channels.get(channel_id)
 
-    def get_channels_mapping(self) -> Mapping[str, Channel]:
+    def get_channels_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Channel]:
         return self._channels
 
     def store_channel(self, channel: Channel, ctx: BaseCacheContext, /) -> None:
@@ -2741,7 +2866,9 @@ class MapCache(Cache):
     def delete_channel(self, channel_id: str, ctx: BaseCacheContext, /) -> None:
         self._channels.pop(channel_id, None)
 
-    def get_private_channels_mapping(self) -> Mapping[str, typing.Union[DMChannel, GroupChannel]]:
+    def get_private_channels_mapping(
+        self, ctx: BaseCacheContext, /
+    ) -> Mapping[str, typing.Union[DMChannel, GroupChannel]]:
         return self._private_channels
 
     ####################
@@ -2792,7 +2919,7 @@ class MapCache(Cache):
     def get_read_state(self, channel_id: str, ctx: BaseCacheContext, /) -> typing.Optional[ReadState]:
         return self._read_states.get(channel_id)
 
-    def get_read_states_mapping(self) -> Mapping[str, ReadState]:
+    def get_read_states_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, ReadState]:
         return self._read_states
 
     def store_read_state(self, read_state: ReadState, ctx: BaseCacheContext, /) -> None:
@@ -2813,7 +2940,7 @@ class MapCache(Cache):
     def get_emoji(self, emoji_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Emoji]:
         return self._emojis.get(emoji_id)
 
-    def get_emojis_mapping(self) -> Mapping[str, Emoji]:
+    def get_emojis_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Emoji]:
         return self._emojis
 
     def get_server_emojis_mapping(
@@ -2866,7 +2993,7 @@ class MapCache(Cache):
     def get_server(self, server_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Server]:
         return self._servers.get(server_id)
 
-    def get_servers_mapping(self) -> Mapping[str, Server]:
+    def get_servers_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Server]:
         return self._servers
 
     def store_server(self, server: Server, ctx: BaseCacheContext, /) -> None:
@@ -2941,7 +3068,7 @@ class MapCache(Cache):
     def delete_server_members_of(self, server_id: str, ctx: BaseCacheContext, /) -> None:
         self._server_members.pop(server_id, None)
 
-    def get_servers_member_mapping(self) -> Mapping[str, Mapping[str, Member]]:
+    def get_servers_member_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Mapping[str, Member]]:
         return self._server_members
 
     #########
@@ -2951,7 +3078,7 @@ class MapCache(Cache):
     def get_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[User]:
         return self._users.get(user_id)
 
-    def get_users_mapping(self) -> Mapping[str, User]:
+    def get_users_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, User]:
         return self._users
 
     def store_user(self, user: User, ctx: BaseCacheContext, /) -> None:
@@ -2969,7 +3096,7 @@ class MapCache(Cache):
     def get_private_channel_by_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[str]:
         return self._private_channels_by_user.get(user_id)
 
-    def get_private_channels_by_users_mapping(self) -> Mapping[str, str]:
+    def get_private_channels_by_users_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, str]:
         return self._private_channels_by_user
 
     def store_private_channel_by_user(self, channel: DMChannel, ctx: BaseCacheContext, /) -> None:
@@ -2986,7 +3113,7 @@ class MapCache(Cache):
     ) -> typing.Optional[ChannelVoiceStateContainer]:
         return self._channel_voice_states.get(channel_id)
 
-    def get_channel_voice_states_mapping(self) -> Mapping[str, ChannelVoiceStateContainer]:
+    def get_channel_voice_states_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, ChannelVoiceStateContainer]:
         return self._channel_voice_states
 
     def store_channel_voice_state(self, container: ChannelVoiceStateContainer, ctx: BaseCacheContext, /) -> None:
@@ -3056,6 +3183,7 @@ __all__ = (
     'GroupChannelCacheContext',
     'BaseEmojiCacheContext',
     'ServerEmojiCacheContext',
+    'ClientCacheContext',
     'ServerPublicInviteCacheContext',
     'GroupPublicInviteCacheContext',
     'PrivateBaseInviteCacheContext',
@@ -3199,6 +3327,18 @@ __all__ = (
     '_READ_STATE_THROUGH_TEXT_CHANNEL_READ_STATE',
     '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_TEXT_CHANNEL_VOICE_STATES',
     '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES',
+    '_CHANNELS_THROUGH_CLIENT_GETTER',
+    '_EMOJIS_THROUGH_CLIENT_GETTER',
+    '_SERVERS_THROUGH_CLIENT_GETTER',
+    '_USERS_THROUGH_CLIENT_GETTER',
+    '_USER_IDS_THROUGH_CLIENT_DM_CHANNELS',
+    '_CHANNELS_THROUGH_CLIENT_DM_CHANNELS',
+    '_CHANNELS_THROUGH_CLIENT_PRIVATE_CHANNELS',
+    '_CHANNEL_THROUGH_CLIENT_GETTER',
+    '_EMOJI_THROUGH_CLIENT_GETTER',
+    '_READ_STATE_THROUGH_CLIENT_GETTER',
+    '_SERVER_THROUGH_CLIENT_GETTER',
+    '_USER_THROUGH_CLIENT_GETTER',
     '_USER_THROUGH_BASE_EMOJI_CREATOR',
     '_SERVER_THROUGH_SERVER_EMOJI_SERVER',
     '_SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER',

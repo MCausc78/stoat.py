@@ -31,14 +31,18 @@ from .cache import (
     CacheContextType,
     ServerThroughServerPublicInviteServerCacheContext,
     ChannelThroughServerPublicInviteChannelCacheContext,
+    UserThroughServerPublicInviteUserCacheContext,
     ChannelThroughGroupPublicInviteChannelCacheContext,
+    UserThroughGroupPublicInviteUserCacheContext,
     UserThroughPrivateBaseInviteCreatorCacheContext,
     ChannelThroughGroupInviteChannelCacheContext,
     ServerThroughServerInviteServerCacheContext,
     ChannelThroughServerInviteChannelCacheContext,
     _SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER,
     _CHANNEL_THROUGH_SERVER_PUBLIC_INVITE_CHANNEL,
+    _USER_THROUGH_SERVER_PUBLIC_INVITE_USER,
     _CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL,
+    _USER_THROUGH_GROUP_PUBLIC_INVITE_USER,
     _USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR,
     _CHANNEL_THROUGH_GROUP_INVITE_CHANNEL,
     _SERVER_THROUGH_SERVER_INVITE_SERVER,
@@ -324,7 +328,8 @@ class ServerPublicInvite(BaseInvite):
 
         This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
         """
-        cache = self.state.cache
+        state = self.state
+        cache = state.cache
         if cache is None:
             return None
 
@@ -341,7 +346,16 @@ class ServerPublicInvite(BaseInvite):
             )
         )
 
-        for user in cache.get_users_mapping().values():
+        ctx = (
+            UserThroughServerPublicInviteUserCacheContext(
+                type=CacheContextType.user_through_server_public_invite_user,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerPublicInvite.user')
+            else _USER_THROUGH_SERVER_PUBLIC_INVITE_USER
+        )
+
+        for user in cache.get_users_mapping(ctx).values():
             if predicate(user):
                 return user
 
@@ -528,7 +542,8 @@ class GroupPublicInvite(BaseInvite):
 
         This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
         """
-        cache = self.state.cache
+        state = self.state
+        cache = state.cache
         if cache is None:
             return None
 
@@ -545,7 +560,16 @@ class GroupPublicInvite(BaseInvite):
             )
         )
 
-        for user in cache.get_users_mapping().values():
+        ctx = (
+            UserThroughGroupPublicInviteUserCacheContext(
+                type=CacheContextType.user_through_group_public_invite_user,
+                invite=self,
+            )
+            if state.provide_cache_context('GroupPublicInvite.user')
+            else _USER_THROUGH_GROUP_PUBLIC_INVITE_USER
+        )
+
+        for user in cache.get_users_mapping(ctx).values():
             if predicate(user):
                 return user
 

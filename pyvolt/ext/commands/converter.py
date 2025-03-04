@@ -375,7 +375,13 @@ class UserConverter(IDConverter[pyvolt.User]):
         else:
             predicate = lambda u, /: u.name == argument or u.global_name == argument
 
-        users = cache.get_users_mapping()
+        cache_context = UserConverterCacheContext(
+            type=pyvolt.CacheContextType.custom,
+            argument=argument,
+            context=ctx,
+        )
+
+        users = cache.get_users_mapping(cache_context)
         for user in users.values():
             if predicate(user):
                 return user
@@ -594,9 +600,17 @@ class ServerChannelConverter(IDConverter[pyvolt.ServerChannel]):
             if server is None:
                 if cache is None:
                     raise ChannelNotFound(argument=argument)
-                for channel in cache.get_channels_mapping().values():
+
+                cache_context = cache_context_type(
+                    type=pyvolt.CacheContextType.custom,
+                    argument=argument,
+                    context=ctx,
+                    server_id='',
+                )
+
+                for channel in cache.get_channels_mapping(cache_context).values():
                     if isinstance(channel, type) and channel.name == argument:
-                        return None, channel
+                        return cache_context, channel
             elif cache is None:
                 # I'm unsure how we can get here...
                 channels = server.channels
@@ -605,9 +619,16 @@ class ServerChannelConverter(IDConverter[pyvolt.ServerChannel]):
                         return None, channel
                 raise ChannelNotFound(argument=argument)
             else:
-                for channel in cache.get_channels_mapping().values():
+                cache_context = cache_context_type(
+                    type=pyvolt.CacheContextType.custom,
+                    argument=argument,
+                    context=ctx,
+                    server_id='',
+                )
+
+                for channel in cache.get_channels_mapping(cache_context).values():
                     if isinstance(channel, type) and channel.name == argument:
-                        return None, channel
+                        return cache_context, channel
         elif cache is None:
             raise ChannelNotFound(argument=argument)
         else:
@@ -843,7 +864,17 @@ class EmojiConverter(IDConverter[pyvolt.Emoji]):
                                 result = emoji
                                 break
                     if result is None:
-                        for emoji in cache.get_emojis_mapping().values():
+                        cache_context = (
+                            EmojiConverterCacheContext(
+                                type=pyvolt.CacheContextType.custom,
+                                context=ctx,
+                                argument=argument,
+                            )
+                            if cache_context is None
+                            else cache_context
+                        )
+
+                        for emoji in cache.get_emojis_mapping(cache_context).values():
                             if emoji.name == argument:
                                 result = emoji
                                 break
@@ -851,7 +882,17 @@ class EmojiConverter(IDConverter[pyvolt.Emoji]):
                     # No cache at all...
                     raise EmojiNotFound(argument=argument)
 
-                for emoji in cache.get_emojis_mapping().values():
+                cache_context = (
+                    EmojiConverterCacheContext(
+                        type=pyvolt.CacheContextType.custom,
+                        context=ctx,
+                        argument=argument,
+                    )
+                    if cache_context is None
+                    else cache_context
+                )
+
+                for emoji in cache.get_emojis_mapping(cache_context).values():
                     if emoji.name == argument:
                         result = emoji
                         break
