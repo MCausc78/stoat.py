@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pyvolt-re"
 description = "A Python wrapper for the Revolt API"
-readme = { file = "README.md", content-type = "text/markdown" }
+readme = { file = "README.rst", content-type = "text/x-rst" }
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
 authors = [{ name = "MCausc78" }]
