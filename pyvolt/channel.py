@@ -316,7 +316,7 @@ class PartialChannel(BaseChannel):
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
         r"""UndefinedOr[Optional[:class:`.Asset`]]: The new channel's icon, if applicable. Only for :class:`.GroupChannel` and :class:`.BaseServerChannel`\'s."""
         if self.internal_icon in (None, UNDEFINED):
-            return self.internal_icon
+            return self.internal_icon  # pyright: ignore[reportReturnType]
         return self.internal_icon.attach_state(self.state, 'icons')
 
     @property
