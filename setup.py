@@ -38,4 +38,7 @@ def derive_version() -> str:
     return version
 
 
-setup(version=derive_version())
+with open('README.rst', 'r') as fp:
+    long_description = fp.read()
+
+setup(version=derive_version(), long_description=long_description)
