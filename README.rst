@@ -26,10 +26,10 @@ To install the library, you can just run the following command:
 .. code:: sh
 
     # Linux/macOS
-    python3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+    python3 -m pip install -U pyvolt-re
 
     # Windows
-    py -3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+    py -3 -m pip install -U pyvolt-re
 
 Quick Example
 -------------

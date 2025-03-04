@@ -22,18 +22,18 @@ is not provided. Python 2.7 or lower is not supported. Python 3.9 or lower is no
 Installing
 ----------
 
-You can get the library directly from GitHub: ::
+You can get the library directly from PyPI: ::
 
-    python3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+    python3 -m pip install -U pyvolt-re
 
 If you are using Windows, then the following should be used instead: ::
 
-    py -3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+    py -3 -m pip install -U pyvolt-re
 
 
-To get voice support, you should use ``pyvolt[voice]`` instead of ``pyvolt``, e.g. ::
+To get voice support, you should use ``pyvolt-re[voice]`` instead of ``pyvolt-re``, e.g. ::
 
-    python3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master#egg=pyvolt[voice,speed]
+    python3 -m pip install -U pyvolt-re[voice,speed]
 
 Remember to check your permissions!
 
@@ -72,7 +72,7 @@ However, for the quick and dirty:
 
     .. code-block:: shell
 
-        $ pip install -U git+https://github.com/MCausc78/pyvolt@master
+        $ pip install -U pyvolt-re
 
 Congratulations. You now have a virtual environment all set up.
 
