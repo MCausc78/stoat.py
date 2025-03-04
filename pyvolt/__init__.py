@@ -13,7 +13,7 @@ __title__ = 'pyvolt'
 __author__ = 'MCausc78'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2024-present MCausc78'
-__version__ = '0.8.0a'
+__version__ = '1.0.0'
 
 from . import (
     abc as abc,
@@ -69,10 +69,10 @@ class _VersionInfo(typing.NamedTuple):
 
 
 version_info: typing.Final[_VersionInfo] = _VersionInfo(
-    major=0,
-    minor=8,
+    major=1,
+    minor=0,
     micro=0,
-    releaselevel='alpha',
+    releaselevel='final',
     serial=0,
 )
 
