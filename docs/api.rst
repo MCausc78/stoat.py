@@ -353,7 +353,7 @@ CacheContextType
     .. attribute:: server_member_remove_event
 
         The context relates to :class:`.ServerMemberRemoveEvent` event.
-    .. attribute:: server_role_update_event
+    .. attribute:: raw_server_role_update_event
 
         The context relates to :class:`.RawServerRoleUpdateEvent` event.
     .. attribute:: server_role_delete_event
@@ -375,22 +375,22 @@ CacheContextType
 
         The context relates to :class:`.UserSettingsUpdateEvent` event.
     .. attribute:: webhook_create_event
-        
+
         The context relates to :class:`.WebhookCreateEvent` event.
     .. attribute:: webhook_update_event
-        
+
         The context relates to :class:`.WebhookUpdateEvent` event.
     .. attribute:: webhook_delete_event
-        
+
         The context relates to :class:`.WebhookDeleteEvent` event.
     .. attribute:: session_create_event
-        
+
         The context relates to :class:`.SessionCreateEvent` event.
     .. attribute:: session_delete_event
-        
+
         The context relates to :class:`.SessionDeleteEvent` event.
     .. attribute:: session_delete_all_event
-        
+
         The context relates to :class:`.SessionDeleteAllEvent` event.
     .. attribute:: voice_channel_join_event
 
@@ -407,6 +407,237 @@ CacheContextType
     .. attribute:: authenticated_event
 
         The context relates to :class:`.AuthenticatedEvent` event.
+    .. attribute:: message_through_messageable_getter
+
+        The context comes from :meth:`Messageable.get_message`.
+    .. attribute:: messages_through_messageable_getter
+
+        The context comes from :attr:`Messageable.messages`.
+    .. attribute:: user_through_bot_owner
+
+        The context comes from :attr:`Bot.owner`.
+    .. attribute:: user_through_dm_channel_initiator
+
+        The context comes from :attr:`DMChannel.initiator`.
+    .. attribute:: message_through_dm_channel_last_message
+
+        The context comes from :attr:`DMChannel.last_message`.
+    .. attribute:: read_state_through_dm_channel_read_state
+
+        The context comes from :attr:`DMChannel.read_state`.
+    .. attribute:: user_through_dm_channel_recipient
+
+        The context comes from :attr:`DMChannel.recipient`.
+    .. attribute:: user_through_dm_channel_recipients
+
+        The context comes from :attr:`DMChannel.recipients`.
+    .. attribute:: message_through_group_channel_last_message
+
+        The context comes from :attr:`GroupChannel.last_message`.
+    .. attribute:: user_through_group_channel_owner
+
+        The context comes from :attr:`GroupChannel.owner`.
+    .. attribute:: read_state_through_group_channel_read_state
+
+        The context comes from :attr:`GroupChannel.read_state`.
+    .. attribute:: user_through_group_channel_recipients
+
+        The context comes from :attr:`GroupChannel.recipients`.
+    .. attribute:: server_through_server_channel
+
+        The context comes from :attr:`BaseServerChannel.server`.
+    .. attribute:: message_through_text_channel_last_message
+
+        The context comes from :attr:`TextChannel.last_message`.
+    .. attribute:: read_state_through_text_channel_read_state
+
+        The context comes from :attr:`TextChannel.read_state`.
+    .. attribute:: channel_voice_state_container_through_text_channel_voice_states
+
+        The context comes from :attr:`TextChannel.voice_states`.
+    .. attribute:: channel_voice_state_container_through_voice_channel_voice_states
+
+        The context comes from :attr:`VoiceChannel.voice_states`.
+    .. attribute:: channels_through_client_getter
+
+        The context comes from :attr:`Client.channels`.
+    .. attribute:: emojis_through_client_getter
+
+        The context comes from :attr:`Client.emojis`.
+    .. attribute:: servers_through_client_getter
+
+        The context comes from :attr:`Client.servers`.
+    .. attribute:: users_through_client_getter
+
+        The context comes from :attr:`Client.users`.
+    .. attribute:: user_ids_through_client_dm_channel_ids
+
+        The context comes from :attr:`Client.dm_channel_ids`.
+    .. attribute:: channels_through_client_dm_channels
+
+        The context comes from :attr:`Client.dm_channels`.
+    .. attribute:: channels_through_client_private_channels
+
+        The context comes from :attr:`Client.private_channels`.
+    .. attribute:: channel_through_client_getter
+
+        The context comes from :meth:`Client.get_channel`.
+    .. attribute:: emoji_through_client_getter
+
+        The context comes from :meth:`Client.get_emoji`.
+    .. attribute:: read_state_through_client_getter
+
+        The context comes from :meth:`Client.get_read_state`.
+    .. attribute:: server_through_client_getter
+
+        The context comes from :meth:`Client.get_server`.
+    .. attribute:: user_through_client_getter
+
+        The context comes from :meth:`Client.get_user`.
+    .. attribute:: user_through_base_emoji_creator
+
+        The context comes from :attr:`BaseEmoji.creator`.
+    .. attribute:: server_through_server_emoji_server
+
+        The context comes from :attr:`ServerEmoji.server`.
+    .. attribute:: server_through_server_public_invite_server
+
+        The context comes from :attr:`ServerPublicInvite.server`.
+    .. attribute:: channel_through_server_public_invite_channel
+
+        The context comes from :attr:`ServerPublicInvite.channel`.
+    .. attribute:: user_through_server_public_invite_user
+
+        The context comes from :attr:`ServerPublicInvite.user`.
+    .. attribute:: channel_through_group_public_invite_channel
+
+        The context comes from :attr:`GroupPublicInvite.channel`.
+    .. attribute:: user_through_group_public_invite_user
+
+        The context comes from :attr:`GroupPublicInvite.user`.
+    .. attribute:: user_through_private_base_invite_creator
+
+        The context comes from :attr:`PrivateBaseInvite.creator`.
+    .. attribute:: channel_through_group_invite_channel
+
+        The context comes from :attr:`GroupInvite.channel`.
+    .. attribute:: server_through_server_invite_server
+
+        The context comes from :attr:`ServerInvite.server`.
+    .. attribute:: channel_through_server_invite_channel
+
+        The context comes from :attr:`ServerInvite.channel`.
+    .. attribute:: user_through_user_added_system_event_user
+
+        The context comes from :attr:`UserAddedSystemEvent.user`.
+    .. attribute:: user_through_user_added_system_event_by
+
+        The context comes from :attr:`UserAddedSystemEvent.by`.
+    .. attribute:: user_through_user_removed_system_event_user
+
+        The context comes from :attr:`UserRemovedSystemEvent.user`.
+    .. attribute:: user_through_user_removed_system_event_by
+
+        The context comes from :attr:`UserRemovedSystemEvent.by`.
+    .. attribute:: member_or_user_through_user_joined_system_event_user
+
+        The context comes from :attr:`UserJoinedSystemEvent.user`.
+    .. attribute:: member_or_user_through_user_left_system_event_user
+
+        The context comes from :attr:`UserLeftSystemEvent.user`.
+    .. attribute:: member_or_user_through_user_kicked_system_event_user
+
+        The context comes from :attr:`UserKickedSystemEvent.user`.
+    .. attribute:: member_or_user_through_user_banned_system_event_user
+
+        The context comes from :attr:`UserBannedSystemEvent.user`.
+    .. attribute:: user_through_channel_renamed_system_event_by
+
+        The context comes from :attr:`ChannelRenamedSystemEvent.by`.
+    .. attribute:: user_through_channel_description_changed_system_event_by
+
+        The context comes from :attr:`ChannelDescriptionChangedSystemEvent.by`.
+    .. attribute:: user_through_channel_icon_changed_system_event_by
+
+        The context comes from :attr:`ChannelIconChangedSystemEvent.by`.
+    .. attribute:: user_through_channel_ownership_changed_system_event_from
+
+        The context comes from :attr:`ChannelOwnershipChangedSystemEvent.from_`.
+    .. attribute:: user_through_channel_ownership_changed_system_event_to
+
+        The context comes from :attr:`ChannelOwnershipChangedSystemEvent.to`.
+    .. attribute:: message_through_message_pinned_system_event_pinned_message
+
+        The context comes from :attr:`MessagePinnedSystemEvent.pinned_message`.
+    .. attribute:: member_or_user_through_message_pinned_system_event_by
+
+        The context comes from :attr:`MessagePinnedSystemEvent.by`.
+    .. attribute:: message_through_message_unpinned_system_event_unpinned_message
+
+        The context comes from :attr:`MessageUnpinnedSystemEvent.unpinned_message`.
+    .. attribute:: member_or_user_through_message_unpinned_system_event_by
+
+        The context comes from :attr:`MessageUnpinnedSystemEvent.by`.
+    .. attribute:: user_through_call_started_system_event_by
+
+        The context comes from :attr:`CallStartedSystemEvent.by`.
+    .. attribute:: channel_through_message_channel
+
+        The context comes from :attr:`Message.channel`.
+    .. attribute:: server_through_message_server
+
+        The context comes from :attr:`Message.server`.
+    .. attribute:: member_or_user_through_message_author
+
+        The context comes from :attr:`Message.author`.
+    .. attribute:: channel_through_read_state_channel
+
+        The context comes from :attr:`ReadState.channel`.
+    .. attribute:: server_through_role_server
+
+        The context comes from :attr:`Role.server`.
+    .. attribute:: emoji_through_server_getter
+
+        The context comes from :meth:`Server.get_emoji`.
+    .. attribute:: member_through_server_getter
+
+        The context comes from :meth:`Server.get_member`.
+    .. attribute:: emojis_through_server_getter
+
+        The context comes from :attr:`Server.emojis`.
+    .. attribute:: members_through_server_getter
+
+        The context comes from :attr:`Server.members`.
+    .. attribute:: channel_through_server_getter
+
+        The context comes from :meth:`Server.get_channel`.
+    .. attribute:: channels_through_server_getter
+
+        The context comes from :attr:`Server.channels`.
+    .. attribute:: member_through_server_owner
+
+        The context comes from :attr:`Server.owner`.
+    .. attribute:: server_through_member_server
+
+        The context comes from :attr:`Member.server`.
+    .. attribute:: user_through_member_getter
+
+        The context comes from :attr:`Member.user`.
+    .. attribute:: user_through_user_bot_owner
+
+        The context comes from :attr:`User.bot_owner`.
+    .. attribute:: channel_id_through_user_dm_channel_id
+
+        The context comes from :attr:`User.dm_channel_id`.
+    .. attribute:: channel_through_user_dm_channel
+
+        The context comes from :attr:`User.dm_channel`.
+    .. attribute:: user_through_webhook_creator
+
+        The context comes from :attr:`Webhook.creator`.
+    .. attribute:: channel_through_webhook_channel
+
+        The context comes from :attr:`Webhook.channel`.
 
 BaseCacheContext
 ~~~~~~~~~~~~~~~~
@@ -922,6 +1153,16 @@ ServerEmojiCacheContext
 .. attributetable:: ServerEmojiCacheContext
 
 .. autoclass:: ServerEmojiCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ClientCacheContext
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ClientCacheContext
+
+.. autoclass:: ClientCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
