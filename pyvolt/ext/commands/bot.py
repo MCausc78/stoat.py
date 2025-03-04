@@ -47,6 +47,7 @@ from .errors import (
     ExtensionNotFound,
 )
 from .events import CommandErrorEvent, CommandEvent, CommandCompletionEvent
+from .gear import Gear
 from .view import StringView
 
 if typing.TYPE_CHECKING:
@@ -55,7 +56,6 @@ if typing.TYPE_CHECKING:
 
     from ._types import ContextT, UserCheck
     from .core import Command
-    from .gear import Gear
 
 _L = logging.getLogger(__name__)
 
@@ -275,7 +275,7 @@ class Bot(Client, GroupMixin[None]):
         .. seealso:: The :func:`~pyvolt.ext.commands.check` decorator
 
         Parameters
-        -----------
+        ----------
         func
             The function that was used as a global check.
         call_once: :class:`bool`
@@ -295,7 +295,7 @@ class Bot(Client, GroupMixin[None]):
         if the function is not in the global checks.
 
         Parameters
-        -----------
+        ----------
         func
             The function to remove from the global checks.
         call_once: :class:`bool`
@@ -337,7 +337,7 @@ class Bot(Client, GroupMixin[None]):
         :exc:`.CommandError`.
 
         Example
-        ---------
+        -------
 
         .. code-block:: python3
 
