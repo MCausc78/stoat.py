@@ -1581,7 +1581,7 @@ class Parser:
             invite_only=payload['invite_only'],
             autumn=self.parse_instance_generic_feature(payload['autumn']),
             january=self.parse_instance_generic_feature(payload['january']),
-            voice=self.parse_instance_voice_feature(voice, livekit),
+            voice=self.parse_instance_voice_feature(voice, livekit),  # type: ignore
         )
 
     def parse_instance_generic_feature(self, payload: raw.Feature, /) -> InstanceGenericFeature:

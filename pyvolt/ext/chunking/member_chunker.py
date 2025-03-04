@@ -357,7 +357,7 @@ class MemberChunker:
         if cache is None:
             return
 
-        server_ids = get_mutual_servers(cache, event.user_id)
+        server_ids = get_mutual_servers(cache, event.user_id, event.cache_context)
 
         if len(server_ids) == 0 or (len(server_ids) == 1 and server_ids[0] == event.server_id):
             cache.delete_user(event.user_id, event.cache_context)
@@ -400,10 +400,10 @@ class MemberChunker:
         return data
 
 
-def get_mutual_servers(cache: Cache, user_id: str, /) -> list[str]:
+def get_mutual_servers(cache: Cache, user_id: str, cache_context: BaseCacheContext, /) -> list[str]:
     ret = []
 
-    for server_id, members in cache.get_servers_member_mapping().items():
+    for server_id, members in cache.get_servers_member_mapping(cache_context).items():
         if user_id in members:
             ret.append(server_id)
 

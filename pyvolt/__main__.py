@@ -24,14 +24,9 @@ def show_version() -> None:
 
 
 async def login(email: str, password: str, friendly_name: typing.Optional[str]):
-    session = aiohttp.ClientSession()
-
     state = pyvolt.State()
-    http = pyvolt.HTTPClient(session=session, state=state)
 
-    state.setup(http=http)
-
-    async with session:
+    async with pyvolt.HTTPClient(state=state).attach() as http:
         resp = await http.login_with_email(email, password, friendly_name=friendly_name)
         if isinstance(resp, pyvolt.MFARequired):
             print('--- MFA required. ---')

@@ -503,10 +503,11 @@ class HTTPClient:
         self.token: str = token or ''
         self.user_agent: str = user_agent or DEFAULT_HTTP_USER_AGENT
 
-    async def __aenter__(self) -> None:
+    async def __aenter__(self) -> Self:
         adapter = self.maybe_get_adapter()
         if adapter is not None:
             await adapter.startup()
+        return self
 
     async def __aexit__(self, exc_type, exc_value, tb, /) -> None:
         del exc_type
@@ -515,19 +516,21 @@ class HTTPClient:
 
         await self.cleanup()
 
-    def attach(self, state: State, /) -> Self:
+    def attach(self, state: typing.Optional[State] = None, /) -> Self:
         """Attach this HTTP client to state.
 
         Parameters
         ----------
-        state: :class:`.State`
-            The state to attach this HTTP client to.
+        state: Optional[:class:`.State`]
+            The state to attach this HTTP client to. Defaults to :attr:`.state` if set is ``None``.
 
         Returns
         -------
         Self
             This HTTP client for chaining.
         """
+        if state is None:
+            state = self.state
         state.setup(http=self)
         return self
 

@@ -1136,7 +1136,7 @@ class PartialUser(BaseUser):
     def avatar(self) -> UndefinedOr[typing.Optional[Asset]]:
         """UndefinedOr[Optional[:class:`.Asset`]]: The new user's avatar."""
         if self.internal_avatar in (None, UNDEFINED):
-            return self.internal_avatar
+            return self.internal_avatar  # pyright: ignore[reportReturnType]
         return self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
