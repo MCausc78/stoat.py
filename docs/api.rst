@@ -2885,7 +2885,6 @@ Discover
 
         Sort messages by timestamp in ascending order.
 
-
 .. class:: ContentReportReason
 
     Specifies reason for reporting message or a server.
