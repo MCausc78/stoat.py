@@ -38,8 +38,11 @@ from .cache import (
     ClientCacheContext,
     _CHANNELS_THROUGH_CLIENT_GETTER,
     _EMOJIS_THROUGH_CLIENT_GETTER,
+    _SERVER_MEMBERS_THROUGH_CLIENT_GETTER,
+    _READ_STATES_THROUGH_CLIENT_GETTER,
     _SERVERS_THROUGH_CLIENT_GETTER,
     _USERS_THROUGH_CLIENT_GETTER,
+    _VOICE_STATES_THROUGH_CLIENT_GETTER,
     _USER_IDS_THROUGH_CLIENT_DM_CHANNELS,
     _CHANNELS_THROUGH_CLIENT_DM_CHANNELS,
     _CHANNELS_THROUGH_CLIENT_PRIVATE_CHANNELS,
@@ -52,7 +55,7 @@ from .cache import (
     MapCache,
 )
 from .cdn import CDNClient
-from .channel import SavedMessagesChannel, DMChannel, GroupChannel, Channel
+from .channel import SavedMessagesChannel, DMChannel, GroupChannel, Channel, ChannelVoiceStateContainer
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -62,7 +65,7 @@ from .emoji import Emoji
 from .events import BaseEvent
 from .http import HTTPClient
 from .parser import Parser
-from .server import Server
+from .server import Server, Member
 from .shard import EventHandler, Shard, ShardImpl
 from .state import State
 from .user import BaseUser, User, OwnUser
@@ -1387,6 +1390,46 @@ class Client:
         return cache.get_emojis_mapping(ctx)
 
     @property
+    def members(self) -> Mapping[str, Mapping[str, Member]]:
+        """Mapping[:class:`str`, Mapping[:class:`str`, :class:`~pyvolt.Member`]]: Mapping of cached server members."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return {}
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.server_members_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.members')
+            else _SERVER_MEMBERS_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_servers_member_mapping(ctx)
+
+    @property
+    def read_states(self) -> Mapping[str, ReadState]:
+        """Mapping[:class:`str`, :class:`~pyvolt.ReadState`]: Mapping of cached read states."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return {}
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.read_states_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.read_states')
+            else _READ_STATES_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_read_states_mapping(ctx)
+
+    @property
     def servers(self) -> Mapping[str, Server]:
         """Mapping[:class:`str`, :class:`~pyvolt.Server`]: Mapping of cached servers."""
         state = self.state
@@ -1425,6 +1468,26 @@ class Client:
         )
 
         return cache.get_users_mapping(ctx)
+
+    @property
+    def voice_states(self) -> Mapping[str, ChannelVoiceStateContainer]:
+        """Mapping[:class:`str`, :class:`~pyvolt.ChannelVoiceStateContainer`]: Mapping of cached voice states."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return {}
+
+        ctx = (
+            ClientCacheContext(
+                type=CacheContextType.voice_states_through_client_getter,
+                client=self,
+            )
+            if state.provide_cache_context('Client.voice_states')
+            else _VOICE_STATES_THROUGH_CLIENT_GETTER
+        )
+
+        return cache.get_channel_voice_states_mapping(ctx)
 
     @property
     def dm_channel_ids(self) -> Mapping[str, str]:

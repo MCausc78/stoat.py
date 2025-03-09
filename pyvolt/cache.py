@@ -201,8 +201,11 @@ class CacheContextType(Enum):
 
     channels_through_client_getter = 'Client.channels: Mapping[str, Channel]'
     emojis_through_client_getter = 'Client.emojis: Mapping[str, Emoji]'
+    server_members_through_client_getter = 'Client.members: Mapping[str, Mapping[str, Member]]'
+    read_states_through_client_getter = 'Client.read_states: Mapping[str, ReadState]'
     servers_through_client_getter = 'Client.servers: Mapping[str, Server]'
     users_through_client_getter = 'Client.users: Mapping[str, User]'
+    voice_states_through_client_getter = 'Client.voice_states: Mapping[str, ChannelVoiceStateContainer]'
     user_ids_through_client_dm_channel_ids = 'Client.dm_channel_ids: Mapping[str, str]'
     channels_through_client_dm_channels = 'Client.dm_channels: Mapping[str, DMChannel]'
     channels_through_client_private_channels = 'Client.private_channels: Mapping[str, PrivateChannel]'
@@ -1449,18 +1452,26 @@ _CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES: typing.Final[
         type=CacheContextType.channel_voice_state_container_through_voice_channel_voice_states,
     )
 )
-
 _CHANNELS_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channels_through_client_getter,
 )
 _EMOJIS_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.emojis_through_client_getter,
 )
+_SERVER_MEMBERS_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_members_through_client_getter,
+)
+_READ_STATES_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.read_states_through_client_getter,
+)
 _SERVERS_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.servers_through_client_getter,
 )
 _USERS_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.users_through_client_getter,
+)
+_VOICE_STATES_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.voice_states_through_client_getter,
 )
 _USER_IDS_THROUGH_CLIENT_DM_CHANNELS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_ids_through_client_dm_channel_ids,
@@ -1695,8 +1706,11 @@ ProvideCacheContextIn = typing.Literal[
     'ServerEmoji.server',
     'Client.channels',
     'Client.emojis',
+    'Client.members',
+    'Client.read_states',
     'Client.servers',
     'Client.users',
+    'Client.voice_states',
     'Client.dm_channel_ids',
     'Client.dm_channels',
     'Client.private_channels',
@@ -3329,8 +3343,11 @@ __all__ = (
     '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_VOICE_CHANNEL_VOICE_STATES',
     '_CHANNELS_THROUGH_CLIENT_GETTER',
     '_EMOJIS_THROUGH_CLIENT_GETTER',
+    '_SERVER_MEMBERS_THROUGH_CLIENT_GETTER',
+    '_READ_STATES_THROUGH_CLIENT_GETTER',
     '_SERVERS_THROUGH_CLIENT_GETTER',
     '_USERS_THROUGH_CLIENT_GETTER',
+    '_VOICE_STATES_THROUGH_CLIENT_GETTER',
     '_USER_IDS_THROUGH_CLIENT_DM_CHANNELS',
     '_CHANNELS_THROUGH_CLIENT_DM_CHANNELS',
     '_CHANNELS_THROUGH_CLIENT_PRIVATE_CHANNELS',
