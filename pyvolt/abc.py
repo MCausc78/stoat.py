@@ -157,7 +157,7 @@ class Messageable:
     async def acknowledge(self, message: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED) -> None:
         """|coro|
 
-        Marks the channel as read.
+        Marks the destination channel as read.
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
@@ -264,7 +264,7 @@ class Messageable:
 
         Returns
         -------
-        :class:`.Message`
+        :class:`~pyvolt.Message`
             The retrieved message.
         """
 
@@ -283,7 +283,7 @@ class Messageable:
     ) -> list[Message]:
         """|coro|
 
-        Retrieve message history of a textable channel.
+        Retrieve message history from destination channel.
 
         You must have :attr:`~pyvolt.Permissions.read_message_history` to do this.
 
@@ -374,7 +374,7 @@ class Messageable:
     ) -> list[Message]:
         """|coro|
 
-        Searches for messages in this channel.
+        Searches for messages in destination channel.
 
         For ``query`` and ``pinned``, only one parameter can be provided, otherwise a :class:`~pyvolt.HTTPException` will
         be thrown with ``InvalidOperation`` type.
@@ -492,7 +492,7 @@ class Messageable:
     ) -> Message:
         """|coro|
 
-        Sends a message to this channel.
+        Sends a message to destination channel.
 
         You must have :attr:`~pyvolt.Permissions.send_messages` to do this.
 
@@ -630,7 +630,7 @@ class Messageable:
         )
 
     def typing(self) -> Typing:
-        """:class:`Typing`: Returns an asynchronous context manager that allows you to send a typing indicator in channel for an indefinite period of time."""
+        """Returns an asynchronous context manager that allows you to send a typing indicator in destination channel for an indefinite period of time."""
 
         return Typing(
             destination=self,
@@ -669,7 +669,7 @@ class Connectable:
     ) -> tuple[str, str]:
         """|coro|
 
-        Asks the voice server for a token to join the call.
+        Asks the voice server for a token to join the call in destination channel.
 
         You must have :attr:`~Permissions.connect` to do this.
 
@@ -745,7 +745,7 @@ class Connectable:
         return await state.http.join_call(channel_id, node=node)
 
     async def connect(self) -> Room:
-        """:class:`Room`: Connects to a voice channel."""
+        """Connects to a destination voice channel and returns a `Room <https://docs.livekit.io/python/livekit/rtc/room.html#livekit.rtc.room.Room>`_ associated with destination."""
 
         try:
             from livekit.rtc import Room  # type: ignore

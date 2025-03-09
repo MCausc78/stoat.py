@@ -2884,8 +2884,57 @@ Discover
     .. attribute:: oldest
 
         Sort messages by timestamp in ascending order.
-    
+
+
 .. class:: ContentReportReason
+
+    Specifies reason for reporting message or a server.
+    
+    .. attribute:: none
+        
+        No reason has been specified.
+
+    .. attribute:: illegal
+    
+        Illegal content catch-all reason.
+    .. attribute:: illegal_goods
+    
+        Server or user is selling or facilitating use of drugs or other illegal goods.
+    .. attribute:: illegal_extortion
+    
+        Extortion or blackmail.
+    .. attribute:: illegal_pornography
+    
+        Revenge or child pornography.
+    .. attribute:: illegal_hacking
+    
+        Illegal hacking activity.
+    .. attribute:: extreme_violence
+    
+        Extreme violence, gore, or animal cruelty, with exception to violence potrayed in media / creative arts.
+    .. attribute:: promotes_harm
+    
+        Content that promotes harm to others / self.
+    .. attribute:: unsolicited_spam
+    
+        Unsolicited advertisements.
+    .. attribute:: raid
+    
+        Server or user is raiding.
+    .. attribute:: spam_abuse
+    
+        Server or user is spamming or doing other sort of platform abuse.
+    .. attribute:: scams_fraud
+    
+        Server is scamming or doing fraud.
+    .. attribute:: malware
+    
+        Server or user is distributing malware or malicious links.
+    .. attribute:: harassment
+    
+        Harassment or abuse targeted at another user.
+
+.. class:: UserReportReason
 
     Specifies reason for user report.
 
@@ -3020,7 +3069,7 @@ Discover
         You're always notified unless you're busy.
     .. attribute:: mentions_only
 
-        You're only notified on mentions unless you're busy .
+        You're only notified on mentions unless you're busy.
     .. attribute:: none
 
         State is not specified. Currently same as :attr:`.muted`.
@@ -3336,6 +3385,17 @@ Cache
 
 Models
 ------
+
+UndefinedOr
+~~~~~~~~~~~
+
+.. class:: UndefinedOr
+
+    A generic union of either :data:`.UNDEFINED` or a ``T``.
+
+.. data:: UNDEFINED
+
+    A type-sentinel to mark something as undefined. Used to distinguish missing parameter from explicit ``None`` values.
 
 PartialAccount
 ~~~~~~~~~~~~~~
@@ -3787,6 +3847,14 @@ ChannelVoiceStateContainer
 .. attributetable:: ChannelVoiceStateContainer
 
 .. autoclass:: ChannelVoiceStateContainer
+    :members:
+
+PartialMessageable
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: PartialMessageable
+
+.. autoclass:: PartialMessageable
     :members:
 
 BaseEmbed

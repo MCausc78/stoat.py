@@ -1342,6 +1342,7 @@ class HTTPClient:
         """|coro|
 
         Invites a bot to a server or group.
+
         **Specifying both ``server`` and ``group`` parameters (or no parameters at all) will lead to an exception.**
 
         If destination is a server, you must have :attr:`~Permissions.manage_server` to do this, otherwise :attr:`~Permissions.create_invites` is required.
@@ -8848,13 +8849,13 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------------+---------------------------------------------------+
-            | Value                   | Reason                                            |
-            +-------------------------+---------------------------------------------------+
-            | ``CompromisedPassword`` | The new password was compromised.                 |
-            +-------------------------+---------------------------------------------------+
-            | ``ShortPassword``       | The new password was less than 8 characters long. |
-            +-------------------------+---------------------------------------------------+
+            +-------------------------+-----------------------------------------------+
+            | Value                   | Reason                                        |
+            +-------------------------+-----------------------------------------------+
+            | ``CompromisedPassword`` | The password was compromised.                 |
+            +-------------------------+-----------------------------------------------+
+            | ``ShortPassword``       | The password was less than 8 characters long. |
+            +-------------------------+-----------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 

@@ -1358,7 +1358,7 @@ class User(DisplayUser):
         Returns
         -------
         Tuple[Optional[:class:`.User`], :class:`str`]
-            The bot owner and their ID.
+            The bot owner and their ID (may be empty if user is not a bot).
         """
         bot = self.bot
         if bot is None:

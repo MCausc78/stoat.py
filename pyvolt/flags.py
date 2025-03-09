@@ -421,7 +421,7 @@ class MessageFlags(BaseFlags, support_kwargs=False):
         return 1 << 2
 
 
-@doc_flags('Wraps up a Permission flag value.', added_in='8.0')
+@doc_flags('Wraps up a Permission flag value.')
 class Permissions(BaseFlags, support_kwargs=True):
     __slots__ = ()
 
