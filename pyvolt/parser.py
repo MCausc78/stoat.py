@@ -3168,16 +3168,18 @@ class Parser:
         server_id: :class:`str`
             The server's ID the role belongs to.
 
-
         Returns
         -------
         :class:`Role`
             The parsed role object.
         """
+        icon = payload.get('icon')
+
         return Role(
             state=self.state,
             id=role_id,
             name=payload['name'],
+            internal_icon=None if icon is None else self.parse_asset(icon),
             permissions=self.parse_permission_override_field(payload['permissions']),
             color=payload.get('colour'),
             hoist=payload.get('hoist', False),
@@ -3579,6 +3581,7 @@ class Parser:
         data = payload['data']
         clear = payload['clear']
 
+        icon = data.get('icon')
         permissions = data.get('permissions')
 
         return RawServerRoleUpdateEvent(
@@ -3588,6 +3591,7 @@ class Parser:
                 id=payload['role_id'],
                 server_id=payload['id'],
                 name=data.get('name', UNDEFINED),
+                internal_icon=None if 'Icon' in clear else UNDEFINED if icon is None else self.parse_asset(icon),
                 permissions=UNDEFINED if permissions is None else self.parse_permission_override_field(permissions),
                 color=None if 'Colour' in clear else data.get('colour', UNDEFINED),
                 hoist=data.get('hoist', UNDEFINED),

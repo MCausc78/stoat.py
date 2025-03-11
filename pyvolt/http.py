@@ -5500,6 +5500,7 @@ class HTTPClient:
         role: ULIDOr[BaseRole],
         *,
         name: UndefinedOr[str] = UNDEFINED,
+        icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         color: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         hoist: UndefinedOr[bool] = UNDEFINED,
         rank: UndefinedOr[int] = UNDEFINED,
@@ -5518,6 +5519,8 @@ class HTTPClient:
             The role to edit.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
+        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+            The new role icon.
         color: UndefinedOr[Optional[:class:`str`]]
             The new role color. Must be a valid CSS color.
         hoist: UndefinedOr[:class:`bool`]
@@ -5551,11 +5554,11 @@ class HTTPClient:
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------+--------------------------------+
-            | Value        | Reason                         |
-            +--------------+--------------------------------+
-            | ``NotFound`` | The server/role was not found. |
-            +--------------+--------------------------------+
+            +--------------+-------------------------------------+
+            | Value        | Reason                              |
+            +--------------+-------------------------------------+
+            | ``NotFound`` | The server/role/file was not found. |
+            +--------------+-------------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5575,6 +5578,11 @@ class HTTPClient:
 
         if name is not UNDEFINED:
             payload['name'] = name
+        if icon is not UNDEFINED:
+            if icon is None:
+                remove.append('Icon')
+            else:
+                payload['icon'] = await resolve_resource(self.state, icon, tag='icons')
         if color is not UNDEFINED:
             if color is None:
                 remove.append('Colour')
