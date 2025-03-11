@@ -181,6 +181,8 @@ class ChannelType(Enum):
     text = 'Text'
     voice = 'Voice'
 
+    unknown = ''
+
 
 class ServerActivity(Enum):
     high = 'high'
@@ -196,34 +198,23 @@ class BotUsage(Enum):
 
 
 class LightspeedContentType(Enum):
-    """Type of remote Lightspeed.tv content."""
-
     channel = 'Channel'
 
 
 class TwitchContentType(Enum):
-    """Type of remote Twitch content."""
-
     channel = 'Channel'
     video = 'Video'
     clip = 'Clip'
 
 
 class BandcampContentType(Enum):
-    """Type of remote Bandcamp content."""
-
     album = 'Album'
     track = 'Track'
 
 
 class ImageSize(Enum):
-    """Controls image positioning and size."""
-
     large = 'Large'
-    """Show large preview at the bottom of the embed."""
-
     preview = 'Preview'
-    """Show small preview to the side of the embed."""
 
 
 class Language(Enum):
@@ -307,79 +298,33 @@ class MessageSort(Enum):
 
 
 class ContentReportReason(Enum):
-    """The reason for reporting content (message or server)."""
-
     none = 'NoneSpecified'
-    """No reason has been specified."""
-
     illegal = 'Illegal'
-    """Illegal content catch-all reason."""
-
     illegal_goods = 'IllegalGoods'
-    """Selling or facilitating use of drugs or other illegal goods."""
-
     illegal_extortion = 'IllegalExtortion'
-    """Extortion or blackmail."""
-
     illegal_pornography = 'IllegalPornography'
-    """Revenge or child pornography."""
-
     illegal_hacking = 'IllegalHacking'
-    """Illegal hacking activity."""
-
     extreme_violence = 'ExtremeViolence'
-    """Extreme violence, gore, or animal cruelty. With exception to violence potrayed in media / creative arts."""
-
     promotes_harm = 'PromotesHarm'
-    """Content that promotes harm to others / self."""
-
     unsolicited_spam = 'UnsolicitedSpam'
-    """Unsolicited advertisements."""
-
     raid = 'Raid'
-    """This is a raid."""
-
     spam_abuse = 'SpamAbuse'
-    """Spam or platform abuse."""
-
     scams_fraud = 'ScamsFraud'
-    """Scams or fraud."""
-
     malware = 'Malware'
-    """Distribution of malware or malicious links."""
-
     harassment = 'Harassment'
-    """Harassment or abuse targeted at another user."""
 
 
 class UserReportReason(Enum):
-    """Reason for reporting a user."""
-
     none = 'NoneSpecified'
-    """No reason has been specified."""
-
     unsolicited_spam = 'UnsolicitedSpam'
-    """Unsolicited advertisements."""
-
     spam_abuse = 'SpamAbuse'
-    """User is sending spam or otherwise abusing the platform."""
-
     inappropriate_profile = 'InappropriateProfile'
-    """User's profile contains inappropriate content for a general audience."""
-
     impersonation = 'Impersonation'
-    """User is impersonating another user."""
-
     ban_evasion = 'BanEvasion'
-    """User is evading a ban."""
-
     underage = 'Underage'
-    """User is not of minimum age to use the platform."""
 
 
 class MemberRemovalIntention(Enum):
-    """Reason why member was removed from server."""
-
     leave = 'Leave'
     kick = 'Kick'
     ban = 'Ban'
@@ -510,44 +455,20 @@ class ReviteMonoFont(Enum):
 
 class Presence(Enum):
     online = 'Online'
-    """User is online."""
-
     idle = 'Idle'
-    """User is not currently available."""
-
     focus = 'Focus'
-    """User is focusing / will only receive mentions."""
-
     busy = 'Busy'
-    """User is busy / will not receive any notifications."""
-
     invisible = 'Invisible'
-    """User appears to be offline."""
 
 
 class RelationshipStatus(Enum):
-    """User's relationship with another user (or themselves)."""
-
     none = 'None'
-    """No relationship with other user."""
-
     user = 'User'
-    """Other user is us."""
-
     friend = 'Friend'
-    """Friends with the other user."""
-
     outgoing = 'Outgoing'
-    """Pending friend request to user."""
-
     incoming = 'Incoming'
-    """Incoming friend request from user."""
-
     blocked = 'Blocked'
-    """Blocked this user."""
-
     blocked_other = 'BlockedOther'
-    """Blocked by this user."""
 
 
 class ReportStatus(Enum):
