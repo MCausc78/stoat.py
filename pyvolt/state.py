@@ -26,8 +26,10 @@ from __future__ import annotations
 
 import typing
 
+from .channel import PartialMessageable
 from .core import ZID
 from .parser import Parser
+from .server import BaseServer, BaseUser
 from .settings import UserSettings
 from .user import RelationshipStatus, User
 
@@ -177,7 +179,26 @@ class State:
             )
         return self._settings
 
+    def get_channel(self, channel_id: str, /) -> PartialMessageable:
+        """:class:`.PartialMessageable`: Returns the partial messageable for provided ID."""
+        return PartialMessageable(state=self, id=channel_id)
+
+    def get_server(self, server_id: str, /) -> BaseServer:
+        """:class:`.BaseServer`: Returns the base server for provided ID."""
+        return BaseServer(state=self, id=server_id)
+
+    def get_user(self, user_id: str, /) -> BaseUser:
+        """:class:`.BaseUser`: Returns the base user for provided ID."""
+        return BaseUser(state=self, id=user_id)
+
     def provide_cache_context(self, place: ProvideCacheContextIn, /) -> bool:
+        """:class:`bool`: Whether to provide cache context in that place or not.
+
+        Parameters
+        ----------
+        place: ProvideCacheContextIn
+            The place the cache context is going to be created in.
+        """
         return place in self.provide_cache_context_in
 
 

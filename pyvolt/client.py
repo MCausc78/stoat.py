@@ -55,7 +55,14 @@ from .cache import (
     MapCache,
 )
 from .cdn import CDNClient
-from .channel import SavedMessagesChannel, DMChannel, GroupChannel, Channel, ChannelVoiceStateContainer
+from .channel import (
+    SavedMessagesChannel,
+    DMChannel,
+    GroupChannel,
+    Channel,
+    ChannelVoiceStateContainer,
+    PartialMessageable,
+)
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -65,7 +72,7 @@ from .emoji import Emoji
 from .events import BaseEvent
 from .http import HTTPClient
 from .parser import Parser
-from .server import Server, Member
+from .server import BaseServer, Server, Member
 from .shard import EventHandler, Shard, ShardImpl
 from .state import State
 from .user import BaseUser, User, OwnUser
@@ -1565,23 +1572,38 @@ class Client:
         """List[Union[:class:`~pyvolt.DMChannel`, :class:`~pyvolt.GroupChannel`]]: The list of private channels in new client's order."""
         return sorted(self.private_channels.values(), key=_private_channel_sort_new, reverse=True)
 
-    def get_channel(self, channel_id: str, /) -> typing.Optional[Channel]:
+    @typing.overload
+    def get_channel(self, channel_id: str, /, *, partial: typing.Literal[False] = False) -> typing.Optional[Channel]:  # type: ignore
+        ...
+
+    @typing.overload
+    def get_channel(
+        self, channel_id: str, /, *, partial: typing.Literal[True] = ...
+    ) -> typing.Union[Channel, PartialMessageable]: ...
+
+    def get_channel(
+        self, channel_id: str, /, *, partial: bool = False
+    ) -> typing.Optional[typing.Union[Channel, PartialMessageable]]:
         """Retrieves a channel from cache.
 
         Parameters
         ----------
         channel_id: :class:`str`
             The channel ID.
+        partial: :class:`bool`
+            Whether to return :class:`~pyvolt.PartialMessageable` instead of ``None`` if server was not found.
 
         Returns
         -------
-        Optional[:class:`~pyvolt.Channel`]
+        Optional[Union[:class:`~pyvolt.Channel`, :class:`~pyvolt.PartialMessageable`]]
             The channel or ``None`` if not found.
         """
         state = self.state
         cache = state.cache
 
         if cache is None:
+            if partial:
+                return PartialMessageable(state=self.state, id=channel_id)
             return None
 
         ctx = (
@@ -1593,7 +1615,10 @@ class Client:
             else _CHANNEL_THROUGH_CLIENT_GETTER
         )
 
-        return cache.get_channel(channel_id, ctx)
+        channel = cache.get_channel(channel_id, ctx)
+        if channel is None and partial:
+            return PartialMessageable(state=self.state, id=channel_id)
+        return channel
 
     async def fetch_channel(self, channel_id: str, /) -> Channel:
         """|coro|
@@ -1638,7 +1663,7 @@ class Client:
 
         Returns
         -------
-        :class:`.Channel`
+        :class:`~pyvolt.Channel`
             The retrieved channel.
         """
 
@@ -1735,23 +1760,38 @@ class Client:
 
         return cache.get_read_state(channel_id, ctx)
 
-    def get_server(self, server_id: str, /) -> typing.Optional[Server]:
+    @typing.overload
+    def get_server(self, server_id: str, /, *, partial: typing.Literal[False] = False) -> typing.Optional[Server]:  # type: ignore
+        ...
+
+    @typing.overload
+    def get_server(
+        self, server_id: str, /, *, partial: typing.Literal[True] = ...
+    ) -> typing.Union[Server, BaseServer]: ...
+
+    def get_server(
+        self, server_id: str, /, *, partial: bool = False
+    ) -> typing.Optional[typing.Union[Server, BaseServer]]:
         """Retrieves a server from cache.
 
         Parameters
         ----------
         server_id: :class:`str`
             The server ID.
+        partial: :class:`bool`
+            Whether to return :class:`~pyvolt.BaseServer` instead of ``None`` if server was not found.
 
         Returns
         -------
-        Optional[:class:`~pyvolt.Server`]
+        Optional[Union[:class:`~pyvolt.Server`, :class:`~pyvolt.BaseServer`]]
             The server or ``None`` if not found.
         """
         state = self.state
         cache = state.cache
 
         if cache is None:
+            if partial:
+                return BaseServer(state=self.state, id=server_id)
             return None
 
         ctx = (
@@ -1763,7 +1803,10 @@ class Client:
             else _SERVER_THROUGH_CLIENT_GETTER
         )
 
-        return cache.get_server(server_id, ctx)
+        server = cache.get_server(server_id, ctx)
+        if server is None and partial:
+            return BaseServer(state=self.state, id=server_id)
+        return server
 
     async def fetch_server(self, server_id: str, *, populate_channels: typing.Optional[bool] = None) -> Server:
         """|coro|
@@ -1805,23 +1848,34 @@ class Client:
         """
         return await self.http.get_server(server_id, populate_channels=populate_channels)
 
-    def get_user(self, user_id: str, /) -> typing.Optional[User]:
+    @typing.overload
+    def get_user(self, user_id: str, /, *, partial: typing.Literal[False] = False) -> typing.Optional[User]:  # type: ignore
+        ...
+
+    @typing.overload
+    def get_user(self, user_id: str, /, *, partial: typing.Literal[True] = ...) -> typing.Union[User, BaseUser]: ...
+
+    def get_user(self, user_id: str, /, *, partial: bool = False) -> typing.Optional[typing.Union[User, BaseUser]]:
         """Retrieves a user from cache.
 
         Parameters
         ----------
         user_id: :class:`str`
             The user ID.
+        partial: :class:`bool`
+            Whether to return :class:`~pyvolt.BaseUser` instead of ``None`` if server was not found.
 
         Returns
         -------
-        Optional[:class:`~pyvolt.User`]
+        Optional[Union[:class:`~pyvolt.User`, :class:`~pyvolt.BaseUser`]]
             The user or ``None`` if not found.
         """
         state = self.state
         cache = state.cache
 
         if cache is None:
+            if partial:
+                return BaseUser(state=self.state, id=user_id)
             return None
 
         ctx = (
@@ -1833,7 +1887,10 @@ class Client:
             else _USER_THROUGH_CLIENT_GETTER
         )
 
-        return cache.get_user(user_id, ctx)
+        user = cache.get_user(user_id, ctx)
+        if user is None and partial:
+            return BaseUser(state=self.state, id=user_id)
+        return user
 
     async def fetch_user(self, user_id: str, /) -> User:
         """|coro|
