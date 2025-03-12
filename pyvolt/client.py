@@ -1919,12 +1919,21 @@ class Client:
         """:class:`~pyvolt.User`: The Revolt sentinel user."""
         return self._state.system
 
+    async def setup_hook(self) -> None:
+        """|coro|
+
+        A hook that is called when client starts up.
+        """
+
     async def start(self) -> None:
         """|coro|
 
         Starts up the client.
+
+        Calls :meth:`.setup_hook` before connecting.
         """
         self.closed = False
+        await self.setup_hook()
         await self._state.shard.connect()
 
     async def close(self, *, http: bool = True, cleanup_websocket: bool = True) -> None:
