@@ -464,12 +464,18 @@ CacheContextType
     .. attribute:: emojis_through_client_getter
 
         The context comes from :attr:`Client.emojis`.
+    .. attribute:: read_states_through_client_getter
+
+        The context comes from :attr:`Client.read_states`.
     .. attribute:: servers_through_client_getter
 
         The context comes from :attr:`Client.servers`.
     .. attribute:: users_through_client_getter
 
         The context comes from :attr:`Client.users`.
+    .. attribute:: voice_states_through_client_getter
+
+        The context comes from :attr:`Client.voice_states`
     .. attribute:: user_ids_through_client_dm_channel_ids
 
         The context comes from :attr:`Client.dm_channel_ids`.
