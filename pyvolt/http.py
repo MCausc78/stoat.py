@@ -5860,6 +5860,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
+        mfa_ticket: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -5881,6 +5882,8 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to edit.
+        mfa_ticket: Optional[:class:`str`]
+            The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
         name: UndefinedOr[:class:`str`]
             The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -5928,11 +5931,13 @@ class HTTPClient:
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------------+----------------------------------------+
-            | Value              | Reason                                 |
-            +--------------------+----------------------------------------+
-            | ``InvalidSession`` | The current bot/user token is invalid. |
-            +--------------------+----------------------------------------+
+            +------------------------+----------------------------------------+
+            | Value                  | Reason                                 |
+            +------------------------+----------------------------------------+
+            | ``InvalidCredentials`` | The provided MFA ticket was invalid.   |
+            +------------------------+----------------------------------------+
+            | ``InvalidSession``     | The current bot/user token is invalid. |
+            +------------------------+----------------------------------------+
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -6023,6 +6028,7 @@ class HTTPClient:
 
         d: raw.Server = await self.request(
             routes.SERVERS_SERVER_EDIT.compile(server_id=resolve_id(server)),
+            mfa_ticket=mfa_ticket,
             json=payload,
         )
         return self.state.parser.parse_server(
