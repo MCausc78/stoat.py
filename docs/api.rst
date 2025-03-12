@@ -214,7 +214,7 @@ Content
 
 .. class:: Content
 
-    A union of types that can be resolved into content.
+    An union of types that can be resolved into content.
 
     The following classes are included in this union:
 
@@ -230,7 +230,7 @@ ResolvableResource
 
 .. class:: ResolvableResource
 
-    A union of types that can be resolved into resource.
+    An union of types that can be resolved into resource.
 
     The following classes are included in this union:
 
@@ -2018,7 +2018,7 @@ ChannelCreateEvent
 
 .. class:: ChannelCreateEvent
 
-    A union of private/server channel create events.
+    An union of private/server channel create events.
     
     The following classes are included in this union:
 
@@ -2565,6 +2565,9 @@ Channel
     .. attribute:: voice
 
         A voice channel.
+    .. attribute:: unknown
+
+        The channel type is unknown.
 
 Discover
 ~~~~~~~~
@@ -3497,7 +3500,7 @@ MFAResponse
 
 .. class:: MFAResponse
 
-    A union of all possible MFA verification responses.
+    An union of all possible MFA verification responses.
     
     The following classes are included in this union:
 
@@ -3510,7 +3513,7 @@ LoginResult
 
 .. class:: LoginResult
 
-    A union of all login responses.
+    An union of all login responses.
     
     The following classes are included in this union:
 
@@ -3748,6 +3751,15 @@ GroupChannel
     :members:
     :inherited-members:
 
+UnknownPrivateChannel
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UnknownPrivateChannel
+
+.. autoclass:: UnknownPrivateChannel
+    :members:
+    :inherited-members:
+
 BaseServerChannel
 ~~~~~~~~~~~~~~~~~
 
@@ -3783,12 +3795,21 @@ VoiceChannel
     :members:
     :inherited-members:
 
+UnknownServerChannel
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UnknownServerChannel
+
+.. autoclass:: UnknownServerChannel
+    :members:
+    :inherited-members:
+
 PrivateChannel
 ~~~~~~~~~~~~~~
 
 .. class:: PrivateChannel
     
-    A union of all channels that do not belong to a server.
+    An union of all channels that do not belong to a server.
     
     The following classes are included in this union:
 
@@ -3801,7 +3822,7 @@ ServerChannel
     
 .. class:: ServerChannel
 
-    A union of all channels that belong to a server.
+    An union of all channels that belong to a server.
     
     The following classes are included in this union:
 
@@ -3813,7 +3834,7 @@ TextableChannel
 
 .. class:: TextableChannel
 
-    A union of all channels that can have messages in them.
+    An union of all channels that can have messages in them.
     
     The following classes are included in this union:
     
@@ -3823,12 +3844,24 @@ TextableChannel
     - :class:`.TextChannel`
     - :class:`.VoiceChannel`
 
+UnknownChannel
+~~~~~~~~~~~~~~
+
+.. class:: UnknownChannel
+
+    An union of all channels that are not recognized by library.
+    
+    The following classes are included in this union:
+    
+    - :class:`.UnknownPrivateChannel`
+    - :class:`.UnknownServerChannel`
+
 Channel
 ~~~~~~~
 
 .. class:: Channel
 
-    A union of all channels.
+    An union of all channels.
 
     Union types such as this exist to help determine which exact channel type has some field during development.
 
@@ -3837,8 +3870,10 @@ Channel
     - :class:`.SavedMessagesChannel`
     - :class:`.DMChannel`
     - :class:`.GroupChannel`
+    - :class:`.UnknownPrivateChannel`
     - :class:`.TextChannel`
     - :class:`.VoiceChannel`
+    - :class:`.UnknownServerChannel`
 
 ChannelVoiceStateContainer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4021,7 +4056,7 @@ EmbedSpecial
 
 .. class:: EmbedSpecial
 
-    A union of all embed special types.
+    An union of all embed special types.
 
     The following classes are included in this union:
     
@@ -4040,7 +4075,7 @@ StatelessEmbed
 
 .. class:: StatelessEmbed
 
-    A union of all stateless embed types.
+    An union of all stateless embed types.
 
     The following classes are included in this union:
     
@@ -4055,7 +4090,7 @@ Embed
 
 .. class:: Embed
 
-    A union of all embed types.
+    An union of all embed types.
 
     The following classes are included in this union:
     
@@ -4103,7 +4138,7 @@ Emoji
 
 .. class:: Emoji
 
-    A union of all emoji types.
+    An union of all emoji types.
 
     The following classes are included in this union:
     
@@ -4115,7 +4150,7 @@ ResolvableEmoji
 
 .. class:: ResolvableEmoji
 
-    A union of either :class:`.BaseEmoji` or :class:`str` (which is either unicode emoji or emoji ID).
+    An union of either :class:`.BaseEmoji` or :class:`str` (which is either unicode emoji or emoji ID).
 
 .. autofunction:: resolve_emoji
 
@@ -4469,7 +4504,7 @@ StatelessSystemEvent
 
 .. class:: StatelessSystemEvent
 
-    A union of all stateless system events that message may hold.
+    An union of all stateless system events that message may hold.
 
     The following classes are included in this union:
 
@@ -4493,7 +4528,7 @@ SystemEvent
 
 .. class:: SystemEvent
 
-    A union of all system events that message may hold.
+    An union of all system events that message may hold.
 
     The following classes are included in this union:
 

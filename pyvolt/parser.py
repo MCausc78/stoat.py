@@ -51,9 +51,11 @@ from .channel import (
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
+    UnknownPrivateChannel,
     ChannelVoiceMetadata,
     TextChannel,
     VoiceChannel,
+    UnknownServerChannel,
     ServerChannel,
     Channel,
     ChannelVoiceStateContainer,
@@ -957,7 +959,38 @@ class Parser:
             The parsed channel object.
         """
 
-        return self._channel_parsers[payload['channel_type']](payload)
+        try:
+            parser = self._channel_parsers[payload['channel_type']]
+        except KeyError:
+            if 'server' in payload:
+                server_id = payload['server']
+                if 'name' in payload:
+                    name = payload['name']
+                    if name is None or not isinstance(name, str):
+                        name = str(name)
+                else:
+                    name = ''
+                nsfw = bool(payload.get('nsfw', False))
+
+                return UnknownServerChannel(
+                    state=self.state,
+                    id=payload['_id'],
+                    server_id=server_id,
+                    payload=payload,  # type: ignore
+                    name=name,
+                    description=None,
+                    internal_icon=None,
+                    default_permissions=None,
+                    role_permissions={},
+                    nsfw=nsfw,
+                )
+            return UnknownPrivateChannel(
+                state=self.state,
+                id=payload['_id'],
+                payload=payload,  # type: ignore
+            )
+        else:
+            return parser(payload)
 
     def parse_created_report(self, payload: raw.CreatedReport, /) -> CreatedReport:
         """Parses a created report object.

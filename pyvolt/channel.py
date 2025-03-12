@@ -1471,7 +1471,20 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         )
 
 
-PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel]
+@define(slots=True)
+class UnknownPrivateChannel(BaseChannel):
+    """Represents a private channel that is not recognized by library yet."""
+
+    payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
+    """Dict[:class:`str`, Any]: The raw channel data."""
+
+    @property
+    def type(self) -> typing.Literal[ChannelType.unknown]:
+        """Literal[:attr:`.ChannelType.unknown`]: The channel's type."""
+        return ChannelType.unknown
+
+
+PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, UnknownPrivateChannel]
 
 
 @define(slots=True)
@@ -2173,9 +2186,31 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
         )
 
 
+@define(slots=True)
+class UnknownServerChannel(BaseServerChannel):
+    """Represents a server channel that is not recognized by library yet."""
+
+    payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
+    """Dict[:class:`str`, Any]: The raw channel data."""
+
+    @property
+    def type(self) -> typing.Literal[ChannelType.unknown]:
+        """Literal[:attr:`.ChannelType.unknown`]: The channel's type."""
+        return ChannelType.unknown
+
+
 ServerChannel = typing.Union[TextChannel, VoiceChannel]
 TextableChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, TextChannel, VoiceChannel]
-Channel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, TextChannel, VoiceChannel]
+UnknownChannel = typing.Union[UnknownPrivateChannel, UnknownServerChannel]
+Channel = typing.Union[
+    SavedMessagesChannel,
+    DMChannel,
+    GroupChannel,
+    UnknownPrivateChannel,
+    TextChannel,
+    VoiceChannel,
+    UnknownServerChannel,
+]
 
 
 @define(slots=True)
@@ -2258,13 +2293,16 @@ __all__ = (
     'SavedMessagesChannel',
     'DMChannel',
     'GroupChannel',
+    'UnknownPrivateChannel',
     'PrivateChannel',
     'BaseServerChannel',
     'ChannelVoiceMetadata',
     'TextChannel',
     'VoiceChannel',
+    'UnknownServerChannel',
     'ServerChannel',
     'TextableChannel',
+    'UnknownChannel',
     'Channel',
     'ChannelVoiceStateContainer',
     'PartialMessageable',

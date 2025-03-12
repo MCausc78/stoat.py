@@ -39,6 +39,7 @@ from .channel import (
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
+    UnknownPrivateChannel,
     PrivateChannel,
     BaseServerChannel,
     TextChannel,
@@ -408,18 +409,21 @@ class ChannelUpdateEvent(ShardEvent):
         cache = self.shard.state.cache
         if cache is None:
             return
+
         before = cache.get_channel(self.channel.id, self.cache_context)
+
         self.before = before
-        if not before:
+        if before is None:
             return
 
         after = copy(before)
-        after.locally_update(self.channel)
+        if not isinstance(after, UnknownPrivateChannel):
+            after.locally_update(self.channel)
         self.after = after
 
     def process(self) -> bool:
         cache = self.shard.state.cache
-        if not cache or not self.after:
+        if cache is None or self.after is None:
             return False
         cache.store_channel(self.after, self.cache_context)
         return True
@@ -818,9 +822,12 @@ class MessageUpdateEvent(ShardEvent):
 
         if cache is None:
             return
+
         before = cache.get_message(self.message.channel_id, self.message.id, self.cache_context)
-        if not before:
+
+        if before is None:
             return
+
         self.before = before
         after = copy(before)
         after.locally_update(self.message)
@@ -829,7 +836,7 @@ class MessageUpdateEvent(ShardEvent):
     def process(self) -> bool:
         cache = self.shard.state.cache
 
-        if not cache or not self.after:
+        if cache is None or self.after is None:
             return False
         cache.store_message(self.after, self.cache_context)
         return True
@@ -877,7 +884,7 @@ class MessageAppendEvent(ShardEvent):
     def process(self) -> bool:
         cache = self.shard.state.cache
 
-        if not cache or not self.message:
+        if cache is None or self.message is None:
             return False
 
         self.message.locally_append(self.data)
@@ -987,8 +994,9 @@ class MessageReactEvent(ShardEvent):
     def process(self) -> bool:
         cache = self.shard.state.cache
 
-        if not cache or not self.message:
+        if cache is None or self.message is None:
             return False
+
         self.message.locally_react(self.user_id, self.emoji)
         cache.store_message(self.message, self.cache_context)
         return True
@@ -1045,8 +1053,9 @@ class MessageUnreactEvent(ShardEvent):
     def process(self) -> bool:
         cache = self.shard.state.cache
 
-        if not cache or not self.message:
+        if cache is None or self.message is None:
             return False
+
         self.message.locally_unreact(self.user_id, self.emoji)
         cache.store_message(self.message, self.cache_context)
         return True
@@ -1095,13 +1104,15 @@ class MessageClearReactionEvent(ShardEvent):
 
         if cache is None:
             return
+
         self.message = cache.get_message(self.channel_id, self.message_id, self.cache_context)
 
     def process(self) -> bool:
         cache = self.shard.state.cache
 
-        if not cache or not self.message:
+        if cache is None or self.message is None:
             return False
+
         self.message.locally_clear_reactions(self.emoji)
         cache.store_message(self.message, self.cache_context)
         return True
@@ -1368,7 +1379,8 @@ class ServerUpdateEvent(ShardEvent):
             return
         before = cache.get_server(self.server.id, self.cache_context)
         self.before = before
-        if not before:
+
+        if before is None:
             return
 
         after = copy(before)
@@ -1377,7 +1389,7 @@ class ServerUpdateEvent(ShardEvent):
 
     def process(self) -> bool:
         cache = self.shard.state.cache
-        if not cache or not self.after:
+        if cache is None or self.after is None:
             return False
         cache.store_server(self.after, self.cache_context)
         return True
@@ -1518,9 +1530,10 @@ class ServerMemberUpdateEvent(ShardEvent):
         cache = self.shard.state.cache
         if cache is None:
             return
+
         before = cache.get_server_member(self.member.server_id, self.member.id, self.cache_context)
         self.before = before
-        if not before:
+        if before is None:
             return
 
         after = copy(before)
@@ -1529,7 +1542,7 @@ class ServerMemberUpdateEvent(ShardEvent):
 
     def process(self) -> bool:
         cache = self.shard.state.cache
-        if not cache or not self.after:
+        if cache is None or self.after is None:
             return False
         cache.store_server_member(self.after, self.cache_context)
         return True
@@ -1660,7 +1673,8 @@ class RawServerRoleUpdateEvent(ShardEvent):
 
     def process(self) -> bool:
         cache = self.shard.state.cache
-        if not cache or self.server is None:
+
+        if cache is None or self.server is None:
             return False
 
         self.server.upsert_role(self.new_role or self.role)
@@ -1716,11 +1730,11 @@ class ServerRoleDeleteEvent(ShardEvent):
 
     def process(self) -> bool:
         cache = self.shard.state.cache
-        if not cache or not self.server:
+
+        if cache is None or self.server is None:
             return False
 
         self.server.roles.pop(self.role_id, None)
-
         cache.store_server(self.server, self.cache_context)
         return True
 
@@ -1778,9 +1792,10 @@ class UserUpdateEvent(ShardEvent):
         cache = self.shard.state.cache
         if cache is None:
             return
+
         before = cache.get_user(self.user.id, self.cache_context)
         self.before = before
-        if not before:
+        if before is None:
             return
 
         after = copy(before)
@@ -1789,7 +1804,7 @@ class UserUpdateEvent(ShardEvent):
 
     def process(self) -> bool:
         cache = self.shard.state.cache
-        if not cache or not self.after:
+        if cache is None or self.after is None:
             return False
         cache.store_user(self.after, self.cache_context)
         return True
@@ -1974,7 +1989,7 @@ class UserPlatformWipeEvent(ShardEvent):
 
     def process(self) -> bool:
         cache = self.shard.state.cache
-        if not cache or not self.after:
+        if cache is None or self.after is None:
             return False
         cache.store_user(self.after, self.cache_context)
         return True
@@ -2155,7 +2170,7 @@ class VoiceChannelLeaveEvent(ShardEvent):
 
     def process(self) -> bool:
         cache = self.shard.state.cache
-        if not cache or not self.container:
+        if cache is None or self.container is None:
             return False
 
         container = self.container
@@ -2290,7 +2305,7 @@ class UserVoiceStateUpdateEvent(ShardEvent):
             return
 
         container = cache.get_channel_voice_state(self.channel_id, self.cache_context)
-        if not container:
+        if container is None:
             return
 
         self.container = container
@@ -2306,7 +2321,7 @@ class UserVoiceStateUpdateEvent(ShardEvent):
     def process(self) -> bool:
         cache = self.shard.state.cache
 
-        if not cache or not self.container:
+        if cache is None or self.container is None:
             return False
 
         cache.store_channel_voice_state(self.container, self.cache_context)
