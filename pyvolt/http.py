@@ -65,6 +65,7 @@ from .core import (
     resolve_id,
 )
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
+from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
 from .errors import (
     HTTPException,
     NoEffect,
@@ -108,7 +109,6 @@ if typing.TYPE_CHECKING:
     from . import raw
     from .bot import BaseBot, Bot, PublicBot
     from .channel import TextableChannel
-    from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
     from .instance import Instance
     from .read_state import ReadState
     from .settings import UserSettings
