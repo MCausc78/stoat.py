@@ -1870,7 +1870,7 @@ class BaseServerChannel(BaseChannel):
             can_publish=True,
             can_receive=True,
         )
-        roles = sort_member_roles(target.roles, safe=safe, server_roles=server.roles)
+        roles = sort_member_roles(target.role_ids, safe=safe, server_roles=server.roles)
         result = calculate_server_channel_permissions(
             initial_permissions,
             roles,

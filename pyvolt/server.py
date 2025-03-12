@@ -33,6 +33,7 @@ from .base import Base
 from .bot import BaseBot
 from .cache import (
     CacheContextType,
+    MembersThroughRoleMembersCacheContext,
     ServerThroughRoleServerCacheContext,
     EmojiThroughServerGetterCacheContext,
     MemberThroughServerGetterCacheContext,
@@ -42,6 +43,7 @@ from .cache import (
     ChannelsThroughServerGetterCacheContext,
     MemberThroughServerOwnerCacheContext,
     UserThroughBaseMemberGetterCacheContext,
+    _MEMBERS_THROUGH_ROLE_MEMBERS,
     _SERVER_THROUGH_ROLE_SERVER,
     _EMOJI_THROUGH_SERVER_GETTER,
     _MEMBER_THROUGH_SERVER_GETTER,
@@ -224,6 +226,43 @@ class BaseRole(Base):
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseRole) and self.id == other.id
+
+    @property
+    def members(self) -> list[Member]:
+        """List[:class:`.Member`]: The members who have this role."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return []
+
+        ctx = (
+            MembersThroughRoleMembersCacheContext(
+                type=CacheContextType.members_through_role_members,
+                role=self,
+            )
+            if state.provide_cache_context('Role.members')
+            else _MEMBERS_THROUGH_ROLE_MEMBERS
+        )
+
+        members = cache.get_server_members_mapping_of(self.server_id, ctx)
+        if members is None:
+            return []
+
+        role_id = self.id
+        return [member for member in members.values() if role_id in member.role_ids]
+
+    @property
+    def server(self) -> Server:
+        """:class:`.Server`: The server this role belongs to."""
+        server = self.get_server()
+        if server is None:
+            raise NoData(
+                what=self.server_id,
+                type='Role.server',
+            )
+        return server
 
     async def delete(self) -> None:
         """|coro|
@@ -2230,7 +2269,7 @@ class PartialServer(BaseServer):
 
 
 def sort_member_roles(
-    target_roles: list[str],
+    target_role_ids: list[str],
     /,
     *,
     safe: bool = True,
@@ -2240,8 +2279,8 @@ def sort_member_roles(
 
     Parameters
     ----------
-    target_roles: List[:class:`str`]
-        The IDs of roles to sort (:attr:`.Member.roles`).
+    target_role_ids: List[:class:`str`]
+        The IDs of roles to sort (:attr:`.Member.role_ids`).
     safe: :class:`bool`
         Whether to raise exception or not if role is missing in cache.
     server_roles: Dict[:class:`str`, :class:`.Role`]
@@ -2259,18 +2298,18 @@ def sort_member_roles(
     """
     if not safe:
         return sorted(
-            (server_roles[tr] for tr in target_roles if tr in server_roles),
+            (server_roles[tr] for tr in target_role_ids if tr in server_roles),
             key=lambda role: role.rank,
             reverse=True,
         )
     try:
         return sorted(
-            (server_roles[tr] for tr in target_roles),
+            (server_roles[tr] for tr in target_role_ids),
             key=lambda role: role.rank,
             reverse=True,
         )
     except KeyError as ke:
-        raise NoData(ke.args[0], 'role')
+        raise NoData(what=ke.args[0], type='Role')
 
 
 def calculate_server_permissions(
@@ -2593,7 +2632,7 @@ class Server(BaseServer):
             return calculate_server_permissions([], None, default_permissions=self.default_permissions)
 
         return calculate_server_permissions(
-            sort_member_roles(member.roles, safe=safe, server_roles=self.roles),
+            sort_member_roles(member.role_ids, safe=safe, server_roles=self.roles),
             member.timed_out_until if include_timeout else None,
             default_permissions=self.default_permissions,
             can_publish=member.can_publish,
@@ -3043,7 +3082,7 @@ class PartialMember(BaseMember):
     internal_server_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new member's avatar."""
 
-    roles: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    role_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
     """UndefinedOr[List[:class:`str`]]: The new member's roles."""
 
     timed_out_until: UndefinedOr[typing.Optional[datetime]] = field(repr=True, kw_only=True)
@@ -3074,7 +3113,7 @@ class Member(BaseMember):
     internal_server_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
     """Optional[:class:`.StatelessAsset`]: The member's avatar on server."""
 
-    roles: list[str] = field(repr=True, kw_only=True)
+    role_ids: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The member's roles."""
 
     timed_out_until: typing.Optional[datetime] = field(repr=True, kw_only=True)
@@ -3101,8 +3140,8 @@ class Member(BaseMember):
             self.nick = data.nick
         if data.internal_server_avatar is not UNDEFINED:
             self.internal_server_avatar = data.internal_server_avatar
-        if data.roles is not UNDEFINED:
-            self.roles = data.roles or []
+        if data.role_ids is not UNDEFINED:
+            self.role_ids = data.role_ids or []
         if data.can_publish is not UNDEFINED:
             self.can_publish = True if data.can_publish is None else data.can_publish
         if data.can_receive is not UNDEFINED:

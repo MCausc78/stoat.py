@@ -1885,7 +1885,7 @@ def has_role(item: str, /) -> Check[typing.Any]:
         if not isinstance(author, pyvolt.Member):
             raise NoPrivateMessage()
 
-        if item not in author.roles:
+        if item not in author.role_ids:
             raise MissingRole(missing_role=item)
 
         return True
@@ -1926,7 +1926,7 @@ def has_any_role(*items: str) -> Callable[[T], T]:
         if not isinstance(author, pyvolt.Member):
             raise NoPrivateMessage()
 
-        roles = author.roles
+        roles = author.role_ids
 
         if any(item in roles for item in items):
             return True
@@ -1951,7 +1951,7 @@ def bot_has_role(item: str, /) -> Callable[[T], T]:
         if not isinstance(me, pyvolt.Member):
             raise NoPrivateMessage()
 
-        if item not in me.roles:
+        if item not in me.role_ids:
             raise BotMissingRole(missing_role=item)
 
         return True
@@ -1974,7 +1974,7 @@ def bot_has_any_role(*items: str) -> Callable[[T], T]:
         if not isinstance(me, pyvolt.Member):
             raise NoPrivateMessage()
 
-        if any(item in me.roles for item in items):
+        if any(item in me.role_ids for item in items):
             return True
         raise BotMissingAnyRole(missing_roles=list(items))
 

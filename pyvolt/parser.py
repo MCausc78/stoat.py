@@ -1785,7 +1785,7 @@ class Parser:
             joined_at=_parse_dt(payload['joined_at']),
             nick=payload.get('nickname'),
             internal_server_avatar=None if avatar is None else self.parse_asset(avatar),
-            roles=payload.get('roles', []),
+            role_ids=payload.get('roles', []),
             timed_out_until=None if timeout is None else _parse_dt(timeout),
             can_publish=payload.get('can_publish', True),
             can_receive=payload.get('can_receive', True),
@@ -3437,7 +3437,7 @@ class Parser:
                 joined_at=joined_at,
                 nick=None,
                 internal_server_avatar=None,
-                roles=[],
+                role_ids=[],
                 timed_out_until=None,
                 can_publish=True,
                 can_receive=True,
@@ -3504,7 +3504,7 @@ class Parser:
                 internal_server_avatar=None
                 if 'Avatar' in clear
                 else (UNDEFINED if avatar is None else self.parse_asset(avatar)),
-                roles=[] if 'Roles' in clear else (UNDEFINED if roles is None else roles),
+                role_ids=[] if 'Roles' in clear else (UNDEFINED if roles is None else roles),
                 timed_out_until=None if 'Timeout' in clear else (UNDEFINED if timeout is None else _parse_dt(timeout)),
                 can_publish=data.get('can_publish', UNDEFINED),
                 can_receive=data.get('can_receive', UNDEFINED),

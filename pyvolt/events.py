@@ -760,7 +760,7 @@ class MessageCreateEvent(ShardEvent):
                 server_id = channel.server_id
                 me = cache.get_server_member(server_id, read_state.user_id, ctx)
                 if me is not None:
-                    mentioned = any(role_id in role_mention_ids for role_id in me.roles)
+                    mentioned = any(role_id in role_mention_ids for role_id in me.role_ids)
 
             if mentioned and self.message.id not in read_state.mentioned_in:
                 read_state.mentioned_in.append(self.message.id)
@@ -1240,7 +1240,7 @@ class ServerCreateEvent(ShardEvent):
                     joined_at=self.joined_at,
                     nick=None,
                     internal_server_avatar=None,
-                    roles=[],
+                    role_ids=[],
                     timed_out_until=None,
                     can_publish=True,
                     can_receive=True,

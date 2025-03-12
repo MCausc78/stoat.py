@@ -249,6 +249,7 @@ class CacheContextType(Enum):
     server_through_message_server = 'Message.server: Optional[Server]'
     member_or_user_through_message_author = 'Message.author: Union[Member, User]'
     channel_through_read_state_channel = 'ReadState.channel: Channel'
+    members_through_role_members = 'Role.members: List[Member]'
     server_through_role_server = 'Role.server: Server'
     emoji_through_server_getter = 'Server.get_emoji(): Optional[Emoji]'
     member_through_server_getter = 'Server.get_member(): Optional[Member]'
@@ -1127,6 +1128,11 @@ class ReadStateThroughTextChannelReadStateCacheContext(TextChannelCacheContext):
 
 
 @define(slots=True)
+class MembersThroughRoleMembersCacheContext(BaseRoleCacheContext):
+    """Represents a cache context that involves an :class:`.BaseRole`, wishing to retrieve server's members."""
+
+
+@define(slots=True)
 class ServerThroughRoleServerCacheContext(BaseRoleCacheContext):
     """Represents a cache context that involves an :class:`.BaseRole`, wishing to retrieve role's server."""
 
@@ -1411,6 +1417,9 @@ _MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE: typing.Final[UndefinedCacheContext] = 
 )
 _READ_STATE_THROUGH_DM_CHANNEL_READ_STATE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.read_state_through_dm_channel_read_state,
+)
+_MEMBERS_THROUGH_ROLE_MEMBERS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.members_through_role_members,
 )
 _SERVER_THROUGH_ROLE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_role_server,
@@ -1750,6 +1759,7 @@ ProvideCacheContextIn = typing.Literal[
     'Message.server',
     'Message.author',
     'ReadState.channel',
+    'Role.members',
     'Role.server',
     'Server.get_emoji()',
     'Server.get_member()',
@@ -3250,6 +3260,7 @@ __all__ = (
     'ServerThroughMessageServerCacheContext',
     'MemberOrUserThroughMessageAuthorCacheContext',
     'ReadStateThroughTextChannelReadStateCacheContext',
+    'MembersThroughRoleMembersCacheContext',
     'ServerThroughRoleServerCacheContext',
     'ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext',
     'ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext',
@@ -3329,6 +3340,7 @@ __all__ = (
     '_USER_THROUGH_DM_CHANNEL_INITIATOR',
     '_MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE',
     '_READ_STATE_THROUGH_DM_CHANNEL_READ_STATE',
+    '_MEMBERS_THROUGH_ROLE_MEMBERS',
     '_SERVER_THROUGH_ROLE_SERVER',
     '_USER_THROUGH_DM_CHANNEL_RECIPIENT',
     '_USER_THROUGH_DM_CHANNEL_RECIPIENTS',
