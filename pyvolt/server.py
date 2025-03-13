@@ -2730,6 +2730,45 @@ class BaseMember:
 
     _user: typing.Union[User, str] = field(repr=True, kw_only=True, alias='_user')
 
+    def get_bot_owner(self) -> tuple[typing.Optional[User], str]:
+        """Returns the user who created this bot user.
+
+        Returns
+        -------
+        Tuple[Optional[:class:`.User`], :class:`str`]
+            The bot owner and their ID (may be empty if user is not a bot).
+        """
+
+        if isinstance(self._user, User):
+            return self._user.get_bot_owner()
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return (None, '')
+
+        ctx = (
+            UserThroughMemberUserCacheContext(
+                type=CacheContextType.user_through_member_user,
+                member=self,
+            )
+            if state.provide_cache_context('Member.user')
+            else _USER_THROUGH_MEMBER_USER
+        )
+
+        user = cache.get_user(self._user, ctx)
+
+        if user is None:
+            return (None, '')
+
+        bot = user.bot
+
+        if bot is None:
+            return (None, '')
+
+        return (cache.get_user(bot.owner_id, ctx), bot.owner_id)
+
     def get_server(self) -> typing.Optional[Server]:
         """Optional[:class:`.Server`]: The server this member belongs to."""
 
@@ -2775,8 +2814,7 @@ class BaseMember:
     def __eq__(self, other: object, /) -> bool:
         return (
             self is other
-            or (isinstance(other, BaseMember) and self.id == other.id and self.server_id == other.server_id)
-            or isinstance(other, BaseUser)
+            or ((isinstance(other, BaseMember) and self.server_id == other.server_id) or isinstance(other, BaseUser))
             and self.id == other.id
         )
 
@@ -2798,6 +2836,18 @@ class BaseMember:
                 type='Member.user',
             )
         return user
+
+    @property
+    def bot_owner(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: Returns the user who created this bot user."""
+
+        bot_owner, bot_owner_id = self.get_bot_owner()
+        if bot_owner is None and len(bot_owner_id):
+            raise NoData(
+                what=bot_owner_id,
+                type='Member.bot_owner',
+            )
+        return bot_owner
 
     @property
     def id(self) -> str:
@@ -2917,6 +2967,11 @@ class BaseMember:
             return None
 
         return user.internal_avatar
+
+    @property
+    def avatar(self) -> typing.Optional[Asset]:
+        """Optional[:class:`.Asset`]: The avatar of the user."""
+        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def raw_badges(self) -> int:
