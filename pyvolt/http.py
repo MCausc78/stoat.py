@@ -1044,6 +1044,8 @@ class HTTPClient:
 
         Deletes a bot.
 
+        Fires :class:`.UserUpdateEvent` for this bot.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1094,6 +1096,8 @@ class HTTPClient:
         """|coro|
 
         Edits the bot.
+
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
 
         Parameters
         ----------
@@ -1347,6 +1351,10 @@ class HTTPClient:
 
         If destination is a server, you must have :attr:`~Permissions.manage_server` to do this, otherwise :attr:`~Permissions.create_invites` is required.
 
+
+        Fires either :class:`.PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for bot,
+        and for rest of group recipients/server members, either :class:`.GroupRecipientAddEvent`, or :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent` are fired.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1446,6 +1454,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
+        Fires :class:`.MessageAckEvent` for the current user.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1504,6 +1514,11 @@ class HTTPClient:
         Deletes a server channel, leaves a group or closes a group.
 
         You must have :attr:`~Permissions.view_channel` to do this. If target channel is server channel, :attr:`~Permissions.manage_channels` is also required.
+
+        For server channels, :class:`.ServerChannelDeleteEvent` is fired.
+        For groups, if the current user is group owner, :class:`.PrivateChannelDeleteEvent` is fired,
+        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user, and :class:`.GroupRecipientRemoveEvent`
+        is fired for rest of group recipients.
 
         Parameters
         ----------
@@ -1574,6 +1589,8 @@ class HTTPClient:
         Edits the channel.
 
         You must have :attr:`~Permissions.manage_channels` to do this.
+
+        Fires :class:`.ChannelUpdateEvent` for all users who can see target channel.
 
         Parameters
         ----------
@@ -1737,6 +1754,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.create_invites` to do this.
 
+        Fires :class:`.PrivateChannelCreateEvent` for added recipient, and :class:`.GroupRecipientAddEvent` for rest of group recipients.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1820,6 +1839,8 @@ class HTTPClient:
         """|coro|
 
         Creates a new group.
+
+        Fires :class:`.PrivateChannelCreateEvent` for the current user and all specified recipients.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1914,6 +1935,8 @@ class HTTPClient:
         """|coro|
 
         Removes a recipient from the group.
+
+        Fires :class:`.PrivateChannelDeleteEvent` for removed recipient, and :class:`.GroupRecipientRemoveEvent` for rest of group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2122,6 +2145,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_messages` to do this regardless whether you authored the message or not.
 
+        Fires :class:`.MessageDeleteBulkEvent` for all users who can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
@@ -2186,6 +2211,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_messages` to do this.
 
+        Fires :class:`.MessageUpdateEvent` with empty :attr:`~PartialMessage.reactions` for all users who can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
@@ -2241,6 +2268,8 @@ class HTTPClient:
         Deletes the message in a channel.
 
         You must have :attr:`~Permissions.manage_messages` to do this if message is not yours.
+
+        Fires :class:`.MessageDeleteEvent` for all users who can see target channel.
 
         Parameters
         ----------
@@ -2302,6 +2331,8 @@ class HTTPClient:
         """|coro|
 
         Edits a message in channel.
+
+        Fires :class:`.MessageUpdateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
@@ -2450,6 +2481,8 @@ class HTTPClient:
         Pins a message.
 
         You must have :attr:`~Permissions.manage_messages` to do this.
+
+        Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
@@ -2620,6 +2653,8 @@ class HTTPClient:
         React to a given message.
 
         You must have :attr:`~Permissions.react` to do this.
+
+        Fires :class:`.MessageReactEvent` for all users who can see target channel.
 
         Parameters
         ----------
@@ -2835,6 +2870,8 @@ class HTTPClient:
 
         If message mentions any roles, you must have :attr:`~Permissions.mention_roles` to do that.
 
+        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
@@ -3011,6 +3048,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_messages` to do this.
 
+        Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
@@ -3082,6 +3121,9 @@ class HTTPClient:
         Remove your own, someone else's or all of a given reaction.
 
         You must have :attr:`~Permissions.react` to do this.
+
+        Fires :class:`.MessageClearReactionEvent` if ``remove_all`` is ``True`` or :class:`.MessageUnreactEvent`, for all users
+        who can see target channel.
 
         Parameters
         ----------
@@ -3168,6 +3210,9 @@ class HTTPClient:
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
         The provided channel must be a :class:`.ServerChannel`.
+
+        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel, and :class:`.ChannelDeleteEvent` for users who
+        no longer can see target channel.
 
         Parameters
         ----------
@@ -3270,6 +3315,9 @@ class HTTPClient:
 
         Channel must be a :class:`GroupChannel`, or :class:`.ServerChannel`.
 
+        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel, and for server channels,
+        :class:`.ChannelDeleteEvent` is fired for users who no longer can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.ServerChannel`]]
@@ -3352,6 +3400,9 @@ class HTTPClient:
         Asks the voice server for a token to join the call.
 
         You must have :attr:`~Permissions.connect` to do this.
+
+        For Livekit instances, fires :class:`.MessageCreateEvent` and :class:`.VoiceChannelJoinEvent` / :class:`.VoiceChannelMoveEvent`
+        for all users who can see target channel.
 
         Parameters
         ----------
@@ -3451,6 +3502,8 @@ class HTTPClient:
         Creates a webhook which 3rd party platforms can use to send.
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
+
+        Fires :class:`.WebhookCreateEvent` for all users who can see target channel.
 
         Parameters
         ----------
@@ -3598,6 +3651,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_customization` to do this.
 
+        Fires :class:`.EmojiCreateEvent` for all server members.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -3690,6 +3745,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_customization` to do this if you do not own
         the emoji, unless it was detached (already deleted).
+
+        May fire :class:`.EmojiDeleteEvent` for all server members.
 
         .. note::
             If deleting detached emoji, this will successfully return.
@@ -3863,6 +3920,10 @@ class HTTPClient:
         """|coro|
 
         Accepts an invite.
+
+        Fires either :class:`.PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for the current user,
+        and fires either :class:`.GroupRecipientAddEvent` or :class:`.ServerMemberJoinEvent`, and :class:`.MessageCreateEvent`,
+        both for all group recipients/server members.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -4127,6 +4188,8 @@ class HTTPClient:
 
         Report a message to the instance moderation team.
 
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -4197,6 +4260,8 @@ class HTTPClient:
         """|coro|
 
         Report a server to the instance moderation team.
+
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
@@ -4269,6 +4334,8 @@ class HTTPClient:
         """|coro|
 
         Report an user to the instance moderation team.
+
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
@@ -4349,6 +4416,8 @@ class HTTPClient:
         Bans a user from the server.
 
         You must have :attr:`~Permissions.ban_members` to do this.
+
+        May fire :class:`.ServerMemberRemoveEvent` for banned user and all server members.
 
         Parameters
         ----------
@@ -4574,6 +4643,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
+        Fires :class:`.ServerChannelCreateEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
@@ -4772,6 +4843,15 @@ class HTTPClient:
         """|coro|
 
         Edits a member.
+
+        Fires :class:`.ServerMemberUpdateEvent` for all server members,
+        and optionally fires multiple/single :class:`.ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
+
+        For Livekit instances:
+
+        - If ``voice`` parameter is provided, fires :class:`.VoiceChannelMoveEvent` / :class:`.VoiceChannelLeaveEvent`
+          if specified as ``None``, otherwise :class:`.VoiceChannelLeaveEvent` is fired. The specified events are fired for all users who can see voice channel the member is currently in.
+        - If any of ``roles``, ``can_publish`` or ``can_receive`` parameters is provided, may fire :class:`.UserVoiceStateUpdateEvent` for all users who can see voice channel the member is currently in.
 
         Parameters
         ----------
@@ -5159,6 +5239,8 @@ class HTTPClient:
 
         Kicks a member from the server.
 
+        Fires :class:`.ServerMemberRemoveEvent` for kicked user and all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
@@ -5230,6 +5312,8 @@ class HTTPClient:
         Sets permissions for the specified server role.
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
+
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -5306,6 +5390,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
+        Fires :class:`.ServerUpdateEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
@@ -5371,6 +5457,8 @@ class HTTPClient:
         Creates a new server role.
 
         You must have :attr:`~Permissions.manage_roles` to do this.
+
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -5448,6 +5536,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
+        Fires :class:`.ServerRoleDeleteEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
@@ -5509,6 +5599,8 @@ class HTTPClient:
         Edits a role.
 
         You must have :attr:`~Permissions.manage_roles` to do this.
+
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -5708,6 +5800,8 @@ class HTTPClient:
 
         Create a new server.
 
+        Fires :class:`.ServerCreateEvent` for the current user.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -5775,6 +5869,8 @@ class HTTPClient:
 
         Deletes a server if owner, or leaves otherwise.
 
+        Fires :class:`.ServerDeleteEvent` (if owner) or :class:`.ServerMemberRemoveEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
@@ -5812,7 +5908,8 @@ class HTTPClient:
     async def leave_server(self, server: ULIDOr[BaseServer], /, *, silent: typing.Optional[bool] = None) -> None:
         """|coro|
 
-        Leaves a server if not owner, or deletes otherwise.
+        Fires :class:`.ServerMemberRemoveEvent` or :class:`.ServerDeleteEvent` (if owner) for all server members.
+
 
         Parameters
         ----------
@@ -5848,12 +5945,12 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        p: raw.OptionsServerDelete = {}
+        params: raw.OptionsServerDelete = {}
         if silent is not None:
-            p['leave_silently'] = utils._bool(silent)
+            params['leave_silently'] = utils._bool(silent)
         await self.request(
             routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)),
-            params=p,
+            params=params,
         )
 
     async def edit_server(
@@ -5877,6 +5974,8 @@ class HTTPClient:
         Edits a server.
 
         To provide any of parameters below (except for ``categories``, ``discoverable`` and ``flags``), you must have :attr:`~Permissions.manage_server`.
+
+        Fires :class:`.ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -6182,6 +6281,8 @@ class HTTPClient:
 
         Edits the current user settings.
 
+        Fires :class:`.UserSettingsUpdateEvent` for the current user.
+
         .. note::
             This is not supposed to be used by bot accounts.
 
@@ -6233,6 +6334,8 @@ class HTTPClient:
         """|coro|
 
         Accept another user's friend request.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you accepted friend request from.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -6316,6 +6419,8 @@ class HTTPClient:
 
         Blocks an user.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and blocked user.
+
         .. note::
             This is not supposed to be used by bot accounts.
 
@@ -6367,6 +6472,8 @@ class HTTPClient:
         """|coro|
 
         Change your username.
+
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -6487,6 +6594,8 @@ class HTTPClient:
 
         Edits the current user.
 
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
+
         Parameters
         ----------
         display_name: UndefinedOr[Optional[:class:`str`]]
@@ -6567,6 +6676,8 @@ class HTTPClient:
         """|coro|
 
         Edits a user.
+
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to target user.
 
         Parameters
         ----------
@@ -6910,6 +7021,8 @@ class HTTPClient:
 
         You must have :attr:`~UserPermissions.send_messages` to do this.
 
+        May fire :class:`.PrivateChannelCreateEvent`.
+
         Parameters
         ----------
         user: ULIDOr[:class:`.BaseUser`]
@@ -6966,6 +7079,8 @@ class HTTPClient:
         """|coro|
 
         Denies another user's friend request.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you denide friend request from.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -7027,6 +7142,8 @@ class HTTPClient:
 
         Removes the user from friend list.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -7086,6 +7203,8 @@ class HTTPClient:
         """|coro|
 
         Sends a friend request to another user.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you sent friend request to.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -7180,6 +7299,8 @@ class HTTPClient:
 
         Unblocks an user.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and unblocked user.
+
         .. note::
             This is not supposed to be used by bot accounts.
 
@@ -7239,6 +7360,8 @@ class HTTPClient:
         If webhook token wasn't given, the library will attempt delete webhook with current bot/user token.
 
         You must have :attr:`~Permissions.manage_webhooks` to do this if ``token`` parameter is ``None`` or missing.
+
+        Fires :class:`.WebhookDeleteEvent` for all users who can see webhook channel.
 
         Parameters
         ----------
@@ -7300,6 +7423,8 @@ class HTTPClient:
         If webhook token wasn't given, the library will attempt edit webhook with current bot/user token.
 
         You must have :attr:`~Permissions.manage_webhooks` to do this if ``token`` parameter is ``None`` or missing.
+
+        Fires :class:`.WebhookUpdateEvent` for all users who can see webhook channel.
 
         Parameters
         ----------
@@ -7408,6 +7533,8 @@ class HTTPClient:
         If message mentions "\\@everyone" or "\\@online", the webhook must have :attr:`~Permissions.mention_everyone` to do that.
 
         If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
+
+        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
@@ -7964,6 +8091,8 @@ class HTTPClient:
         """|coro|
 
         Disable an account.
+
+        Fires :class:`.LogoutEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -9010,6 +9139,8 @@ class HTTPClient:
 
         Deletes a specific active session.
 
+        Fires :class:`.SessionDeleteEvent` for the provided session.
+
         Parameters
         ----------
         session: ULIDOr[:class:`.PartialSession`]
@@ -9050,6 +9181,8 @@ class HTTPClient:
         """|coro|
 
         Deletes all active sessions, optionally including current one.
+
+        Fires :class:`.SessionDeleteAllEvent` for the all sessions (may include current session if ``revoke_self`` is ``True``).
 
         Parameters
         ----------
