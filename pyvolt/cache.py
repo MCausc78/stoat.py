@@ -260,6 +260,7 @@ class CacheContextType(Enum):
     member_through_server_owner = 'Server.owner: Member'
     server_through_member_server = 'Member.server: Server'
     user_through_member_user = 'Member.user: User'
+    user_through_member_bot_owner = 'Member.bot_owner: Optional[User]'
     user_through_member_name = 'Member.name: str'
     user_through_member_discriminator = 'Member.discriminator: str'
     user_through_member_display_name = 'Member.display_name: Optional[str]'
@@ -272,7 +273,7 @@ class CacheContextType(Enum):
     user_through_member_relationship = 'Member.relationship: RelationshipStatus'
     user_through_member_online = 'Member.online: bool'
     user_through_member_tag = 'Member.tag: str'
-    user_through_user_bot_owner = 'User.bot_owner: User'
+    user_through_user_bot_owner = 'User.bot_owner: Optional[User]'
     channel_id_through_user_dm_channel_id = 'User.dm_channel_id: Optional[str]'
     channel_through_user_dm_channel = 'User.dm_channel: Optional[DMChannel]'
     user_through_webhook_creator = 'Webhook.creator: User'
@@ -1265,6 +1266,11 @@ class UserThroughMemberUserCacheContext(BaseMemberCacheContext):
 
 
 @define(slots=True)
+class UserThroughMemberBotOwnerCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's bot owner."""
+
+
+@define(slots=True)
 class UserThroughMemberNameCacheContext(BaseMemberCacheContext):
     """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's name."""
 
@@ -1713,6 +1719,9 @@ _SERVER_THROUGH_MEMBER_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCa
 _USER_THROUGH_MEMBER_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_member_user,
 )
+_USER_THROUGH_MEMBER_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_bot_owner,
+)
 _USER_THROUGH_MEMBER_NAME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_member_name,
 )
@@ -1887,7 +1896,7 @@ ProvideCacheContextIn = typing.Literal[
     'Server.owner',
     'Member.server',
     'Member.user',
-    'Member.id',
+    'Member.bot_owner',
     'Member.name',
     'Member.discriminator',
     'Member.display_name',
@@ -3414,6 +3423,7 @@ __all__ = (
     'ChannelsThroughServerGetterCacheContext',
     'ServerThroughMemberServerCacheContext',
     'UserThroughMemberUserCacheContext',
+    'UserThroughMemberBotOwnerCacheContext',
     'UserThroughMemberNameCacheContext',
     'UserThroughMemberDiscriminatorCacheContext',
     'UserThroughMemberDisplayNameCacheContext',
@@ -3553,6 +3563,7 @@ __all__ = (
     '_MEMBER_THROUGH_SERVER_OWNER',
     '_SERVER_THROUGH_MEMBER_SERVER',
     '_USER_THROUGH_MEMBER_USER',
+    '_USER_THROUGH_MEMBER_BOT_OWNER',
     '_USER_THROUGH_MEMBER_NAME',
     '_USER_THROUGH_MEMBER_DISCRIMINATOR',
     '_USER_THROUGH_MEMBER_DISPLAY_NAME',

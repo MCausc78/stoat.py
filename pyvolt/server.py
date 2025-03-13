@@ -44,6 +44,7 @@ from .cache import (
     MemberThroughServerOwnerCacheContext,
     ServerThroughMemberServerCacheContext,
     UserThroughMemberUserCacheContext,
+    UserThroughMemberBotOwnerCacheContext,
     UserThroughMemberNameCacheContext,
     UserThroughMemberDiscriminatorCacheContext,
     UserThroughMemberDisplayNameCacheContext,
@@ -67,6 +68,7 @@ from .cache import (
     _MEMBER_THROUGH_SERVER_OWNER,
     _SERVER_THROUGH_MEMBER_SERVER,
     _USER_THROUGH_MEMBER_USER,
+    _USER_THROUGH_MEMBER_BOT_OWNER,
     _USER_THROUGH_MEMBER_NAME,
     _USER_THROUGH_MEMBER_DISCRIMINATOR,
     _USER_THROUGH_MEMBER_DISPLAY_NAME,
@@ -2749,12 +2751,12 @@ class BaseMember:
             return (None, '')
 
         ctx = (
-            UserThroughMemberUserCacheContext(
-                type=CacheContextType.user_through_member_user,
+            UserThroughMemberBotOwnerCacheContext(
+                type=CacheContextType.user_through_member_bot_owner,
                 member=self,
             )
-            if state.provide_cache_context('Member.user')
-            else _USER_THROUGH_MEMBER_USER
+            if state.provide_cache_context('Member.bot_owner')
+            else _USER_THROUGH_MEMBER_BOT_OWNER
         )
 
         user = cache.get_user(self._user, ctx)
