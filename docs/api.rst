@@ -1929,12 +1929,142 @@ ChannelsThroughServerGetterCacheContext
     :members:
     :inherited-members:
 
-UserThroughBaseMemberGetterCacheContext
+ServerThroughMemberServerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughMemberServerCacheContext
+
+.. autoclass:: ServerThroughMemberServerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberUserCacheContext
+
+.. autoclass:: UserThroughMemberUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberNameCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberNameCacheContext
+
+.. autoclass:: UserThroughMemberNameCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberDiscriminatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberDiscriminatorCacheContext
+
+.. autoclass:: UserThroughMemberDiscriminatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberDisplayNameCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberDisplayNameCacheContext
+
+.. autoclass:: UserThroughMemberDisplayNameCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberInternalAvatarCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberInternalAvatarCacheContext
+
+.. autoclass:: UserThroughMemberInternalAvatarCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberRawBadgesCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberRawBadgesCacheContext
+
+.. autoclass:: UserThroughMemberRawBadgesCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberStatusCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberStatusCacheContext
+
+.. autoclass:: UserThroughMemberStatusCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberRawFlagsCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberRawFlagsCacheContext
+
+.. autoclass:: UserThroughMemberRawFlagsCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberPrivilegedCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: UserThroughBaseMemberGetterCacheContext
+.. attributetable:: UserThroughMemberPrivilegedCacheContext
 
-.. autoclass:: UserThroughBaseMemberGetterCacheContext
+.. autoclass:: UserThroughMemberPrivilegedCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberBotCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberBotCacheContext
+
+.. autoclass:: UserThroughMemberBotCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberRelationshipCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberRelationshipCacheContext
+
+.. autoclass:: UserThroughMemberRelationshipCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberOnlineCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberOnlineCacheContext
+
+.. autoclass:: UserThroughMemberOnlineCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberTagCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberTagCacheContext
+
+.. autoclass:: UserThroughMemberTagCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
