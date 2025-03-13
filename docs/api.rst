@@ -1952,6 +1952,16 @@ UserThroughMemberUserCacheContext
     :members:
     :inherited-members:
 
+UserThroughMemberBotOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberBotOwnerCacheContext
+
+.. autoclass:: UserThroughMemberBotOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 UserThroughMemberNameCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
