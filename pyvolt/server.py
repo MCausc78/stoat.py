@@ -42,7 +42,20 @@ from .cache import (
     ChannelThroughServerGetterCacheContext,
     ChannelsThroughServerGetterCacheContext,
     MemberThroughServerOwnerCacheContext,
-    UserThroughBaseMemberGetterCacheContext,
+    ServerThroughMemberServerCacheContext,
+    UserThroughMemberUserCacheContext,
+    UserThroughMemberNameCacheContext,
+    UserThroughMemberDiscriminatorCacheContext,
+    UserThroughMemberDisplayNameCacheContext,
+    UserThroughMemberInternalAvatarCacheContext,
+    UserThroughMemberRawBadgesCacheContext,
+    UserThroughMemberStatusCacheContext,
+    UserThroughMemberRawFlagsCacheContext,
+    UserThroughMemberPrivilegedCacheContext,
+    UserThroughMemberBotCacheContext,
+    UserThroughMemberRelationshipCacheContext,
+    UserThroughMemberOnlineCacheContext,
+    UserThroughMemberTagCacheContext,
     _MEMBERS_THROUGH_ROLE_MEMBERS,
     _SERVER_THROUGH_ROLE_SERVER,
     _EMOJI_THROUGH_SERVER_GETTER,
@@ -52,7 +65,20 @@ from .cache import (
     _CHANNEL_THROUGH_SERVER_GETTER,
     _CHANNELS_THROUGH_SERVER_GETTER,
     _MEMBER_THROUGH_SERVER_OWNER,
-    _USER_THROUGH_MEMBER_GETTER,
+    _SERVER_THROUGH_MEMBER_SERVER,
+    _USER_THROUGH_MEMBER_USER,
+    _USER_THROUGH_MEMBER_NAME,
+    _USER_THROUGH_MEMBER_DISCRIMINATOR,
+    _USER_THROUGH_MEMBER_DISPLAY_NAME,
+    _USER_THROUGH_MEMBER_INTERNAL_AVATAR,
+    _USER_THROUGH_MEMBER_RAW_BADGES,
+    _USER_THROUGH_MEMBER_STATUS,
+    _USER_THROUGH_MEMBER_RAW_FLAGS,
+    _USER_THROUGH_MEMBER_PRIVILEGED,
+    _USER_THROUGH_MEMBER_BOT,
+    _USER_THROUGH_MEMBER_RELATIONSHIP,
+    _USER_THROUGH_MEMBER_ONLINE,
+    _USER_THROUGH_MEMBER_TAG,
 )
 from .cdn import StatelessAsset, Asset, ResolvableResource
 from .core import (
@@ -64,7 +90,7 @@ from .core import (
 from .emoji import ServerEmoji
 from .enums import ChannelType, ContentReportReason, RelationshipStatus
 from .errors import NoData
-from .flags import Permissions, ServerFlags, UserBadges, UserFlags
+from .flags import Permissions, ServerFlags  # , UserBadges, UserFlags
 from .permissions import Permissions, PermissionOverride
 from .user import (
     UserStatus,
@@ -2713,8 +2739,19 @@ class BaseMember:
         if cache is None:
             return None
 
+        ctx = (
+            ServerThroughMemberServerCacheContext(
+                type=CacheContextType.server_through_member_server,
+                member=self,
+            )
+            if state.provide_cache_context('Member.server')
+            else _SERVER_THROUGH_MEMBER_SERVER
+        )
+
+        return cache.get_server(self.server_id, ctx)
+
     def get_user(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Grabs the user from cache."""
+        """Optional[:class:`.User`]: The user."""
         if isinstance(self._user, User):
             return self._user
 
@@ -2725,12 +2762,12 @@ class BaseMember:
             return None
 
         ctx = (
-            UserThroughBaseMemberGetterCacheContext(
-                type=CacheContextType.user_through_member_getter,
+            UserThroughMemberUserCacheContext(
+                type=CacheContextType.user_through_member_user,
                 member=self,
             )
             if state.provide_cache_context('Member.user')
-            else _USER_THROUGH_MEMBER_GETTER
+            else _USER_THROUGH_MEMBER_USER
         )
 
         return cache.get_user(self._user, ctx)
@@ -2751,78 +2788,363 @@ class BaseMember:
         return str(user) if user else ''
 
     @property
-    def id(self) -> str:
-        """:class:`str`: The member's user ID."""
-        return self._user.id if isinstance(self._user, User) else self._user
-
-    @property
     def user(self) -> User:
-        """:class:`.User`: The member user."""
+        """:class:`.User`: The user."""
+
         user = self.get_user()
         if user is None:
-            raise NoData(what=self.id, type='Member.user')
+            raise NoData(
+                what=self.id,
+                type='Member.user',
+            )
         return user
 
     @property
-    def display_name(self) -> typing.Optional[str]:
-        """Optional[:class:`str`]: The user display name."""
-        user = self.get_user()
-        if user is not None:
-            return user.display_name
+    def id(self) -> str:
+        """:class:`str`: The ID of the entity."""
+        if isinstance(self._user, User):
+            return self._user.id
+        return self._user
 
     @property
-    def badges(self) -> UserBadges:
-        """:class:`.UserBadges`: The user badges."""
-        user = self.get_user()
+    def name(self) -> str:
+        """:class:`str`: The username of the user."""
+        if isinstance(self._user, User):
+            return self._user.name
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return ''
+
+        ctx = (
+            UserThroughMemberNameCacheContext(
+                type=CacheContextType.user_through_member_name,
+                member=self,
+            )
+            if state.provide_cache_context('Member.name')
+            else _USER_THROUGH_MEMBER_NAME
+        )
+
+        user = cache.get_user(self._user, ctx)
+
         if user is None:
-            return UserBadges.none()
-        return user.badges
+            return ''
+
+        return user.name
+
+    @property
+    def discriminator(self) -> str:
+        """:class:`str`: The discriminator of the user."""
+        if isinstance(self._user, User):
+            return self._user.discriminator
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return ''
+
+        ctx = (
+            UserThroughMemberDiscriminatorCacheContext(
+                type=CacheContextType.user_through_member_discriminator,
+                member=self,
+            )
+            if state.provide_cache_context('Member.discriminator')
+            else _USER_THROUGH_MEMBER_DISCRIMINATOR
+        )
+
+        user = cache.get_user(self._user, ctx)
+
+        if user is None:
+            return ''
+
+        return user.discriminator
+
+    @property
+    def display_name(self) -> typing.Optional[str]:
+        """Optional[:class:`str`]: The user’s display name."""
+        if isinstance(self._user, User):
+            return self._user.display_name
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughMemberDisplayNameCacheContext(
+                type=CacheContextType.user_through_member_display_name,
+                member=self,
+            )
+            if state.provide_cache_context('Member.display_name')
+            else _USER_THROUGH_MEMBER_DISPLAY_NAME
+        )
+
+        user = cache.get_user(self._user, ctx)
+
+        if user is None:
+            return None
+
+        return user.display_name
+
+    @property
+    def internal_avatar(self) -> typing.Optional[StatelessAsset]:
+        """Optional[:class:`.StatelessAsset`]: The stateless avatar of the user."""
+        if isinstance(self._user, User):
+            return self._user.internal_avatar
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughMemberInternalAvatarCacheContext(
+                type=CacheContextType.user_through_member_internal_avatar,
+                member=self,
+            )
+            if state.provide_cache_context('Member.internal_avatar')
+            else _USER_THROUGH_MEMBER_INTERNAL_AVATAR
+        )
+
+        user = cache.get_user(self._user, ctx)
+
+        if user is None:
+            return None
+
+        return user.internal_avatar
+
+    @property
+    def raw_badges(self) -> int:
+        """:class:`int`: The user's badges raw value."""
+        if isinstance(self._user, User):
+            return self._user.raw_badges
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return 0
+
+        ctx = (
+            UserThroughMemberRawBadgesCacheContext(
+                type=CacheContextType.user_through_member_raw_badges,
+                member=self,
+            )
+            if state.provide_cache_context('Member.raw_badges')
+            else _USER_THROUGH_MEMBER_RAW_BADGES
+        )
+
+        user = cache.get_user(self._user, ctx)
+
+        if user is None:
+            return 0
+
+        return user.raw_badges
 
     @property
     def status(self) -> typing.Optional[UserStatus]:
         """Optional[:class:`.UserStatus`]: The current user's status."""
-        user = self.get_user()
-        if user is not None:
-            return user.status
+        if isinstance(self._user, User):
+            return self._user.status
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughMemberStatusCacheContext(
+                type=CacheContextType.user_through_member_status,
+                member=self,
+            )
+            if state.provide_cache_context('Member.status')
+            else _USER_THROUGH_MEMBER_STATUS
+        )
+
+        user = cache.get_user(self._user, ctx)
+
+        if user is None:
+            return None
+
+        return user.status
 
     @property
-    def flags(self) -> UserFlags:
-        """:class:`.UserFlags`: The user flags."""
-        user = self.get_user()
+    def raw_flags(self) -> int:
+        """:class:`int`: The user's flags raw value."""
+        if isinstance(self._user, User):
+            return self._user.raw_flags
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return 0
+
+        ctx = (
+            UserThroughMemberRawFlagsCacheContext(
+                type=CacheContextType.user_through_member_raw_flags,
+                member=self,
+            )
+            if state.provide_cache_context('Member.raw_flags')
+            else _USER_THROUGH_MEMBER_RAW_FLAGS
+        )
+
+        user = cache.get_user(self._user, ctx)
+
         if user is None:
-            return UserFlags.none()
-        return user.flags
+            return 0
+
+        return user.raw_flags
 
     @property
     def privileged(self) -> bool:
-        """:class:`bool`: Whether this user is privileged."""
-        user = self.get_user()
+        """:class:`bool`: Whether the user is privileged."""
+        if isinstance(self._user, User):
+            return self._user.privileged
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return False
+
+        ctx = (
+            UserThroughMemberPrivilegedCacheContext(
+                type=CacheContextType.user_through_member_privileged,
+                member=self,
+            )
+            if state.provide_cache_context('Member.privileged')
+            else _USER_THROUGH_MEMBER_PRIVILEGED
+        )
+
+        user = cache.get_user(self._user, ctx)
+
         if user is None:
             return False
+
         return user.privileged
 
     @property
     def bot(self) -> typing.Optional[BotUserMetadata]:
         """Optional[:class:`.BotUserMetadata`]: The information about the bot."""
-        user = self.get_user()
-        if user is not None:
-            return user.bot
+        if isinstance(self._user, User):
+            return self._user.bot
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughMemberBotCacheContext(
+                type=CacheContextType.user_through_member_bot,
+                member=self,
+            )
+            if state.provide_cache_context('Member.bot')
+            else _USER_THROUGH_MEMBER_BOT
+        )
+
+        user = cache.get_user(self._user, ctx)
+
+        if user is None:
+            return None
+
+        return user.bot
 
     @property
     def relationship(self) -> RelationshipStatus:
-        """:class:`.RelationshipStatus`: The current session user's relationship with this user."""
-        user = self.get_user()
+        """:class:`RelationshipStatus`: The current session user's relationship with this user."""
+        if isinstance(self._user, User):
+            return self._user.relationship
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return RelationshipStatus.none
+
+        ctx = (
+            UserThroughMemberRelationshipCacheContext(
+                type=CacheContextType.user_through_member_relationship,
+                member=self,
+            )
+            if state.provide_cache_context('Member.relationship')
+            else _USER_THROUGH_MEMBER_RELATIONSHIP
+        )
+
+        user = cache.get_user(self._user, ctx)
+
         if user is None:
             return RelationshipStatus.none
+
         return user.relationship
 
     @property
     def online(self) -> bool:
-        """:class:`bool`: Whether this user is currently online."""
-        user = self.get_user()
+        """:class:`bool`: Whether the user is currently online."""
+        if isinstance(self._user, User):
+            return self._user.online
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return False
+
+        ctx = (
+            UserThroughMemberOnlineCacheContext(
+                type=CacheContextType.user_through_member_online,
+                member=self,
+            )
+            if state.provide_cache_context('Member.online')
+            else _USER_THROUGH_MEMBER_ONLINE
+        )
+
+        user = cache.get_user(self._user, ctx)
+
         if user is None:
             return False
+
         return user.online
+
+    @property
+    def tag(self) -> str:
+        """:class:`str`: The tag of the user.
+
+        Assuming that :attr:`User.name` is ``'kotlin.Unit'`` and :attr:`User.discriminator` is ``'3510'``,
+        example output would be ``'kotlin.Unit#3510'``.
+        """
+        if isinstance(self._user, User):
+            return self._user.tag
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return ''
+
+        ctx = (
+            UserThroughMemberTagCacheContext(
+                type=CacheContextType.user_through_member_tag,
+                member=self,
+            )
+            if state.provide_cache_context('Member.tag')
+            else _USER_THROUGH_MEMBER_TAG
+        )
+
+        user = cache.get_user(self._user, ctx)
+
+        if user is None:
+            return ''
+
+        return user.tag
 
     async def ban(self, *, reason: typing.Optional[str] = None) -> Ban:
         """|coro|

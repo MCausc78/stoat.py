@@ -259,7 +259,19 @@ class CacheContextType(Enum):
     channels_through_server_getter = 'Server.channels: List[ServerChannel]'
     member_through_server_owner = 'Server.owner: Member'
     server_through_member_server = 'Member.server: Server'
-    user_through_member_getter = 'Member.user: User'
+    user_through_member_user = 'Member.user: User'
+    user_through_member_name = 'Member.name: str'
+    user_through_member_discriminator = 'Member.discriminator: str'
+    user_through_member_display_name = 'Member.display_name: Optional[str]'
+    user_through_member_internal_avatar = 'Member.internal_avatar: Optional[StatelessAsset]'
+    user_through_member_raw_badges = 'Member.raw_badges: int'
+    user_through_member_status = 'Member.status: Optional[UserStatus]'
+    user_through_member_raw_flags = 'Member.raw_flags: int'
+    user_through_member_privileged = 'Member.privileged: bool'
+    user_through_member_bot = 'Member.bot: Optional[BotUserMetadata]'
+    user_through_member_relationship = 'Member.relationship: RelationshipStatus'
+    user_through_member_online = 'Member.online: bool'
+    user_through_member_tag = 'Member.tag: str'
     user_through_user_bot_owner = 'User.bot_owner: User'
     channel_id_through_user_dm_channel_id = 'User.dm_channel_id: Optional[str]'
     channel_through_user_dm_channel = 'User.dm_channel: Optional[DMChannel]'
@@ -1243,8 +1255,73 @@ class MemberThroughServerOwnerCacheContext(ServerCacheContext):
 
 
 @define(slots=True)
-class UserThroughBaseMemberGetterCacheContext(BaseMemberCacheContext):
+class ServerThroughMemberServerCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's server."""
+
+
+@define(slots=True)
+class UserThroughMemberUserCacheContext(BaseMemberCacheContext):
     """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's user."""
+
+
+@define(slots=True)
+class UserThroughMemberNameCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's name."""
+
+
+@define(slots=True)
+class UserThroughMemberDiscriminatorCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's discriminator."""
+
+
+@define(slots=True)
+class UserThroughMemberDisplayNameCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's display name."""
+
+
+@define(slots=True)
+class UserThroughMemberInternalAvatarCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's stateless avatar."""
+
+
+@define(slots=True)
+class UserThroughMemberRawBadgesCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's raw badges value."""
+
+
+@define(slots=True)
+class UserThroughMemberStatusCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's status."""
+
+
+@define(slots=True)
+class UserThroughMemberRawFlagsCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's raw flags value."""
+
+
+@define(slots=True)
+class UserThroughMemberPrivilegedCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's privileged."""
+
+
+@define(slots=True)
+class UserThroughMemberBotCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's user bot-specific metadata."""
+
+
+@define(slots=True)
+class UserThroughMemberRelationshipCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's relationship."""
+
+
+@define(slots=True)
+class UserThroughMemberOnlineCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's online status."""
+
+
+@define(slots=True)
+class UserThroughMemberTagCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's tag."""
 
 
 @define(slots=True)
@@ -1630,6 +1707,49 @@ _CHANNELS_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = Undefined
 _MEMBER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_through_server_owner,
 )
+_SERVER_THROUGH_MEMBER_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_member_server,
+)
+_USER_THROUGH_MEMBER_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_user,
+)
+_USER_THROUGH_MEMBER_NAME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_name,
+)
+_USER_THROUGH_MEMBER_DISCRIMINATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_discriminator,
+)
+_USER_THROUGH_MEMBER_DISPLAY_NAME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_display_name,
+)
+_USER_THROUGH_MEMBER_INTERNAL_AVATAR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_internal_avatar,
+)
+_USER_THROUGH_MEMBER_RAW_BADGES: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_raw_badges,
+)
+_USER_THROUGH_MEMBER_STATUS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_status,
+)
+_USER_THROUGH_MEMBER_RAW_FLAGS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_raw_flags,
+)
+_USER_THROUGH_MEMBER_PRIVILEGED: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_privileged,
+)
+_USER_THROUGH_MEMBER_BOT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_bot,
+)
+_USER_THROUGH_MEMBER_RELATIONSHIP: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_relationship,
+)
+_USER_THROUGH_MEMBER_ONLINE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_online,
+)
+_USER_THROUGH_MEMBER_TAG: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_tag,
+)
+
 _USER_THROUGH_USER_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_user_bot_owner,
 )
@@ -1638,9 +1758,6 @@ _CHANNEL_THROUGH_USER_DM_CHANNEL: typing.Final[UndefinedCacheContext] = Undefine
 )
 _CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_id_through_user_dm_channel_id,
-)
-_USER_THROUGH_MEMBER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_through_member_getter,
 )
 _USER_THROUGH_WEBHOOK_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_webhook_creator,
@@ -1770,6 +1887,19 @@ ProvideCacheContextIn = typing.Literal[
     'Server.owner',
     'Member.server',
     'Member.user',
+    'Member.id',
+    'Member.name',
+    'Member.discriminator',
+    'Member.display_name',
+    'Member.internal_avatar',
+    'Member.raw_badges',
+    'Member.status',
+    'Member.raw_flags',
+    'Member.privileged',
+    'Member.bot',
+    'Member.relationship',
+    'Member.online',
+    'Member.tag',
     'User.bot_owner',
     'User.dm_channel_id',
     'User.dm_channel',
@@ -3282,7 +3412,20 @@ __all__ = (
     'MembersThroughServerGetterCacheContext',
     'ChannelThroughServerGetterCacheContext',
     'ChannelsThroughServerGetterCacheContext',
-    'UserThroughBaseMemberGetterCacheContext',
+    'ServerThroughMemberServerCacheContext',
+    'UserThroughMemberUserCacheContext',
+    'UserThroughMemberNameCacheContext',
+    'UserThroughMemberDiscriminatorCacheContext',
+    'UserThroughMemberDisplayNameCacheContext',
+    'UserThroughMemberInternalAvatarCacheContext',
+    'UserThroughMemberRawBadgesCacheContext',
+    'UserThroughMemberStatusCacheContext',
+    'UserThroughMemberRawFlagsCacheContext',
+    'UserThroughMemberPrivilegedCacheContext',
+    'UserThroughMemberBotCacheContext',
+    'UserThroughMemberRelationshipCacheContext',
+    'UserThroughMemberOnlineCacheContext',
+    'UserThroughMemberTagCacheContext',
     'UserThroughUserBotOwnerCacheContext',
     'ChannelIDThroughUserDMChannelIDCacheContext',
     'ChannelThroughUserDMChannelIDCacheContext',
@@ -3408,10 +3551,23 @@ __all__ = (
     '_CHANNEL_THROUGH_SERVER_GETTER',
     '_CHANNELS_THROUGH_SERVER_GETTER',
     '_MEMBER_THROUGH_SERVER_OWNER',
+    '_SERVER_THROUGH_MEMBER_SERVER',
+    '_USER_THROUGH_MEMBER_USER',
+    '_USER_THROUGH_MEMBER_NAME',
+    '_USER_THROUGH_MEMBER_DISCRIMINATOR',
+    '_USER_THROUGH_MEMBER_DISPLAY_NAME',
+    '_USER_THROUGH_MEMBER_INTERNAL_AVATAR',
+    '_USER_THROUGH_MEMBER_RAW_BADGES',
+    '_USER_THROUGH_MEMBER_STATUS',
+    '_USER_THROUGH_MEMBER_RAW_FLAGS',
+    '_USER_THROUGH_MEMBER_PRIVILEGED',
+    '_USER_THROUGH_MEMBER_BOT',
+    '_USER_THROUGH_MEMBER_RELATIONSHIP',
+    '_USER_THROUGH_MEMBER_ONLINE',
+    '_USER_THROUGH_MEMBER_TAG',
     '_USER_THROUGH_USER_BOT_OWNER',
     '_CHANNEL_THROUGH_USER_DM_CHANNEL',
     '_CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID',
-    '_USER_THROUGH_MEMBER_GETTER',
     '_USER_THROUGH_WEBHOOK_CREATOR',
     '_CHANNEL_THROUGH_WEBHOOK_CHANNEL',
     'ProvideCacheContextIn',

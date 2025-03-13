@@ -626,9 +626,45 @@ CacheContextType
     .. attribute:: server_through_member_server
 
         The context comes from :attr:`Member.server`.
-    .. attribute:: user_through_member_getter
-
+    .. attribute:: user_through_member_user
+        
         The context comes from :attr:`Member.user`.
+    .. attribute:: user_through_member_name
+        
+        The context comes from :attr:`Member.name`.
+    .. attribute:: user_through_member_discriminator
+        
+        The context comes from :attr:`Member.discriminator`.
+    .. attribute:: user_through_member_display_name
+        
+        The context comes from :attr:`Member.display_name`.
+    .. attribute:: user_through_member_internal_avatar
+        
+        The context comes from :attr:`Member.internal_avatar`.
+    .. attribute:: user_through_member_raw_badges
+        
+        The context comes from :attr:`Member.raw_badges`.
+    .. attribute:: user_through_member_status
+        
+        The context comes from :attr:`Member.status`.
+    .. attribute:: user_through_member_raw_flags
+        
+        The context comes from :attr:`Member.raw_flags`.
+    .. attribute:: user_through_member_privileged
+        
+        The context comes from :attr:`Member.privileged`.
+    .. attribute:: user_through_member_bot
+        
+        The context comes from :attr:`Member.bot`.
+    .. attribute:: user_through_member_relationship
+        
+        The context comes from :attr:`Member.relationship`.
+    .. attribute:: user_through_member_online
+        
+        The context comes from :attr:`Member.online`.
+    .. attribute:: user_through_member_tag
+
+        The context comes from :attr:`Member.tag`.
     .. attribute:: user_through_user_bot_owner
 
         The context comes from :attr:`User.bot_owner`.
