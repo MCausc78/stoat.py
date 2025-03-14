@@ -510,6 +510,8 @@ class TemporarySubscription(typing.Generic[EventT]):
         'future',
         'check',
         'coro',
+        'manual_process',
+        'stop_dispatching_on_success',
     )
 
     def __init__(
@@ -521,6 +523,8 @@ class TemporarySubscription(typing.Generic[EventT]):
         future: asyncio.Future[EventT],
         check: Callable[[EventT], utils.MaybeAwaitable[bool]],
         coro: Coroutine[typing.Any, typing.Any, EventT],
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> None:
         self.client: Client = client
         self.id: int = id
@@ -528,6 +532,8 @@ class TemporarySubscription(typing.Generic[EventT]):
         self.future: asyncio.Future[EventT] = future
         self.check: Callable[[EventT], utils.MaybeAwaitable[bool]] = check
         self.coro: Coroutine[typing.Any, typing.Any, EventT] = coro
+        self.manual_process: bool = manual_process
+        self.stop_dispatching_on_success: bool = stop_dispatching_on_success
 
     def __await__(self) -> Generator[typing.Any, typing.Any, EventT]:
         return self.coro.__await__()
@@ -595,6 +601,8 @@ class TemporarySubscriptionList(typing.Generic[EventT]):
         'exception',
         'expected',
         'queue',
+        'manual_process',
+        'stop_dispatching_on_success',
     )
 
     def __init__(
@@ -605,6 +613,8 @@ class TemporarySubscriptionList(typing.Generic[EventT]):
         id: int,
         event: type[EventT],
         check: Callable[[EventT], utils.MaybeAwaitable[bool]],
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> None:
         self.client: Client = client
         self.id: int = id
@@ -614,8 +624,9 @@ class TemporarySubscriptionList(typing.Generic[EventT]):
         self.result: list[EventT] = []
         self.exception: typing.Optional[Exception] = None
         self.expected: int = expected
-
         self.queue: asyncio.Queue[int] = asyncio.Queue(expected)
+        self.manual_process: bool = manual_process
+        self.stop_dispatching_on_success: bool = stop_dispatching_on_success
 
     async def wait(self) -> list[EventT]:
         if len(self.result) < self.expected:
@@ -865,7 +876,9 @@ class Client:
         event.before_dispatch()
         await event.abefore_dispatch()
 
-        for i, type in enumerate(types):
+        manual_process = False
+
+        for _, type in enumerate(types):
             handlers, temporary_handlers = self._handlers.get(type, _DEFAULT_HANDLERS)
             if _L.isEnabledFor(logging.DEBUG):
                 _L.debug(
@@ -876,6 +889,8 @@ class Client:
                 )
 
             remove = None
+            stop_dispatching_on_success = True
+
             for handler in temporary_handlers.values():
                 r = handler._handle(event, name)
                 if isawaitable(r):
@@ -883,11 +898,14 @@ class Client:
 
                 if r:
                     remove = handler.id
+                    manual_process = handler.manual_process
+                    stop_dispatching_on_success = handler.stop_dispatching_on_success
                     break
 
             if remove is not None:
                 del temporary_handlers[remove]
-                break
+                if stop_dispatching_on_success:
+                    break
 
             for handler in handlers.values():
                 r = handler._handle(event, name)
@@ -906,12 +924,13 @@ class Client:
         if handler:
             await self._run_callback(handler, event, name)
 
-        if event.is_canceled:
-            _L.debug('%s processing was canceled', event.__class__.__name__)
-        else:
-            _L.debug('Processing %s', event.__class__.__name__)
-            event.process()
-            await event.aprocess()
+        if not manual_process:
+            if event.is_canceled:
+                _L.debug('%s processing was canceled', event.__class__.__name__)
+            else:
+                _L.debug('Processing %s', event.__class__.__name__)
+                event.process()
+                await event.aprocess()
 
         hook = getattr(event, 'call_object_handlers_hook', None)
         if not hook:
@@ -929,12 +948,12 @@ class Client:
                 _L.exception('on_user_error (task: %s) raised an exception', name)
 
     def dispatch(self, event: BaseEvent, /) -> asyncio.Task[None]:
-        """Dispatches a event.
+        """Dispatches an event.
 
         Examples
         --------
 
-        Dispatch a event when someone sends silent message: ::
+        Dispatch an event when someone sends silent message: ::
 
             from attrs import define, field
             import pyvolt
@@ -1125,6 +1144,8 @@ class Client:
         check: typing.Optional[Callable[[EventT], bool]] = None,
         count: typing.Literal[1] = 1,
         timeout: typing.Optional[float] = None,
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> TemporarySubscription[EventT]: ...
 
     @typing.overload
@@ -1136,6 +1157,8 @@ class Client:
         check: typing.Optional[Callable[[EventT], bool]] = None,
         count: typing.Literal[0] = ...,
         timeout: typing.Optional[float] = None,
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> typing.NoReturn: ...
 
     @typing.overload
@@ -1147,6 +1170,8 @@ class Client:
         check: typing.Optional[Callable[[EventT], bool]] = None,
         count: int = 1,
         timeout: typing.Optional[float] = None,
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> TemporarySubscriptionList[EventT]: ...
 
     def wait_for(
@@ -1157,6 +1182,8 @@ class Client:
         check: typing.Optional[Callable[[EventT], bool]] = None,
         count: int = 1,
         timeout: typing.Optional[float] = None,
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> typing.Union[TemporarySubscription[EventT], TemporarySubscriptionList[EventT]]:
         """|coro|
 
@@ -1211,7 +1238,7 @@ class Client:
                         await channel.send('\N{THUMBS UP SIGN}')
 
         Parameters
-        ------------
+        ----------
         event: Type[EventT]
             The event to wait for.
         check: Optional[Callable[[EventT], :class:`bool`]]
@@ -1219,16 +1246,20 @@ class Client:
         timeout: Optional[:class:`float`]
             The number of seconds to wait before timing out and raising
             :exc:`asyncio.TimeoutError`.
+        manual_process: :class:`bool`
+            Whether to not process the event at all when it gets dispatched. Defaults to ``False``.
+        stop_dispatching_on_success: :class:`bool`
+            Whether to stop dispatching when event arrives. Defaults to ``True``.
 
         Raises
-        -------
+        ------
         :class:`TypeError`
             If ``count`` parameter was negative or zero.
         :class:`asyncio.TimeoutError`
             If a timeout is provided and it was reached.
 
         Returns
-        --------
+        -------
         Union[:class:`~pyvolt.TemporarySubscription`, :class:`~pyvolt.TemporarySubscriptionList`]
             The subscription. This can be ``await``'ed.
         """
@@ -1246,6 +1277,8 @@ class Client:
                 id=self._get_i(),
                 event=event,
                 check=check,
+                manual_process=manual_process,
+                stop_dispatching_on_success=stop_dispatching_on_success,
             )
 
             try:
@@ -1264,6 +1297,8 @@ class Client:
             future=future,
             check=check,
             coro=coro,
+            manual_process=manual_process,
+            stop_dispatching_on_success=stop_dispatching_on_success,
         )
 
         try:
