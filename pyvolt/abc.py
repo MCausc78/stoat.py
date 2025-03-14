@@ -161,6 +161,8 @@ class Messageable:
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
+        Fires :class:`.MessageAckEvent` for the current user.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -500,6 +502,8 @@ class Messageable:
 
         If message mentions any roles, you must :attr:`~pyvolt.Permission.mention_roles` to do that.
 
+        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see destination channel.
+
         Parameters
         ----------
         content: Optional[:class:`str`]
@@ -672,6 +676,9 @@ class Connectable:
         Asks the voice server for a token to join the call in destination channel.
 
         You must have :attr:`~Permissions.connect` to do this.
+
+        For Livekit instances, fires :class:`.MessageCreateEvent` and :class:`.VoiceChannelJoinEvent` / :class:`.VoiceChannelMoveEvent`
+        for all users who can see target channel.
 
         Parameters
         ----------

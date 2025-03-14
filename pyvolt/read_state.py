@@ -114,6 +114,8 @@ class ReadState:
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
+        Fires :class:`.MessageAckEvent` for the current user.
+
         .. note::
             This can only be used by non-bot accounts.
 

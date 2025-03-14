@@ -57,6 +57,8 @@ from .cache import (
     UserThroughMemberRelationshipCacheContext,
     UserThroughMemberOnlineCacheContext,
     UserThroughMemberTagCacheContext,
+    ServerThroughMemberRolesCacheContext,
+    ServerThroughMemberTopRoleCacheContext,
     _MEMBERS_THROUGH_ROLE_MEMBERS,
     _SERVER_THROUGH_ROLE_SERVER,
     _EMOJI_THROUGH_SERVER_GETTER,
@@ -81,6 +83,8 @@ from .cache import (
     _USER_THROUGH_MEMBER_RELATIONSHIP,
     _USER_THROUGH_MEMBER_ONLINE,
     _USER_THROUGH_MEMBER_TAG,
+    _SERVER_THROUGH_MEMBER_ROLES,
+    _SERVER_THROUGH_MEMBER_TOP_ROLE,
 )
 from .cdn import StatelessAsset, Asset, ResolvableResource
 from .core import (
@@ -299,6 +303,8 @@ class BaseRole(Base):
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
+        Fires :class:`.ServerRoleDeleteEvent` for all server members.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -352,6 +358,8 @@ class BaseRole(Base):
         Edits the role.
 
         You must have :attr:`~Permissions.manage_roles` to do this.
+
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -429,6 +437,8 @@ class BaseRole(Base):
         Sets permissions for this role.
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
+
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -686,6 +696,8 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_server` to do this.
 
+        For servers, fires :class:`.ServerCreateEvent` for bot, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent` for all server members.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -758,6 +770,8 @@ class BaseServer(Base):
         Bans a user from the server.
 
         You must have :attr:`~Permissions.ban_members` to do this.
+
+        May fire :class:`.ServerMemberRemoveEvent` for banned user and all server members.
 
         Parameters
         ----------
@@ -866,6 +880,8 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
+        Fires :class:`.ServerChannelCreateEvent` for all server members.
+
         Parameters
         ----------
         type: Optional[:class:`.ChannelType`]
@@ -942,6 +958,8 @@ class BaseServer(Base):
         Creates an emoji in server.
 
         You must have :attr:`~Permissions.manage_customization` to do this.
+
+        Fires :class:`.EmojiCreateEvent` for all server members.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1023,6 +1041,8 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
+        Fires :class:`.ServerChannelCreateEvent` for all server members.
+
         Parameters
         ----------
         name: :class:`str`
@@ -1092,6 +1112,8 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
+        Fires :class:`.ServerChannelCreateEvent` for all server members.
+
         Parameters
         ----------
         name: :class:`str`
@@ -1158,6 +1180,8 @@ class BaseServer(Base):
         Creates a new server role.
 
         You must have :attr:`~Permissions.manage_roles` to do this.
+
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -1226,6 +1250,8 @@ class BaseServer(Base):
 
         Deletes a server if owner, or leaves otherwise.
 
+        Fires :class:`.ServerDeleteEvent` (if owner) or :class:`.ServerMemberRemoveEvent` for all server members.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -1272,9 +1298,11 @@ class BaseServer(Base):
     ) -> Server:
         """|coro|
 
-        Edits a server.
+        Edits the server.
 
         To provide any of parameters below (except for ``categories``, ``discoverable`` and ``flags``), you must have :attr:`~Permissions.manage_server`.
+
+        Fires :class:`.ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -1734,6 +1762,9 @@ class BaseServer(Base):
 
         Joins the server.
 
+        Fires :class:`.ServerCreateEvent` for the current user, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent`,
+        both for all server members.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1803,6 +1834,8 @@ class BaseServer(Base):
 
         Kicks a member from the server.
 
+        Fires :class:`.ServerMemberRemoveEvent` for kicked user and all server members.
+
         Parameters
         ----------
         member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
@@ -1861,6 +1894,8 @@ class BaseServer(Base):
         """|coro|
 
         Leaves a server if not owner, or deletes otherwise.
+
+        Fires :class:`.ServerMemberRemoveEvent` or :class:`.ServerDeleteEvent` (if owner) for all server members.
 
         Parameters
         ----------
@@ -1999,6 +2034,8 @@ class BaseServer(Base):
 
         Report a server to the instance moderation team.
 
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -2062,6 +2099,8 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+
         Parameters
         ----------
         role: ULIDOr[:class:`.BaseRole`]
@@ -2123,6 +2162,8 @@ class BaseServer(Base):
         Sets default permissions for everyone in a server.
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
+
+        Fires :class:`.ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -2322,7 +2363,7 @@ def sort_member_roles(
     Returns
     -------
     List[:class:`.Role`]
-        The sorted result.
+        The sorted result, in ascending order.
     """
     if not safe:
         return sorted(
@@ -2355,8 +2396,8 @@ def calculate_server_permissions(
     ----------
     target_roles: List[:class:`.Role`]
         The target member's roles. Should be empty list if calculating against :class:`.User`,
-        and ``pyvolt.sort_member_roles(member.roles, server_roles=server.roles)``
-        for member.
+        or ``pyvolt.sort_member_roles(member.roles, server_roles=server.roles)`` if calculating
+        against member.
     target_timeout: Optional[:class:`~datetime.datetime`]
         The target timeout, if applicable (:attr:`.Member.timed_out_until`).
     default_permissions: :class:`Permissions`
@@ -3210,6 +3251,8 @@ class BaseMember:
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
+        May fire :class:`.ServerMemberRemoveEvent` for banned user and all server members.
+
         Parameters
         ----------
         reason: Optional[:class:`str`]
@@ -3286,6 +3329,15 @@ class BaseMember:
         """|coro|
 
         Edits the member.
+
+        Fires :class:`.ServerMemberUpdateEvent` for all server members,
+        and optionally fires multiple/single :class:`.ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
+
+        For Livekit instances:
+
+        - If ``voice`` parameter is provided, fires :class:`.VoiceChannelMoveEvent` / :class:`.VoiceChannelLeaveEvent`
+          if specified as ``None``, otherwise :class:`.VoiceChannelLeaveEvent` is fired. The specified events are fired for all users who can see voice channel the member is currently in.
+        - If any of ``roles``, ``can_publish`` or ``can_receive`` parameters is provided, may fire :class:`.UserVoiceStateUpdateEvent` for all users who can see voice channel the member is currently in.
 
         Parameters
         ----------
@@ -3397,6 +3449,8 @@ class BaseMember:
         """|coro|
 
         Kicks a member from the server.
+
+        Fires :class:`.ServerMemberRemoveEvent` for kicked user and all server members.
 
         Raises
         ------
@@ -3527,9 +3581,73 @@ class Member(BaseMember):
             self.can_receive = True if data.can_receive is None else data.can_receive
 
     @property
+    def roles(self) -> list[Role]:
+        """List[:class:`.Role`]: The member's roles."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return []
+
+        ctx = (
+            ServerThroughMemberRolesCacheContext(
+                type=CacheContextType.server_through_member_roles,
+                member=self,
+            )
+            if state.provide_cache_context('Member.roles')
+            else _SERVER_THROUGH_MEMBER_ROLES
+        )
+
+        server = cache.get_server(self.server_id, ctx)
+        if server is None:
+            return []
+
+        roles = []
+        for role_id in self.role_ids:
+            try:
+                role = server.roles[role_id]
+            except KeyError:
+                pass
+            else:
+                roles.append(role)
+
+        return roles
+
+    @property
     def server_avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
+
+    @property
+    def top_role(self) -> typing.Optional[Role]:
+        """Optional[:class:`.Role`]: The member's top role."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ServerThroughMemberTopRoleCacheContext(
+                type=CacheContextType.server_through_member_top_role,
+                member=self,
+            )
+            if state.provide_cache_context('Member.top_role')
+            else _SERVER_THROUGH_MEMBER_TOP_ROLE
+        )
+
+        server = cache.get_server(self.server_id, ctx)
+        if server is None:
+            return None
+
+        roles = sort_member_roles(self.role_ids, safe=False, server_roles=server.roles)
+
+        if len(roles):
+            return roles[-1]
+
+        return None
 
 
 @define(slots=True)

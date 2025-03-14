@@ -338,6 +338,8 @@ class BaseUser(Base, Connectable, Messageable):
 
         Accept another user's friend request.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you accepted friend request from.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -412,6 +414,8 @@ class BaseUser(Base, Connectable, Messageable):
 
         Blocks an user.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and blocked user.
+
         .. note::
             This is not supposed to be used by bot accounts.
 
@@ -461,6 +465,8 @@ class BaseUser(Base, Connectable, Messageable):
         """|coro|
 
         Denies another user's friend request.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you denide friend request from.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -523,6 +529,8 @@ class BaseUser(Base, Connectable, Messageable):
         """|coro|
 
         Edits the user.
+
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to target user.
 
         Parameters
         ----------
@@ -887,6 +895,8 @@ class BaseUser(Base, Connectable, Messageable):
 
         You must have :attr:`~UserPermissions.send_messages` to do this.
 
+        May fire :class:`.PrivateChannelCreateEvent` for the current user and user you opened DM with.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -934,6 +944,8 @@ class BaseUser(Base, Connectable, Messageable):
         """|coro|
 
         Removes the user from friend list.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -993,6 +1005,8 @@ class BaseUser(Base, Connectable, Messageable):
         """|coro|
 
         Report an user to the instance moderation team.
+
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1055,6 +1069,8 @@ class BaseUser(Base, Connectable, Messageable):
         """|coro|
 
         Unblocks an user.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and unblocked user.
 
         .. note::
             This is not supposed to be used by bot accounts.
@@ -1192,6 +1208,8 @@ class DisplayUser(BaseUser):
         """|coro|
 
         Sends a friend request to this user.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you sent friend request to.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1522,6 +1540,8 @@ class OwnUser(User):
         """|coro|
 
         Edits the current user.
+
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
 
         Parameters
         ----------

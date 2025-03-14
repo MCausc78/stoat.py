@@ -75,6 +75,8 @@ class BaseWebhook(Base):
 
         Deletes the webhook.
 
+        Fires :class:`.WebhookDeleteEvent` for all users who can see webhook channel.
+
         Parameters
         ----------
         by_token: :class:`bool`
@@ -129,6 +131,8 @@ class BaseWebhook(Base):
         """|coro|
 
         Edits the webhook.
+
+        Fires :class:`.WebhookUpdateEvent` for all users who can see webhook channel.
 
         Parameters
         ----------
@@ -222,6 +226,8 @@ class BaseWebhook(Base):
         If message mentions "\\@everyone" or "\\@online", the webhook must have :attr:`~Permissions.mention_everyone` to do that.
 
         If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
+
+        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
 
         Parameters
         ----------

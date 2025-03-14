@@ -273,6 +273,8 @@ class CacheContextType(Enum):
     user_through_member_relationship = 'Member.relationship: RelationshipStatus'
     user_through_member_online = 'Member.online: bool'
     user_through_member_tag = 'Member.tag: str'
+    server_through_member_roles = 'Member.roles: List[Role]'
+    server_through_member_top_role = 'Member.top_role: Optional[Role]'
     user_through_user_bot_owner = 'User.bot_owner: Optional[User]'
     channel_id_through_user_dm_channel_id = 'User.dm_channel_id: Optional[str]'
     channel_through_user_dm_channel = 'User.dm_channel: Optional[DMChannel]'
@@ -823,6 +825,14 @@ class BaseMemberCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class MemberCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.Member` entity."""
+
+    member: Member = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.Member`: The member involved."""
+
+
+@define(slots=True)
 class ServerCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.Server` entity."""
 
@@ -1331,6 +1341,16 @@ class UserThroughMemberTagCacheContext(BaseMemberCacheContext):
 
 
 @define(slots=True)
+class ServerThroughMemberRolesCacheContext(MemberCacheContext):
+    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's roles."""
+
+
+@define(slots=True)
+class ServerThroughMemberTopRoleCacheContext(MemberCacheContext):
+    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's roles."""
+
+
+@define(slots=True)
 class UserThroughUserBotOwnerCacheContext(UserCacheContext):
     """Represents a cache context that involves an :class:`.User`, wishing to retrieve owner of bot user."""
 
@@ -1758,7 +1778,12 @@ _USER_THROUGH_MEMBER_ONLINE: typing.Final[UndefinedCacheContext] = UndefinedCach
 _USER_THROUGH_MEMBER_TAG: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_member_tag,
 )
-
+_SERVER_THROUGH_MEMBER_ROLES: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_member_roles,
+)
+_SERVER_THROUGH_MEMBER_TOP_ROLE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_member_top_role,
+)
 _USER_THROUGH_USER_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_user_bot_owner,
 )
@@ -1909,6 +1934,8 @@ ProvideCacheContextIn = typing.Literal[
     'Member.relationship',
     'Member.online',
     'Member.tag',
+    'Member.roles',
+    'Member.top_role',
     'User.bot_owner',
     'User.dm_channel_id',
     'User.dm_channel',
@@ -3358,13 +3385,13 @@ __all__ = (
     'BaseRoleCacheContext',
     'BaseServerChannelCacheContext',
     'BaseMemberCacheContext',
+    'MemberCacheContext',
     'ServerCacheContext',
     'BaseUserCacheContext',
     'UserCacheContext',
     'WebhookCacheContext',
     'MessageThroughMessageableGetterCacheContext',
     'MessagesThroughMessageableGetterCacheContext',
-    # 'MessageableMessagesGetterCacheContext',
     'UserThroughBotOwnerCacheContext',
     'UserThroughDMChannelInitiatorCacheContext',
     'MessageThroughDMChannelLastMessageCacheContext',
@@ -3436,6 +3463,8 @@ __all__ = (
     'UserThroughMemberRelationshipCacheContext',
     'UserThroughMemberOnlineCacheContext',
     'UserThroughMemberTagCacheContext',
+    'ServerThroughMemberRolesCacheContext',
+    'ServerThroughMemberTopRoleCacheContext',
     'UserThroughUserBotOwnerCacheContext',
     'ChannelIDThroughUserDMChannelIDCacheContext',
     'ChannelThroughUserDMChannelIDCacheContext',

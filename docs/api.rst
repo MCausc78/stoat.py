@@ -1370,6 +1370,16 @@ BaseMemberCacheContext
     :members:
     :inherited-members:
 
+MemberCacheContext
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberCacheContext
+
+.. autoclass:: MemberCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 ServerCacheContext
 ~~~~~~~~~~~~~~~~~~
 
@@ -2126,6 +2136,26 @@ UserThroughMemberTagCacheContext
 .. attributetable:: UserThroughMemberTagCacheContext
 
 .. autoclass:: UserThroughMemberTagCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughMemberRolesCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughMemberRolesCacheContext
+
+.. autoclass:: ServerThroughMemberRolesCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughMemberTopRoleCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughMemberTopRoleCacheContext
+
+.. autoclass:: ServerThroughMemberTopRoleCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

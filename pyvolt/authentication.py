@@ -159,6 +159,8 @@ class PartialSession(Base):
 
         Deletes the session.
 
+        Fires :class:`.SessionDeleteEvent` for the provided session.
+
         Raises
         ------
         :class:`Unauthorized`

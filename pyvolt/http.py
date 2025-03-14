@@ -1044,7 +1044,7 @@ class HTTPClient:
 
         Deletes a bot.
 
-        Fires :class:`.UserUpdateEvent` for this bot.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1351,9 +1351,8 @@ class HTTPClient:
 
         If destination is a server, you must have :attr:`~Permissions.manage_server` to do this, otherwise :attr:`~Permissions.create_invites` is required.
 
-
-        Fires either :class:`.PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for bot,
-        and for rest of group recipients/server members, either :class:`.GroupRecipientAddEvent`, or :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent` are fired.
+        For groups, fires :class:`.PrivateChannelCreateEvent` for bot, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent` for all group recipients.
+        For servers, fires :class:`.ServerCreateEvent` for bot, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent` for all server members.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1515,10 +1514,11 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.view_channel` to do this. If target channel is server channel, :attr:`~Permissions.manage_channels` is also required.
 
-        For server channels, :class:`.ServerChannelDeleteEvent` is fired.
-        For groups, if the current user is group owner, :class:`.PrivateChannelDeleteEvent` is fired,
-        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user, and :class:`.GroupRecipientRemoveEvent`
-        is fired for rest of group recipients.
+        For DMs, fires :class:`.ChannelUpdateEvent` for the current user and DM recipient.
+        For groups, if the current user is group owner, fires :class:`.PrivateChannelDeleteEvent` for all group recipients (including group owner),
+        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user,
+        and :class:`.GroupRecipientRemoveEvent` is fired for rest of group recipients.
+        For server channels, :class:`.ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`.ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -1590,7 +1590,9 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
-        Fires :class:`.ChannelUpdateEvent` for all users who can see target channel.
+        Fires :class:`.ChannelUpdateEvent` for all users who still can see target channel,
+        optionally :class:`.ServerChannelCreateEvent` for all users who now can see target server channel, and
+        optionally :class:`.ChannelDeleteEvent` for users who no longer can see target server channel.
 
         Parameters
         ----------
@@ -1667,6 +1669,7 @@ class HTTPClient:
         """
         payload: raw.DataEditChannel = {}
         remove: list[raw.FieldsChannel] = []
+
         if name is not UNDEFINED:
             payload['name'] = name
         if description is not UNDEFINED:
@@ -1687,8 +1690,10 @@ class HTTPClient:
             payload['archived'] = archived
         if default_permissions is not UNDEFINED:
             remove.append('DefaultPermissions')
+
         if len(remove) > 0:
             payload['remove'] = remove
+
         resp: raw.Channel = await self.request(
             routes.CHANNELS_CHANNEL_EDIT.compile(channel_id=resolve_id(channel)),
             json=payload,
@@ -3211,8 +3216,9 @@ class HTTPClient:
 
         The provided channel must be a :class:`.ServerChannel`.
 
-        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel, and :class:`.ChannelDeleteEvent` for users who
-        no longer can see target channel.
+        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel,
+        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`.ChannelDeleteEvent` for users who no longer can see target channel.
 
         Parameters
         ----------
@@ -3316,7 +3322,8 @@ class HTTPClient:
         Channel must be a :class:`GroupChannel`, or :class:`.ServerChannel`.
 
         Fires :class:`.ChannelUpdateEvent` for all users who still see target channel, and for server channels,
-        :class:`.ChannelDeleteEvent` is fired for users who no longer can see target channel.
+        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`.ChannelDeleteEvent` is fired for users who no longer can see target channel.
 
         Parameters
         ----------
@@ -5908,8 +5915,9 @@ class HTTPClient:
     async def leave_server(self, server: ULIDOr[BaseServer], /, *, silent: typing.Optional[bool] = None) -> None:
         """|coro|
 
-        Fires :class:`.ServerMemberRemoveEvent` or :class:`.ServerDeleteEvent` (if owner) for all server members.
+        Leaves a server if not owner, or deletes otherwise.
 
+        Fires :class:`.ServerMemberRemoveEvent` or :class:`.ServerDeleteEvent` (if owner) for all server members.
 
         Parameters
         ----------
@@ -7021,7 +7029,7 @@ class HTTPClient:
 
         You must have :attr:`~UserPermissions.send_messages` to do this.
 
-        May fire :class:`.PrivateChannelCreateEvent`.
+        May fire :class:`.PrivateChannelCreateEvent` for the current user and user you opened DM with.
 
         Parameters
         ----------
@@ -7922,6 +7930,8 @@ class HTTPClient:
         """|coro|
 
         Schedule an account for deletion by confirming the received token.
+
+        Fires :class:`.LogoutEvent` for the current user.
 
         Parameters
         ----------
@@ -9112,6 +9122,8 @@ class HTTPClient:
         """|coro|
 
         Deletes the current session.
+
+        Fires :class:`.SessionDeleteEvent` for the current session.
 
         Raises
         ------

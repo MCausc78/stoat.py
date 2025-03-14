@@ -118,6 +118,12 @@ class BaseChannel(Base):
 
         You must have :attr:`~Permissions.view_channel` to do this. If target channel is server channel, :attr:`~Permissions.manage_channels` is also required.
 
+        For DMs, fires :class:`.ChannelUpdateEvent` for the current user and DM recipient.
+        For groups, if the current user is group owner, fires :class:`.PrivateChannelDeleteEvent` for all group recipients (including group owner),
+        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user,
+        and :class:`.GroupRecipientRemoveEvent` is fired for rest of group recipients.
+        For server channels, :class:`.ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`.ServerUpdateEvent` for all server members.
+
         Parameters
         ----------
         silent: Optional[:class:`bool`]
@@ -177,6 +183,10 @@ class BaseChannel(Base):
         Edits the channel.
 
         You must have :attr:`~Permissions.manage_channels` to do this.
+
+        Fires :class:`.ChannelUpdateEvent` for all users who still can see target channel,
+        optionally :class:`.ServerChannelCreateEvent` for all users who now can see target server channel, and
+        optionally :class:`.ChannelDeleteEvent` for users who no longer can see target server channel.
 
         Parameters
         ----------
@@ -1049,6 +1059,8 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.create_invites` to do this.
 
+        Fires :class:`.PrivateChannelCreateEvent` for added recipient, and :class:`.GroupRecipientAddEvent` for rest of group recipients.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1123,6 +1135,8 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         Invites a bot to a group.
 
         You must have :attr:`~Permissions.create_invites` to do this.
+
+        Fires :class:`.PrivateChannelCreateEvent` for bot, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent` for all group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1270,6 +1284,8 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
 
+        Fires :class:`.WebhookCreateEvent` for all users who can see target channel.
+
         Parameters
         ----------
         name: :class:`str`
@@ -1334,6 +1350,10 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
+        Fires :class:`.PrivateChannelDeleteEvent` for all group recipients (including group owner) if the current user is group owner,
+        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user,
+        and :class:`.GroupRecipientRemoveEvent` is fired for rest of group recipients.
+
         Parameters
         ----------
         silent: Optional[:class:`bool`]
@@ -1383,6 +1403,8 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         Sets default permissions for everyone in a channel.
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
+
+        Fires :class:`.ChannelUpdateEvent` for all group recipients.
 
         Parameters
         ----------
@@ -1571,6 +1593,8 @@ class BaseServerChannel(BaseChannel):
 
         You must have :attr:`~Permissions.view_channel` and :attr:`~Permissions.manage_channels` to do this.
 
+        For server channels, :class:`.ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`.ServerUpdateEvent` for all server members.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -1679,6 +1703,10 @@ class BaseServerChannel(BaseChannel):
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
+        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel,
+        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`.ChannelDeleteEvent` for users who no longer can see target channel.
+
         Parameters
         ----------
         role: ULIDOr[:class:`.BaseRole`]
@@ -1737,6 +1765,10 @@ class BaseServerChannel(BaseChannel):
         Sets default permissions for everyone in a channel.
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
+
+        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel,
+        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`.ChannelDeleteEvent` is fired for users who no longer can see target channel.
 
         Parameters
         ----------
@@ -2077,6 +2109,8 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         Creates a webhook which 3rd party platforms can use to send.
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
+
+        Fires :class:`.WebhookCreateEvent` for all users who can see target channel.
 
         Parameters
         ----------

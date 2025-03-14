@@ -146,6 +146,8 @@ class ServerEmoji(BaseEmoji):
         You must have :attr:`~Permissions.manage_customization` to do this if you do not own
         the emoji, unless it was detached (already deleted).
 
+        May fire :class:`.EmojiDeleteEvent` for all server members.
+
         .. note::
             If deleting detached emoji, this will successfully return.
 

@@ -364,6 +364,8 @@ class BaseMessage(Base):
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
+        Fires :class:`.MessageAckEvent` for the current user.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -413,6 +415,8 @@ class BaseMessage(Base):
 
         There is an alias for this called :meth:`~.ack`.
 
+        Fires :class:`.MessageAckEvent` for the current user.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -460,6 +464,8 @@ class BaseMessage(Base):
 
         You must have :attr:`~Permissions.manage_messages` to do this.
 
+        Fires :class:`.MessageUpdateEvent` with empty :attr:`~PartialMessage.reactions` for all users who can see target channel.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -503,6 +509,8 @@ class BaseMessage(Base):
         Deletes the message in a channel.
 
         You must have :attr:`~Permissions.manage_messages` to do this if message is not yours.
+
+        Fires :class:`.MessageDeleteEvent` for all users who can see target channel.
 
         Raises
         ------
@@ -550,6 +558,8 @@ class BaseMessage(Base):
         """|coro|
 
         Edits the message.
+
+        Fires :class:`.MessageUpdateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
@@ -678,6 +688,8 @@ class BaseMessage(Base):
 
         You must have :attr:`~Permissions.manage_messages` to do this.
 
+        Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
+
         Raises
         ------
         :class:`HTTPException`
@@ -732,6 +744,8 @@ class BaseMessage(Base):
         React to this message.
 
         You must have :attr:`~Permissions.react` to do this.
+
+        Fires :class:`.MessageReactEvent` for all users who can see target channel.
 
         Parameters
         ----------
@@ -811,6 +825,8 @@ class BaseMessage(Base):
         If message mentions "\\@everyone" or "\\@online", you must have :attr:`~Permissions.mention_everyone` to do that.
 
         If message mentions any roles, you must :attr:`~Permission.mention_roles` to do that.
+
+        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
@@ -949,6 +965,8 @@ class BaseMessage(Base):
 
         Report a message to the instance moderation team.
 
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1005,6 +1023,8 @@ class BaseMessage(Base):
         Unpins the message.
 
         You must have :attr:`~Permissions.manage_messages` to do this.
+
+        Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
         Raises
         ------
@@ -1064,6 +1084,9 @@ class BaseMessage(Base):
         Remove your own, someone else's or all of a given reaction.
 
         You must have :attr:`~Permissions.react` to do this.
+
+        Fires :class:`.MessageClearReactionEvent` if ``remove_all`` is ``True`` or :class:`.MessageUnreactEvent`, for all users
+        who can see target channel.
 
         Parameters
         ----------

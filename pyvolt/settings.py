@@ -194,6 +194,8 @@ class UserSettings:
 
         Edits the current user settings.
 
+        Fires :class:`.UserSettingsUpdateEvent` for the current user.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -443,6 +445,8 @@ class AndroidUserSettings:
         """|coro|
 
         Edits the Android user settings.
+
+        Fires :class:`.UserSettingsUpdateEvent` for the current user.
 
         Parameters
         ----------
@@ -1085,6 +1089,8 @@ class ReviteUserSettings:
 
         Edits the Revite user settings.
 
+        Fires :class:`.UserSettingsUpdateEvent` for the current user.
+
         Parameters
         ----------
         edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
@@ -1334,6 +1340,8 @@ class JoltUserSettings:
         """|coro|
 
         Edits the Jolt user settings.
+
+        Fires :class:`.UserSettingsUpdateEvent` for the current user.
 
         Parameters
         ----------

@@ -2156,6 +2156,8 @@ class Client:
 
         Creates a new group.
 
+        Fires :class:`.PrivateChannelCreateEvent` for the current user and all specified recipients.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -2235,6 +2237,8 @@ class Client:
         """|coro|
 
         Create a new server.
+
+        Fires :class:`.ServerCreateEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
