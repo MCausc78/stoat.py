@@ -1004,7 +1004,7 @@ class BaseUser(Base, Connectable, Messageable):
     ) -> None:
         """|coro|
 
-        Report an user to the instance moderation team.
+        Report the user to the instance moderation team.
 
         Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
 
@@ -1019,6 +1019,8 @@ class BaseUser(Base, Connectable, Messageable):
             The additional context for moderation team. Can be only up to 1000 characters.
         message_context: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message context.
+
+            Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
 
         Raises
         ------

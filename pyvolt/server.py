@@ -2032,7 +2032,7 @@ class BaseServer(Base):
     ) -> None:
         """|coro|
 
-        Report a server to the instance moderation team.
+        Report the server to the instance moderation team.
 
         Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
 

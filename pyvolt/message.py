@@ -963,9 +963,11 @@ class BaseMessage(Base):
     ) -> None:
         """|coro|
 
-        Report a message to the instance moderation team.
+        Report the message to the instance moderation team.
 
         Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+
+        Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
 
         .. note::
             This can only be used by non-bot accounts.
