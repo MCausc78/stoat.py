@@ -88,6 +88,46 @@ HTTPClient
 .. autoclass:: HTTPClient
     :members:
 
+HTTPAdapter
+~~~~~~~~~~~
+
+.. attributetable:: HTTPAdapter
+
+.. autoclass:: HTTPAdapter
+    :members:
+
+AIOHTTPAdapter
+~~~~~~~~~~~~~~~
+
+.. attributetable:: AIOHTTPAdapter
+
+.. autoclass:: AIOHTTPAdapter
+    :members:
+
+HTTPResponse
+~~~~~~~~~~~~
+
+.. attributetable:: HTTPResponse
+
+.. autoclass:: HTTPResponse
+    :members:
+
+AIOHTTPResponseWrapper
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: AIOHTTPResponseWrapper
+
+.. autoclass:: AIOHTTPResponseWrapper
+    :members:
+
+HTTPWebSocket
+~~~~~~~~~~~~~
+
+.. attributetable:: HTTPWebSocket
+
+.. autoclass:: HTTPWebSocket
+    :members:
+
 Route
 ~~~~~
 
@@ -158,6 +198,14 @@ Shard
 .. attributetable:: Shard
 
 .. autoclass:: Shard
+    :members:
+
+ShardImpl
+~~~~~~~~~
+
+.. attributetable:: ShardImpl
+
+.. autoclass:: ShardImpl
     :members:
 
 EventHandler
@@ -5050,6 +5098,11 @@ The following exceptions are thrown by the library.
     :members:
     :inherited-members:
     :exclude-members: add_note, with_traceback
+
+.. autoexception:: WebSocketConnectionFailure
+    :show-inheritance:
+    :members:
+    :inherited-members:
 
 .. autoexception:: HTTPException
     :show-inheritance:
