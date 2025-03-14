@@ -261,6 +261,8 @@ class CacheContextType(Enum):
     server_through_member_server = 'Member.server: Server'
     user_through_member_user = 'Member.user: User'
     user_through_member_bot_owner = 'Member.bot_owner: Optional[User]'
+    channel_id_through_member_dm_channel_id = 'Member.dm_channel_id: Optional[str]'
+    channel_through_member_dm_channel = 'Member.dm_channel: Optional[DMChannel]'
     user_through_member_name = 'Member.name: str'
     user_through_member_discriminator = 'Member.discriminator: str'
     user_through_member_display_name = 'Member.display_name: Optional[str]'
@@ -292,7 +294,7 @@ class BaseCacheContext:
 
 @define(slots=True)
 class UndefinedCacheContext(BaseCacheContext):
-    """Represents a undefined cache context."""
+    """Represents an undefined cache context."""
 
 
 @define(slots=True)
@@ -1281,6 +1283,16 @@ class UserThroughMemberBotOwnerCacheContext(BaseMemberCacheContext):
 
 
 @define(slots=True)
+class ChannelIDThroughMemberDMChannelIDCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's DM channel ID."""
+
+
+@define(slots=True)
+class ChannelThroughMemberDMChannelCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's DM channel."""
+
+
+@define(slots=True)
 class UserThroughMemberNameCacheContext(BaseMemberCacheContext):
     """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's name."""
 
@@ -1742,6 +1754,12 @@ _USER_THROUGH_MEMBER_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheC
 _USER_THROUGH_MEMBER_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_member_bot_owner,
 )
+_CHANNEL_ID_THROUGH_MEMBER_DM_CHANNEL_ID: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_id_through_member_dm_channel_id,
+)
+_CHANNEL_THROUGH_MEMBER_DM_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_member_dm_channel,
+)
 _USER_THROUGH_MEMBER_NAME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_member_name,
 )
@@ -1922,6 +1940,8 @@ ProvideCacheContextIn = typing.Literal[
     'Member.server',
     'Member.user',
     'Member.bot_owner',
+    'Member.dm_channel_id',
+    'Member.dm_channel',
     'Member.name',
     'Member.discriminator',
     'Member.display_name',
@@ -2501,7 +2521,7 @@ class Cache(ABC):
     #########
     @abstractmethod
     def get_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Retrieves a user using ID.
+        """Optional[:class:`.User`]: Retrieves an user using ID.
 
         Parameters
         ----------
@@ -3451,6 +3471,8 @@ __all__ = (
     'ServerThroughMemberServerCacheContext',
     'UserThroughMemberUserCacheContext',
     'UserThroughMemberBotOwnerCacheContext',
+    'ChannelIDThroughMemberDMChannelIDCacheContext',
+    'ChannelThroughMemberDMChannelCacheContext',
     'UserThroughMemberNameCacheContext',
     'UserThroughMemberDiscriminatorCacheContext',
     'UserThroughMemberDisplayNameCacheContext',
@@ -3593,6 +3615,8 @@ __all__ = (
     '_SERVER_THROUGH_MEMBER_SERVER',
     '_USER_THROUGH_MEMBER_USER',
     '_USER_THROUGH_MEMBER_BOT_OWNER',
+    '_CHANNEL_ID_THROUGH_MEMBER_DM_CHANNEL_ID',
+    '_CHANNEL_THROUGH_MEMBER_DM_CHANNEL',
     '_USER_THROUGH_MEMBER_NAME',
     '_USER_THROUGH_MEMBER_DISCRIMINATOR',
     '_USER_THROUGH_MEMBER_DISPLAY_NAME',

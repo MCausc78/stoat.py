@@ -157,7 +157,7 @@ class StreamableEmbedSpecial(BaseEmbedSpecial):
 
 @define(slots=True)
 class ImageEmbed(BaseEmbed):
-    """Represents an image in a embed."""
+    """Represents an image in an embed."""
 
     url: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The URL to the original image."""
@@ -177,7 +177,7 @@ class ImageEmbed(BaseEmbed):
 
 @define(slots=True)
 class VideoEmbed(BaseEmbed):
-    """Represents an video in a embed."""
+    """Represents a video in an embed."""
 
     url: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The URL to the original video."""

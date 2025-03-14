@@ -28,7 +28,7 @@ from attrs import define, field
 from datetime import datetime, timedelta
 import typing
 
-from . import utils
+from . import routes, utils
 from .base import Base
 from .bot import BaseBot
 from .cache import (
@@ -45,6 +45,8 @@ from .cache import (
     ServerThroughMemberServerCacheContext,
     UserThroughMemberUserCacheContext,
     UserThroughMemberBotOwnerCacheContext,
+    ChannelIDThroughMemberDMChannelIDCacheContext,
+    ChannelThroughMemberDMChannelCacheContext,
     UserThroughMemberNameCacheContext,
     UserThroughMemberDiscriminatorCacheContext,
     UserThroughMemberDisplayNameCacheContext,
@@ -71,6 +73,8 @@ from .cache import (
     _SERVER_THROUGH_MEMBER_SERVER,
     _USER_THROUGH_MEMBER_USER,
     _USER_THROUGH_MEMBER_BOT_OWNER,
+    _CHANNEL_ID_THROUGH_MEMBER_DM_CHANNEL_ID,
+    _CHANNEL_THROUGH_MEMBER_DM_CHANNEL,
     _USER_THROUGH_MEMBER_NAME,
     _USER_THROUGH_MEMBER_DISCRIMINATOR,
     _USER_THROUGH_MEMBER_DISPLAY_NAME,
@@ -94,12 +98,14 @@ from .core import (
     resolve_id,
 )
 from .emoji import ServerEmoji
-from .enums import ChannelType, ContentReportReason, RelationshipStatus
+from .enums import ChannelType, ContentReportReason, RelationshipStatus, UserReportReason
 from .errors import NoData
-from .flags import Permissions, ServerFlags  # , UserBadges, UserFlags
+from .flags import Permissions, ServerFlags, UserBadges, UserFlags
 from .permissions import Permissions, PermissionOverride
 from .user import (
     UserStatus,
+    UserProfile,
+    Mutuals,
     BaseUser,
     DisplayUser,
     BotUserMetadata,
@@ -112,6 +118,8 @@ if typing.TYPE_CHECKING:
 
     from . import raw
     from .channel import (
+        SavedMessagesChannel,
+        DMChannel,
         TextChannel,
         VoiceChannel,
         ServerChannel,
@@ -119,10 +127,13 @@ if typing.TYPE_CHECKING:
         PartialMessageable,
     )
     from .invite import ServerInvite
+    from .message import BaseMessage
     from .state import State
 
 _new_permissions = Permissions.__new__
 _new_server_flags = ServerFlags.__new__
+_new_user_badges = UserBadges.__new__
+_new_user_flags = UserFlags.__new__
 
 
 class Category:
@@ -767,7 +778,7 @@ class BaseServer(Base):
     async def ban(self, user: typing.Union[str, BaseUser, BaseMember], *, reason: typing.Optional[str] = None) -> Ban:
         """|coro|
 
-        Bans a user from the server.
+        Bans an user from the server.
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
@@ -2225,7 +2236,7 @@ class BaseServer(Base):
     async def unban(self, user: ULIDOr[BaseUser]) -> None:
         """|coro|
 
-        Unbans a user from the server.
+        Unbans an user from the server.
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
@@ -2812,6 +2823,9 @@ class BaseMember:
 
         return (cache.get_user(bot.owner_id, ctx), bot.owner_id)
 
+    def get_channel_id(self) -> str:
+        return self.dm_channel_id or ''
+
     def get_server(self) -> typing.Optional[Server]:
         """Optional[:class:`.Server`]: The server this member belongs to."""
 
@@ -2866,7 +2880,7 @@ class BaseMember:
 
     def __str__(self) -> str:
         user = self.get_user()
-        return str(user) if user else ''
+        return '' if user is None else str(user)
 
     @property
     def user(self) -> User:
@@ -2894,14 +2908,80 @@ class BaseMember:
 
     @property
     def id(self) -> str:
-        """:class:`str`: The ID of the entity."""
+        """:class:`str`: The ID of the member user."""
         if isinstance(self._user, User):
             return self._user.id
         return self._user
 
     @property
+    def default_avatar_url(self) -> str:
+        """:class:`str`: The URL to member user's default avatar."""
+        return self.state.http.url_for(routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=self.id))
+
+    @property
+    def mention(self) -> str:
+        """:class:`str`: The member user mention."""
+        return f'<@{self.id}>'
+
+    @property
+    def dm_channel_id(self) -> typing.Optional[str]:
+        """Optional[:class:`str`]: The ID of the private channel with this member."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelIDThroughMemberDMChannelIDCacheContext(
+                type=CacheContextType.channel_id_through_member_dm_channel_id,
+                member=self,
+            )
+            if state.provide_cache_context('Member.dm_channel_id')
+            else _CHANNEL_ID_THROUGH_MEMBER_DM_CHANNEL_ID
+        )
+
+        return cache.get_private_channel_by_user(self.id, ctx)
+
+    pm_id = dm_channel_id
+
+    @property
+    def dm_channel(self) -> typing.Optional[DMChannel]:
+        """Optional[:class:`.DMChannel`]: The private channel with this member."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ChannelThroughMemberDMChannelCacheContext(
+                type=CacheContextType.channel_through_member_dm_channel,
+                member=self,
+            )
+            if state.provide_cache_context('Member.dm_channel')
+            else _CHANNEL_THROUGH_MEMBER_DM_CHANNEL
+        )
+
+        channel_id = cache.get_private_channel_by_user(self.id, ctx)
+        if channel_id is None:
+            return None
+
+        channel = cache.get_channel(channel_id, ctx)
+        if channel is not None:
+            from .channel import DMChannel
+
+            assert isinstance(channel, DMChannel)
+
+        return channel
+
+    pm = dm_channel
+
+    @property
     def name(self) -> str:
-        """:class:`str`: The username of the user."""
+        """:class:`str`: The member's username."""
         if isinstance(self._user, User):
             return self._user.name
 
@@ -2929,7 +3009,7 @@ class BaseMember:
 
     @property
     def discriminator(self) -> str:
-        """:class:`str`: The discriminator of the user."""
+        """:class:`str`: The member user's discriminator."""
         if isinstance(self._user, User):
             return self._user.discriminator
 
@@ -2957,7 +3037,7 @@ class BaseMember:
 
     @property
     def display_name(self) -> typing.Optional[str]:
-        """Optional[:class:`str`]: The user’s display name."""
+        """Optional[:class:`str`]: The member user's display name."""
         if isinstance(self._user, User):
             return self._user.display_name
 
@@ -2985,7 +3065,7 @@ class BaseMember:
 
     @property
     def internal_avatar(self) -> typing.Optional[StatelessAsset]:
-        """Optional[:class:`.StatelessAsset`]: The stateless avatar of the user."""
+        """Optional[:class:`.StatelessAsset`]: The stateless avatar of the member user."""
         if isinstance(self._user, User):
             return self._user.internal_avatar
 
@@ -3013,12 +3093,12 @@ class BaseMember:
 
     @property
     def avatar(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The avatar of the user."""
+        """Optional[:class:`.Asset`]: The avatar of the member user."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def raw_badges(self) -> int:
-        """:class:`int`: The user's badges raw value."""
+        """:class:`int`: The member user's badges raw value."""
         if isinstance(self._user, User):
             return self._user.raw_badges
 
@@ -3045,8 +3125,15 @@ class BaseMember:
         return user.raw_badges
 
     @property
+    def badges(self) -> UserBadges:
+        """:class:`.UserBadges`: The member user's badges."""
+        ret = _new_user_badges(UserBadges)
+        ret.value = self.raw_badges
+        return ret
+
+    @property
     def status(self) -> typing.Optional[UserStatus]:
-        """Optional[:class:`.UserStatus`]: The current user's status."""
+        """Optional[:class:`.UserStatus`]: The current member user's status."""
         if isinstance(self._user, User):
             return self._user.status
 
@@ -3074,7 +3161,7 @@ class BaseMember:
 
     @property
     def raw_flags(self) -> int:
-        """:class:`int`: The user's flags raw value."""
+        """:class:`int`: The member user's flags raw value."""
         if isinstance(self._user, User):
             return self._user.raw_flags
 
@@ -3101,8 +3188,15 @@ class BaseMember:
         return user.raw_flags
 
     @property
+    def flags(self) -> UserFlags:
+        """:class:`.UserFlags`: The member user's flags."""
+        ret = _new_user_flags(UserFlags)
+        ret.value = self.raw_flags
+        return ret
+
+    @property
     def privileged(self) -> bool:
-        """:class:`bool`: Whether the user is privileged."""
+        """:class:`bool`: Whether the member user is privileged."""
         if isinstance(self._user, User):
             return self._user.privileged
 
@@ -3158,7 +3252,7 @@ class BaseMember:
 
     @property
     def relationship(self) -> RelationshipStatus:
-        """:class:`RelationshipStatus`: The current session user's relationship with this user."""
+        """:class:`RelationshipStatus`: The current user's relationship with this member user."""
         if isinstance(self._user, User):
             return self._user.relationship
 
@@ -3186,7 +3280,7 @@ class BaseMember:
 
     @property
     def online(self) -> bool:
-        """:class:`bool`: Whether the user is currently online."""
+        """:class:`bool`: Whether the member user is currently online."""
         if isinstance(self._user, User):
             return self._user.online
 
@@ -3214,9 +3308,9 @@ class BaseMember:
 
     @property
     def tag(self) -> str:
-        """:class:`str`: The tag of the user.
+        """:class:`str`: The tag of the member user.
 
-        Assuming that :attr:`User.name` is ``'kotlin.Unit'`` and :attr:`User.discriminator` is ``'3510'``,
+        Assuming that :attr:`Member.name` is ``'kotlin.Unit'`` and :attr:`Mmeber.discriminator` is ``'3510'``,
         example output would be ``'kotlin.Unit#3510'``.
         """
         if isinstance(self._user, User):
@@ -3247,7 +3341,7 @@ class BaseMember:
     async def ban(self, *, reason: typing.Optional[str] = None) -> Ban:
         """|coro|
 
-        Bans a user from the server.
+        Bans an user from the server.
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
@@ -3314,6 +3408,80 @@ class BaseMember:
         """
 
         return await self.state.http.ban(self.server_id, self.id, reason=reason)
+
+    async def fetch_channel_id(self) -> str:
+        channel_id = self.dm_channel_id
+        if channel_id:
+            return channel_id
+
+        channel = await self.open_dm()
+        return channel.id
+
+    async def fetch_default_avatar(self) -> bytes:
+        """|coro|
+
+        Return a default user avatar based on the given ID.
+
+        Returns
+        -------
+        :class:`bytes`
+            The image in PNG format.
+        """
+        return await self.state.http.get_default_avatar(self.id)
+
+    async def fetch_flags(self) -> UserFlags:
+        """|coro|
+
+        Retrieves flags for user.
+
+        Returns
+        -------
+        :class:`.UserFlags`
+            The retrieved flags.
+        """
+        return await self.state.http.get_user_flags(self.id)
+
+    async def fetch_profile(self) -> UserProfile:
+        """|coro|
+
+        Retrieve profile of an user.
+
+        You must have :attr:`~UserPermissions.view_profile` to do this.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+----------------------------------------+
+            | Value                  | Reason                                 |
+            +------------------------+----------------------------------------+
+            | ``InvalidSession``     | The current bot/user token is invalid. |
+            +------------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------+
+            | Value                     | Reason                                                       |
+            +---------------------------+--------------------------------------------------------------+
+            | ``MissingUserPermission`` | You do not have the proper permissions to view user profile. |
+            +---------------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+
+        Returns
+        -------
+        :class:`.UserProfile`
+            The retrieved user profile.
+        """
+
+        return await self.state.http.get_user_profile(self.id)
 
     async def edit(
         self,
@@ -3500,6 +3668,413 @@ class BaseMember:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         return await self.state.http.kick_member(self.server_id, self.id)
+
+    async def mutual_friend_ids(self) -> list[str]:
+        """|coro|
+
+        Retrieves a list of mutual friend user IDs with another user.
+
+        You must have :attr:`~UserPermissions.view_profile` to do this.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------+
+            | Value                | Reason                                       |
+            +----------------------+----------------------------------------------+
+            | ``InvalidOperation`` | You tried to retrieve mutuals with yourself. |
+            +----------------------+----------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------+
+            | Value                     | Reason                                                       |
+            +---------------------------+--------------------------------------------------------------+
+            | ``MissingUserPermission`` | You do not have the proper permissions to view user profile. |
+            +---------------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`str`]
+            The found mutual friend user IDs.
+        """
+
+        mutuals = await self.state.http.get_mutuals_with(self.id)
+        return mutuals.user_ids
+
+    async def mutual_server_ids(self) -> list[str]:
+        """|coro|
+
+        Retrieves a list of mutual server IDs with another user.
+
+        You must have :attr:`~UserPermissions.view_profile` to do this.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------+
+            | Value                | Reason                                       |
+            +----------------------+----------------------------------------------+
+            | ``InvalidOperation`` | You tried to retrieve mutuals with yourself. |
+            +----------------------+----------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------+
+            | Value                     | Reason                                                       |
+            +---------------------------+--------------------------------------------------------------+
+            | ``MissingUserPermission`` | You do not have the proper permissions to view user profile. |
+            +---------------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`str`]
+            The found mutual server IDs.
+        """
+        mutuals = await self.state.http.get_mutuals_with(self.id)
+        return mutuals.server_ids
+
+    async def mutuals(self) -> Mutuals:
+        """|coro|
+
+        Retrieves a list of mutual friends and servers with another user.
+
+        You must have :attr:`~UserPermissions.view_profile` to do this.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------+
+            | Value                | Reason                                       |
+            +----------------------+----------------------------------------------+
+            | ``InvalidOperation`` | You tried to retrieve mutuals with yourself. |
+            +----------------------+----------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+--------------------------------------------------------------+
+            | Value                     | Reason                                                       |
+            +---------------------------+--------------------------------------------------------------+
+            | ``MissingUserPermission`` | You do not have the proper permissions to view user profile. |
+            +---------------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Mutuals`
+            The found mutuals.
+        """
+        return await self.state.http.get_mutuals_with(self.id)
+
+    async def open_dm(self) -> typing.Union[SavedMessagesChannel, DMChannel]:
+        """|coro|
+
+        Retrieve a DM (or create if it doesn't exist) with another user.
+
+        If target is current user, a :class:`.SavedMessagesChannel` is always returned.
+
+        You must have :attr:`~UserPermissions.send_messages` to do this.
+
+        May fire :class:`.PrivateChannelCreateEvent` for the current user and user you opened DM with.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+-------------------------------------------------------------------+
+            | Value                     | Reason                                                            |
+            +---------------------------+-------------------------------------------------------------------+
+            | ``MissingUserPermission`` | You do not have the proper permissions to open DM with this user. |
+            +---------------------------+-------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        Union[:class:`.SavedMessagesChannel`, :class:`.DMChannel`]
+            The private channel.
+        """
+
+        return await self.state.http.open_dm(self.id)
+
+    async def remove_friend(self) -> User:
+        """|coro|
+
+        Removes the user from friend list.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------+-----------------------------------------------------------------------------------------+
+            | Value     | Reason                                                                                  |
+            +-----------+-----------------------------------------------------------------------------------------+
+            | ``IsBot`` | Either the current user or user you tried to deny friend request from are bot accounts. |
+            +-----------+-----------------------------------------------------------------------------------------+
+        :class:`NoEffect`
+            You tried to deny friend request from user you had no friend request sent from/to.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.User`
+            The user you removed from friend list.
+        """
+
+        return await self.state.http.remove_friend(self.id)
+
+    async def report(
+        self,
+        reason: UserReportReason,
+        *,
+        additional_context: typing.Optional[str] = None,
+        message_context: typing.Optional[ULIDOr[BaseMessage]] = None,
+    ) -> None:
+        """|coro|
+
+        Report the user to the instance moderation team.
+
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        reason: :class:`.UserReportReason`
+            The reason for reporting user.
+        additional_context: Optional[:class:`str`]
+            The additional context for moderation team. Can be only up to 1000 characters.
+        message_context: Optional[ULIDOr[:class:`.BaseMessage`]]
+            The message context.
+
+            Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+-------------------------------+
+            | Value                    | Reason                        |
+            +--------------------------+-------------------------------+
+            | ``CannotReportYourself`` | You tried to report yourself. |
+            +--------------------------+-------------------------------+
+            | ``FailedValidation``     | The payload was invalid.      |
+            +--------------------------+-------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The user/message was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+
+        return await self.state.http.report_user(
+            self.id,
+            reason,
+            additional_context=additional_context,
+            message_context=message_context,
+        )
+
+    async def unblock(self) -> User:
+        """|coro|
+
+        Unblocks an user.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and unblocked user.
+
+        .. note::
+            This is not supposed to be used by bot accounts.
+
+        Raises
+        ------
+        :class:`NoEffect`
+            You tried to block yourself or someone that you didn't had blocked.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The user was not found. |
+            +--------------+-------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                               | Populated attributes                                                |
+            +-------------------+------------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.       | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during unblocking user. |                                                                     |
+            +-------------------+------------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.User`
+            The unblocked user.
+        """
+        return await self.state.http.unblock_user(self.id)
+
+    def is_sentinel(self) -> bool:
+        """:class:`bool`: Returns whether the user is sentinel (Revolt#0000)."""
+        return self is self.state.system
 
 
 @define(slots=True)

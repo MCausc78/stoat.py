@@ -680,6 +680,12 @@ CacheContextType
     .. attribute:: user_through_member_bot_owner
 
         The context comes from :attr:`Member.bot_owner`.
+    .. attribute:: channel_id_through_member_dm_channel_id
+
+        The context comes from :attr:`Member.dm_channel_id`.
+    .. attribute:: channel_through_member_dm_channel
+
+        The context comes from :attr:`Member.dm_channel`.
     .. attribute:: user_through_member_name
 
         The context comes from :attr:`Member.name`.
@@ -2020,6 +2026,26 @@ UserThroughMemberBotOwnerCacheContext
     :members:
     :inherited-members:
 
+ChannelIDThroughMemberDMChannelIDCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelIDThroughMemberDMChannelIDCacheContext
+
+.. autoclass:: ChannelIDThroughMemberDMChannelIDCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughMemberDMChannelIDCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughMemberDMChannelIDCacheContext
+
+.. autoclass:: ChannelThroughMemberDMChannelIDCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 UserThroughMemberNameCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2755,7 +2781,7 @@ Enumerations
 The API provides some enumerations for certain types of strings to avoid the API
 from being stringly typed in case the strings change in the future.
 
-All enumerations are subclasses of an custom class which mimics the behaviour
+All enumerations are subclasses of a custom class which mimics the behaviour
 of :class:`enum.Enum`.
 
 Enum
@@ -3445,7 +3471,7 @@ Discover
 
 .. class:: Presence
     
-    Specifies the presence of a user.
+    Specifies the presence of an user.
 
     .. attribute:: online
 

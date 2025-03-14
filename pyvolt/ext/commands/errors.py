@@ -894,7 +894,7 @@ class BadLiteralArgument(UserInputError):
 
 
 class ArgumentParsingError(UserInputError):
-    """An exception raised when the parser fails to parse a user's input.
+    """An exception raised when the parser fails to parse an user's input.
 
     This inherits from :exc:`.UserInputError`.
 

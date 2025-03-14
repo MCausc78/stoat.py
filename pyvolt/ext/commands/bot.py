@@ -369,7 +369,7 @@ class Bot(Client, GroupMixin[None]):
         """A decorator that registers a coroutine as a pre-invoke hook.
 
         A pre-invoke hook is called directly before the command is
-        called. This makes it a useful function to set up database
+        called. This makes it an useful function to set up database
         connections or any type of set up required.
 
         This pre-invoke hook takes a sole parameter, a :class:`.Context`.
@@ -401,7 +401,7 @@ class Bot(Client, GroupMixin[None]):
         r"""A decorator that registers a coroutine as a post-invoke hook.
 
         A post-invoke hook is called directly after the command is
-        called. This makes it a useful function to clean-up database
+        called. This makes it an useful function to clean-up database
         connections or any type of clean up required.
 
         This post-invoke hook takes a sole parameter, a :class:`.Context`.
@@ -809,17 +809,17 @@ class Bot(Client, GroupMixin[None]):
 
     @property
     def self_bot(self) -> bool:
-        """:class:`bool`: Whether the bot is a self-bot (responds only to :attr:`.me`)."""
+        """:class:`bool`: Whether the bot is a self-bot (listens only to :attr:`.me`)."""
         return self.skip_check is self.self_bot_skip_check
 
     @property
     def traditional_bot(self) -> bool:
-        """:class:`bool`: Whether the bot is a traditional bot (does not respond to :attr:`.me`)."""
+        """:class:`bool`: Whether the bot is a traditional bot (does not listen to :attr:`.me`)."""
         return self.skip_check is self.traditional_bot_skip_check
 
     @property
     def user_bot(self) -> bool:
-        """:class:`bool`: Whether the bot is a userbot (responds to everyone)."""
+        """:class:`bool`: Whether the bot is an userbot (listens to everyone)."""
         return self.skip_check is self.user_bot_skip_check
 
     async def invoke(self, ctx: Context[Self], /) -> None:

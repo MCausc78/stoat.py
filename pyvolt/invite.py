@@ -63,7 +63,7 @@ _new_server_flags = ServerFlags.__new__
 
 @define(slots=True)
 class BaseInvite:
-    """Represents a invite on Revolt."""
+    """Represents an invite on Revolt."""
 
     state: State = field(repr=False, kw_only=True)
     """:class:`.State`: State that controls this invite."""

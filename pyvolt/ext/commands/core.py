@@ -974,7 +974,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         """A decorator that registers a coroutine as a pre-invoke hook.
 
         A pre-invoke hook is called directly before the command is
-        called. This makes it a useful function to set up database
+        called. This makes it an useful function to set up database
         connections or any type of set up required.
 
         This pre-invoke hook takes a sole parameter, a :class:`.Context`.
@@ -1001,7 +1001,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         """A decorator that registers a coroutine as a post-invoke hook.
 
         A post-invoke hook is called directly after the command is
-        called. This makes it a useful function to clean-up database
+        called. This makes it an useful function to clean-up database
         connections or any type of clean up required.
 
         This post-invoke hook takes a sole parameter, a :class:`.Context`.
@@ -1184,7 +1184,7 @@ class GroupMixin(typing.Generic[GearT]):
 
     @property
     def commands(self) -> set[Command[GearT, ..., typing.Any]]:
-        """Set[:class:`.Command`]: A unique set of commands without aliases that are registered."""
+        """Set[:class:`.Command`]: An unique set of commands without aliases that are registered."""
         return set(self.all_commands.values())
 
     def recursively_remove_all_commands(self) -> None:

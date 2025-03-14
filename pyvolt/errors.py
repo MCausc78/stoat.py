@@ -43,7 +43,7 @@ class PyvoltException(Exception):
 
 
 class HTTPException(PyvoltException):
-    """Exception that's raised when an HTTP request operation fails.
+    """Exception that's raised when a HTTP request operation fails.
 
     Attributes
     ----------

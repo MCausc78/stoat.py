@@ -432,7 +432,7 @@ def _resolve_member_id(target: typing.Union[str, BaseUser, BaseMember], /) -> st
 
 
 class HTTPClient:
-    """Represents an HTTP client sending HTTP requests to the Revolt API.
+    """Represents a HTTP client sending HTTP requests to the Revolt API.
 
     Attributes
     ----------
@@ -540,7 +540,7 @@ class HTTPClient:
         return self._base
 
     def url_for(self, route: routes.CompiledRoute, /) -> str:
-        """Returns a URL for route.
+        """Returns URL for route.
 
         Parameters
         ----------
@@ -3748,7 +3748,7 @@ class HTTPClient:
     async def delete_emoji(self, emoji: ULIDOr[ServerEmoji]) -> None:
         """|coro|
 
-        Deletes a emoji.
+        Deletes an emoji.
 
         You must have :attr:`~Permissions.manage_customization` to do this if you do not own
         the emoji, unless it was detached (already deleted).
@@ -3787,7 +3787,7 @@ class HTTPClient:
             +----------------------------------+-----------------------------------------------------------+
             | Value                            | Reason                                                    |
             +----------------------------------+-----------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to delete a emoji. |
+            | ``MissingPermission``            | You do not have the proper permissions to delete an emoji. |
             +----------------------------------+-----------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
@@ -3843,7 +3843,7 @@ class HTTPClient:
     async def delete_invite(self, code: typing.Union[str, BaseInvite], /) -> None:
         """|coro|
 
-        Deletes a invite.
+        Deletes an invite.
 
         You must have :class:`~Permissions.manage_server` if deleting server invite.
 
@@ -4114,7 +4114,7 @@ class HTTPClient:
     async def push_subscribe(self, *, endpoint: str, p256dh: str, auth: str) -> None:
         """|coro|
 
-        Create a new Web Push subscription. If an subscription already exists on this session, it will be removed.
+        Create a new Web Push subscription. If a subscription already exists on this session, it will be removed.
 
         Parameters
         ----------
@@ -4424,7 +4424,7 @@ class HTTPClient:
     ) -> Ban:
         """|coro|
 
-        Bans a user from the server.
+        Bans an user from the server.
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
@@ -4553,7 +4553,7 @@ class HTTPClient:
     async def unban(self, server: ULIDOr[BaseServer], user: ULIDOr[BaseUser]) -> None:
         """|coro|
 
-        Unbans a user from the server.
+        Unbans an user from the server.
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
@@ -6687,7 +6687,7 @@ class HTTPClient:
     ) -> User:
         """|coro|
 
-        Edits a user.
+        Edits an user.
 
         Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to target user.
 
@@ -6870,7 +6870,7 @@ class HTTPClient:
     async def get_user(self, user: ULIDOr[BaseUser], /) -> User:
         """|coro|
 
-        Retrieve a user's information.
+        Retrieve user's information.
 
         You must have :attr:`~UserPermissions.access` to do this.
 
@@ -8016,7 +8016,7 @@ class HTTPClient:
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
             | ``InvalidInvite``       | The provided instance invite was not found.                                                                                                                                                                        |
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``MissingInvite``       | The instance requires a invite to register, but you did not provide it.                                                                                                                                            |
+            | ``MissingInvite``       | The instance requires an invite to register, but you did not provide it.                                                                                                                                           |
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
             | ``ShortPassword``       | The provided password was less than 8 characters long.                                                                                                                                                             |
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+

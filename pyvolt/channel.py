@@ -1921,7 +1921,7 @@ class ChannelVoiceMetadata:
     max_users: int = field(repr=True, kw_only=True)
     """:class:`int`: The maximium amount of users allowed in the voice channel at once.
     
-    Zero means a infinite amount of users can connect to voice channel.
+    Zero means an infinite amount of users can connect to voice channel.
     """
 
 

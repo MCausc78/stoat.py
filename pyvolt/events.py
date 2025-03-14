@@ -633,7 +633,7 @@ class ChannelStopTypingEvent(ShardEvent):
 
 @define(slots=True)
 class MessageStartEditingEvent(ShardEvent):
-    """Dispatched when someone starts editing an message."""
+    """Dispatched when someone starts editing a message."""
 
     event_name: typing.ClassVar[typing.Literal['message_start_editing']] = 'message_start_editing'
 
@@ -649,7 +649,7 @@ class MessageStartEditingEvent(ShardEvent):
 
 @define(slots=True)
 class MessageStopEditingEvent(ShardEvent):
-    """Dispatched when someone stops editing an message."""
+    """Dispatched when someone stops editing a message."""
 
     event_name: typing.ClassVar[typing.Literal['message_stop_editing']] = 'message_stop_editing'
 
@@ -2080,7 +2080,7 @@ class LogoutEvent(ShardEvent):
 
 @define(slots=True)
 class VoiceChannelJoinEvent(ShardEvent):
-    """Dispatched when a user joins a voice channel."""
+    """Dispatched when an user joins a voice channel."""
 
     event_name: typing.ClassVar[typing.Literal['voice_channel_join']] = 'voice_channel_join'
 
@@ -2122,7 +2122,7 @@ class VoiceChannelJoinEvent(ShardEvent):
 
 @define(slots=True)
 class VoiceChannelLeaveEvent(ShardEvent):
-    """Dispatched when a user left voice channel."""
+    """Dispatched when an user left voice channel."""
 
     event_name: typing.ClassVar[typing.Literal['voice_channel_leave']] = 'voice_channel_leave'
 
@@ -2182,7 +2182,7 @@ class VoiceChannelLeaveEvent(ShardEvent):
 
 @define(slots=True)
 class VoiceChannelMoveEvent(ShardEvent):
-    """Dispatched when a user is moved from voice channel to another voice channel."""
+    """Dispatched when an user is moved from voice channel to another voice channel."""
 
     event_name: typing.ClassVar[typing.Literal['voice_channel_move']] = 'voice_channel_move'
 
@@ -2259,7 +2259,7 @@ class VoiceChannelMoveEvent(ShardEvent):
 
 @define(slots=True)
 class UserVoiceStateUpdateEvent(ShardEvent):
-    """Dispatched when a user's voice state is updated."""
+    """Dispatched when an user's voice state is updated."""
 
     event_name: typing.ClassVar[typing.Literal['user_voice_state_update']] = 'user_voice_state_update'
 

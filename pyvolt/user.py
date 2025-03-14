@@ -253,7 +253,7 @@ class Mutuals:
 
 
 class BaseUser(Base, Connectable, Messageable):
-    """Represents a user on Revolt."""
+    """Represents an user on Revolt."""
 
     def get_channel_id(self) -> str:
         return self.dm_channel_id or ''
@@ -600,7 +600,7 @@ class BaseUser(Base, Connectable, Messageable):
     async def fetch(self) -> User:
         """|coro|
 
-        Retrieve a user's information.
+        Retrieve user's information.
 
         You must have :attr:`~UserPermissions.access` to do this.
 
@@ -1178,7 +1178,7 @@ class PartialUser(BaseUser):
 
 @define(slots=True)
 class DisplayUser(BaseUser):
-    """Represents a user on Revolt that can be easily displayed in UI."""
+    """Represents an user on Revolt that can be easily displayed in UI."""
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The username of the user."""
@@ -1288,7 +1288,7 @@ class DisplayUser(BaseUser):
 
 @define(slots=True)
 class BotUserMetadata:
-    """Represents a bot-specific metadata for a user."""
+    """Represents a bot-specific metadata for an user."""
 
     owner_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who owns bot."""
@@ -1346,7 +1346,7 @@ def calculate_user_permissions(
 
 @define(slots=True)
 class User(DisplayUser):
-    """Represents a user on Revolt."""
+    """Represents an user on Revolt."""
 
     display_name: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The user's display name."""
@@ -1367,7 +1367,7 @@ class User(DisplayUser):
     """Optional[:class:`.BotUserMetadata`]: The information about the bot."""
 
     relationship: RelationshipStatus = field(repr=True, kw_only=True)
-    """:class:`.RelationshipStatus`: The current session user's relationship with this user."""
+    """:class:`.RelationshipStatus`: The current user's relationship with this user."""
 
     online: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the user is currently online."""

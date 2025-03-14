@@ -457,7 +457,7 @@ def _parents_of(type: type[BaseEvent], /) -> tuple[type[BaseEvent], ...]:
 
 
 class EventSubscription(typing.Generic[EventT]):
-    """Represents a event subscription.
+    """Represents an event subscription.
 
     Attributes
     ----------
@@ -850,7 +850,7 @@ class Client:
         """Handles library errors. By default, this logs exception.
 
         .. note::
-            This won't be called if handling ``Ready`` will raise a exception as it is fatal.
+            This won't be called if handling ``Ready`` will raise an exception as it is fatal.
         """
 
         type = payload['type']
@@ -1189,7 +1189,7 @@ class Client:
 
         Waits for a WebSocket event to be dispatched.
 
-        This could be used to wait for a user to reply to a message,
+        This could be used to wait for an user to reply to a message,
         or to react to a message, or to edit a message in a self-contained
         way.
 
@@ -1203,7 +1203,7 @@ class Client:
         Examples
         --------
 
-        Waiting for a user reply: ::
+        Waiting for an user reply: ::
 
             @client.on(pyvolt.MessageCreateEvent)
             async def on_message_create(event):
@@ -1707,7 +1707,7 @@ class Client:
         return await self.http.get_channel(channel_id)
 
     def get_emoji(self, emoji_id: str, /) -> typing.Optional[Emoji]:
-        """Retrieves a emoji from cache.
+        """Retrieves an emoji from cache.
 
         Parameters
         ----------
@@ -1893,7 +1893,7 @@ class Client:
     def get_user(self, user_id: str, /, *, partial: typing.Literal[True] = ...) -> typing.Union[User, BaseUser]: ...
 
     def get_user(self, user_id: str, /, *, partial: bool = False) -> typing.Optional[typing.Union[User, BaseUser]]:
-        """Retrieves a user from cache.
+        """Retrieves an user from cache.
 
         Parameters
         ----------
@@ -1932,7 +1932,7 @@ class Client:
     async def fetch_user(self, user_id: str, /) -> User:
         """|coro|
 
-        Retrieves a user from API. This is shortcut to :meth:`pyvolt.HTTPClient.get_user`.
+        Retrieves an user from API. This is shortcut to :meth:`pyvolt.HTTPClient.get_user`.
 
         Parameters
         ----------

@@ -55,7 +55,7 @@ _new_server_flags = ServerFlags.__new__
 
 @define(slots=True)
 class DiscoverableServer(BaseServer):
-    """Represents a server on Revolt Discovery. The ID is a invite code."""
+    """Represents a server on Revolt Discovery. The ID is an invite code."""
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's name."""

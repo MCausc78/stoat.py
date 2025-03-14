@@ -67,7 +67,7 @@ class MFATicket:
     """:class:`bool`: Whether this ticket has been validated (can be used for account actions)."""
 
     authorized: bool = field(repr=True, kw_only=True)
-    """:class:`bool`: Whether this ticket is authorized (can be used to log a user in)."""
+    """:class:`bool`: Whether this ticket is authorized (can be used to log an user in)."""
 
     last_totp_code: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The TOTP code at time of ticket creation."""

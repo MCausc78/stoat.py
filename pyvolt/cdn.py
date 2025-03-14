@@ -382,7 +382,7 @@ async def resolve_resource(state: State, resolvable: ResolvableResource, /, *, t
 
 
 class CDNClient:
-    """Represents an HTTP client sending HTTP requests to the Revolt Autumn API.
+    """Represents a HTTP client sending HTTP requests to the Revolt Autumn API.
 
     Attributes
     ----------

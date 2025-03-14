@@ -180,7 +180,7 @@ class UserSettings:
         return self.data[key][1]
 
     def get(self, key: str, default: D = None) -> typing.Union[str, D]:
-        """Union[:class:`str`, D]: Get a user setting."""
+        """Union[:class:`str`, D]: Retrieve value for an user setting."""
         if key in self.data:
             return self.data[key][1]
         return default
