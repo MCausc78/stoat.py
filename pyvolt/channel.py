@@ -1561,7 +1561,7 @@ class BaseServerChannel(BaseChannel):
         """:class:`.Server`: The server that channel belongs to."""
         server = self.get_server()
         if server is None:
-            raise NoData(self.server_id, 'channel server')
+            raise NoData(what=self.server_id, type='BaseServerChannel.server')
         return server
 
     async def create_invite(self) -> Invite:

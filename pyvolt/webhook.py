@@ -31,13 +31,17 @@ from attrs import define, field
 from .base import Base
 from .cache import (
     CacheContextType,
+    MemberOrUserThroughWebhookCreatorCacheContext,
+    MemberThroughWebhookCreatorCacheContext,
     UserThroughWebhookCreatorCacheContext,
     ChannelThroughWebhookChannelCacheContext,
+    _MEMBER_OR_USER_THROUGH_WEBHOOK_CREATOR,
+    _MEMBER_THROUGH_WEBHOOK_CREATOR,
     _USER_THROUGH_WEBHOOK_CREATOR,
     _CHANNEL_THROUGH_WEBHOOK_CHANNEL,
 )
 from .cdn import StatelessAsset, Asset, ResolvableResource
-from .channel import GroupChannel, TextChannel
+from .channel import GroupChannel, BaseServerChannel, TextChannel
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -55,6 +59,7 @@ from .message import (
 from .permissions import Permissions
 
 if typing.TYPE_CHECKING:
+    from .server import Member
     from .user import User
 
 _new_permissions = Permissions.__new__
@@ -476,8 +481,66 @@ class Webhook(BaseWebhook):
     token: typing.Optional[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The webhook's private token."""
 
-    def get_creator(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]]: The user who created this webhook."""
+    def get_creator(self) -> typing.Optional[typing.Union[Member, User]]:
+        """Optional[Union[:class:`.Member`, :class:`.User`]]: The user who created this webhook."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        creator_id = self.creator_id
+        if not creator_id:
+            return None
+
+        ctx = (
+            MemberOrUserThroughWebhookCreatorCacheContext(
+                type=CacheContextType.member_or_user_through_webhook_creator,
+                webhook=self,
+            )
+            if state.provide_cache_context('Webhook.creator')
+            else _MEMBER_OR_USER_THROUGH_WEBHOOK_CREATOR
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+
+        ret = None
+        if isinstance(channel, BaseServerChannel):
+            ret = cache.get_server_member(channel.server_id, self.creator_id, ctx)
+
+        if ret is None:
+            return cache.get_user(creator_id, ctx)
+        return ret
+
+    def get_creator_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The user who created this webhook."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        creator_id = self.creator_id
+        if not creator_id:
+            return None
+
+        ctx = (
+            MemberThroughWebhookCreatorCacheContext(
+                type=CacheContextType.member_through_webhook_creator,
+                webhook=self,
+            )
+            if state.provide_cache_context('Webhook.creator_as_member')
+            else _MEMBER_THROUGH_WEBHOOK_CREATOR
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            return cache.get_server_member(channel.server_id, self.creator_id, ctx)
+        return None
+
+    def get_creator_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who created this webhook."""
         state = self.state
         cache = state.cache
 
@@ -493,7 +556,7 @@ class Webhook(BaseWebhook):
                 type=CacheContextType.user_through_webhook_creator,
                 webhook=self,
             )
-            if state.provide_cache_context('Webhook.creator')
+            if state.provide_cache_context('Webhook.creator_as_user')
             else _USER_THROUGH_WEBHOOK_CREATOR
         )
 
@@ -549,11 +612,27 @@ class Webhook(BaseWebhook):
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
-    def creator(self) -> User:
-        """:class:`.User`: The user who created this webhook."""
+    def creator(self) -> typing.Union[Member, User]:
+        """Union[:class:`.Member`, :class:`.User`]: The user who created this webhook."""
         creator = self.get_creator()
         if creator is None:
             raise NoData(what=self.creator_id, type='Webhook.creator')
+        return creator
+
+    @property
+    def creator_as_member(self) -> Member:
+        """:class:`.Member`: The user who created this webhook."""
+        creator = self.get_creator_as_member()
+        if creator is None:
+            raise NoData(what=self.creator_id, type='Webhook.creator_as_member')
+        return creator
+
+    @property
+    def creator_as_user(self) -> User:
+        """:class:`.User`: The user who created this webhook."""
+        creator = self.get_creator_as_user()
+        if creator is None:
+            raise NoData(what=self.creator_id, type='Webhook.creator_as_user')
         return creator
 
     @property

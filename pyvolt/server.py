@@ -41,7 +41,9 @@ from .cache import (
     MembersThroughServerGetterCacheContext,
     ChannelThroughServerGetterCacheContext,
     ChannelsThroughServerGetterCacheContext,
+    MemberOrUserThroughServerOwnerCacheContext,
     MemberThroughServerOwnerCacheContext,
+    UserThroughServerOwnerCacheContext,
     ServerThroughMemberServerCacheContext,
     UserThroughMemberUserCacheContext,
     UserThroughMemberBotOwnerCacheContext,
@@ -69,7 +71,9 @@ from .cache import (
     _MEMBERS_THROUGH_SERVER_GETTER,
     _CHANNEL_THROUGH_SERVER_GETTER,
     _CHANNELS_THROUGH_SERVER_GETTER,
+    _MEMBER_OR_USER_THROUGH_SERVER_OWNER,
     _MEMBER_THROUGH_SERVER_OWNER,
+    _USER_THROUGH_SERVER_OWNER,
     _SERVER_THROUGH_MEMBER_SERVER,
     _USER_THROUGH_MEMBER_USER,
     _USER_THROUGH_MEMBER_BOT_OWNER,
@@ -2533,7 +2537,30 @@ class Server(BaseServer):
             if t.id == channel_id:
                 return t
 
-    def get_owner(self) -> typing.Optional[Member]:
+    def get_owner(self) -> typing.Optional[typing.Union[Member, User]]:
+        """Optional[Union[:class:`.Member`, :class:`.User`]]: The server's owner."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return
+
+        ctx = (
+            MemberOrUserThroughServerOwnerCacheContext(
+                type=CacheContextType.member_or_user_through_server_owner,
+                server=self,
+            )
+            if state.provide_cache_context('Server.owner')
+            else _MEMBER_OR_USER_THROUGH_SERVER_OWNER
+        )
+
+        member = cache.get_server_member(self.id, self.owner_id, ctx)
+        if member is None:
+            return cache.get_user(self.owner_id, ctx)
+        return member
+
+    def get_owner_as_member(self) -> typing.Optional[Member]:
         """Optional[:class:`.Member`]: The server's owner."""
 
         state = self.state
@@ -2547,11 +2574,31 @@ class Server(BaseServer):
                 type=CacheContextType.member_through_server_owner,
                 server=self,
             )
-            if state.provide_cache_context('Server.owner')
+            if state.provide_cache_context('Server.owner_as_member')
             else _MEMBER_THROUGH_SERVER_OWNER
         )
 
         return cache.get_server_member(self.id, self.owner_id, ctx)
+
+    def get_owner_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The server's owner."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return
+
+        ctx = (
+            UserThroughServerOwnerCacheContext(
+                type=CacheContextType.user_through_server_owner,
+                server=self,
+            )
+            if state.provide_cache_context('Server.owner_as_user')
+            else _USER_THROUGH_SERVER_OWNER
+        )
+
+        return cache.get_user(self.owner_id, ctx)
 
     @property
     def banner(self) -> typing.Optional[Asset]:
@@ -2624,12 +2671,30 @@ class Server(BaseServer):
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
-    def owner(self) -> Member:
-        """:class:`.Member`: The server's owner."""
+    def owner(self) -> typing.Union[Member, User]:
+        """Union[:class:`.Member`, :class:`.User`]: The server's owner."""
 
         owner = self.get_owner()
         if owner is None:
             raise NoData(what=self.owner_id, type='Server.owner')
+        return owner
+
+    @property
+    def owner_as_member(self) -> Member:
+        """:class:`.Member`: The server's owner."""
+
+        owner = self.get_owner_as_member()
+        if owner is None:
+            raise NoData(what=self.owner_id, type='Server.owner_as_member')
+        return owner
+
+    @property
+    def owner_as_user(self) -> User:
+        """:class:`.User`: The server's owner."""
+
+        owner = self.get_owner_as_user()
+        if owner is None:
+            raise NoData(what=self.owner_id, type='Server.owner_as_user')
         return owner
 
     def is_verified(self) -> bool:

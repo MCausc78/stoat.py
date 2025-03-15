@@ -262,7 +262,9 @@ class CacheContextType(Enum):
     members_through_server_getter = 'Server.members: Dict[str, Member]'
     channel_through_server_getter = 'Server.get_channel(): Optional[ServerChannel]'
     channels_through_server_getter = 'Server.channels: List[ServerChannel]'
-    member_through_server_owner = 'Server.owner: Member'
+    member_or_user_through_server_owner = 'Server.owner: Union[Member, User]'
+    member_through_server_owner = 'Server.owner_as_member: Member'
+    user_through_server_owner = 'Server.owner_as_user: User'
     server_through_member_server = 'Member.server: Server'
     user_through_member_user = 'Member.user: User'
     user_through_member_bot_owner = 'Member.bot_owner: Optional[User]'
@@ -285,7 +287,9 @@ class CacheContextType(Enum):
     user_through_user_bot_owner = 'User.bot_owner: Optional[User]'
     channel_id_through_user_dm_channel_id = 'User.dm_channel_id: Optional[str]'
     channel_through_user_dm_channel = 'User.dm_channel: Optional[DMChannel]'
-    user_through_webhook_creator = 'Webhook.creator: User'
+    member_or_user_through_webhook_creator = 'Webhook.creator: Union[Member, User]'
+    member_through_webhook_creator = 'Webhook.creator_as_member: Member'
+    user_through_webhook_creator = 'Webhook.creator_as_user: User'
     channel_through_webhook_channel = 'Webhook.channel: Union[GroupChannel, TextChannel]'
 
 
@@ -1298,8 +1302,18 @@ class ChannelsThroughServerGetterCacheContext(BaseServerCacheContext):
 
 
 @define(slots=True)
-class MemberThroughServerOwnerCacheContext(ServerCacheContext):
+class MemberOrUserThroughServerOwnerCacheContext(ServerCacheContext):
     """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner."""
+
+
+@define(slots=True)
+class MemberThroughServerOwnerCacheContext(ServerCacheContext):
+    """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner as member."""
+
+
+@define(slots=True)
+class UserThroughServerOwnerCacheContext(ServerCacheContext):
+    """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner as user."""
 
 
 @define(slots=True)
@@ -1413,8 +1427,18 @@ class ChannelThroughUserDMChannelIDCacheContext(BaseUserCacheContext):
 
 
 @define(slots=True)
-class UserThroughWebhookCreatorCacheContext(WebhookCacheContext):
+class MemberOrUserThroughWebhookCreatorCacheContext(WebhookCacheContext):
     """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator."""
+
+
+@define(slots=True)
+class MemberThroughWebhookCreatorCacheContext(WebhookCacheContext):
+    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator as member."""
+
+
+@define(slots=True)
+class UserThroughWebhookCreatorCacheContext(WebhookCacheContext):
+    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator as user."""
 
 
 @define(slots=True)
@@ -1795,8 +1819,14 @@ _CHANNEL_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedC
 _CHANNELS_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channels_through_server_getter,
 )
+_MEMBER_OR_USER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_server_owner,
+)
 _MEMBER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_through_server_owner,
+)
+_USER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_server_owner,
 )
 _SERVER_THROUGH_MEMBER_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_member_server,
@@ -1863,6 +1893,12 @@ _CHANNEL_THROUGH_USER_DM_CHANNEL: typing.Final[UndefinedCacheContext] = Undefine
 )
 _CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_id_through_user_dm_channel_id,
+)
+_MEMBER_OR_USER_THROUGH_WEBHOOK_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_webhook_creator,
+)
+_MEMBER_THROUGH_WEBHOOK_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_webhook_creator,
 )
 _USER_THROUGH_WEBHOOK_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_webhook_creator,
@@ -1996,6 +2032,8 @@ ProvideCacheContextIn = typing.Literal[
     'Server.get_channel()',
     'Server.channels',
     'Server.owner',
+    'Server.owner_as_member',
+    'Server.owner_as_user',
     'Member.server',
     'Member.user',
     'Member.bot_owner',
@@ -2019,6 +2057,8 @@ ProvideCacheContextIn = typing.Literal[
     'User.dm_channel_id',
     'User.dm_channel',
     'Webhook.creator',
+    'Webhook.creator_as_member',
+    'Webhook.creator_as_user',
     'Webhook.channel',
 ]
 
@@ -3533,6 +3573,9 @@ __all__ = (
     'MembersThroughServerGetterCacheContext',
     'ChannelThroughServerGetterCacheContext',
     'ChannelsThroughServerGetterCacheContext',
+    'MemberOrUserThroughServerOwnerCacheContext',
+    'MemberThroughServerOwnerCacheContext',
+    'UserThroughServerOwnerCacheContext',
     'ServerThroughMemberServerCacheContext',
     'UserThroughMemberUserCacheContext',
     'UserThroughMemberBotOwnerCacheContext',
@@ -3555,6 +3598,8 @@ __all__ = (
     'UserThroughUserBotOwnerCacheContext',
     'ChannelIDThroughUserDMChannelIDCacheContext',
     'ChannelThroughUserDMChannelIDCacheContext',
+    'MemberOrUserThroughWebhookCreatorCacheContext',
+    'MemberThroughWebhookCreatorCacheContext',
     'UserThroughWebhookCreatorCacheContext',
     'ChannelThroughWebhookChannelCacheContext',
     '_UNDEFINED',
@@ -3682,7 +3727,9 @@ __all__ = (
     '_MEMBERS_THROUGH_SERVER_GETTER',
     '_CHANNEL_THROUGH_SERVER_GETTER',
     '_CHANNELS_THROUGH_SERVER_GETTER',
+    '_MEMBER_OR_USER_THROUGH_SERVER_OWNER',
     '_MEMBER_THROUGH_SERVER_OWNER',
+    '_USER_THROUGH_SERVER_OWNER',
     '_SERVER_THROUGH_MEMBER_SERVER',
     '_USER_THROUGH_MEMBER_USER',
     '_USER_THROUGH_MEMBER_BOT_OWNER',
@@ -3700,9 +3747,13 @@ __all__ = (
     '_USER_THROUGH_MEMBER_RELATIONSHIP',
     '_USER_THROUGH_MEMBER_ONLINE',
     '_USER_THROUGH_MEMBER_TAG',
+    '_SERVER_THROUGH_MEMBER_ROLES',
+    '_SERVER_THROUGH_MEMBER_TOP_ROLE',
     '_USER_THROUGH_USER_BOT_OWNER',
     '_CHANNEL_THROUGH_USER_DM_CHANNEL',
     '_CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID',
+    '_MEMBER_OR_USER_THROUGH_WEBHOOK_CREATOR',
+    '_MEMBER_THROUGH_WEBHOOK_CREATOR',
     '_USER_THROUGH_WEBHOOK_CREATOR',
     '_CHANNEL_THROUGH_WEBHOOK_CHANNEL',
     'ProvideCacheContextIn',

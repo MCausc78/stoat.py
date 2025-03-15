@@ -686,9 +686,15 @@ CacheContextType
     .. attribute:: channels_through_server_getter
 
         The context comes from :attr:`Server.channels`.
-    .. attribute:: member_through_server_owner
+    .. attribute:: member_or_user_through_server_owner
 
         The context comes from :attr:`Server.owner`.
+    .. attribute:: member_through_server_owner
+
+        The context comes from :attr:`Server.owner_as_member`.
+    .. attribute:: user_through_server_owner
+
+        The context comes from :attr:`Server.owner_as_user`.
     .. attribute:: server_through_member_server
 
         The context comes from :attr:`Member.server`.
@@ -749,9 +755,15 @@ CacheContextType
     .. attribute:: channel_through_user_dm_channel
 
         The context comes from :attr:`User.dm_channel`.
-    .. attribute:: user_through_webhook_creator
+    .. attribute:: member_or_user_through_webhook_creator
 
         The context comes from :attr:`Webhook.creator`.
+    .. attribute:: member_through_webhook_creator
+
+        The context comes from :attr:`Webhook.creator_as_member`.
+    .. attribute:: user_through_webhook_creator
+
+        The context comes from :attr:`Webhook.creator_as_user`.
     .. attribute:: channel_through_webhook_channel
 
         The context comes from :attr:`Webhook.channel`.
