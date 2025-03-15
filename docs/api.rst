@@ -548,9 +548,18 @@ CacheContextType
     .. attribute:: user_through_client_getter
 
         The context comes from :meth:`Client.get_user`.
-    .. attribute:: user_through_base_emoji_creator
-
-        The context comes from :attr:`BaseEmoji.creator`.
+    .. attribute:: member_or_user_through_server_emoji_creator
+        
+        The context comes from :attr:`ServerEmoji.creator`
+    .. attribute:: member_through_server_emoji_creator
+        
+        The context comes from :attr:`ServerEmoji.creator_as_member`
+    .. attribute:: user_through_server_emoji_creator
+        
+        The context comes from :attr:`ServerEmoji.creator_as_user`
+    .. attribute:: user_through_detached_emoji_creator
+        
+        The context comes from :attr:`ServeBaseEmojirEmoji.creator`
     .. attribute:: server_through_server_emoji_server
 
         The context comes from :attr:`ServerEmoji.server`.
@@ -1816,12 +1825,42 @@ ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext
     :members:
     :inherited-members:
 
-UserThroughBaseEmojiCreatorCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+MemberOrUserThroughServerEmojiCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: UserThroughBaseEmojiCreatorCacheContext
+.. attributetable:: MemberOrUserThroughServerEmojiCreatorCacheContext
 
-.. autoclass:: UserThroughBaseEmojiCreatorCacheContext
+.. autoclass:: MemberOrUserThroughServerEmojiCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughServerEmojiCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughServerEmojiCreatorCacheContext
+
+.. autoclass:: MemberThroughServerEmojiCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughServerEmojiCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughServerEmojiCreatorCacheContext
+
+.. autoclass:: UserThroughServerEmojiCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughDetachedEmojiCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughDetachedEmojiCreatorCacheContext
+
+.. autoclass:: UserThroughDetachedEmojiCreatorCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

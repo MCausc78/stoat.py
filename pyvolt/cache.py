@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
 
     from .abc import Messageable
     from .bot import Bot
-    from .emoji import ServerEmoji, Emoji
+    from .emoji import ServerEmoji, DetachedEmoji, Emoji
     from .channel import (
         DMChannel,
         GroupChannel,
@@ -214,7 +214,10 @@ class CacheContextType(Enum):
     read_state_through_client_getter = 'Client.get_read_state(): Optional[ReadState]'
     server_through_client_getter = 'Client.get_server(): Optional[Server]'
     user_through_client_getter = 'Client.get_user(): Optional[User]'
-    user_through_base_emoji_creator = 'BaseEmoji.creator: User'
+    member_or_user_through_server_emoji_creator = 'ServerEmoji.creator: Union[Member, User]'
+    member_through_server_emoji_creator = 'ServerEmoji.creator_as_member: Member'
+    user_through_server_emoji_creator = 'ServerEmoji.creator_as_user: User'
+    user_through_detached_emoji_creator = 'BaseEmoji.creator: User'
     server_through_server_emoji_server = 'ServerEmoji.server: Server'
     server_through_server_public_invite_server = 'ServerPublicInvite.server: Server'
     channel_through_server_public_invite_channel = 'ServerPublicInvite.channel: ServerChannel'
@@ -731,6 +734,14 @@ class ServerEmojiCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class DetachedEmojiCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.DetachedEmoji` entity."""
+
+    emoji: DetachedEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.DetachedEmoji`: The emoji involved."""
+
+
+@define(slots=True)
 class ClientCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.Client`."""
 
@@ -1173,8 +1184,23 @@ class ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext(Voice
 
 
 @define(slots=True)
-class UserThroughBaseEmojiCreatorCacheContext(BaseEmojiCacheContext):
-    """Represents a cache context that involves an :class:`.BaseEmoji`, wishing to retrieve emoji's creator."""
+class MemberOrUserThroughServerEmojiCreatorCacheContext(ServerEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's creator."""
+
+
+@define(slots=True)
+class MemberThroughServerEmojiCreatorCacheContext(ServerEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's creator as member."""
+
+
+@define(slots=True)
+class UserThroughServerEmojiCreatorCacheContext(ServerEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's creator as user."""
+
+
+@define(slots=True)
+class UserThroughDetachedEmojiCreatorCacheContext(DetachedEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.DetachedEmoji`, wishing to retrieve emoji's creator."""
 
 
 @define(slots=True)
@@ -1621,8 +1647,17 @@ _SERVER_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCa
 _USER_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_client_getter,
 )
-_USER_THROUGH_BASE_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_through_base_emoji_creator,
+_MEMBER_OR_USER_THROUGH_SERVER_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_server_emoji_creator,
+)
+_MEMBER_THROUGH_SERVER_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_server_emoji_creator,
+)
+_USER_THROUGH_SERVER_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_server_emoji_creator,
+)
+_USER_THROUGH_DETACHED_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_detached_emoji_creator,
 )
 _SERVER_THROUGH_SERVER_EMOJI_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_server_emoji_server,
@@ -1880,7 +1915,10 @@ ProvideCacheContextIn = typing.Literal[
     'TextChannel.read_state',
     'TextChannel.voice_states',
     'VoiceChannel.voice_states',
-    'BaseEmoji.creator',
+    'ServerEmoji.creator',
+    'ServerEmoji.creator_as_member',
+    'ServerEmoji.creator_as_user',
+    'DetachedEmoji.creator',
     'ServerEmoji.server',
     'Client.channels',
     'Client.emojis',
@@ -3393,6 +3431,7 @@ __all__ = (
     'GroupChannelCacheContext',
     'BaseEmojiCacheContext',
     'ServerEmojiCacheContext',
+    'DetachedEmojiCacheContext',
     'ClientCacheContext',
     'ServerPublicInviteCacheContext',
     'GroupPublicInviteCacheContext',
@@ -3450,7 +3489,10 @@ __all__ = (
     'ServerThroughRoleServerCacheContext',
     'ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext',
     'ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext',
-    'UserThroughBaseEmojiCreatorCacheContext',
+    'MemberOrUserThroughServerEmojiCreatorCacheContext',
+    'MemberThroughServerEmojiCreatorCacheContext',
+    'UserThroughServerEmojiCreatorCacheContext',
+    'UserThroughDetachedEmojiCreatorCacheContext',
     'ServerThroughServerEmojiServerCacheContext',
     'ServerThroughServerPublicInviteServerCacheContext',
     'ChannelThroughServerPublicInviteChannelCacheContext',
@@ -3572,7 +3614,10 @@ __all__ = (
     '_READ_STATE_THROUGH_CLIENT_GETTER',
     '_SERVER_THROUGH_CLIENT_GETTER',
     '_USER_THROUGH_CLIENT_GETTER',
-    '_USER_THROUGH_BASE_EMOJI_CREATOR',
+    '_MEMBER_OR_USER_THROUGH_SERVER_EMOJI_CREATOR',
+    '_MEMBER_THROUGH_SERVER_EMOJI_CREATOR',
+    '_USER_THROUGH_SERVER_EMOJI_CREATOR',
+    '_USER_THROUGH_DETACHED_EMOJI_CREATOR',
     '_SERVER_THROUGH_SERVER_EMOJI_SERVER',
     '_SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER',
     '_CHANNEL_THROUGH_SERVER_PUBLIC_INVITE_CHANNEL',
