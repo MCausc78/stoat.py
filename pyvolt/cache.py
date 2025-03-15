@@ -98,7 +98,6 @@ if typing.TYPE_CHECKING:
     from .invite import (
         ServerPublicInvite,
         GroupPublicInvite,
-        PrivateBaseInvite,
         GroupInvite,
         ServerInvite,
     )
@@ -224,10 +223,13 @@ class CacheContextType(Enum):
     user_through_server_public_invite_user = 'ServerPublicInvite.user: User'
     channel_through_group_public_invite_channel = 'GroupPublicInvite.channel: GroupChannel'
     user_through_group_public_invite_user = 'GroupPublicInvite.user: User'
-    user_through_private_base_invite_creator = 'PrivateBaseInvite.creator: User'
     channel_through_group_invite_channel = 'GroupInvite.channel: GroupChannel'
+    user_through_group_invite_creator = 'GroupInvite.creator: User'
     server_through_server_invite_server = 'ServerInvite.server: Server'
     channel_through_server_invite_channel = 'ServerInvite.channel: ServerChannel'
+    member_or_user_through_server_invite_creator = 'ServerInvite.creator: Union[Member, User]'
+    member_through_server_invite_creator = 'ServerInvite.creator_as_member: Member'
+    user_through_server_invite_creator = 'ServerInvite.creator_as_user: User'
     user_through_user_added_system_event_user = 'UserAddedSystemEvent.user: User'
     user_through_user_added_system_event_by = 'UserAddedSystemEvent.by: User'
     user_through_user_removed_system_event_user = 'UserRemovedSystemEvent.user: User'
@@ -766,14 +768,6 @@ class GroupPublicInviteCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
-class PrivateBaseInviteCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.PrivateBaseInvite` entity."""
-
-    invite: PrivateBaseInvite = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.PrivateBaseInvite`: The invite involved."""
-
-
-@define(slots=True)
 class GroupInviteCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.GroupInvite` entity."""
 
@@ -1225,32 +1219,47 @@ class UserThroughServerPublicInviteUserCacheContext(ServerPublicInviteCacheConte
 
 @define(slots=True)
 class ChannelThroughGroupPublicInviteChannelCacheContext(GroupPublicInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupPublicInviteCacheContext`, wishing to retrieve destination group channel."""
+    """Represents a cache context that involves an :class:`.GroupPublicInvite`, wishing to retrieve destination group channel."""
 
 
 @define(slots=True)
 class UserThroughGroupPublicInviteUserCacheContext(GroupPublicInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupPublicInviteCacheContext`, wishing to retrieve invite's creator.."""
+    """Represents a cache context that involves an :class:`.GroupPublicInvite`, wishing to retrieve invite's creator.."""
 
 
 @define(slots=True)
-class UserThroughPrivateBaseInviteCreatorCacheContext(PrivateBaseInviteCacheContext):
-    """Represents a cache context that involves an :class:`.PrivateBaseInviteCacheContext`, wishing to retrieve invite's creator."""
+class UserThroughGroupInviteCreatorCacheContext(GroupInviteCacheContext):
+    """Represents a cache context that involves an :class:`.GroupInvite`, wishing to retrieve invite's creator."""
 
 
 @define(slots=True)
 class ChannelThroughGroupInviteChannelCacheContext(GroupInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupInviteCacheContext`, wishing to retrieve destination group channel."""
+    """Represents a cache context that involves an :class:`.GroupInvite`, wishing to retrieve destination group channel."""
 
 
 @define(slots=True)
 class ServerThroughServerInviteServerCacheContext(ServerInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInviteCacheContext`, wishing to retrieve destination server."""
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve destination server."""
 
 
 @define(slots=True)
 class ChannelThroughServerInviteChannelCacheContext(ServerInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInviteCacheContext`, wishing to retrieve destination server channel."""
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve destination server channel."""
+
+
+@define(slots=True)
+class MemberOrUserThroughServerInviteCreatorCacheContext(ServerInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve invite's creator."""
+
+
+@define(slots=True)
+class MemberThroughServerInviteCreatorCacheContext(ServerInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve invite's creator."""
+
+
+@define(slots=True)
+class UserThroughServerInviteCreatorCacheContext(ServerInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve invite's creator."""
 
 
 @define(slots=True)
@@ -1677,17 +1686,26 @@ _CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL: typing.Final[UndefinedCacheContext
 _USER_THROUGH_GROUP_PUBLIC_INVITE_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_group_public_invite_user,
 )
-_USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_through_private_base_invite_creator,
-)
 _CHANNEL_THROUGH_GROUP_INVITE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_group_invite_channel,
+)
+_USER_THROUGH_GROUP_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_group_invite_creator,
 )
 _SERVER_THROUGH_SERVER_INVITE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_server_invite_server,
 )
 _CHANNEL_THROUGH_SERVER_INVITE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_server_invite_channel,
+)
+_MEMBER_OR_USER_THROUGH_SERVER_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_server_invite_creator,
+)
+_MEMBER_THROUGH_SERVER_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_server_invite_creator,
+)
+_USER_THROUGH_SERVER_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_server_invite_creator,
 )
 _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_user_added_system_event_user,
@@ -1940,10 +1958,13 @@ ProvideCacheContextIn = typing.Literal[
     'ServerPublicInvite.user',
     'GroupPublicInvite.channel',
     'GroupPublicInvite.user',
-    'PrivateBaseInvite.creator',
     'GroupInvite.channel',
+    'GroupInvite.creator',
     'ServerInvite.server',
     'ServerInvite.channel',
+    'ServerInvite.creator',
+    'ServerInvite.creator_as_member',
+    'ServerInvite.creator_as_user',
     'UserAddedSystemEvent.user',
     'UserAddedSystemEvent.by',
     'UserRemovedSystemEvent.user',
@@ -3435,7 +3456,6 @@ __all__ = (
     'ClientCacheContext',
     'ServerPublicInviteCacheContext',
     'GroupPublicInviteCacheContext',
-    'PrivateBaseInviteCacheContext',
     'GroupInviteCacheContext',
     'ServerInviteCacheContext',
     'BaseMessageCacheContext',
@@ -3499,10 +3519,13 @@ __all__ = (
     'UserThroughServerPublicInviteUserCacheContext',
     'ChannelThroughGroupPublicInviteChannelCacheContext',
     'UserThroughGroupPublicInviteUserCacheContext',
-    'UserThroughPrivateBaseInviteCreatorCacheContext',
     'ChannelThroughGroupInviteChannelCacheContext',
+    'UserThroughGroupInviteCreatorCacheContext',
     'ServerThroughServerInviteServerCacheContext',
     'ChannelThroughServerInviteChannelCacheContext',
+    'MemberOrUserThroughServerInviteCreatorCacheContext',
+    'MemberThroughServerInviteCreatorCacheContext',
+    'UserThroughServerInviteCreatorCacheContext',
     'ChannelThroughReadStateChannelCacheContext',
     'EmojiThroughServerGetterCacheContext',
     'MemberThroughServerGetterCacheContext',
@@ -3624,10 +3647,13 @@ __all__ = (
     '_USER_THROUGH_SERVER_PUBLIC_INVITE_USER',
     '_CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL',
     '_USER_THROUGH_GROUP_PUBLIC_INVITE_USER',
-    '_USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR',
     '_CHANNEL_THROUGH_GROUP_INVITE_CHANNEL',
+    '_USER_THROUGH_GROUP_INVITE_CREATOR',
     '_SERVER_THROUGH_SERVER_INVITE_SERVER',
     '_CHANNEL_THROUGH_SERVER_INVITE_CHANNEL',
+    '_MEMBER_OR_USER_THROUGH_SERVER_INVITE_CREATOR',
+    '_MEMBER_THROUGH_SERVER_INVITE_CREATOR',
+    '_USER_THROUGH_SERVER_INVITE_CREATOR',
     '_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER',
     '_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_BY',
     '_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER',

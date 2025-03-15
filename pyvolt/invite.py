@@ -34,19 +34,25 @@ from .cache import (
     UserThroughServerPublicInviteUserCacheContext,
     ChannelThroughGroupPublicInviteChannelCacheContext,
     UserThroughGroupPublicInviteUserCacheContext,
-    UserThroughPrivateBaseInviteCreatorCacheContext,
     ChannelThroughGroupInviteChannelCacheContext,
+    UserThroughGroupInviteCreatorCacheContext,
     ServerThroughServerInviteServerCacheContext,
     ChannelThroughServerInviteChannelCacheContext,
+    MemberOrUserThroughServerInviteCreatorCacheContext,
+    MemberThroughServerInviteCreatorCacheContext,
+    UserThroughServerInviteCreatorCacheContext,
     _SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER,
     _CHANNEL_THROUGH_SERVER_PUBLIC_INVITE_CHANNEL,
     _USER_THROUGH_SERVER_PUBLIC_INVITE_USER,
     _CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL,
     _USER_THROUGH_GROUP_PUBLIC_INVITE_USER,
-    _USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR,
     _CHANNEL_THROUGH_GROUP_INVITE_CHANNEL,
+    _USER_THROUGH_GROUP_INVITE_CREATOR,
     _SERVER_THROUGH_SERVER_INVITE_SERVER,
     _CHANNEL_THROUGH_SERVER_INVITE_CHANNEL,
+    _MEMBER_OR_USER_THROUGH_SERVER_INVITE_CREATOR,
+    _MEMBER_THROUGH_SERVER_INVITE_CREATOR,
+    _USER_THROUGH_SERVER_INVITE_CREATOR,
 )
 from .channel import GroupChannel, ServerChannel
 from .cdn import StatelessAsset, Asset
@@ -54,7 +60,7 @@ from .errors import NoData
 from .flags import ServerFlags
 
 if typing.TYPE_CHECKING:
-    from .server import Server
+    from .server import Server, Member
     from .state import State
     from .user import User
 
@@ -703,37 +709,6 @@ class PrivateBaseInvite(BaseInvite):
     creator_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who created this invite."""
 
-    def get_creator(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who created this invite."""
-        state = self.state
-        cache = state.cache
-
-        if cache is None:
-            return None
-
-        ctx = (
-            UserThroughPrivateBaseInviteCreatorCacheContext(
-                type=CacheContextType.user_through_private_base_invite_creator,
-                invite=self,
-            )
-            if state.provide_cache_context('PrivateBaseInvite.creator')
-            else _USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR
-        )
-
-        return cache.get_user(self.creator_id, ctx)
-
-    @property
-    def creator(self) -> User:
-        """:class:`.User`: The user who created this invite."""
-
-        creator = self.get_creator()
-        if creator is None:
-            raise NoData(
-                what=self.creator_id,
-                type='PrivateBaseInvite.creator',
-            )
-        return creator
-
 
 @define(slots=True)
 class GroupInvite(PrivateBaseInvite):
@@ -765,6 +740,25 @@ class GroupInvite(PrivateBaseInvite):
             assert isinstance(channel, GroupChannel)
         return channel
 
+    def get_creator(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who created this invite."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughGroupInviteCreatorCacheContext(
+                type=CacheContextType.user_through_group_invite_creator,
+                invite=self,
+            )
+            if state.provide_cache_context('GroupInvite.creator')
+            else _USER_THROUGH_GROUP_INVITE_CREATOR
+        )
+
+        return cache.get_user(self.creator_id, ctx)
+
     @property
     def channel(self) -> GroupChannel:
         """:class:`.GroupChannel`: The group channel this invite points to."""
@@ -776,6 +770,18 @@ class GroupInvite(PrivateBaseInvite):
                 type='GroupInvite.channel',
             )
         return channel
+
+    @property
+    def creator(self) -> User:
+        """:class:`.User`: The user who created this invite."""
+
+        creator = self.get_creator()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='GroupInvite.creator',
+            )
+        return creator
 
     async def accept(self) -> GroupChannel:
         """|coro|
@@ -901,6 +907,66 @@ class ServerInvite(PrivateBaseInvite):
             assert isinstance(channel, ServerChannel)
         return channel
 
+    def get_creator(self) -> typing.Optional[typing.Union[Member, User]]:
+        """Optional[Union[:class:`.Member`, :class:`.User`]]: The user who created this invite."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughServerInviteCreatorCacheContext(
+                type=CacheContextType.member_or_user_through_server_invite_creator,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerInvite.creator')
+            else _MEMBER_OR_USER_THROUGH_SERVER_INVITE_CREATOR
+        )
+
+        member = cache.get_server_member(self.server_id, self.creator_id, ctx)
+        if member is None:
+            return cache.get_user(self.creator_id, ctx)
+        return member
+
+    def get_creator_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The user who created this invite."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberThroughServerInviteCreatorCacheContext(
+                type=CacheContextType.member_through_server_invite_creator,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerInvite.creator_as_member')
+            else _MEMBER_THROUGH_SERVER_INVITE_CREATOR
+        )
+
+        return cache.get_server_member(self.server_id, self.creator_id, ctx)
+
+    def get_creator_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who created this invite."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughServerInviteCreatorCacheContext(
+                type=CacheContextType.user_through_server_invite_creator,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerInvite.creator_as_user')
+            else _USER_THROUGH_SERVER_INVITE_CREATOR
+        )
+
+        return cache.get_user(self.creator_id, ctx)
+
     @property
     def server(self) -> Server:
         """:class:`.Server`: The server this invite points to."""
@@ -924,6 +990,42 @@ class ServerInvite(PrivateBaseInvite):
                 type='ServerInvite.channel',
             )
         return channel
+
+    @property
+    def creator(self) -> typing.Union[Member, User]:
+        """Union[:class:`.Member`, :class:`.User`]: The user who created this invite."""
+
+        creator = self.get_creator()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='ServerInvite.creator',
+            )
+        return creator
+
+    @property
+    def creator_as_member(self) -> Member:
+        """:class:`.Member`: The user who created this invite."""
+
+        creator = self.get_creator_as_member()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='ServerInvite.creator_as_member',
+            )
+        return creator
+
+    @property
+    def creator_as_user(self) -> User:
+        """:class:`.User`: The user who created this invite."""
+
+        creator = self.get_creator_as_user()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='ServerInvite.creator_as_user',
+            )
+        return creator
 
     async def accept(self) -> Server:
         """|coro|

@@ -578,18 +578,27 @@ CacheContextType
     .. attribute:: user_through_group_public_invite_user
 
         The context comes from :attr:`GroupPublicInvite.user`.
-    .. attribute:: user_through_private_base_invite_creator
-
-        The context comes from :attr:`PrivateBaseInvite.creator`.
     .. attribute:: channel_through_group_invite_channel
 
         The context comes from :attr:`GroupInvite.channel`.
+    .. attribute:: user_through_group_invite_creator
+
+        The context comes from :attr:`GroupInvite.creator`.
     .. attribute:: server_through_server_invite_server
 
         The context comes from :attr:`ServerInvite.server`.
     .. attribute:: channel_through_server_invite_channel
 
         The context comes from :attr:`ServerInvite.channel`.
+    .. attribute:: member_or_user_through_server_invite_creator
+    
+        The context comes from :attr:`ServerInvite.creator`.
+    .. attribute:: member_through_server_invite_creator
+    
+        The context comes from :attr:`ServerInvite.creator_as_member`.
+    .. attribute:: user_through_server_invite_creator
+    
+        The context comes from :attr:`ServerInvite.creator_as_user`.
     .. attribute:: user_through_user_added_system_event_user
 
         The context comes from :attr:`UserAddedSystemEvent.user`.
@@ -1925,22 +1934,22 @@ UserThroughGroupPublicInviteUserCacheContext
     :members:
     :inherited-members:
 
-UserThroughPrivateBaseInviteCreatorCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: UserThroughPrivateBaseInviteCreatorCacheContext
-
-.. autoclass:: UserThroughPrivateBaseInviteCreatorCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
 ChannelThroughGroupInviteChannelCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelThroughGroupInviteChannelCacheContext
 
 .. autoclass:: ChannelThroughGroupInviteChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughGroupInviteCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughGroupInviteCreatorCacheContext
+
+.. autoclass:: UserThroughGroupInviteCreatorCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1964,6 +1973,37 @@ ChannelThroughServerInviteChannelCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+MemberOrUserThroughServerInviteCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughServerInviteCreatorCacheContext
+
+.. autoclass:: MemberOrUserThroughServerInviteCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughServerInviteCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughServerInviteCreatorCacheContext
+
+.. autoclass:: MemberThroughServerInviteCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughServerInviteCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughServerInviteCreatorCacheContext
+
+.. autoclass:: UserThroughServerInviteCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 
 ChannelThroughReadStateChannelCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

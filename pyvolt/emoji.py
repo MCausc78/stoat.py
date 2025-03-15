@@ -316,6 +316,17 @@ class DetachedEmoji(BaseEmoji):
 
         return cache.get_user(self.creator_id, ctx)
 
+    @property
+    def creator(self) -> User:
+        """:class:`.User`: The user who uploaded this emoji."""
+        creator = self.get_creator()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='DetachedEmoji.creator',
+            )
+        return creator
+
 
 Emoji = typing.Union[ServerEmoji, DetachedEmoji]
 ResolvableEmoji = typing.Union[BaseEmoji, str]
