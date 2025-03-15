@@ -253,6 +253,8 @@ class CacheContextType(Enum):
     channel_through_message_channel = 'Message.channel: Channel'
     server_through_message_server = 'Message.server: Optional[Server]'
     member_or_user_through_message_author = 'Message.author: Union[Member, User]'
+    member_through_message_author = 'Message.author_as_member: Member'
+    user_through_message_author = 'Message.author_as_user: User'
     channel_through_read_state_channel = 'ReadState.channel: Channel'
     members_through_role_members = 'Role.members: List[Member]'
     server_through_role_server = 'Role.server: Server'
@@ -1157,6 +1159,16 @@ class MemberOrUserThroughMessageAuthorCacheContext(MessageCacheContext):
 
 
 @define(slots=True)
+class MemberThroughMessageAuthorCacheContext(MessageCacheContext):
+    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's author as member."""
+
+
+@define(slots=True)
+class UserThroughMessageAuthorCacheContext(MessageCacheContext):
+    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's author as user."""
+
+
+@define(slots=True)
 class ReadStateThroughTextChannelReadStateCacheContext(TextChannelCacheContext):
     """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve text channel's read state."""
 
@@ -1798,6 +1810,12 @@ _SERVER_THROUGH_MESSAGE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedC
 _MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_message_author,
 )
+_MEMBER_THROUGH_MESSAGE_AUTHOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_message_author,
+)
+_USER_THROUGH_MESSAGE_AUTHOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_message_author,
+)
 _CHANNEL_THROUGH_READ_STATE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_read_state_channel,
 )
@@ -2022,6 +2040,8 @@ ProvideCacheContextIn = typing.Literal[
     'Message.channel',
     'Message.server',
     'Message.author',
+    'Message.author_as_member',
+    'Message.author_as_user',
     'ReadState.channel',
     'Role.members',
     'Role.server',
@@ -3544,6 +3564,8 @@ __all__ = (
     'ChannelThroughMessageChannelCacheContext',
     'ServerThroughMessageServerCacheContext',
     'MemberOrUserThroughMessageAuthorCacheContext',
+    'MemberThroughMessageAuthorCacheContext',
+    'UserThroughMessageAuthorCacheContext',
     'ReadStateThroughTextChannelReadStateCacheContext',
     'MembersThroughRoleMembersCacheContext',
     'ServerThroughRoleServerCacheContext',
@@ -3720,6 +3742,8 @@ __all__ = (
     '_CHANNEL_THROUGH_MESSAGE_CHANNEL',
     '_SERVER_THROUGH_MESSAGE_SERVER',
     '_MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR',
+    '_MEMBER_THROUGH_MESSAGE_AUTHOR',
+    '_USER_THROUGH_MESSAGE_AUTHOR',
     '_CHANNEL_THROUGH_READ_STATE_CHANNEL',
     '_EMOJI_THROUGH_SERVER_GETTER',
     '_MEMBER_THROUGH_SERVER_GETTER',

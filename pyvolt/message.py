@@ -53,6 +53,8 @@ from .cache import (
     ChannelThroughMessageChannelCacheContext,
     ServerThroughMessageServerCacheContext,
     MemberOrUserThroughMessageAuthorCacheContext,
+    MemberThroughMessageAuthorCacheContext,
+    UserThroughMessageAuthorCacheContext,
     _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER,
     _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_BY,
     _USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER,
@@ -74,6 +76,8 @@ from .cache import (
     _CHANNEL_THROUGH_MESSAGE_CHANNEL,
     _SERVER_THROUGH_MESSAGE_SERVER,
     _MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR,
+    _MEMBER_THROUGH_MESSAGE_AUTHOR,
+    _USER_THROUGH_MESSAGE_AUTHOR,
 )
 from .channel import BaseServerChannel, TextableChannel, PartialMessageable
 from .cdn import AssetMetadata, StatelessAsset, Asset, ResolvableResource, resolve_resource
@@ -2744,9 +2748,9 @@ class Message(BaseMessage):
         if data.reactions is not UNDEFINED:
             self.reactions = data.reactions
 
-    def get_author(self) -> typing.Optional[typing.Union[User, Member]]:
-        """Optional[Union[:class:`.User`, :class:`.Member`]]: Tries to get message author."""
-        if isinstance(self._author, (User, Member)):
+    def get_author(self) -> typing.Optional[typing.Union[Member, User]]:
+        """Optional[Union[:class:`.Member`, :class:`.User`]]: The message's author."""
+        if isinstance(self._author, (Member, User)):
             return self._author
 
         if self._author == ZID:
@@ -2813,7 +2817,115 @@ class Message(BaseMessage):
         else:
             ret = None
 
-        return ret or cache.get_user(self._author, ctx)
+        if ret is None:
+            return cache.get_user(self._author, ctx)
+
+        return ret
+
+    def get_author_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The message's author."""
+        if isinstance(self._author, Member):
+            return self._author
+
+        if isinstance(self._author, User):
+            user_id = self._author.id
+        else:
+            user_id = self._author
+
+        if user_id == ZID:
+            return None
+
+        state = self.state
+
+        if self.webhook is not None:
+            return None
+
+        cache = state.cache
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberThroughMessageAuthorCacheContext(
+                type=CacheContextType.member_through_message_author,
+                message=self,
+            )
+            if state.provide_cache_context('Message.author_as_member')
+            else _MEMBER_THROUGH_MESSAGE_AUTHOR
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+
+        if not isinstance(channel, BaseServerChannel):
+            return None
+
+        return cache.get_server_member(channel.server_id, user_id, ctx)
+
+    def get_author_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The message's author."""
+        if isinstance(self._author, Member):
+            if isinstance(self._author._user, User):
+                return self._author._user
+            return None
+        if isinstance(self._author, User):
+            return self._author
+
+        if self._author == ZID:
+            return self.state.system
+
+        state = self.state
+
+        if self.webhook is not None:
+            webhook = self.webhook
+            webhook_id = self.author_id
+
+            return User(
+                state=state,
+                id=webhook_id,
+                name=webhook.name,
+                discriminator='0000',
+                internal_avatar=None
+                if webhook.avatar is None
+                else StatelessAsset(
+                    id=webhook.avatar,
+                    filename='',
+                    metadata=AssetMetadata(
+                        type=AssetMetadataType.image,
+                        width=0,
+                        height=0,
+                    ),
+                    content_type='',
+                    size=0,
+                    deleted=False,
+                    reported=False,
+                    message_id=None,
+                    user_id=webhook_id,
+                    server_id=None,
+                    object_id=webhook_id,
+                ),
+                display_name=None,
+                raw_badges=0,
+                status=None,
+                raw_flags=0,
+                privileged=False,
+                bot=None,
+                relationship=RelationshipStatus.none,
+                online=False,
+            )
+
+        cache = state.cache
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughMessageAuthorCacheContext(
+                type=CacheContextType.user_through_message_author,
+                message=self,
+            )
+            if state.provide_cache_context('Message.author_as_user')
+            else _USER_THROUGH_MESSAGE_AUTHOR
+        )
+
+        return cache.get_user(self._author, ctx)
 
     @property
     def attachments(self) -> list[Asset]:
@@ -2826,8 +2938,30 @@ class Message(BaseMessage):
         author = self.get_author()
         if author is None:
             raise NoData(
-                what=typing.cast('str', self._author),
+                what=self._author,  # type: ignore
                 type='Message.author',
+            )
+        return author
+
+    @property
+    def author_as_member(self) -> Member:
+        """:class:`.Member`: The user that sent this message."""
+        author = self.get_author_as_member()
+        if author is None:
+            raise NoData(
+                what=self._author,  # type: ignore
+                type='Message.author_as_member',
+            )
+        return author
+
+    @property
+    def author_as_user(self) -> User:
+        """:class:`.User`: The user that sent this message."""
+        author = self.get_author_as_user()
+        if author is None:
+            raise NoData(
+                what=self._author,  # type: ignore
+                type='Message.author_as_user',
             )
         return author
 

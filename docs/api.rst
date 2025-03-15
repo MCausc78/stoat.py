@@ -662,6 +662,13 @@ CacheContextType
     .. attribute:: member_or_user_through_message_author
 
         The context comes from :attr:`Message.author`.
+    .. attribute:: member_through_message_author
+
+        The context comes from :attr:`Message.author_as_member`.
+    .. attribute:: user_through_message_author
+
+        The context comes from :attr:`Message.author_as_user`.
+
     .. attribute:: channel_through_read_state_channel
 
         The context comes from :attr:`ReadState.channel`.
@@ -1806,6 +1813,26 @@ MemberOrUserThroughMessageAuthorCacheContext
     :members:
     :inherited-members:
 
+MemberThroughMessageAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughMessageAuthorCacheContext
+
+.. autoclass:: MemberThroughMessageAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMessageAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMessageAuthorCacheContext
+
+.. autoclass:: UserThroughMessageAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 ReadStateThroughTextChannelReadStateCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2086,6 +2113,37 @@ ChannelsThroughServerGetterCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+    
+MemberOrUserThroughServerOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughServerOwnerCacheContext
+
+.. autoclass:: MemberOrUserThroughServerOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughServerOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughServerOwnerCacheContext
+
+.. autoclass:: MemberThroughServerOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughServerOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughServerOwnerCacheContext
+
+.. autoclass:: UserThroughServerOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 
 ServerThroughMemberServerCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2307,6 +2365,26 @@ ChannelThroughUserDMChannelIDCacheContext
     :members:
     :inherited-members:
 
+MemberOrUserThroughWebhookCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughWebhookCreatorCacheContext
+
+.. autoclass:: MemberOrUserThroughWebhookCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughWebhookCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughWebhookCreatorCacheContext
+
+.. autoclass:: MemberThroughWebhookCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 UserThroughWebhookCreatorCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2316,6 +2394,7 @@ UserThroughWebhookCreatorCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
 
 ChannelThroughWebhookChannelCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
