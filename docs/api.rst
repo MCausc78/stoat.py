@@ -614,15 +614,39 @@ CacheContextType
     .. attribute:: member_or_user_through_user_joined_system_event_user
 
         The context comes from :attr:`UserJoinedSystemEvent.user`.
+    .. attribute:: member_through_user_joined_system_event_user
+
+        The context comes from :attr:`UserJoinedSystemEvent.user_as_member`.
+    .. attribute:: user_through_user_joined_system_event_user
+
+        The context comes from :attr:`UserJoinedSystemEvent.user_as_user`.
     .. attribute:: member_or_user_through_user_left_system_event_user
 
         The context comes from :attr:`UserLeftSystemEvent.user`.
+    .. attribute:: member_through_user_left_system_event_user
+
+        The context comes from :attr:`UserLeftSystemEvent.user_as_member`.
+    .. attribute:: user_through_user_left_system_event_user
+
+        The context comes from :attr:`UserLeftSystemEvent.user_as_user`.
     .. attribute:: member_or_user_through_user_kicked_system_event_user
 
         The context comes from :attr:`UserKickedSystemEvent.user`.
+    .. attribute:: member_through_user_kicked_system_event_user
+
+        The context comes from :attr:`UserKickedSystemEvent.user_as_member`.
+    .. attribute:: user_through_user_kicked_system_event_user
+
+        The context comes from :attr:`UserKickedSystemEvent.user_as_user`.
     .. attribute:: member_or_user_through_user_banned_system_event_user
 
         The context comes from :attr:`UserBannedSystemEvent.user`.
+    .. attribute:: member_through_user_banned_system_event_user
+
+        The context comes from :attr:`UserBannedSystemEvent.user_as_member`.
+    .. attribute:: user_through_user_banned_system_event_user
+
+        The context comes from :attr:`UserBannedSystemEvent.user_as_user`.
     .. attribute:: user_through_channel_renamed_system_event_by
 
         The context comes from :attr:`ChannelRenamedSystemEvent.by`.
@@ -644,12 +668,24 @@ CacheContextType
     .. attribute:: member_or_user_through_message_pinned_system_event_by
 
         The context comes from :attr:`MessagePinnedSystemEvent.by`.
+    .. attribute:: member_through_message_pinned_system_event_by
+
+        The context comes from :attr:`MessagePinnedSystemEvent.by_as_member`.
+    .. attribute:: user_through_message_pinned_system_event_by
+
+        The context comes from :attr:`MessagePinnedSystemEvent.by_as_user`.
     .. attribute:: message_through_message_unpinned_system_event_unpinned_message
 
         The context comes from :attr:`MessageUnpinnedSystemEvent.unpinned_message`.
     .. attribute:: member_or_user_through_message_unpinned_system_event_by
 
         The context comes from :attr:`MessageUnpinnedSystemEvent.by`.
+    .. attribute:: member_through_message_unpinned_system_event_by
+
+        The context comes from :attr:`MessageUnpinnedSystemEvent.by_as_member`.
+    .. attribute:: user_through_message_unpinned_system_event_by
+
+        The context comes from :attr:`MessageUnpinnedSystemEvent.by_as_user`.
     .. attribute:: user_through_call_started_system_event_by
 
         The context comes from :attr:`CallStartedSystemEvent.by`.
@@ -1653,12 +1689,52 @@ MemberOrUserThroughUserJoinedSystemEventUserCacheContext
     :members:
     :inherited-members:
 
+MemberThroughUserJoinedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughUserJoinedSystemEventUserCacheContext
+
+.. autoclass:: MemberThroughUserJoinedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserJoinedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserJoinedSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserJoinedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 MemberOrUserThroughUserLeftSystemEventUserCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MemberOrUserThroughUserLeftSystemEventUserCacheContext
 
 .. autoclass:: MemberOrUserThroughUserLeftSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughUserLeftSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughUserLeftSystemEventUserCacheContext
+
+.. autoclass:: MemberThroughUserLeftSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserLeftSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserLeftSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserLeftSystemEventUserCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1673,12 +1749,52 @@ MemberOrUserThroughUserKickedSystemEventUserCacheContext
     :members:
     :inherited-members:
 
+MemberThroughUserKickedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughUserKickedSystemEventUserCacheContext
+
+.. autoclass:: MemberThroughUserKickedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserKickedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserKickedSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserKickedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 MemberOrUserThroughUserBannedSystemEventUserCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MemberOrUserThroughUserBannedSystemEventUserCacheContext
 
 .. autoclass:: MemberOrUserThroughUserBannedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughUserBannedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughUserBannedSystemEventUserCacheContext
+
+.. autoclass:: MemberThroughUserBannedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserBannedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserBannedSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserBannedSystemEventUserCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1753,6 +1869,26 @@ MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext
     :members:
     :inherited-members:
 
+MemberThroughMessagePinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughMessagePinnedSystemEventAuthorCacheContext
+
+.. autoclass:: MemberThroughMessagePinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMessagePinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMessagePinnedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughMessagePinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1769,6 +1905,26 @@ MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext
 .. attributetable:: MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext
 
 .. autoclass:: MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughMessageUnpinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughMessageUnpinnedSystemEventAuthorCacheContext
+
+.. autoclass:: MemberThroughMessageUnpinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMessageUnpinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMessageUnpinnedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughMessageUnpinnedSystemEventAuthorCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

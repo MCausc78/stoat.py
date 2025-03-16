@@ -235,9 +235,17 @@ class CacheContextType(Enum):
     user_through_user_removed_system_event_user = 'UserRemovedSystemEvent.user: User'
     user_through_user_removed_system_event_by = 'UserRemovedSystemEvent.by: User'
     member_or_user_through_user_joined_system_event_user = 'UserJoinedSystemEvent.user: Union[Member, User]'
+    member_through_user_joined_system_event_user = 'UserJoinedSystemEvent.user_as_member: Member'
+    user_through_user_joined_system_event_user = 'UserJoinedSystemEvent.user_as_user: User'
     member_or_user_through_user_left_system_event_user = 'UserLeftSystemEvent.user: Union[Member, User]'
+    member_through_user_left_system_event_user = 'UserLeftSystemEvent.user_as_member: Member'
+    user_through_user_left_system_event_user = 'UserLeftSystemEvent.user_as_user: User'
     member_or_user_through_user_kicked_system_event_user = 'UserKickedSystemEvent.user: Union[Member, User]'
+    member_through_user_kicked_system_event_user = 'UserKickedSystemEvent.user_as_member: Member'
+    user_through_user_kicked_system_event_user = 'UserKickedSystemEvent.user_as_user: User'
     member_or_user_through_user_banned_system_event_user = 'UserBannedSystemEvent.user: Union[Member, User]'
+    member_through_user_banned_system_event_user = 'UserBannedSystemEvent.user_as_member: Member'
+    user_through_user_banned_system_event_user = 'UserBannedSystemEvent.user_as_user: User'
     user_through_channel_renamed_system_event_by = 'ChannelRenamedSystemEvent.by: User'
     user_through_channel_description_changed_system_event_by = 'ChannelDescriptionChangedSystemEvent.by: User'
     user_through_channel_icon_changed_system_event_by = 'ChannelIconChangedSystemEvent.by: User'
@@ -245,10 +253,14 @@ class CacheContextType(Enum):
     user_through_channel_ownership_changed_system_event_to = 'ChannelOwnershipChangedSystemEvent.to: User'
     message_through_message_pinned_system_event_pinned_message = 'MessagePinnedSystemEvent.pinned_message: Message'
     member_or_user_through_message_pinned_system_event_by = 'MessagePinnedSystemEvent.by: Union[Member, User]'
+    member_through_message_pinned_system_event_by = 'MessagePinnedSystemEvent.by_as_member: Member'
+    user_through_message_pinned_system_event_by = 'MessagePinnedSystemEvent.by_as_user: User'
     message_through_message_unpinned_system_event_unpinned_message = (
         'MessageUnpinnedSystemEvent.unpinned_message: Message'
     )
     member_or_user_through_message_unpinned_system_event_by = 'MessageUnpinnedSystemEvent.by: Union[Member, User]'
+    member_through_message_unpinned_system_event_by = 'MessageUnpinnedSystemEvent.by_as_member: Member'
+    user_through_message_unpinned_system_event_by = 'MessageUnpinnedSystemEvent.by_as_user: User'
     user_through_call_started_system_event_by = 'CallStartedSystemEvent.by: User'
     channel_through_message_channel = 'Message.channel: Channel'
     server_through_message_server = 'Message.server: Optional[Server]'
@@ -1077,8 +1089,28 @@ class MemberOrUserThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemE
 
 
 @define(slots=True)
+class MemberThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user as member."""
+
+
+@define(slots=True)
+class UserThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user as user."""
+
+
+@define(slots=True)
 class MemberOrUserThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
     """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class MemberThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user as member."""
+
+
+@define(slots=True)
+class UserThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user as user."""
 
 
 @define(slots=True)
@@ -1087,8 +1119,28 @@ class MemberOrUserThroughUserKickedSystemEventUserCacheContext(UserKickedSystemE
 
 
 @define(slots=True)
+class MemberThroughUserKickedSystemEventUserCacheContext(UserKickedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent`, wishing to retrieve system message's user as member."""
+
+
+@define(slots=True)
+class UserThroughUserKickedSystemEventUserCacheContext(UserKickedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent`, wishing to retrieve system message's user as user."""
+
+
+@define(slots=True)
 class MemberOrUserThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
     """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class MemberThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user as member."""
+
+
+@define(slots=True)
+class UserThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user as user."""
 
 
 @define(slots=True)
@@ -1129,6 +1181,16 @@ class MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinne
 
 
 @define(slots=True)
+class MemberThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author as member."""
+
+
+@define(slots=True)
+class UserThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author as user."""
+
+
+@define(slots=True)
 class MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext(MessageUnpinnedSystemEventCacheContext):
     """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's pinned message."""
 
@@ -1136,6 +1198,16 @@ class MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext(Messag
 @define(slots=True)
 class MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
     """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class MemberThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author as member."""
+
+
+@define(slots=True)
+class UserThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author as user."""
 
 
 @define(slots=True)
@@ -1758,14 +1830,38 @@ _USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] 
 _MEMBER_OR_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_user_joined_system_event_user,
 )
+_MEMBER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_user_joined_system_event_user,
+)
+_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_joined_system_event_user,
+)
 _MEMBER_OR_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_user_left_system_event_user,
+)
+_MEMBER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_user_left_system_event_user,
+)
+_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_left_system_event_user,
 )
 _MEMBER_OR_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_user_kicked_system_event_user,
 )
+_MEMBER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_user_kicked_system_event_user,
+)
+_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_kicked_system_event_user,
+)
 _MEMBER_OR_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_user_banned_system_event_user,
+)
+_MEMBER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_user_banned_system_event_user,
+)
+_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_banned_system_event_user,
 )
 _USER_THROUGH_CHANNEL_RENAMED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_channel_renamed_system_event_by,
@@ -1790,6 +1886,12 @@ _MESSAGE_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_PINNED_MESSAGE: typing.Final[Undefi
 _MEMBER_OR_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_message_pinned_system_event_by,
 )
+_MEMBER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_message_pinned_system_event_by,
+)
+_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_message_pinned_system_event_by,
+)
 _MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE: typing.Final[UndefinedCacheContext] = (
     UndefinedCacheContext(
         type=CacheContextType.message_through_message_unpinned_system_event_unpinned_message,
@@ -1798,9 +1900,16 @@ _MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE: typing.Final[Un
 _MEMBER_OR_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_message_unpinned_system_event_by,
 )
+_MEMBER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_message_unpinned_system_event_by,
+)
+_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_message_unpinned_system_event_by,
+)
 _USER_THROUGH_CALL_STARTED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_call_started_system_event_by,
 )
+
 _CHANNEL_THROUGH_MESSAGE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_message_channel,
 )
@@ -2024,9 +2133,17 @@ ProvideCacheContextIn = typing.Literal[
     'UserRemovedSystemEvent.user',
     'UserRemovedSystemEvent.by',
     'UserJoinedSystemEvent.user',
+    'UserJoinedSystemEvent.user_as_member',
+    'UserJoinedSystemEvent.user_as_user',
     'UserLeftSystemEvent.user',
+    'UserLeftSystemEvent.user_as_member',
+    'UserLeftSystemEvent.user_as_user',
     'UserKickedSystemEvent.user',
+    'UserKickedSystemEvent.user_as_member',
+    'UserKickedSystemEvent.user_as_user',
     'UserBannedSystemEvent.user',
+    'UserBannedSystemEvent.user_as_member',
+    'UserBannedSystemEvent.user_as_user',
     'ChannelRenamedSystemEvent.by',
     'ChannelDescriptionChangedSystemEvent.by',
     'ChannelIconChangedSystemEvent.by',
@@ -2034,8 +2151,12 @@ ProvideCacheContextIn = typing.Literal[
     'ChannelOwnershipChangedSystemEvent.to',
     'MessagePinnedSystemEvent.pinned_message',
     'MessagePinnedSystemEvent.by',
+    'MessagePinnedSystemEvent.by_as_member',
+    'MessagePinnedSystemEvent.by_as_user',
     'MessageUnpinnedSystemEvent.unpinned_message',
     'MessageUnpinnedSystemEvent.by',
+    'MessageUnpinnedSystemEvent.by_as_member',
+    'MessageUnpinnedSystemEvent.by_as_user',
     'CallStartedSystemEvent.by',
     'Message.channel',
     'Message.server',
@@ -3548,9 +3669,17 @@ __all__ = (
     'UserThroughUserRemovedSystemEventUserCacheContext',
     'UserThroughUserRemovedSystemEventAuthorCacheContext',
     'MemberOrUserThroughUserJoinedSystemEventUserCacheContext',
+    'MemberThroughUserJoinedSystemEventUserCacheContext',
+    'UserThroughUserJoinedSystemEventUserCacheContext',
     'MemberOrUserThroughUserLeftSystemEventUserCacheContext',
+    'MemberThroughUserLeftSystemEventUserCacheContext',
+    'UserThroughUserLeftSystemEventUserCacheContext',
     'MemberOrUserThroughUserKickedSystemEventUserCacheContext',
+    'MemberThroughUserKickedSystemEventUserCacheContext',
+    'UserThroughUserKickedSystemEventUserCacheContext',
     'MemberOrUserThroughUserBannedSystemEventUserCacheContext',
+    'MemberThroughUserBannedSystemEventUserCacheContext',
+    'UserThroughUserBannedSystemEventUserCacheContext',
     'UserThroughChannelRenamedSystemEventAuthorCacheContext',
     'UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext',
     'UserThroughChannelIconChangedSystemEventAuthorCacheContext',
@@ -3558,8 +3687,12 @@ __all__ = (
     'UserThroughChannelOwnershipChangedSystemEventToCacheContext',
     'MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext',
     'MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext',
+    'MemberThroughMessagePinnedSystemEventAuthorCacheContext',
+    'UserThroughMessagePinnedSystemEventAuthorCacheContext',
     'MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext',
     'MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext',
+    'MemberThroughMessageUnpinnedSystemEventAuthorCacheContext',
+    'UserThroughMessageUnpinnedSystemEventAuthorCacheContext',
     'UserThroughCallStartedSystemEventAuthorCacheContext',
     'ChannelThroughMessageChannelCacheContext',
     'ServerThroughMessageServerCacheContext',
@@ -3726,9 +3859,17 @@ __all__ = (
     '_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER',
     '_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_BY',
     '_MEMBER_OR_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER',
+    '_MEMBER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER',
     '_MEMBER_OR_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER',
+    '_MEMBER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER',
     '_MEMBER_OR_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER',
+    '_MEMBER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER',
     '_MEMBER_OR_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER',
+    '_MEMBER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER',
     '_USER_THROUGH_CHANNEL_RENAMED_SYSTEM_EVENT_BY',
     '_USER_THROUGH_CHANNEL_DESCRIPTION_CHANGED_SYSTEM_EVENT_BY',
     '_USER_THROUGH_CHANNEL_ICON_CHANGED_SYSTEM_EVENT_BY',
@@ -3736,8 +3877,12 @@ __all__ = (
     '_USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_TO',
     '_MESSAGE_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_PINNED_MESSAGE',
     '_MEMBER_OR_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY',
+    '_MEMBER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY',
+    '_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY',
     '_MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE',
     '_MEMBER_OR_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY',
+    '_MEMBER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY',
+    '_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY',
     '_USER_THROUGH_CALL_STARTED_SYSTEM_EVENT_BY',
     '_CHANNEL_THROUGH_MESSAGE_CHANNEL',
     '_SERVER_THROUGH_MESSAGE_SERVER',
