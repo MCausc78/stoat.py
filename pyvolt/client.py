@@ -1142,7 +1142,7 @@ class Client:
         /,
         *,
         check: typing.Optional[Callable[[EventT], bool]] = None,
-        count: typing.Literal[1] = 1,
+        count: typing.Literal[1] = ...,
         timeout: typing.Optional[float] = None,
         manual_process: bool = False,
         stop_dispatching_on_success: bool = True,

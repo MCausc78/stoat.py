@@ -1243,6 +1243,13 @@ class TextSystemEvent(BaseSystemEvent):
         """
         return self
 
+    def to_dict(self) -> raw.TextSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'text',
+            'content': self.content,
+        }
+
     @property
     def system_content(self) -> str:
         """:class:`str`: The displayed system's content."""
@@ -1337,6 +1344,14 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
             internal_by=self._by,
         )
+
+    def to_dict(self) -> raw.UserAddedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'user_added',
+            'by': self.by_id,
+            'id': self.user_id,
+        }
 
 
 @define(slots=True)
@@ -1483,6 +1498,14 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
             internal_by=self._by,
         )
+
+    def to_dict(self) -> raw.UserRemoveSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'user_remove',
+            'by': self.by_id,
+            'id': self.user_id,
+        }
 
 
 @define(slots=True)
@@ -1631,6 +1654,13 @@ class StatelessUserJoinedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
         )
 
+    def to_dict(self) -> raw.UserJoinedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'user_joined',
+            'id': self.user_id,
+        }
+
 
 @define(slots=True)
 class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
@@ -1760,19 +1790,6 @@ class StatelessUserLeftSystemEvent(BaseSystemEvent):
             return self._user
         return None
 
-    def attach_state(self, message: Message, /) -> UserLeftSystemEvent:
-        """:class:`.UserLeftSystemEvent`: Attach a state to system event.
-
-        Parameters
-        ----------
-        message: :class:`.Message`
-            The state to attach.
-        """
-        return UserLeftSystemEvent(
-            message=message,
-            internal_user=self._user,
-        )
-
     @property
     def system_content(self) -> str:
         """:class:`str`: The displayed system's content."""
@@ -1822,6 +1839,26 @@ class StatelessUserLeftSystemEvent(BaseSystemEvent):
         if isinstance(self._user, (Member, User)):
             return self._user.id
         return self._user
+
+    def attach_state(self, message: Message, /) -> UserLeftSystemEvent:
+        """:class:`.UserLeftSystemEvent`: Attach a state to system event.
+
+        Parameters
+        ----------
+        message: :class:`.Message`
+            The state to attach.
+        """
+        return UserLeftSystemEvent(
+            message=message,
+            internal_user=self._user,
+        )
+
+    def to_dict(self) -> raw.UserLeftSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'user_left',
+            'id': self.user_id,
+        }
 
 
 @define(slots=True)
@@ -2015,6 +2052,13 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
         )
 
+    def to_dict(self) -> raw.UserKickedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'user_kicked',
+            'id': self.user_id,
+        }
+
 
 @define(slots=True)
 class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
@@ -2207,6 +2251,13 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
             internal_user=self._user,
         )
 
+    def to_dict(self) -> raw.UserBannedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'user_banned',
+            'id': self.user_id,
+        }
+
 
 @define(slots=True)
 class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
@@ -2330,6 +2381,17 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
         )
 
     @property
+    def by(self) -> User:
+        """:class:`.User`: The user that renamed this group."""
+        by = self.get_by()
+        if by is None:
+            raise NoData(
+                what=self.by_id,
+                type='StatelessChannelRenamedSystemEvent.by',
+            )
+        return by
+
+    @property
     def by_id(self) -> str:
         """:class:`str`: The user's ID that renamed this group."""
         if isinstance(self._by, User):
@@ -2359,6 +2421,14 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
             name=self.name,
             internal_by=self._by,
         )
+
+    def to_dict(self) -> raw.ChannelRenamedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'channel_renamed',
+            'name': self.name,
+            'by': self.by_id,
+        }
 
 
 @define(slots=True)
@@ -2391,17 +2461,6 @@ class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
             ctx,
         )
 
-    @property
-    def by(self) -> User:
-        """:class:`.User`: The user that renamed this group."""
-        by = self.get_by()
-        if by is None:
-            raise NoData(
-                what=self.by_id,
-                type='ChannelRenamedSystemEvent.by',
-            )
-        return by
-
 
 @define(slots=True)
 class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
@@ -2418,6 +2477,17 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
             or isinstance(other, StatelessChannelDescriptionChangedSystemEvent)
             and self.by_id == other.by_id
         )
+
+    @property
+    def by(self) -> User:
+        """:class:`.User`: The user that changed description of this group."""
+        by = self.get_by()
+        if by is None:
+            raise NoData(
+                what=self.by_id,
+                type='StatelessChannelDescriptionChangedSystemEvent.by',
+            )
+        return by
 
     @property
     def by_id(self) -> str:
@@ -2448,6 +2518,13 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
             message=message,
             internal_by=self._by,
         )
+
+    def to_dict(self) -> raw.ChannelDescriptionChangedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'channel_description_changed',
+            'by': self.by_id,
+        }
 
 
 @define(slots=True)
@@ -2480,17 +2557,6 @@ class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSys
             ctx,
         )
 
-    @property
-    def by(self) -> User:
-        """:class:`.User`: The user that changed description of this group."""
-        by = self.get_by()
-        if by is None:
-            raise NoData(
-                what=self.by_id,
-                type='ChannelDescriptionChangedSystemEvent.by',
-            )
-        return by
-
 
 @define(slots=True)
 class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
@@ -2503,6 +2569,17 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessChannelIconChangedSystemEvent) and self.by_id == other.by_id
+
+    @property
+    def by(self) -> User:
+        """:class:`.User`: The user that changed icon of this group."""
+        by = self.get_by()
+        if by is None:
+            raise NoData(
+                what=self.by_id,
+                type='StatelessChannelIconChangedSystemEvent.by',
+            )
+        return by
 
     @property
     def by_id(self) -> str:
@@ -2533,6 +2610,13 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
             message=message,
             internal_by=self._by,
         )
+
+    def to_dict(self) -> raw.ChannelIconChangedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'channel_icon_changed',
+            'by': self.by_id,
+        }
 
 
 @define(slots=True)
@@ -2565,17 +2649,6 @@ class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
             ctx,
         )
 
-    @property
-    def by(self) -> User:
-        """:class:`.User`: The user that changed icon of this group."""
-        by = self.get_by()
-        if by is None:
-            raise NoData(
-                what=self.by_id,
-                type='ChannelIconChangedSystemEvent.by',
-            )
-        return by
-
 
 @define(slots=True)
 class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
@@ -2601,11 +2674,33 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
         )
 
     @property
+    def from_(self) -> User:
+        """:class:`.User`: The user that was previous owner of this group."""
+        user = self.get_from()
+        if user is None:
+            raise NoData(
+                what=self.from_id,
+                type='ChannelOwnershipChangedSystemEvent.from_',
+            )
+        return user
+
+    @property
     def from_id(self) -> str:
         """:class:`str`: The user's ID that was previous owner of this group."""
         if isinstance(self._from, User):
             return self._from.id
         return self._from
+
+    @property
+    def to(self) -> User:
+        """:class:`.User`: The user that became owner of this group."""
+        user = self.get_from()
+        if user is None:
+            raise NoData(
+                what=self.from_id,
+                type='ChannelOwnershipChangedSystemEvent.to',
+            )
+        return user
 
     @property
     def to_id(self) -> str:
@@ -2640,6 +2735,14 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
             internal_from=self._from,
             internal_to=self._to,
         )
+
+    def to_dict(self) -> raw.ChannelOwnershipChangedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'channel_ownership_changed',
+            'from': self.from_id,
+            'to': self.to_id,
+        }
 
 
 @define(slots=True)
@@ -2696,28 +2799,6 @@ class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemE
             self._to,
             ctx,
         )
-
-    @property
-    def from_(self) -> User:
-        """:class:`.User`: The user that was previous owner of this group."""
-        user = self.get_from()
-        if user is None:
-            raise NoData(
-                what=self.from_id,
-                type='ChannelOwnershipChangedSystemEvent.from_',
-            )
-        return user
-
-    @property
-    def to(self) -> User:
-        """:class:`.User`: The user that became owner of this group."""
-        user = self.get_from()
-        if user is None:
-            raise NoData(
-                what=self.from_id,
-                type='ChannelOwnershipChangedSystemEvent.to',
-            )
-        return user
 
 
 @define(slots=True)
@@ -2818,6 +2899,14 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
             pinned_message_id=self.pinned_message_id,
             internal_by=self._by,
         )
+
+    def to_dict(self) -> raw.MessagePinnedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'message_pinned',
+            'id': self.pinned_message_id,
+            'by': self.by_id,
+        }
 
 
 @define(slots=True)
@@ -3041,6 +3130,14 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
             internal_by=self._by,
         )
 
+    def to_dict(self) -> raw.MessageUnpinnedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'message_unpinned',
+            'id': self.unpinned_message_id,
+            'by': self.by_id,
+        }
+
 
 @define(slots=True)
 class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
@@ -3171,6 +3268,22 @@ class StatelessCallStartedSystemEvent(BaseSystemEvent):
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessCallStartedSystemEvent) and self.by_id == other.by_id
 
+    def get_by(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user that started a call."""
+        if isinstance(self._by, User):
+            return self._by
+
+    @property
+    def by(self) -> User:
+        """:class:`.User`: The user that started a call."""
+        user = self.get_by()
+        if user is None:
+            raise NoData(
+                what=self.by_id,
+                type='StatelessCallStartedSystemEvent.by',
+            )
+        return user
+
     @property
     def by_id(self) -> str:
         """:class:`str`: The user's ID that started a call."""
@@ -3178,10 +3291,15 @@ class StatelessCallStartedSystemEvent(BaseSystemEvent):
             return self._by.id
         return self._by
 
-    def get_by(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user that started a call."""
-        if isinstance(self._by, User):
-            return self._by
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} started a call.'
 
     def attach_state(self, message: Message, /) -> CallStartedSystemEvent:
         """:class:`.CallStartedSystemEvent`: Attach a state to system event.
@@ -3196,15 +3314,12 @@ class StatelessCallStartedSystemEvent(BaseSystemEvent):
             internal_by=self._by,
         )
 
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        by = self.get_by()
-        if by is None:
-            by = '<Unknown User>'
-
-        return f'{by} started a call.'
+    def to_dict(self) -> raw.CallStartedSystemMessage:
+        """:class:`dict`: Convert system event to raw data."""
+        return {
+            'type': 'call_started',
+            'by': self.by_id,
+        }
 
 
 @define(slots=True)
@@ -3235,17 +3350,6 @@ class CallStartedSystemEvent(StatelessCallStartedSystemEvent):
             self._by,
             ctx,
         )
-
-    @property
-    def by(self) -> User:
-        """:class:`.User`: The user that started a call."""
-        user = self.get_by()
-        if user is None:
-            raise NoData(
-                what=self.by_id,
-                type='CallStartedSystemEvent.by',
-            )
-        return user
 
 
 StatelessSystemEvent = typing.Union[

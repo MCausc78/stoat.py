@@ -86,6 +86,7 @@ Special = typing.Union[
     LightspeedSpecial,
     TwitchSpecial,
     SpotifySpecial,
+    SoundcloudSpecial,
     BandcampSpecial,
     AppleMusicSpecial,
     StreamableSpecial,

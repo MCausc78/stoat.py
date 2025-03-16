@@ -25,11 +25,12 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from attrs import define, field
 import typing
 
+from attrs import define, field
 
 if typing.TYPE_CHECKING:
+    from . import raw
     from .cdn import StatelessAsset, Asset
     from .enums import LightspeedContentType, TwitchContentType, BandcampContentType, ImageSize
     from .state import State
@@ -61,6 +62,12 @@ class BaseEmbedSpecial:
 class NoneEmbedSpecial(BaseEmbedSpecial):
     """No remote content."""
 
+    def to_dict(self) -> raw.NoneSpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        return {
+            'type': 'None',
+        }
+
 
 _NONE_EMBED_SPECIAL = NoneEmbedSpecial()
 
@@ -68,6 +75,12 @@ _NONE_EMBED_SPECIAL = NoneEmbedSpecial()
 @define(slots=True)
 class GIFEmbedSpecial(BaseEmbedSpecial):
     """A content hint that embed contains a GIF. Metadata should be used to find video or image to play."""
+
+    def to_dict(self) -> raw.GIFSpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        return {
+            'type': 'GIF',
+        }
 
 
 _GIF_EMBED_SPECIAL = GIFEmbedSpecial()
@@ -83,6 +96,16 @@ class YouTubeEmbedSpecial(BaseEmbedSpecial):
     timestamp: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The video timestamp."""
 
+    def to_dict(self) -> raw.YouTubeSpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        payload: raw.YouTubeSpecial = {
+            'type': 'YouTube',
+            'id': self.id,
+        }
+        if self.timestamp is not None:
+            payload['timestamp'] = self.timestamp
+        return payload
+
 
 @define(slots=True)
 class LightspeedEmbedSpecial(BaseEmbedSpecial):
@@ -93,6 +116,14 @@ class LightspeedEmbedSpecial(BaseEmbedSpecial):
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Lightspeed.tv stream ID."""
+
+    def to_dict(self) -> raw.LightspeedSpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        return {
+            'type': 'Lightspeed',
+            'content_type': self.content_type.value,
+            'id': self.id,
+        }
 
 
 @define(slots=True)
@@ -105,6 +136,14 @@ class TwitchEmbedSpecial(BaseEmbedSpecial):
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Twitch content ID."""
 
+    def to_dict(self) -> raw.TwitchSpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        return {
+            'type': 'Twitch',
+            'content_type': self.content_type.value,
+            'id': self.id,
+        }
+
 
 @define(slots=True)
 class SpotifyEmbedSpecial(BaseEmbedSpecial):
@@ -116,10 +155,24 @@ class SpotifyEmbedSpecial(BaseEmbedSpecial):
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Spotify content ID."""
 
+    def to_dict(self) -> raw.SpotifySpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        return {
+            'type': 'Spotify',
+            'content_type': self.content_type,
+            'id': self.id,
+        }
+
 
 @define(slots=True)
 class SoundcloudEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Soundcloud track."""
+
+    def to_dict(self) -> raw.SoundcloudSpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        return {
+            'type': 'Soundcloud',
+        }
 
 
 _SOUNDCLOUD_EMBED_SPECIAL = SoundcloudEmbedSpecial()
@@ -135,6 +188,14 @@ class BandcampEmbedSpecial(BaseEmbedSpecial):
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Bandcamp content ID."""
 
+    def to_dict(self) -> raw.BandcampSpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        return {
+            'type': 'Bandcamp',
+            'content_type': self.content_type.value,
+            'id': self.id,
+        }
+
 
 @define(slots=True)
 class AppleMusicEmbedSpecial(BaseEmbedSpecial):
@@ -146,6 +207,16 @@ class AppleMusicEmbedSpecial(BaseEmbedSpecial):
     track_id: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The Apple Music track ID."""
 
+    def to_dict(self) -> raw.AppleMusicSpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        payload: raw.AppleMusicSpecial = {
+            'type': 'AppleMusic',
+            'album_id': self.album_id,
+        }
+        if self.track_id is not None:
+            payload['track_id'] = self.track_id
+        return payload
+
 
 @define(slots=True)
 class StreamableEmbedSpecial(BaseEmbedSpecial):
@@ -153,6 +224,13 @@ class StreamableEmbedSpecial(BaseEmbedSpecial):
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The video ID."""
+
+    def to_dict(self) -> raw.StreamableSpecial:
+        """:class:`dict`: Convert embed special to raw data."""
+        return {
+            'type': 'Streamable',
+            'id': self.id,
+        }
 
 
 @define(slots=True)
@@ -174,6 +252,29 @@ class ImageEmbed(BaseEmbed):
     def attach_state(self, state: State, /) -> Embed:
         return self
 
+    @typing.overload
+    def to_dict(self, *, as_embed: typing.Literal[False]) -> raw.Image: ...
+
+    @typing.overload
+    def to_dict(self, *, as_embed: typing.Literal[True] = ...) -> raw.ImageEmbed: ...
+
+    def to_dict(self, *, as_embed: bool = True) -> typing.Union[raw.Image, raw.ImageEmbed]:
+        """:class:`dict`: Convert embed to raw data."""
+        if as_embed:
+            return {
+                'type': 'Image',
+                'url': self.url,
+                'width': self.width,
+                'height': self.height,
+                'size': self.size.value,
+            }
+        return {
+            'url': self.url,
+            'width': self.width,
+            'height': self.height,
+            'size': self.size.value,
+        }
+
 
 @define(slots=True)
 class VideoEmbed(BaseEmbed):
@@ -190,6 +291,27 @@ class VideoEmbed(BaseEmbed):
 
     def attach_state(self, state: State, /) -> Embed:
         return self
+
+    @typing.overload
+    def to_dict(self, *, as_embed: typing.Literal[False]) -> raw.Video: ...
+
+    @typing.overload
+    def to_dict(self, *, as_embed: typing.Literal[True] = ...) -> raw.VideoEmbed: ...
+
+    def to_dict(self, *, as_embed: bool = True) -> typing.Union[raw.Video, raw.VideoEmbed]:
+        """:class:`dict`: Convert embed to raw data."""
+        if as_embed:
+            return {
+                'type': 'Video',
+                'url': self.url,
+                'width': self.width,
+                'height': self.height,
+            }
+        return {
+            'url': self.url,
+            'width': self.width,
+            'height': self.height,
+        }
 
 
 @define(slots=True)
@@ -229,6 +351,58 @@ class WebsiteEmbed(BaseEmbed):
     def attach_state(self, state: State, /) -> Embed:
         return self
 
+    @typing.overload
+    def to_dict(self, *, as_embed: typing.Literal[False]) -> raw.WebsiteMetadata: ...
+
+    @typing.overload
+    def to_dict(self, *, as_embed: typing.Literal[True] = ...) -> raw.WebsiteEmbed: ...
+
+    def to_dict(self, *, as_embed: bool = True) -> typing.Union[raw.WebsiteMetadata, raw.WebsiteEmbed]:
+        """:class:`dict`: Convert embed to raw data."""
+        if as_embed:
+            payload: raw.WebsiteEmbed = {
+                'type': 'Website',
+            }
+            if self.url is not None:
+                payload['url'] = self.url
+            if self.original_url is not None:
+                payload['original_url'] = self.original_url
+            if self.special is not None:
+                payload['special'] = self.special.to_dict()
+            if self.title is not None:
+                payload['title'] = self.title
+            if self.description is not None:
+                payload['description'] = self.description
+            if self.image is not None:
+                payload['image'] = self.image.to_dict(as_embed=False)
+            if self.video is not None:
+                payload['video'] = self.video.to_dict(as_embed=False)
+            if self.icon_url is not None:
+                payload['icon_url'] = self.icon_url
+            if self.color is not None:
+                payload['colour'] = self.color
+            return payload
+        metadata: raw.WebsiteMetadata = {}
+        if self.url is not None:
+            metadata['url'] = self.url
+        if self.original_url is not None:
+            metadata['original_url'] = self.original_url
+        if self.special is not None:
+            metadata['special'] = self.special.to_dict()
+        if self.title is not None:
+            metadata['title'] = self.title
+        if self.description is not None:
+            metadata['description'] = self.description
+        if self.image is not None:
+            metadata['image'] = self.image.to_dict(as_embed=False)
+        if self.video is not None:
+            metadata['video'] = self.video.to_dict(as_embed=False)
+        if self.icon_url is not None:
+            metadata['icon_url'] = self.icon_url
+        if self.color is not None:
+            metadata['colour'] = self.color
+        return metadata
+
 
 @define(slots=True)
 class StatelessTextEmbed(BaseEmbed):
@@ -263,6 +437,49 @@ class StatelessTextEmbed(BaseEmbed):
             state=state,
         )
 
+    @typing.overload
+    def to_dict(self, *, as_embed: typing.Literal[False]) -> raw.Text: ...
+
+    @typing.overload
+    def to_dict(self, *, as_embed: typing.Literal[True] = ...) -> raw.TextEmbed: ...
+
+    def to_dict(self, *, as_embed: bool = True) -> typing.Union[raw.Text, raw.TextEmbed]:
+        """:class:`dict`: Convert embed to raw data."""
+        if as_embed:
+            payload: raw.TextEmbed = {
+                'type': 'Text',
+            }
+            if self.icon_url is not None:
+                payload['icon_url'] = self.icon_url
+            if self.url is not None:
+                payload['url'] = self.url
+            if self.title is not None:
+                payload['title'] = self.title
+            if self.description is not None:
+                payload['description'] = self.description
+            # TODO: ToDict for Assets
+            # if self.internal_media is not None:
+            #     payload['media'] = self.internal_media
+            if self.color is not None:
+                payload['colour'] = self.color
+            return payload
+        else:
+            metadata: raw.Text = {}
+            if self.icon_url is not None:
+                metadata['icon_url'] = self.icon_url
+            if self.url is not None:
+                metadata['url'] = self.url
+            if self.title is not None:
+                metadata['title'] = self.title
+            if self.description is not None:
+                metadata['description'] = self.description
+            # TODO: ToDict for Assets
+            # if self.internal_media is not None:
+            #     metadata['media'] = self.internal_media
+            if self.color is not None:
+                metadata['colour'] = self.color
+            return metadata
+
 
 @define(slots=True)
 class TextEmbed(StatelessTextEmbed):
@@ -281,6 +498,14 @@ class NoneEmbed(BaseEmbed):
 
     def attach_state(self, state: State, /) -> Embed:
         return self
+
+    def to_dict(
+        self,
+    ) -> raw.NoneEmbed:
+        """:class:`dict`: Convert embed to raw data."""
+        return {
+            'type': 'None',
+        }
 
 
 _NONE_EMBED: typing.Final[NoneEmbed] = NoneEmbed()
