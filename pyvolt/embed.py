@@ -457,9 +457,8 @@ class StatelessTextEmbed(BaseEmbed):
                 payload['title'] = self.title
             if self.description is not None:
                 payload['description'] = self.description
-            # TODO: ToDict for Assets
-            # if self.internal_media is not None:
-            #     payload['media'] = self.internal_media
+            if self.internal_media is not None:
+                payload['media'] = self.internal_media.to_dict('attachments')
             if self.color is not None:
                 payload['colour'] = self.color
             return payload
@@ -473,9 +472,8 @@ class StatelessTextEmbed(BaseEmbed):
                 metadata['title'] = self.title
             if self.description is not None:
                 metadata['description'] = self.description
-            # TODO: ToDict for Assets
-            # if self.internal_media is not None:
-            #     metadata['media'] = self.internal_media
+            if self.internal_media is not None:
+                metadata['media'] = self.internal_media.to_dict('attachments')
             if self.color is not None:
                 metadata['colour'] = self.color
             return metadata

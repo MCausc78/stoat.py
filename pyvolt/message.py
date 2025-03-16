@@ -147,6 +147,7 @@ class Reply:
         self.mention = mention
 
     def to_dict(self) -> raw.ReplyIntent:
+        """:class:`dict`: Convert reply to raw data."""
         return {
             'id': self.id,
             'mention': self.mention,
@@ -173,6 +174,7 @@ class MessageInteractions:
         self.restrict_reactions: bool = restrict_reactions
 
     def to_dict(self) -> raw.Interactions:
+        """:class:`dict`: Convert interactions information to raw data."""
         return {
             'reactions': self.reactions,
             'restrict_reactions': self.restrict_reactions,
@@ -209,6 +211,7 @@ class MessageMasquerade:
         self.color: typing.Optional[str] = color
 
     def to_dict(self) -> raw.Masquerade:
+        """:class:`dict`: Convert masquerade to raw data."""
         payload: raw.Masquerade = {}
         if self.name is not None:
             payload['name'] = self.name
@@ -258,6 +261,18 @@ class SendableEmbed:
         self.color: typing.Optional[str] = color
 
     async def to_dict(self, state: State, /) -> raw.SendableEmbed:
+        """Convert reply to raw data.
+
+        Parameters
+        ----------
+        state: :class:`.State`
+            The state. Required to resolve :attr:`~.media` attribute into file ID.
+
+        Returns
+        -------
+        :class:`dict`
+            The raw data.
+        """
         payload: raw.SendableEmbed = {}
         if self.icon_url is not None:
             payload['icon_url'] = self.icon_url
