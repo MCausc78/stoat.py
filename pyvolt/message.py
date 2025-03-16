@@ -2953,6 +2953,21 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
         """Optional[Union[:class:`.Member`, :class:`.User`]]: The user that unpinned a message."""
         if isinstance(self._by, (Member, User)):
             return self._by
+        return None
+
+    def get_by_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The user that unpinned a message."""
+        if isinstance(self._by, Member):
+            return self._by
+        return None
+
+    def get_by_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user that unpinned a message."""
+        if isinstance(self._by, User):
+            return self._by
+        elif isinstance(self._by, Member) and isinstance(self._by._user, User):
+            return self._by._user
+        return None
 
     def __eq__(self, other: object, /) -> bool:
         return (
@@ -2963,11 +2978,54 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
         )
 
     @property
+    def by(self) -> typing.Union[Member, User]:
+        """Union[:class:`.Member`, :class:`.User`]: The user that unpinned a message."""
+        user = self.get_by()
+        if user is None:
+            raise NoData(
+                what=self.by_id,
+                type='StatelessMessageUnpinnedSystemEvent.by',
+            )
+        return user
+
+    @property
+    def by_as_member(self) -> Member:
+        """:class:`.Member`: The user that unpinned a message."""
+        user = self.get_by_as_member()
+        if user is None:
+            raise NoData(
+                what=self.by_id,
+                type='StatelessMessageUnpinnedSystemEvent.by_as_member',
+            )
+        return user
+
+    @property
+    def by_as_user(self) -> User:
+        """:class:`.User`: The user that unpinned a message."""
+        user = self.get_by_as_user()
+        if user is None:
+            raise NoData(
+                what=self.by_id,
+                type='StatelessMessageUnpinnedSystemEvent.by_as_user',
+            )
+        return user
+
+    @property
     def by_id(self) -> str:
         """:class:`str`: The user's ID that unpinned a message."""
         if isinstance(self._by, (Member, User)):
             return self._by.id
         return self._by
+
+    @property
+    def system_content(self) -> str:
+        """:class:`str`: The displayed system's content."""
+
+        by = self.get_by()
+        if by is None:
+            by = '<Unknown User>'
+
+        return f'{by} unpinned a message from this channel'
 
     def attach_state(self, message: Message, /) -> MessageUnpinnedSystemEvent:
         """:class:`.MessageUnpinnedSystemEvent`: Attach a state to system event.
@@ -3018,7 +3076,71 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
         else:
             ret = None
 
-        return ret or cache.get_user(self._by, ctx)
+        if ret is None:
+            return cache.get_user(self._by, ctx)
+        return ret
+
+    def get_by_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The user that unpinned a message."""
+        if isinstance(self._by, Member):
+            return self._by
+
+        if isinstance(self._by, User):
+            user_id = self._by.id
+        else:
+            user_id = self._by
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberThroughMessageUnpinnedSystemEventAuthorCacheContext(
+                type=CacheContextType.member_through_message_unpinned_system_event_by,
+                system_message=self,
+            )
+            if state.provide_cache_context('MessageUnpinnedSystemEvent.by_as_member')
+            else _MEMBER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY
+        )
+
+        channel = cache.get_channel(message.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            return cache.get_server_member(channel.server_id, user_id, ctx)
+        return None
+
+    def get_by_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user that unpinned a message."""
+        if isinstance(self._by, User):
+            return self._by
+
+        if isinstance(self._by, Member):
+            if isinstance(self._by._user, User):
+                return self._by._user
+            user_id = self._by.id
+        else:
+            user_id = self._by
+
+        message = self.message
+        state = message.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughMessageUnpinnedSystemEventAuthorCacheContext(
+                type=CacheContextType.user_through_message_unpinned_system_event_by,
+                system_message=self,
+            )
+            if state.provide_cache_context('MessageUnpinnedSystemEvent.by_as_user')
+            else _USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY
+        )
+
+        return cache.get_user(user_id, ctx)
 
     def get_unpinned_message(self) -> typing.Optional[Message]:
         """Optional[:class:`.Message`]: The message that was unpinned from this channel."""
@@ -3040,27 +3162,6 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
         )
 
         return cache.get_message(message.channel_id, self.unpinned_message_id, ctx)
-
-    @property
-    def by(self) -> typing.Union[Member, User]:
-        """Union[:class:`.Member`, :class:`.User`]: The user that unpinned a message."""
-        user = self.get_by()
-        if user is None:
-            raise NoData(
-                what=self.by_id,
-                type='MessageUnpinnedSystemEvent.by',
-            )
-        return user
-
-    @property
-    def system_content(self) -> str:
-        """:class:`str`: The displayed system's content."""
-
-        by = self.get_by()
-        if by is None:
-            by = '<Unknown User>'
-
-        return f'{by} unpinned a message from this channel'
 
 
 @define(slots=True)
