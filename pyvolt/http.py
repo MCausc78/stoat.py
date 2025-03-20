@@ -31,7 +31,7 @@ from inspect import isawaitable
 import logging
 import typing
 
-from multidict import CIMultiDict
+from multidict import CIMultiDict, MultiMapping
 
 from . import __version__, routes, utils
 from .adapter import HTTPResponse, HTTPAdapter, AIOHTTPAdapter
@@ -206,7 +206,7 @@ class RateLimiter(ABC):
     def on_bucket_update(
         self, response: HTTPResponse, route: routes.CompiledRoute, old_bucket: str, new_bucket: str, /
     ) -> None:
-        """Called when route updates their bucket key.
+        """Called when route updates it's bucket key.
 
         The :meth:`default implementation <DefaultRateLimiter.on_bucket_update>` will remove old
         bucket from internal mapping.
@@ -426,6 +426,93 @@ class DefaultRateLimiter(RateLimiter):
             del self._routes_to_bucket[key]
 
 
+_HTTP_OVERRIDE_PARAMETER_KEYS: tuple[str, ...] = (
+    'adapter',
+    'accept_json',
+    'base_url',
+    'bot',
+    'cookie',
+    'headers',
+    'idempotency_key' 'json',
+    'mfa_ticket',
+    'token',
+    'rate_limiter',
+    'user_agent',
+)
+
+
+class HTTPOverrideParameters:
+    """Represents overrides for outgoing HTTP request.
+
+    All parameters are optional.
+
+    The attributes are same as parameters, but may be not present if not set.
+
+    Parameters
+    ----------
+    accept_json: :class:`bool`
+        Whether to explicitly receive JSON or not.
+    adapter: :class:`.HTTPAdapter`
+        The adapter to use when sending a HTTP request.
+    bot: UndefinedOr[:class:`bool`]
+        Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+    cookie: UndefinedOr[:class:`str`]
+        The cookies to use when performing a request.
+    headers: MultiMapping[:class:`str`]
+        The headers.
+    idempotency_key: Optional[:class:`str`]
+        The idempotency key.
+    json: UndefinedOr[typing.Any]
+        The JSON payload to pass in.
+    mfa_ticket: Optional[:class:`str`]
+        The MFA ticket to pass in headers.
+    token: UndefinedOr[Optional[:class:`str`]]
+        The token to use when requesting the route.
+    user_agent: UndefinedOr[:class:`str`]
+        The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+    """
+
+    __slots__ = _HTTP_OVERRIDE_PARAMETER_KEYS
+
+    if typing.TYPE_CHECKING:
+        accept_json: bool
+        adapter: HTTPAdapter
+        bot: UndefinedOr[bool]
+        cookie: UndefinedOr[str]
+        headers: MultiMapping[str]
+        idempotency_key: typing.Optional[str]
+        json: UndefinedOr[typing.Any]
+        mfa_ticket: typing.Optional[str]
+        token: UndefinedOr[typing.Optional[str]]
+        user_agent: UndefinedOr[str]
+
+    def __init__(self, /, **kwargs) -> None:
+        self.update(**kwargs)
+
+    def update(self, /, **kwargs) -> Self:
+        r"""Updates overrides.
+
+        Parameters
+        ----------
+        \*\*kwargs
+            The parameters to update overrides with.
+
+        Returns
+        -------
+        Self
+            The overrides for chaining.
+        """
+        for k, v in kwargs.items():
+            if k not in _HTTP_OVERRIDE_PARAMETER_KEYS:
+                raise TypeError(f'Invalid parameter: {k}')
+            setattr(self, k, v)
+        return self
+
+    def populate(self, **kwargs) -> utils.MaybeAwaitable[None]:
+        """Populate overrides."""
+        ...
+
+
 def _resolve_member_id(target: typing.Union[str, BaseUser, BaseMember], /) -> str:
     ret: str = getattr(target, 'id', target)  # type: ignore
     return ret
@@ -601,8 +688,10 @@ class HTTPClient:
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
         cookie: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        idempotency_key: typing.Optional[str] = None,
         json_body: bool = False,
         mfa_ticket: typing.Optional[str] = None,
+        overrides: typing.Optional[HTTPOverrideParameters] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> utils.MaybeAwaitable[None]:
@@ -620,10 +709,14 @@ class HTTPClient:
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
-        json: UndefinedOr[typing.Any]
-            The JSON payload to pass in.
+        idempotency_key: Optional[:class:`str`]
+            The idempotency key.
+        json_body: :class:`bool`
+            Whether the request body is JSON.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        overrides: Optional[:class:`.HTTPOverrideParameters`]
+
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
@@ -664,6 +757,9 @@ class HTTPClient:
         if user_agent is not None:
             headers['User-Agent'] = user_agent
 
+        if idempotency_key is not None:
+            headers['Idempotency-Key'] = idempotency_key
+
         if mfa_ticket is not None:
             headers['X-Mfa-Ticket'] = mfa_ticket
 
@@ -673,6 +769,7 @@ class HTTPClient:
         url: str,
         *,
         headers: CIMultiDict[typing.Any],
+        overrides: typing.Optional[HTTPOverrideParameters] = None,
         **kwargs,
     ) -> HTTPResponse:
         """Perform an actual HTTP request.
@@ -687,6 +784,8 @@ class HTTPClient:
             The URL to send HTTP request to.
         headers: CIMultiDict[Any]
             The HTTP headers.
+        overrides: Optional[:class:`.HTTPOverrideParameter`]
+            The HTTP request overrides.
         \\*\\*kwargs
             The keyword arguments to pass to :meth:`HTTPAdapter.request`.
 
@@ -695,7 +794,11 @@ class HTTPClient:
         :class:`.HTTPResponse`
             The response.
         """
-        adapter = await self.get_adapter()
+        if overrides and hasattr(overrides, 'adapter') and overrides.adapter is not UNDEFINED:
+            adapter = overrides.adapter
+        else:
+            adapter = await self.get_adapter()
+
         return await adapter.request(
             method,
             url,
@@ -710,6 +813,8 @@ class HTTPClient:
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
         cookie: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        idempotency_key: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         mfa_ticket: typing.Optional[str] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
@@ -730,7 +835,11 @@ class HTTPClient:
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
-        json_body: UndefinedOr[typing.Any]
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
+        idempotency_key: Optional[:class:`str`]
+            The idempotency key.
+        json: UndefinedOr[typing.Any]
             The JSON payload to pass in.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
@@ -760,14 +869,53 @@ class HTTPClient:
 
         retries = 0
 
+        if http_overrides is not None:
+            tmp = http_overrides.populate(
+                route=route,
+                accept_json=accept_json,
+                bot=bot,
+                cookie=cookie,
+                headers=headers,
+                idempotency_key=idempotency_key,
+                json=json,
+                mfa_ticket=mfa_ticket,
+                token=token,
+                user_agent=user_agent,
+                kwargs=kwargs,
+            )
+
+            if isawaitable(tmp):
+                await tmp
+
+            if hasattr(tmp, 'accept_json'):
+                accept_json = http_overrides.accept_json
+            if hasattr(tmp, 'bot'):
+                bot = http_overrides.bot
+            if hasattr(tmp, 'cookie'):
+                cookie = http_overrides.cookie
+            if hasattr(tmp, 'headers'):
+                headers = CIMultiDict(http_overrides.headers)
+            if hasattr(tmp, 'idempotency_key'):
+                idempotency_key = http_overrides.idempotency_key
+            if hasattr(tmp, 'json'):
+                json = http_overrides.json
+            if hasattr(tmp, 'mfa_ticket'):
+                mfa_ticket = http_overrides.mfa_ticket
+            if hasattr(tmp, 'token'):
+                token = http_overrides.token
+            if hasattr(tmp, 'user_agent'):
+                user_agent = http_overrides.user_agent
+
         tmp = self.add_headers(
             headers,
             route,
             accept_json=accept_json,
             bot=bot,
             cookie=cookie,
+            idempotency_key=idempotency_key,
             json_body=json is not UNDEFINED,
             mfa_ticket=mfa_ticket,
+            overrides=http_overrides,
             token=token,
             user_agent=user_agent,
         )
@@ -875,9 +1023,11 @@ class HTTPClient:
         *,
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
-        mfa_ticket: typing.Optional[str] = None,
+        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        idempotency_key: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
+        mfa_ticket: typing.Optional[str] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
@@ -894,6 +1044,10 @@ class HTTPClient:
             Whether to explicitly receive JSON or not. Defaults to ``True``.
         bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
+        idempotency_key: Optional[:class:`str`]
+            The idempotency key.
         json: UndefinedOr[typing.Any]
             The JSON payload to pass in.
         log: :class:`bool`
@@ -922,6 +1076,8 @@ class HTTPClient:
             route,
             accept_json=accept_json,
             bot=bot,
+            http_overrides=http_overrides,
+            idempotency_key=idempotency_key,
             json=json,
             mfa_ticket=mfa_ticket,
             token=token,
@@ -3035,14 +3191,10 @@ class HTTPClient:
         if flags is not None:
             payload['flags'] = flags
 
-        headers = {}
-        if nonce is not None:
-            headers['Idempotency-Key'] = nonce
-
         resp: raw.Message = await self.request(
             routes.CHANNELS_MESSAGE_SEND.compile(channel_id=resolve_id(channel)),
             json=payload,
-            headers=headers,
+            idempotency_key=nonce,
         )
         return self.state.parser.parse_message(resp)
 
@@ -7696,14 +7848,10 @@ class HTTPClient:
         if flags is not None:
             payload['flags'] = flags
 
-        headers = {}
-        if nonce is not None:
-            headers['Idempotency-Key'] = nonce
-
         resp: raw.Message = await self.request(
             routes.WEBHOOKS_WEBHOOK_EXECUTE.compile(webhook_id=resolve_id(webhook), webhook_token=token),
+            idempotency_key=nonce,
             json=payload,
-            headers=headers,
             token=None,
         )
         return self.state.parser.parse_message(resp)
@@ -9240,5 +9388,6 @@ __all__ = (
     'DefaultRateLimitBlocker',
     '_NoopRateLimitBlocker',
     'DefaultRateLimiter',
+    'HTTPOverrideParameters',
     'HTTPClient',
 )
