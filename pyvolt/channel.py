@@ -79,6 +79,7 @@ from .flags import (
 from .read_state import ReadState
 
 if typing.TYPE_CHECKING:
+    from . import raw
     from .bot import BaseBot
     from .cdn import StatelessAsset, Asset, ResolvableResource
     from .invite import Invite
@@ -501,6 +502,16 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
         return calculate_saved_messages_channel_permissions(target.id, self.user_id)
 
+    def to_dict(self) -> raw.SavedMessagesChannel:
+        """:class:`dict`: Convert channel to raw data."""
+
+        payload: raw.SavedMessagesChannel = {
+            'channel_type': 'SavedMessages',
+            '_id': self.id,
+            'user': self.user_id,
+        }
+        return payload
+
 
 @define(slots=True)
 class DMChannel(BaseChannel, Connectable, Messageable):
@@ -602,7 +613,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
                     state=state,
                     channel_id=self.id,
                     user_id=state.my_id,
-                    last_acked_message_id=default_acked_message_id,
+                    last_acked_id=default_acked_message_id,
                     mentioned_in=[],
                 )
             return None
@@ -622,7 +633,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
                 state=state,
                 channel_id=self.id,
                 user_id=state.my_id,
-                last_acked_message_id=default_acked_message_id,
+                last_acked_id=default_acked_message_id,
                 mentioned_in=[],
             )
             cache.store_read_state(read_state, ctx)
@@ -771,6 +782,19 @@ class DMChannel(BaseChannel, Connectable, Messageable):
             )
         )
 
+    def to_dict(self) -> raw.DirectMessageChannel:
+        """:class:`dict`: Convert channel to raw data."""
+
+        payload: raw.DirectMessageChannel = {
+            'channel_type': 'DirectMessage',
+            '_id': self.id,
+            'active': self.active,
+            'recipients': list(self.recipient_ids),
+        }
+        if self.last_message_id is not None:
+            payload['last_message_id'] = self.last_message_id
+        return payload
+
 
 @define(slots=True)
 class GroupChannel(BaseChannel, Connectable, Messageable):
@@ -893,7 +917,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
                     state=state,
                     channel_id=self.id,
                     user_id=state.my_id,
-                    last_acked_message_id=default_acked_message_id,
+                    last_acked_id=default_acked_message_id,
                     mentioned_in=[],
                 )
             return None
@@ -913,7 +937,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
                 state=state,
                 channel_id=self.id,
                 user_id=state.my_id,
-                last_acked_message_id=default_acked_message_id,
+                last_acked_id=default_acked_message_id,
                 mentioned_in=[],
             )
             cache.store_read_state(read_state, ctx)
@@ -1492,6 +1516,28 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
             )
         )
 
+    def to_dict(self) -> raw.GroupChannel:
+        """:class:`dict`: Convert channel to raw data."""
+
+        payload: dict[str, typing.Any] = {
+            'channel_type': 'Group',
+            '_id': self.id,
+            'name': self.name,
+            'owner': self.owner_id,
+        }
+        if self.description is not None:
+            payload['description'] = self.description
+        payload['recipients'] = self.recipient_ids
+        if self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.last_message_id is not None:
+            payload['last_message_id'] = self.last_message_id
+        if self.raw_permissions is not None:
+            payload['permissions'] = self.raw_permissions
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        return payload  # type: ignore
+
 
 @define(slots=True)
 class UnknownPrivateChannel(BaseChannel):
@@ -1504,6 +1550,11 @@ class UnknownPrivateChannel(BaseChannel):
     def type(self) -> typing.Literal[ChannelType.unknown]:
         """Literal[:attr:`.ChannelType.unknown`]: The channel's type."""
         return ChannelType.unknown
+
+    def to_dict(self) -> dict[str, typing.Any]:
+        """:class:`dict`: Convert channel to raw data."""
+
+        return self.payload
 
 
 PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, UnknownPrivateChannel]
@@ -1924,6 +1975,12 @@ class ChannelVoiceMetadata:
     Zero means an infinite amount of users can connect to voice channel.
     """
 
+    def to_dict(self) -> raw.VoiceInformation:
+        """:class:`dict`: Convert channel voice state container to raw data."""
+        return {
+            'max_users': None if self.max_users == 0 else self.max_users,
+        }
+
 
 @define(slots=True)
 class TextChannel(BaseServerChannel, Connectable, Messageable):
@@ -2003,7 +2060,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
                     state=state,
                     channel_id=self.id,
                     user_id=state.my_id,
-                    last_acked_message_id=default_acked_message_id,
+                    last_acked_id=default_acked_message_id,
                     mentioned_in=[],
                 )
             return None
@@ -2023,7 +2080,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
                 state=state,
                 channel_id=self.id,
                 user_id=state.my_id,
-                last_acked_message_id=default_acked_message_id,
+                last_acked_id=default_acked_message_id,
                 mentioned_in=[],
             )
             cache.store_read_state(read_state, ctx)
@@ -2169,6 +2226,31 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         """
         return await self.state.http.create_webhook(self.id, name=name, avatar=avatar)
 
+    def to_dict(self) -> raw.TextChannel:
+        """:class:`dict`: Convert channel to raw data."""
+
+        payload: dict[str, typing.Any] = {
+            'channel_type': 'TextChannel',
+            '_id': self.id,
+            'server': self.server_id,
+            'name': self.name,
+        }
+        if self.description is not None:
+            payload['description'] = self.description
+        if self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.last_message_id is not None:
+            payload['last_message_id'] = self.last_message_id
+        if self.default_permissions is not None:
+            payload['default_permissions'] = self.default_permissions.to_field_dict()
+        if len(self.role_permissions):
+            payload['role_permissions'] = {k: v.to_field_dict() for k, v in self.role_permissions.items()}
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        if self.voice is not None:
+            payload['voice'] = self.voice.to_dict()
+        return payload  # type: ignore
+
 
 @define(slots=True)
 class VoiceChannel(BaseServerChannel, Connectable, Messageable):
@@ -2219,6 +2301,27 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
             else res
         )
 
+    def to_dict(self) -> raw.VoiceChannel:
+        """:class:`dict`: Convert channel to raw data."""
+
+        payload: dict[str, typing.Any] = {
+            'channel_type': 'VoiceChannel',
+            '_id': self.id,
+            'server': self.server_id,
+            'name': self.name,
+        }
+        if self.description is not None:
+            payload['description'] = self.description
+        if self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.default_permissions is not None:
+            payload['default_permissions'] = self.default_permissions.to_field_dict()
+        if len(self.role_permissions):
+            payload['role_permissions'] = {k: v.to_field_dict() for k, v in self.role_permissions.items()}
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        return payload  # type: ignore
+
 
 @define(slots=True)
 class UnknownServerChannel(BaseServerChannel):
@@ -2231,6 +2334,10 @@ class UnknownServerChannel(BaseServerChannel):
     def type(self) -> typing.Literal[ChannelType.unknown]:
         """Literal[:attr:`.ChannelType.unknown`]: The channel's type."""
         return ChannelType.unknown
+
+    def to_dict(self) -> dict[str, typing.Any]:
+        """:class:`dict`: Convert channel to raw data."""
+        return self.payload
 
 
 ServerChannel = typing.Union[TextChannel, VoiceChannel]

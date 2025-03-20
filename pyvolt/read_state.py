@@ -42,6 +42,7 @@ from .core import (
 from .errors import NoData
 
 if typing.TYPE_CHECKING:
+    from . import raw
     from .channel import Channel
     from .message import BaseMessage
     from .state import State
@@ -49,7 +50,11 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True)
 class ReadState:
-    """Represents the read state of a channel."""
+    """Represents the read state of a channel.
+
+    .. note::
+        An entity currently refers to message here. However this might change in future.
+    """
 
     state: State = field(repr=False, kw_only=True)
 
@@ -59,8 +64,8 @@ class ReadState:
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID the read state belongs to."""
 
-    last_acked_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
-    """Optional[:class:`str`]: The last acknowledged message's ID. It *may* not point to an existing or valid message."""
+    last_acked_id: typing.Optional[str] = field(repr=True, kw_only=True)
+    """Optional[:class:`str`]: The last acknowledged entity's ID. It *may* not point to an existing or valid entity."""
 
     mentioned_in: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The message's IDs that mention the user."""
@@ -106,7 +111,7 @@ class ReadState:
     async def edit(
         self,
         *,
-        last_acked_message_id: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED,
+        last_acked_id: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED,
     ) -> ReadState:
         """|coro|
 
@@ -121,8 +126,8 @@ class ReadState:
 
         Parameters
         ----------
-        last_acked_message_id: UndefinedOr[Optional[ULIDOr[:class:`.BaseMessage`]]]
-            The new last acknowledged message's ID.
+        last_acked_id: UndefinedOr[Optional[ULIDOr[:class:`.BaseMessage`]]]
+            The new last acknowledged entity's ID.
 
         Raises
         ------
@@ -165,23 +170,37 @@ class ReadState:
             The newly updated read state.
         """
 
-        if last_acked_message_id is UNDEFINED:
+        if last_acked_id is UNDEFINED:
             return self
 
-        if last_acked_message_id is None:
-            last_acked_message_id = ZID
+        if last_acked_id is None:
+            last_acked_id = ZID
         else:
-            last_acked_message_id = resolve_id(last_acked_message_id)
+            last_acked_id = resolve_id(last_acked_id)
 
-        await self.state.http.acknowledge_message(self.channel_id, last_acked_message_id)
+        await self.state.http.acknowledge_message(self.channel_id, last_acked_id)
         read_state = ReadState(
             state=self.state,
             channel_id=self.channel_id,
             user_id=self.user_id,
-            last_acked_message_id=None if last_acked_message_id == ZID else last_acked_message_id,
-            mentioned_in=[m for m in self.mentioned_in if m >= last_acked_message_id],
+            last_acked_id=None if last_acked_id == ZID else last_acked_id,
+            mentioned_in=[m for m in self.mentioned_in if m >= last_acked_id],
         )
         return read_state
+
+    def to_dict(self) -> raw.ChannelUnread:
+        """:class:`dict`: Convert read state to raw data."""
+        payload: raw.ChannelUnread = {
+            '_id': {
+                'channel': self.channel_id,
+                'user': self.user_id,
+            },
+        }
+        if self.last_acked_id is not None:
+            payload['last_id'] = self.last_acked_id
+        if len(self.mentioned_in):
+            payload['mentions'] = self.mentioned_in
+        return payload
 
 
 __all__ = ('ReadState',)

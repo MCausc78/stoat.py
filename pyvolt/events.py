@@ -299,7 +299,7 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
                 state=state,
                 channel_id=channel.id,
                 user_id=channel.user_id,
-                last_acked_message_id=None,
+                last_acked_id=None,
                 mentioned_in=[],
             )
         elif isinstance(channel, DMChannel):
@@ -309,7 +309,7 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
                     state=state,
                     channel_id=channel.id,
                     user_id=me.id,
-                    last_acked_message_id=None,
+                    last_acked_id=None,
                     mentioned_in=[],
                 )
             cache.store_private_channel_by_user(channel, ctx)
@@ -355,7 +355,7 @@ class ServerChannelCreateEvent(BaseChannelCreateEvent):
                     state=state,
                     channel_id=channel.id,
                     user_id=me.id,
-                    last_acked_message_id=None,
+                    last_acked_id=None,
                     mentioned_in=[],
                 )
 
@@ -697,12 +697,12 @@ class MessageAckEvent(ShardEvent):
         read_state = cache.get_read_state(self.channel_id, ctx)
         if read_state:
             # opposite effect cannot be done
-            if read_state.last_acked_message_id and self.message_id >= read_state.last_acked_message_id:
-                acked_message_id = read_state.last_acked_message_id
+            if read_state.last_acked_id and self.message_id >= read_state.last_acked_id:
+                acked_message_id = read_state.last_acked_id
 
                 read_state.mentioned_in = [m for m in read_state.mentioned_in if m >= acked_message_id]
 
-            read_state.last_acked_message_id = self.message_id
+            read_state.last_acked_id = self.message_id
             cache.store_read_state(read_state, ctx)
 
         return True

@@ -82,7 +82,12 @@ class PermissionOverride:
         self.raw_deny = deny.value
 
     def to_dict(self) -> raw.Override:
+        """:class:`dict`: Convert override to raw data."""
         return {'allow': self.raw_allow, 'deny': self.raw_deny}
+
+    def to_field_dict(self) -> raw.OverrideField:
+        """:class:`dict`: Convert override to raw data."""
+        return {'a': self.raw_allow, 'd': self.raw_deny}
 
     def __repr__(self) -> str:
         return f'<PermissionOverride allow={self.allow!r} deny={self.deny!r}>'

@@ -1359,12 +1359,12 @@ GroupPublicInviteCacheContext
     :members:
     :inherited-members:
 
-PrivateBaseInviteCacheContext
+GroupPublicInviteCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: PrivateBaseInviteCacheContext
+.. attributetable:: GroupPublicInviteCacheContext
 
-.. autoclass:: PrivateBaseInviteCacheContext
+.. autoclass:: GroupPublicInviteCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -2341,12 +2341,12 @@ ChannelIDThroughMemberDMChannelIDCacheContext
     :members:
     :inherited-members:
 
-ChannelThroughMemberDMChannelIDCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ChannelThroughMemberDMChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: ChannelThroughMemberDMChannelIDCacheContext
+.. attributetable:: ChannelThroughMemberDMChannelCacheContext
 
-.. autoclass:: ChannelThroughMemberDMChannelIDCacheContext
+.. autoclass:: ChannelThroughMemberDMChannelCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

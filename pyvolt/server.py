@@ -29,6 +29,7 @@ from datetime import datetime, timedelta
 import typing
 
 from . import routes, utils
+from .abc import Messageable, Connectable
 from .base import Base
 from .bot import BaseBot
 from .cache import (
@@ -179,6 +180,8 @@ class Category:
         return self is other or isinstance(other, Category) and self.id == other.id
 
     def to_dict(self) -> raw.Category:
+        """:class:`dict`: Convert category to raw data."""
+
         return {
             'id': self.id,
             'title': self.title,
@@ -229,6 +232,8 @@ class SystemMessageChannels:
         )
 
     def to_dict(self) -> raw.SystemMessageChannels:
+        """:class:`dict`: Convert system message channels configuration to raw data."""
+
         payload: raw.SystemMessageChannels = {}
         if self.user_joined is not None:
             payload['user_joined'] = self.user_joined
@@ -588,6 +593,28 @@ class Role(BaseRole):
             self.hoist = data.hoist
         if data.rank is not UNDEFINED:
             self.rank = data.rank
+
+    def to_dict(self) -> raw.Role:
+        """:class:`dict`: Convert role to raw data."""
+
+        if self.color is None:
+            payload = {
+                'name': self.name,
+                'permissions': self.permissions.to_field_dict(),
+            }
+        else:
+            payload = {
+                'name': self.name,
+                'permissions': self.permissions.to_field_dict(),
+                'colour': self.color,
+            }
+
+        if self.hoist:
+            payload['hoist'] = self.hoist
+
+        payload['rank'] = self.rank
+
+        return payload  # type: ignore
 
 
 @define(slots=True)
@@ -2792,6 +2819,47 @@ class Server(BaseServer):
         self.internal_channels = (True, self.channel_ids)
         return channels  # type: ignore
 
+    @typing.overload
+    def to_dict(self, *, with_channels: typing.Literal[False] = ...) -> raw.Server: ...
+
+    @typing.overload
+    def to_dict(self, *, with_channels: typing.Literal[True]) -> raw.ServerWithChannels: ...
+
+    def to_dict(self, *, with_channels: bool = False) -> typing.Union[raw.ServerWithChannels, raw.Server]:
+        """:class:`dict`: Convert server to raw data."""
+        payload: dict[str, typing.Any] = {
+            '_id': self.id,
+            'owner': self.owner_id,
+            'name': self.name,
+        }
+        if self.description is not None:
+            payload['description'] = self.description
+        if with_channels:
+            payload['channels'] = [channel.to_dict() for channel in self.channels]
+        else:
+            payload['channels'] = self.channel_ids
+        if self.categories is not None:
+            payload['categories'] = [category.to_dict() for category in self.categories]
+        if self.system_messages is not None:
+            payload['system_messages'] = self.system_messages.to_dict()
+
+        if len(self.roles):
+            payload['roles'] = {k: v.to_dict() for k, v in self.roles.items()}
+        payload['default_permissions'] = self.raw_default_permissions
+        if self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.internal_banner is not None:
+            payload['banner'] = self.internal_banner.to_dict('banners')
+        if self.raw_flags != 0:
+            payload['flags'] = self.raw_flags
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        if self.analytics:
+            payload['analytics'] = self.analytics
+        if self.discoverable:
+            payload['discoverable'] = self.discoverable
+        return payload  # type: ignore
+
     def upsert_role(self, role: typing.Union[PartialRole, Role], /) -> None:
         """Locally upserts role into :attr:`Server.roles` mapping.
 
@@ -2836,9 +2904,19 @@ class Ban:
             and (self.server_id == other.server_id and self.user_id == other.user_id)
         )
 
+    def to_dict(self) -> raw.ServerBan:
+        """:class:`dict`: Convert server ban to raw data."""
+        return {
+            '_id': {
+                'server': self.server_id,
+                'user': self.user_id,
+            },
+            'reason': self.reason,
+        }
+
 
 @define(slots=True)
-class BaseMember:
+class BaseMember(Connectable, Messageable):
     """Represents a Revolt base member to a :class:`Server`."""
 
     state: State = field(repr=False, kw_only=True)
@@ -4288,6 +4366,25 @@ class Member(BaseMember):
             return roles[-1]
 
         return None
+
+    def to_dict(self) -> raw.Member:
+        """:class:`dict`: Convert server member to raw data."""
+        payload: raw.Member = {
+            '_id': {
+                'server': self.server_id,
+                'user': self.id,
+            },
+            'joined_at': self.joined_at.isoformat(),
+        }
+        if self.nick is not None:
+            payload['nickname'] = self.nick
+        if self.internal_server_avatar is not None:
+            payload['avatar'] = self.internal_server_avatar.to_dict('avatars')
+        if len(self.role_ids):
+            payload['roles'] = self.role_ids
+        if self.timed_out_until is not None:
+            payload['timeout'] = self.timed_out_until.isoformat()
+        return payload
 
 
 @define(slots=True)

@@ -80,6 +80,16 @@ class UserStatus:
         if data.presence is not UNDEFINED:
             self.presence = data.presence
 
+    def to_dict(self) -> raw.UserStatus:
+        """:class:`dict`: Convert user status to raw data."""
+
+        payload: raw.UserStatus = {}
+        if self.text is not None:
+            payload['text'] = self.text
+        if self.presence is not None:
+            payload['presence'] = self.presence.value
+        return payload
+
 
 class UserStatusEdit:
     """Represents partial user's status.
@@ -239,6 +249,14 @@ class Relationship:
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, Relationship) and self.id == other.id and self.status == other.status
+
+    def to_dict(self) -> raw.Relationship:
+        """:class:`dict`: Convert relationship to raw data."""
+
+        return {
+            '_id': self.id,
+            'status': self.status.value,
+        }
 
 
 @define(slots=True)
@@ -1296,6 +1314,12 @@ class BotUserMetadata:
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BotUserMetadata) and self.owner_id == other.owner_id
 
+    def to_dict(self) -> raw.BotInformation:
+        """:class:`dict`: Convert bot user metadata to raw data."""
+        return {
+            'owner': self.owner_id,
+        }
+
 
 def calculate_user_permissions(
     user_id: str,
@@ -1521,6 +1545,31 @@ class User(DisplayUser):
         """:class:`bool`: Whether this user have given other funny joke (Called as "It's Morbin Time" in Revite)."""
         return self.badges.reserved_relevant_joke_badge_2
 
+    def to_dict(self) -> raw.User:
+        """:class:`dict`: Convert user to raw data."""
+        payload: dict[str, typing.Any] = {
+            '_id': self.id,
+            'username': self.name,
+            'discriminator': self.discriminator,
+        }
+        if self.display_name is not None:
+            payload['display_name'] = self.display_name
+        if self.internal_avatar is not None:
+            payload['avatar'] = self.internal_avatar.to_dict('avatars')
+        if self.raw_badges != 0:
+            payload['badges'] = self.raw_badges
+        if self.status is not None:
+            payload['status'] = self.status.to_dict()
+        if self.raw_flags != 0:
+            payload['flags'] = self.raw_flags
+        if self.privileged:
+            payload['privileged'] = self.privileged
+        if self.bot is not None:
+            payload['bot'] = self.bot.to_dict()
+        payload['relationship'] = self.relationship.value
+        payload['online'] = self.online
+        return payload  # type: ignore
+
 
 @define(slots=True)
 class OwnUser(User):
@@ -1609,6 +1658,33 @@ class OwnUser(User):
             badges=badges,
             flags=flags,
         )
+
+    def to_dict(self) -> raw.User:
+        """:class:`dict`: Convert user to raw data."""
+        payload: dict[str, typing.Any] = {
+            '_id': self.id,
+            'username': self.name,
+            'discriminator': self.discriminator,
+        }
+        if self.display_name is not None:
+            payload['display_name'] = self.display_name
+        if self.internal_avatar is not None:
+            payload['avatar'] = self.internal_avatar.to_dict('avatars')
+        if len(self.relations):
+            payload['relations'] = [relationship.to_dict() for relationship in self.relations.values()]
+        if self.raw_badges != 0:
+            payload['badges'] = self.raw_badges
+        if self.status is not None:
+            payload['status'] = self.status.to_dict()
+        if self.raw_flags != 0:
+            payload['flags'] = self.raw_flags
+        if self.privileged:
+            payload['privileged'] = self.privileged
+        if self.bot is not None:
+            payload['bot'] = self.bot.to_dict()
+        payload['relationship'] = self.relationship.value
+        payload['online'] = self.online
+        return payload  # type: ignore
 
 
 @define(slots=True)

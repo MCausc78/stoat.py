@@ -856,7 +856,7 @@ class Parser:
             state=self.state,
             channel_id=id['channel'],
             user_id=id['user'],
-            last_acked_message_id=payload.get('last_id'),
+            last_acked_id=payload.get('last_id'),
             mentioned_in=payload.get('mentions', []),
         )
 
