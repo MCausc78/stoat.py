@@ -291,13 +291,20 @@ class SendableEmbed:
 
 @define(slots=True)
 class MessageWebhook:
-    """Information about the webhook bundled with Message."""
+    """Specifies information about the webhook bundled with Message."""
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The webhook's name. Can be between 1 to 32 characters."""
 
     avatar: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The webhook avatar's ID, if any."""
+
+    def to_dict(self) -> raw.MessageWebhook:
+        """:class:`dict`: Convert message webhook to raw data."""
+        return {
+            'name': self.name,
+            'avatar': self.avatar,
+        }
 
 
 @define(slots=True)
@@ -3757,6 +3764,60 @@ class Message(BaseMessage):
     def is_silent(self) -> bool:
         """:class:`bool`: Whether the message suppresses push notifications."""
         return self.flags.suppress_notifications
+
+    def to_dict(self) -> raw.Message:
+        """:class:`dict`: Convert message to raw data."""
+        payload: dict[str, typing.Any] = {
+            '_id': self.id,
+        }
+        if self.nonce is not None:
+            payload['nonce'] = self.nonce
+        payload['channel'] = self.channel_id
+
+        if isinstance(self._author, Member):
+            user = self._author._user
+            if isinstance(user, User):
+                payload['author'] = user.id
+                payload['user'] = user.to_dict()
+            else:
+                payload['author'] = user
+            payload['member'] = self._author.to_dict()
+        elif isinstance(self._author, User):
+            payload['author'] = self._author.id
+            payload['user'] = self._author.to_dict()
+        else:
+            payload['author'] = self._author
+        if self.webhook is not None:
+            payload['webhook'] = self.webhook.to_dict()
+
+        # TODO: Maybe add internal_content: Optional[str] and a property for backwards compatibilty?
+        if len(self.content):
+            payload['content'] = self.content
+        if self.internal_system_event is not None:
+            payload['system'] = self.internal_system_event.to_dict()
+        if len(self.internal_attachments):
+            payload['attachments'] = [a.to_dict('attachments') for a in self.internal_attachments]
+        if self.edited_at is not None:
+            payload['edited'] = self.edited_at.isoformat()
+        if len(self.internal_embeds):
+            payload['embeds'] = [e.to_dict() for e in self.internal_embeds]
+        if len(self.mention_ids):
+            payload['mentions'] = self.mention_ids
+        if len(self.role_mention_ids):
+            payload['role_mentions'] = self.role_mention_ids
+        if len(self.replies):
+            payload['replies'] = self.replies
+        if len(self.reactions):
+            payload['reactions'] = {k: list(v) for k, v in self.reactions.items()}
+        if self.interactions is not None:
+            payload['interactions'] = self.interactions.to_dict()
+        if self.masquerade is not None:
+            payload['masquerade'] = self.masquerade.to_dict()
+        if self.pinned:
+            payload['pinned'] = self.pinned
+        if self.raw_flags != 0:
+            payload['flags'] = self.raw_flags
+        return payload  # type: ignore
 
 
 Masquerade: typing.TypeAlias = MessageMasquerade

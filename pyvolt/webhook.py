@@ -59,6 +59,7 @@ from .message import (
 from .permissions import Permissions
 
 if typing.TYPE_CHECKING:
+    from . import raw
     from .server import Member
     from .user import User
 
@@ -649,6 +650,21 @@ class Webhook(BaseWebhook):
         ret = _new_permissions(Permissions)
         ret.value = self.raw_permissions
         return ret
+
+    def to_dict(self) -> raw.Webhook:
+        """:class:`dict`: Convert webhook to raw data."""
+        payload: dict[str, typing.Any] = {
+            'id': self.id,
+            'name': self.name,
+        }
+        if self.internal_avatar is not None:
+            payload['avatar'] = self.internal_avatar.to_dict('avatars')
+        if len(self.creator_id):
+            payload['creator_id'] = self.creator_id
+        payload['channel_id'] = self.channel_id
+        payload['permissions'] = self.raw_permissions
+        payload['token'] = self.token
+        return payload  # type: ignore
 
 
 __all__ = (

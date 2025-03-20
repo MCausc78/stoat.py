@@ -47,6 +47,7 @@ from .enums import AssetMetadataType
 from .errors import NoData
 
 if typing.TYPE_CHECKING:
+    from . import raw
     from .server import Server, Member
     from .user import User
 
@@ -291,6 +292,23 @@ class ServerEmoji(BaseEmoji):
         """
         return await self.state.http.delete_emoji(self.id)
 
+    def to_dict(self) -> raw.ServerEmoji:
+        """:class:`dict`: Convert server emoji to raw data."""
+        payload: raw.ServerEmoji = {
+            '_id': self.id,
+            'parent': {
+                'type': 'Server',
+                'id': self.server_id,
+            },
+            'creator_id': self.creator_id,
+            'name': self.name,
+        }
+        if self.animated:
+            payload['animated'] = self.animated
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        return payload
+
 
 @define(slots=True)
 class DetachedEmoji(BaseEmoji):
@@ -326,6 +344,22 @@ class DetachedEmoji(BaseEmoji):
                 type='DetachedEmoji.creator',
             )
         return creator
+
+    def to_dict(self) -> raw.DetachedEmoji:
+        """:class:`dict`: Convert detached emoji to raw data."""
+        payload: raw.DetachedEmoji = {
+            '_id': self.id,
+            'parent': {
+                'type': 'Detached',
+            },
+            'creator_id': self.creator_id,
+            'name': self.name,
+        }
+        if self.animated:
+            payload['animated'] = self.animated
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        return payload
 
 
 Emoji = typing.Union[ServerEmoji, DetachedEmoji]

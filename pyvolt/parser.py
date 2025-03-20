@@ -1873,7 +1873,7 @@ class Parser:
         elif user is not None:
             author = self.parse_user(user)
         else:
-            author = members.get(author_id) or users.get(author_id) or author_id
+            author = members.get(author_id) or users.get(author_id, author_id)
 
         reactions = payload.get('reactions')
 
