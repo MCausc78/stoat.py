@@ -226,6 +226,18 @@ class UserProfileEdit:
         return remove
 
     async def to_dict(self, state: State, /) -> raw.DataUserProfile:
+        """Convert user profile edit to raw data.
+
+        Parameters
+        ----------
+        state: :class:`.State`
+            The state. Required to resolve :attr:`~.media` attribute into file ID.
+
+        Returns
+        -------
+        :class:`dict`
+            The raw data.
+        """
         payload: raw.DataUserProfile = {}
         if self.content not in (None, UNDEFINED):
             payload['content'] = self.content

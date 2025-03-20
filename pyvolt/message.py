@@ -261,7 +261,7 @@ class SendableEmbed:
         self.color: typing.Optional[str] = color
 
     async def to_dict(self, state: State, /) -> raw.SendableEmbed:
-        """Convert reply to raw data.
+        """Convert sendable embed to raw data.
 
         Parameters
         ----------

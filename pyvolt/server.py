@@ -2826,7 +2826,13 @@ class Server(BaseServer):
     def to_dict(self, *, with_channels: typing.Literal[True]) -> raw.ServerWithChannels: ...
 
     def to_dict(self, *, with_channels: bool = False) -> typing.Union[raw.ServerWithChannels, raw.Server]:
-        """:class:`dict`: Convert server to raw data."""
+        """:class:`dict`: Convert server to raw data.
+
+        Parameters
+        ----------
+        with_channels: :class:`bool`
+            Whether to include channel objects instead of their IDs in ``channels`` key when serializing. Defaults to ``False``.
+        """
         payload: dict[str, typing.Any] = {
             '_id': self.id,
             'owner': self.owner_id,

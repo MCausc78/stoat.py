@@ -165,7 +165,13 @@ class StatelessAsset:
         )
 
     def to_dict(self, tag: Tag, /) -> raw.File:
-        """:class:`dict`: Convert asset to raw data."""
+        """:class:`dict`: Convert asset to raw data.
+
+        Parameters
+        ----------
+        tag: :class:`.Tag`
+            The asset tag.
+        """
 
         payload: raw.File = {
             '_id': self.id,

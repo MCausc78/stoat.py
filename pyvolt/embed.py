@@ -259,7 +259,13 @@ class ImageEmbed(BaseEmbed):
     def to_dict(self, *, as_embed: typing.Literal[True] = ...) -> raw.ImageEmbed: ...
 
     def to_dict(self, *, as_embed: bool = True) -> typing.Union[raw.Image, raw.ImageEmbed]:
-        """:class:`dict`: Convert embed to raw data."""
+        """:class:`dict`: Convert embed to raw data.
+
+        Parameters
+        ----------
+        as_embed: :class:`bool`
+            Whether to serialize image as embed. If set to ``False``, this means removal of ``type`` key in root object. Defaults to ``True``.
+        """
         if as_embed:
             return {
                 'type': 'Image',
@@ -299,7 +305,13 @@ class VideoEmbed(BaseEmbed):
     def to_dict(self, *, as_embed: typing.Literal[True] = ...) -> raw.VideoEmbed: ...
 
     def to_dict(self, *, as_embed: bool = True) -> typing.Union[raw.Video, raw.VideoEmbed]:
-        """:class:`dict`: Convert embed to raw data."""
+        """:class:`dict`: Convert embed to raw data.
+
+        Parameters
+        ----------
+        as_embed: :class:`bool`
+            Whether to serialize video as embed. If set to ``False``, this means removal of ``type`` key in root object. Defaults to ``True``.
+        """
         if as_embed:
             return {
                 'type': 'Video',
@@ -358,7 +370,13 @@ class WebsiteEmbed(BaseEmbed):
     def to_dict(self, *, as_embed: typing.Literal[True] = ...) -> raw.WebsiteEmbed: ...
 
     def to_dict(self, *, as_embed: bool = True) -> typing.Union[raw.WebsiteMetadata, raw.WebsiteEmbed]:
-        """:class:`dict`: Convert embed to raw data."""
+        """:class:`dict`: Convert embed to raw data.
+
+        Parameters
+        ----------
+        as_embed: :class:`bool`
+            Whether to serialize website metadata as embed. If set to ``False``, this means removal of ``type`` key in root object. Defaults to ``True``.
+        """
         if as_embed:
             payload: raw.WebsiteEmbed = {
                 'type': 'Website',
@@ -444,7 +462,13 @@ class StatelessTextEmbed(BaseEmbed):
     def to_dict(self, *, as_embed: typing.Literal[True] = ...) -> raw.TextEmbed: ...
 
     def to_dict(self, *, as_embed: bool = True) -> typing.Union[raw.Text, raw.TextEmbed]:
-        """:class:`dict`: Convert embed to raw data."""
+        """:class:`dict`: Convert embed to raw data.
+
+        Parameters
+        ----------
+        as_embed: :class:`bool`
+            Whether to serialize text metadata as embed. If set to ``False``, this means removal of ``type`` key in root object. Defaults to ``True``.
+        """
         if as_embed:
             payload: raw.TextEmbed = {
                 'type': 'Text',
