@@ -48,6 +48,7 @@ if typing.TYPE_CHECKING:
 
     from .cdn import ResolvableResource
     from .enums import MessageSort
+    from .http import HTTPOverrideParameters
     from .message import Reply, MessageInteractions, MessageMasquerade, SendableEmbed, BaseMessage, Message
     from .state import State
 
@@ -154,7 +155,12 @@ class Messageable:
     # because it breaks references in commands extension.
     # Use :class:`~pyvolt.HTTPException` and :class:`~pyvolt.MessageInteractions` explicitly.
 
-    async def acknowledge(self, message: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED) -> None:
+    async def acknowledge(
+        self,
+        message: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+    ) -> None:
         """|coro|
 
         Marks the destination channel as read.
@@ -170,6 +176,8 @@ class Messageable:
         ----------
         message: ULIDOr[:class:`.BaseMessage`]
             The message to mark as read.
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -215,9 +223,11 @@ class Messageable:
         elif message is None:
             message = ZID
 
-        await state.http.acknowledge_message(channel_id, message)
+        await state.http.acknowledge_message(channel_id, message, http_overrides=http_overrides)
 
-    async def fetch_message(self, message: ULIDOr[BaseMessage], /) -> Message:
+    async def fetch_message(
+        self, message: ULIDOr[BaseMessage], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+    ) -> Message:
         """|coro|
 
         Retrieves a message.
@@ -228,6 +238,8 @@ class Messageable:
             The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
             The message to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -271,11 +283,12 @@ class Messageable:
         """
 
         channel = await self.fetch_channel_id()
-        return await self.state.http.get_message(channel, message)
+        return await self.state.http.get_message(channel, message, http_overrides=http_overrides)
 
     async def history(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
         after: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -291,8 +304,8 @@ class Messageable:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`~pyvolt.TextableChannel`]
-            The channel to retrieve messages from.
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
 
@@ -355,6 +368,7 @@ class Messageable:
         channel = await self.fetch_channel_id()
         return await self.state.http.get_messages(
             channel,
+            http_overrides=http_overrides,
             limit=limit,
             before=before,
             after=after,
@@ -367,6 +381,7 @@ class Messageable:
         self,
         query: typing.Optional[str] = None,
         *,
+        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
         pinned: typing.Optional[bool] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -390,6 +405,8 @@ class Messageable:
         ----------
         query: Optional[:class:`str`]
             The full-text search query. See `MongoDB documentation <https://www.mongodb.com/docs/manual/text-search/>`_ for more information.
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
         limit: Optional[:class:`int`]
@@ -470,6 +487,7 @@ class Messageable:
         return await state.http.search_for_messages(
             channel_id,
             query=query,
+            http_overrides=http_overrides,
             pinned=pinned,
             limit=limit,
             before=before,
@@ -482,6 +500,7 @@ class Messageable:
         self,
         content: typing.Optional[str] = None,
         *,
+        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
@@ -508,6 +527,8 @@ class Messageable:
         ----------
         content: Optional[:class:`str`]
             The message content.
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`~pyvolt.ResolvableResource`]]
@@ -622,6 +643,7 @@ class Messageable:
         return await state.http.send_message(
             channel_id,
             content,
+            http_overrides=http_overrides,
             nonce=nonce,
             attachments=attachments,
             replies=replies,
@@ -669,6 +691,7 @@ class Connectable:
     async def join_call(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
         node: UndefinedOr[str] = UNDEFINED,
     ) -> tuple[str, str]:
         """|coro|
@@ -682,6 +705,8 @@ class Connectable:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
         node: UndefinedOr[:class:`str`]
             The node's name to use for starting a call.
 
@@ -749,7 +774,7 @@ class Connectable:
         channel_id = await self.fetch_channel_id()
         state = self.state
 
-        return await state.http.join_call(channel_id, node=node)
+        return await state.http.join_call(channel_id, http_overrides=http_overrides, node=node)
 
     async def connect(self) -> Room:
         """Connects to a destination voice channel and returns a `Room <https://docs.livekit.io/python/livekit/rtc/room.html#livekit.rtc.room.Room>`_ associated with destination."""
