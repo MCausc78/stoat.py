@@ -48,7 +48,7 @@ if typing.TYPE_CHECKING:
 
     from .cdn import ResolvableResource
     from .enums import MessageSort
-    from .http import HTTPOverrideParameters
+    from .http import HTTPOverrideOptions
     from .message import Reply, MessageInteractions, MessageMasquerade, SendableEmbed, BaseMessage, Message
     from .state import State
 
@@ -159,7 +159,7 @@ class Messageable:
         self,
         message: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -176,7 +176,7 @@ class Messageable:
         ----------
         message: ULIDOr[:class:`.BaseMessage`]
             The message to mark as read.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -226,7 +226,7 @@ class Messageable:
         await state.http.acknowledge_message(channel_id, message, http_overrides=http_overrides)
 
     async def fetch_message(
-        self, message: ULIDOr[BaseMessage], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, message: ULIDOr[BaseMessage], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> Message:
         """|coro|
 
@@ -238,7 +238,7 @@ class Messageable:
             The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
             The message to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -288,7 +288,7 @@ class Messageable:
     async def history(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
         after: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -304,7 +304,7 @@ class Messageable:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
@@ -381,7 +381,7 @@ class Messageable:
         self,
         query: typing.Optional[str] = None,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         pinned: typing.Optional[bool] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -405,7 +405,7 @@ class Messageable:
         ----------
         query: Optional[:class:`str`]
             The full-text search query. See `MongoDB documentation <https://www.mongodb.com/docs/manual/text-search/>`_ for more information.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
@@ -500,7 +500,7 @@ class Messageable:
         self,
         content: typing.Optional[str] = None,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
@@ -527,7 +527,7 @@ class Messageable:
         ----------
         content: Optional[:class:`str`]
             The message content.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
@@ -691,7 +691,7 @@ class Connectable:
     async def join_call(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         node: UndefinedOr[str] = UNDEFINED,
     ) -> tuple[str, str]:
         """|coro|
@@ -705,7 +705,7 @@ class Connectable:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         node: UndefinedOr[:class:`str`]
             The node's name to use for starting a call.

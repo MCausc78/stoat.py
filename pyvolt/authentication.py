@@ -32,7 +32,7 @@ from .core import UNDEFINED, UndefinedOr
 from .enums import MFAMethod
 
 if typing.TYPE_CHECKING:
-    from .http import HTTPOverrideParameters
+    from .http import HTTPOverrideOptions
     from .state import State
     from . import raw
 
@@ -101,7 +101,7 @@ class PartialSession(Base):
     async def edit(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         friendly_name: UndefinedOr[str] = UNDEFINED,
     ) -> PartialSession:
         """|coro|
@@ -162,7 +162,7 @@ class PartialSession(Base):
             friendly_name=friendly_name,
         )
 
-    async def revoke(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> None:
+    async def revoke(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the session.
@@ -171,7 +171,7 @@ class PartialSession(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -238,7 +238,7 @@ class MFARequired:
         self,
         code: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         friendly_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> typing.Union[Session, AccountDisabled]:
         """|coro|
@@ -249,7 +249,7 @@ class MFARequired:
         ----------
         code: :class:`str`
             The valid recovery code.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         friendly_name: UndefinedOr[Optional[:class:`str`]]
             The user-friendly client name. If set to :data:`.UNDEFINED`, this defaults to :attr:`.friendly_name`.
@@ -311,7 +311,7 @@ class MFARequired:
         self,
         code: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         friendly_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> typing.Union[Session, AccountDisabled]:
         """|coro|
@@ -322,7 +322,7 @@ class MFARequired:
         ----------
         code: :class:`str`
             The valid TOTP code.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         friendly_name: UndefinedOr[Optional[:class:`str`]]
             The user-friendly client name. If set to :data:`.UNDEFINED`, this defaults to :attr:`.friendly_name`.

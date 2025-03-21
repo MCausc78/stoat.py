@@ -48,7 +48,7 @@ from .errors import NoData
 
 if typing.TYPE_CHECKING:
     from . import raw
-    from .http import HTTPOverrideParameters
+    from .http import HTTPOverrideOptions
     from .server import Server, Member
     from .user import User
 
@@ -235,7 +235,7 @@ class ServerEmoji(BaseEmoji):
             )
         return server
 
-    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> None:
+    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the emoji.
@@ -250,7 +250,7 @@ class ServerEmoji(BaseEmoji):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises

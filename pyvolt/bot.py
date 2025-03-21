@@ -34,7 +34,7 @@ from .errors import NoData
 from .flags import BotFlags
 
 if typing.TYPE_CHECKING:
-    from .http import HTTPOverrideParameters
+    from .http import HTTPOverrideOptions
     from .user import User
 
 _new_bot_flags = BotFlags.__new__
@@ -47,7 +47,7 @@ class BaseBot(Base):
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseBot) and self.id == other.id
 
-    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> None:
+    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the bot.
@@ -59,7 +59,7 @@ class BaseBot(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -95,7 +95,7 @@ class BaseBot(Base):
     async def edit(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: UndefinedOr[str] = UNDEFINED,
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
@@ -110,7 +110,7 @@ class BaseBot(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.

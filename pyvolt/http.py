@@ -442,7 +442,7 @@ _HTTP_OVERRIDE_PARAMETER_KEYS: tuple[str, ...] = (
 )
 
 
-class HTTPOverrideParameters:
+class HTTPOverrideOptions:
     """Represents overrides for outgoing HTTP request.
 
     All parameters are optional.
@@ -692,7 +692,7 @@ class HTTPClient:
         idempotency_key: typing.Optional[str] = None,
         json_body: bool = False,
         mfa_ticket: typing.Optional[str] = None,
-        overrides: typing.Optional[HTTPOverrideParameters] = None,
+        overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> utils.MaybeAwaitable[None]:
@@ -716,7 +716,7 @@ class HTTPClient:
             Whether the request body is JSON.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
-        overrides: Optional[:class:`.HTTPOverrideParameters`]
+        overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
@@ -770,7 +770,7 @@ class HTTPClient:
         url: str,
         *,
         headers: CIMultiDict[typing.Any],
-        overrides: typing.Optional[HTTPOverrideParameters] = None,
+        overrides: typing.Optional[HTTPOverrideOptions] = None,
         **kwargs,
     ) -> HTTPResponse:
         """Perform an actual HTTP request.
@@ -785,7 +785,7 @@ class HTTPClient:
             The URL to send HTTP request to.
         headers: CIMultiDict[Any]
             The HTTP headers.
-        overrides: Optional[:class:`.HTTPOverrideParameters`]
+        overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         \\*\\*kwargs
             The keyword arguments to pass to :meth:`HTTPAdapter.request`.
@@ -814,7 +814,7 @@ class HTTPClient:
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
         cookie: UndefinedOr[typing.Optional[str]] = UNDEFINED,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         idempotency_key: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         mfa_ticket: typing.Optional[str] = None,
@@ -836,7 +836,7 @@ class HTTPClient:
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         idempotency_key: Optional[:class:`str`]
             The idempotency key.
@@ -1024,7 +1024,7 @@ class HTTPClient:
         *,
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         idempotency_key: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
@@ -1045,7 +1045,7 @@ class HTTPClient:
             Whether to explicitly receive JSON or not. Defaults to ``True``.
         bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         idempotency_key: Optional[:class:`str`]
             The idempotency key.
@@ -1110,14 +1110,14 @@ class HTTPClient:
         if adapter is not None:
             await adapter.close()
 
-    async def query_node(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> Instance:
+    async def query_node(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Instance:
         """|coro|
 
         Retrieves the instance information.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1134,7 +1134,7 @@ class HTTPClient:
         return self.state.parser.parse_instance(resp)
 
     # Bots control
-    async def create_bot(self, name: str, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> Bot:
+    async def create_bot(self, name: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Bot:
         """|coro|
 
         Creates a new Revolt bot.
@@ -1146,7 +1146,7 @@ class HTTPClient:
         ----------
         name: :class:`str`
             The bot name. Must be between 2 and 32 characters and not contain whitespace characters.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1206,7 +1206,7 @@ class HTTPClient:
         return self.state.parser.parse_bot(resp, resp['user'])
 
     async def delete_bot(
-        self, bot: ULIDOr[BaseBot], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, bot: ULIDOr[BaseBot], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> None:
         """|coro|
 
@@ -1221,7 +1221,7 @@ class HTTPClient:
         ----------
         bot: ULIDOr[:class:`.BaseBot`]
             The bot to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1257,7 +1257,7 @@ class HTTPClient:
         self,
         bot: ULIDOr[BaseBot],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: UndefinedOr[str] = UNDEFINED,
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
@@ -1274,7 +1274,7 @@ class HTTPClient:
         ----------
         bot: ULIDOr[:class:`.BaseBot`]
             The bot to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
@@ -1363,7 +1363,7 @@ class HTTPClient:
         )
 
     async def get_bot(
-        self, bot: ULIDOr[BaseBot], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, bot: ULIDOr[BaseBot], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> Bot:
         """|coro|
 
@@ -1378,7 +1378,7 @@ class HTTPClient:
         ----------
         bot: ULIDOr[:class:`.BaseBot`]
             The bot to fetch.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1418,7 +1418,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_bot(resp['bot'], resp['user'])
 
-    async def get_owned_bots(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> list[Bot]:
+    async def get_owned_bots(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[Bot]:
         """|coro|
 
         Retrieves all bots owned by you.
@@ -1428,7 +1428,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1461,7 +1461,7 @@ class HTTPClient:
         return self.state.parser.parse_bots(resp)
 
     async def get_public_bot(
-        self, bot: ULIDOr[BaseBot], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, bot: ULIDOr[BaseBot], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> PublicBot:
         """|coro|
 
@@ -1474,7 +1474,7 @@ class HTTPClient:
         ----------
         bot: ULIDOr[:class:`.BaseBot`]
             The bot to fetch.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1519,7 +1519,7 @@ class HTTPClient:
         self,
         bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         server: ULIDOr[BaseServer],
     ) -> None: ...
 
@@ -1528,7 +1528,7 @@ class HTTPClient:
         self,
         bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         group: ULIDOr[GroupChannel],
     ) -> None: ...
 
@@ -1536,7 +1536,7 @@ class HTTPClient:
         self,
         bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         server: typing.Optional[ULIDOr[BaseServer]] = None,
         group: typing.Optional[ULIDOr[GroupChannel]] = None,
     ) -> None:
@@ -1558,7 +1558,7 @@ class HTTPClient:
         ----------
         bot: ULIDOr[Union[:class:`.BaseBot`, :class:`.BaseUser`]]
             The bot.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         server: Optional[ULIDOr[:class:`.BaseServer`]]
             The destination server.
@@ -1652,7 +1652,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -1671,7 +1671,7 @@ class HTTPClient:
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1722,7 +1722,7 @@ class HTTPClient:
         channel: ULIDOr[BaseChannel],
         silent: typing.Optional[bool] = None,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -1742,7 +1742,7 @@ class HTTPClient:
             The channel to close.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1795,7 +1795,7 @@ class HTTPClient:
         self,
         channel: ULIDOr[BaseChannel],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         owner: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
@@ -1818,7 +1818,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.BaseChannel`]
             The channel.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
@@ -1924,7 +1924,7 @@ class HTTPClient:
         return self.state.parser.parse_channel(resp)
 
     async def get_channel(
-        self, channel: ULIDOr[BaseChannel], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, channel: ULIDOr[BaseChannel], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> Channel:
         """|coro|
 
@@ -1936,7 +1936,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.BaseChannel`]
             The channel to fetch.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1982,7 +1982,7 @@ class HTTPClient:
         /,
         user: ULIDOr[BaseUser],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -2001,7 +2001,7 @@ class HTTPClient:
             The group.
         user: ULIDOr[:class:`.BaseUser`]
             The user to add.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2071,7 +2071,7 @@ class HTTPClient:
         self,
         name: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         description: typing.Optional[str] = None,
         icon: typing.Optional[ResolvableResource] = None,
         recipients: typing.Optional[list[ULIDOr[BaseUser]]] = None,
@@ -2090,7 +2090,7 @@ class HTTPClient:
         ----------
         name: :class:`str`
             The group name. Must be between 1 and 32 characters long.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
             The group description. Can be only up to 1024 characters.
@@ -2177,7 +2177,7 @@ class HTTPClient:
         channel: ULIDOr[GroupChannel],
         user: ULIDOr[BaseUser],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -2194,7 +2194,7 @@ class HTTPClient:
             The group.
         user: ULIDOr[:class:`.BaseUser`]
             The user to remove.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2258,7 +2258,7 @@ class HTTPClient:
         self,
         channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> Invite:
         """|coro|
 
@@ -2271,7 +2271,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.ServerChannel`]]
             The invite destination channel.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2333,7 +2333,7 @@ class HTTPClient:
         self,
         channel: ULIDOr[GroupChannel],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> list[User]:
         """|coro|
 
@@ -2343,7 +2343,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.GroupChannel`]
             The group channel.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2407,7 +2407,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         messages: Sequence[ULIDOr[BaseMessage]],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -2423,7 +2423,7 @@ class HTTPClient:
             The channel.
         messages: Sequence[ULIDOr[:class:`.BaseMessage`]]
             The messages to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2482,7 +2482,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -2498,7 +2498,7 @@ class HTTPClient:
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2549,7 +2549,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -2565,7 +2565,7 @@ class HTTPClient:
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2616,7 +2616,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         content: UndefinedOr[str] = UNDEFINED,
         embeds: UndefinedOr[list[SendableEmbed]] = UNDEFINED,
     ) -> Message:
@@ -2632,7 +2632,7 @@ class HTTPClient:
             The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
             The message to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         content: UndefinedOr[:class:`str`]
             The new content to replace the message with. Must be between 1 and 2000 characters long.
@@ -2715,7 +2715,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> Message:
         """|coro|
 
@@ -2727,7 +2727,7 @@ class HTTPClient:
             The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
             The message to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2784,7 +2784,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -2800,7 +2800,7 @@ class HTTPClient:
             The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
             The message to pin.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2858,7 +2858,7 @@ class HTTPClient:
         self,
         channel: ULIDOr[TextableChannel],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
         after: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -2876,7 +2876,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
             The channel to retrieve messages from.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
@@ -2965,7 +2965,7 @@ class HTTPClient:
         message: ULIDOr[BaseMessage],
         emoji: ResolvableEmoji,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -2983,7 +2983,7 @@ class HTTPClient:
             The message to react to.
         emoji: :class:`.ResolvableEmoji`
             The emoji to react with.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -3047,7 +3047,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         query: typing.Optional[str] = None,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         pinned: typing.Optional[bool] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -3073,7 +3073,7 @@ class HTTPClient:
             The channel to search in.
         query: Optional[:class:`str`]
             The full-text search query. See `MongoDB documentation <https://www.mongodb.com/docs/manual/text-search/>`_ for more information.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
@@ -3176,7 +3176,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         content: typing.Optional[str] = None,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
@@ -3205,7 +3205,7 @@ class HTTPClient:
             The destination channel.
         content: Optional[:class:`str`]
             The message content.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
@@ -3372,7 +3372,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -3388,7 +3388,7 @@ class HTTPClient:
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -3448,7 +3448,7 @@ class HTTPClient:
         message: ULIDOr[BaseUser],
         emoji: ResolvableEmoji,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         user: typing.Optional[ULIDOr[BaseUser]] = None,
         remove_all: typing.Optional[bool] = None,
     ) -> None:
@@ -3469,7 +3469,7 @@ class HTTPClient:
             The message.
         emoji: :class:`.ResolvableEmoji`
             The emoji to remove.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         user: Optional[ULIDOr[:class:`.BaseUser`]]
             The user to remove reactions from.
@@ -3539,7 +3539,7 @@ class HTTPClient:
         channel: ULIDOr[ServerChannel],
         role: ULIDOr[BaseRole],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> ServerChannel:
@@ -3561,7 +3561,7 @@ class HTTPClient:
             The channel.
         role: ULIDOr[:class:`.BaseRole`]
             The role.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         allow: :class:`.Permissions`
             The permissions to allow for role in channel.
@@ -3638,7 +3638,7 @@ class HTTPClient:
         channel: ULIDOr[GroupChannel],
         permissions: Permissions,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> GroupChannel: ...
 
     @typing.overload
@@ -3647,7 +3647,7 @@ class HTTPClient:
         channel: ULIDOr[ServerChannel],
         permissions: PermissionOverride,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> ServerChannel: ...
 
     async def set_default_channel_permissions(
@@ -3655,7 +3655,7 @@ class HTTPClient:
         channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]],
         permissions: typing.Union[Permissions, PermissionOverride],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> typing.Union[GroupChannel, ServerChannel]:
         """|coro|
 
@@ -3675,7 +3675,7 @@ class HTTPClient:
             The channel to set default permissions for.
         permissions: Union[:class:`.Permissions`, :class:`.PermissionOverride`]
             The new permissions. Must be :class:`.Permissions` for groups and :class:`.PermissionOverride` for server channels.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -3747,7 +3747,7 @@ class HTTPClient:
         self,
         channel: ULIDOr[typing.Union[DMChannel, GroupChannel, TextChannel, VoiceChannel]],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         node: UndefinedOr[str] = UNDEFINED,
     ) -> tuple[str, str]:
         """|coro|
@@ -3768,7 +3768,7 @@ class HTTPClient:
             whether :attr:`InstanceFeaturesConfig.livekit_voice` is ``False``), then
             a channel with type of :attr:`~ChannelType.text` cannot be passed and
             will raise :class:`HTTPException` with ``CannotJoinCall`` type.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         node: UndefinedOr[:class:`str`]
             The node's name to use for starting a call.
@@ -3851,7 +3851,7 @@ class HTTPClient:
         self,
         channel: ULIDOr[typing.Union[GroupChannel, TextChannel]],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: str,
         avatar: typing.Optional[ResolvableResource] = None,
     ) -> Webhook:
@@ -3867,7 +3867,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.TextChannel`]]
             The channel to create webhook in.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
@@ -3933,7 +3933,7 @@ class HTTPClient:
         return self.state.parser.parse_webhook(resp)
 
     async def get_channel_webhooks(
-        self, channel: ULIDOr[ServerChannel], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, channel: ULIDOr[ServerChannel], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> list[Webhook]:
         """|coro|
 
@@ -3945,7 +3945,7 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.ServerChannel`]
             The channel to retrieve webhooks from.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4007,7 +4007,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: str,
         nsfw: typing.Optional[bool] = None,
         image: ResolvableResource,
@@ -4027,7 +4027,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to create emoji in.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         name: :class:`str`
             The emoji name. Must be between 1 and 32 chars long. Can only contain ASCII digits, underscore and lowercase letters.
@@ -4109,7 +4109,7 @@ class HTTPClient:
         return self.state.parser.parse_server_emoji(resp)
 
     async def delete_emoji(
-        self, emoji: ULIDOr[ServerEmoji], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, emoji: ULIDOr[ServerEmoji], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> None:
         """|coro|
 
@@ -4127,7 +4127,7 @@ class HTTPClient:
         ----------
         emoji: ULIDOr[:class:`.ServerEmoji`]
             The emoji to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4178,7 +4178,7 @@ class HTTPClient:
         )
 
     async def get_emoji(
-        self, emoji: ULIDOr[BaseEmoji], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, emoji: ULIDOr[BaseEmoji], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> Emoji:
         """|coro|
 
@@ -4188,7 +4188,7 @@ class HTTPClient:
         ----------
         emoji: ULIDOr[:class:`.BaseEmoji`]
             The emoji to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4216,7 +4216,7 @@ class HTTPClient:
 
     # Invites control
     async def delete_invite(
-        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> None:
         """|coro|
 
@@ -4228,7 +4228,7 @@ class HTTPClient:
         ----------
         code: Union[:class:`str`, :class:`.BaseInvite`]
             The invite code.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4270,7 +4270,7 @@ class HTTPClient:
         await self.request(routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code), http_overrides=http_overrides)
 
     async def get_invite(
-        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> PublicInvite:
         """|coro|
 
@@ -4280,7 +4280,7 @@ class HTTPClient:
         ----------
         code: Union[:class:`str`, :class:`.BaseInvite`]
             The code to retrieve invite from.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4308,7 +4308,7 @@ class HTTPClient:
         return self.state.parser.parse_public_invite(resp)
 
     async def accept_invite(
-        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> typing.Union[Server, GroupChannel]:
         """|coro|
 
@@ -4325,7 +4325,7 @@ class HTTPClient:
         ----------
         code: Union[:class:`str`, :class:`.BaseInvite`]
             The invite code.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4411,7 +4411,7 @@ class HTTPClient:
 
     # Onboarding control
     async def complete_onboarding(
-        self, username: str, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, username: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> OwnUser:
         """|coro|
 
@@ -4421,7 +4421,7 @@ class HTTPClient:
         ----------
         username: :class:`str`
             The username to use. Must be between 2 and 32 characters and not contain whitespace characters.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4482,7 +4482,7 @@ class HTTPClient:
         )
         return self.state.parser.parse_own_user(resp)
 
-    async def onboarding_status(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> bool:
+    async def onboarding_status(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> bool:
         """|coro|
 
         Determines whether the current session requires to complete onboarding.
@@ -4491,7 +4491,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4515,7 +4515,7 @@ class HTTPClient:
 
     # Web Push control
     async def push_subscribe(
-        self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None, endpoint: str, p256dh: str, auth: str
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, endpoint: str, p256dh: str, auth: str
     ) -> None:
         """|coro|
 
@@ -4523,7 +4523,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         endpoint: :class:`str`
             The HTTP `endpoint <https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/endpoint>`_ associated with push subscription.
@@ -4562,14 +4562,14 @@ class HTTPClient:
             json=payload,
         )
 
-    async def unsubscribe(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> None:
+    async def unsubscribe(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Remove the Web Push subscription associated with the current session.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4595,7 +4595,7 @@ class HTTPClient:
 
     # Safety control
     async def _report_content(
-        self, payload: raw.DataReportContent, /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, payload: raw.DataReportContent, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> None:
         await self.request(routes.SAFETY_REPORT_CONTENT.compile(), http_overrides=http_overrides, json=payload)
 
@@ -4604,7 +4604,7 @@ class HTTPClient:
         message: ULIDOr[BaseMessage],
         reason: ContentReportReason,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         additional_context: typing.Optional[str] = None,
     ) -> None:
         """|coro|
@@ -4624,7 +4624,7 @@ class HTTPClient:
             Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
         reason: :class:`.ContentReportReason`
             The reason for reporting.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
@@ -4682,7 +4682,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         reason: ContentReportReason,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         additional_context: typing.Optional[str] = None,
     ) -> None:
         """|coro|
@@ -4700,7 +4700,7 @@ class HTTPClient:
             The server to report.
         reason: :class:`.ContentReportReason`
             The reason for reporting.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
@@ -4758,7 +4758,7 @@ class HTTPClient:
         user: ULIDOr[BaseUser],
         reason: UserReportReason,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         additional_context: typing.Optional[str] = None,
         message_context: typing.Optional[ULIDOr[BaseMessage]] = None,
     ) -> None:
@@ -4777,7 +4777,7 @@ class HTTPClient:
             The user to report.
         reason: :class:`.UserReportReason`
             The reason for reporting user.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
@@ -4844,7 +4844,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         user: typing.Union[str, BaseUser, BaseMember],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         reason: typing.Optional[str] = None,
     ) -> Ban:
         """|coro|
@@ -4861,7 +4861,7 @@ class HTTPClient:
             The server.
         user: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The user to ban from the server.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The ban reason. Can be only up to 1024 characters long.
@@ -4932,7 +4932,7 @@ class HTTPClient:
         )
 
     async def get_bans(
-        self, server: ULIDOr[BaseServer], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, server: ULIDOr[BaseServer], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> list[Ban]:
         """|coro|
 
@@ -4944,7 +4944,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4989,7 +4989,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         user: ULIDOr[BaseUser],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -5003,7 +5003,7 @@ class HTTPClient:
             The server.
         user: ULIDOr[:class:`.BaseUser`]
             The user to unban from the server.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5043,7 +5043,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: typing.Literal[ChannelType.text] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -5055,7 +5055,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: None = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -5067,7 +5067,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: typing.Literal[ChannelType.voice] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -5079,7 +5079,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: ChannelType = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -5090,7 +5090,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: typing.Optional[ChannelType] = None,
         name: str,
         description: typing.Optional[str] = None,
@@ -5108,7 +5108,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to create channel in.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         type: Optional[:class:`.ChannelType`]
             The channel type. Defaults to :attr:`~.ChannelType.text` if not provided.
@@ -5186,7 +5186,7 @@ class HTTPClient:
         return self.state.parser.parse_channel(resp)
 
     async def get_server_emojis(
-        self, server: ULIDOr[BaseServer], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, server: ULIDOr[BaseServer], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> list[ServerEmoji]:
         """|coro|
 
@@ -5196,7 +5196,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5238,7 +5238,7 @@ class HTTPClient:
         return list(map(self.state.parser.parse_server_emoji, resp))
 
     async def get_server_invites(
-        self, server: ULIDOr[BaseServer], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, server: ULIDOr[BaseServer], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> list[ServerInvite]:
         """|coro|
 
@@ -5250,7 +5250,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5304,7 +5304,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         member: typing.Union[str, BaseUser, BaseMember],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nick: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         roles: UndefinedOr[typing.Optional[list[ULIDOr[BaseRole]]]] = UNDEFINED,
@@ -5332,7 +5332,7 @@ class HTTPClient:
             The server.
         member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The member.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
@@ -5486,7 +5486,7 @@ class HTTPClient:
         return self.state.parser.parse_member(resp)
 
     async def query_members_by_name(
-        self, server: ULIDOr[BaseServer], query: str, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, server: ULIDOr[BaseServer], query: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> list[Member]:
         """|coro|
 
@@ -5501,7 +5501,7 @@ class HTTPClient:
             The server.
         query: :class:`str`
             The query to search members for.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5552,7 +5552,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         member: typing.Union[str, BaseUser, BaseMember],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> Member:
         """|coro|
 
@@ -5564,7 +5564,7 @@ class HTTPClient:
             The server to retrieve member in.
         member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The user to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5612,7 +5612,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         exclude_offline: typing.Optional[bool] = None,
     ) -> list[Member]:
         """|coro|
@@ -5623,7 +5623,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -5675,7 +5675,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         exclude_offline: typing.Optional[bool] = None,
     ) -> MemberList:
         """|coro|
@@ -5686,7 +5686,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -5739,7 +5739,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         member: typing.Union[str, BaseUser, BaseMember],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -5753,7 +5753,7 @@ class HTTPClient:
             The server.
         member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The member to kick.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5813,7 +5813,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> Server:
@@ -5831,7 +5831,7 @@ class HTTPClient:
             The server.
         role: ULIDOr[:class:`.BaseRole`]
             The role.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         allow: :class:`.Permissions`
             The permissions to allow for the specified role.
@@ -5897,7 +5897,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         permissions: Permissions,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> Server:
         """|coro|
 
@@ -5913,7 +5913,7 @@ class HTTPClient:
             The server to set default permissions for.
         permissions: :class:`.Permissions`
             The new permissions.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5973,7 +5973,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: str,
         rank: typing.Optional[int] = None,
     ) -> Role:
@@ -5989,7 +5989,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to create role in.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
@@ -6062,7 +6062,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -6078,7 +6078,7 @@ class HTTPClient:
             The server.
         role: ULIDOr[:class:`.BaseRole`]
             The role to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6128,7 +6128,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: UndefinedOr[str] = UNDEFINED,
         color: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         hoist: UndefinedOr[bool] = UNDEFINED,
@@ -6148,7 +6148,7 @@ class HTTPClient:
             The server the role in.
         role: ULIDOr[:class:`.BaseRole`]
             The role to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
@@ -6240,7 +6240,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> Role:
         """|coro|
 
@@ -6252,7 +6252,7 @@ class HTTPClient:
             The server.
         role: ULIDOr[:class:`.BaseRole`]
             The role to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6292,7 +6292,7 @@ class HTTPClient:
         )
 
     async def mark_server_as_read(
-        self, server: ULIDOr[BaseServer], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, server: ULIDOr[BaseServer], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> None:
         """|coro|
 
@@ -6305,7 +6305,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to mark as read.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6352,7 +6352,7 @@ class HTTPClient:
         self,
         name: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
     ) -> Server:
@@ -6369,7 +6369,7 @@ class HTTPClient:
         ----------
         name: :class:`str`
             The server name.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
             The server description.
@@ -6429,7 +6429,7 @@ class HTTPClient:
         )
 
     async def delete_server(
-        self, server: ULIDOr[BaseServer], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, server: ULIDOr[BaseServer], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> None:
         """|coro|
 
@@ -6441,7 +6441,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to delete or leave.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6480,7 +6480,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         /,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         silent: typing.Optional[bool] = None,
     ) -> None:
         """|coro|
@@ -6493,7 +6493,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to leave.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         silent: Optional[:class:`bool`]
             Whether to silently leave server or not.
@@ -6538,7 +6538,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
@@ -6563,7 +6563,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
@@ -6724,7 +6724,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         populate_channels: typing.Optional[bool] = None,
     ) -> Server:
         """|coro|
@@ -6735,7 +6735,7 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         populate_channels: Optional[:class:`bool`]
             Whether to populate :attr:`Server.channels`.
@@ -6780,7 +6780,7 @@ class HTTPClient:
 
     # Sync control
     async def get_user_settings(
-        self, keys: typing.Optional[list[str]] = None, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, keys: typing.Optional[list[str]] = None, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> UserSettings:
         """|coro|
 
@@ -6793,7 +6793,7 @@ class HTTPClient:
         ----------
         keys: Optional[List[:class:`str`]]
             The keys of user settings to retrieve. To retrieve all user settings, pass ``None`` or empty list.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6833,7 +6833,7 @@ class HTTPClient:
         )
 
     async def get_read_states(
-        self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> list[ReadState]:
         """|coro|
 
@@ -6844,7 +6844,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6881,7 +6881,7 @@ class HTTPClient:
         partial: dict[str, str],
         edited_at: typing.Optional[typing.Union[datetime, int]] = None,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -6898,7 +6898,7 @@ class HTTPClient:
             The dict to merge into the current user settings.
         edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
             The revision.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6941,7 +6941,7 @@ class HTTPClient:
 
     # Users control
     async def accept_friend_request(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> User:
         """|coro|
 
@@ -6956,7 +6956,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to accept friend request from.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7031,7 +7031,7 @@ class HTTPClient:
         return self.state.parser.parse_user(resp)
 
     async def block_user(
-        self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> User:
         """|coro|
 
@@ -7046,7 +7046,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to block.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7091,7 +7091,7 @@ class HTTPClient:
         return self.state.parser.parse_user(resp)
 
     async def change_username(
-        self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None, username: str, current_password: str
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, username: str, current_password: str
     ) -> OwnUser:
         """|coro|
 
@@ -7104,7 +7104,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         username: :class:`str`
             The new username. Must be between 2 and 32 characters and not contain whitespace characters.
@@ -7174,7 +7174,7 @@ class HTTPClient:
         route: routes.CompiledRoute,
         /,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
@@ -7211,7 +7211,7 @@ class HTTPClient:
     async def edit_my_user(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
@@ -7227,7 +7227,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
@@ -7298,7 +7298,7 @@ class HTTPClient:
         self,
         user: ULIDOr[BaseUser],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
@@ -7316,7 +7316,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
@@ -7386,7 +7386,7 @@ class HTTPClient:
     async def get_private_channels(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> list[typing.Union[SavedMessagesChannel, DMChannel, GroupChannel]]:
         """|coro|
 
@@ -7394,7 +7394,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7427,7 +7427,7 @@ class HTTPClient:
         return list(map(self.state.parser.parse_channel, resp))  # type: ignore[return-value]
 
     async def get_user_profile(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> UserProfile:
         """|coro|
 
@@ -7439,7 +7439,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to retrieve profile of.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7480,14 +7480,14 @@ class HTTPClient:
         )
         return self.state.parser.parse_user_profile(resp).attach_state(self.state, user_id)
 
-    async def get_me(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> OwnUser:
+    async def get_me(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> OwnUser:
         """|coro|
 
         Retrieves your user data.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7510,7 +7510,7 @@ class HTTPClient:
         return self.state.parser.parse_own_user(resp)
 
     async def get_user(
-        self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> User:
         """|coro|
 
@@ -7522,7 +7522,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7563,7 +7563,7 @@ class HTTPClient:
         return self.state.parser.parse_user(resp)
 
     async def get_user_flags(
-        self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> UserFlags:
         """|coro|
 
@@ -7573,7 +7573,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to retrieve flags for.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Returns
@@ -7590,7 +7590,7 @@ class HTTPClient:
         return UserFlags(resp['flags'])
 
     async def get_mutuals_with(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> Mutuals:
         """|coro|
 
@@ -7602,7 +7602,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to retrieve mutuals with.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7659,7 +7659,7 @@ class HTTPClient:
         return self.state.parser.parse_mutuals(resp)
 
     async def get_default_avatar(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> bytes:
         """|coro|
 
@@ -7669,7 +7669,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to retrieve default avatar of.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Returns
@@ -7689,7 +7689,7 @@ class HTTPClient:
         return avatar
 
     async def open_dm(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> typing.Union[SavedMessagesChannel, DMChannel]:
         """|coro|
 
@@ -7705,7 +7705,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to open DM with.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7757,7 +7757,7 @@ class HTTPClient:
         return channel
 
     async def deny_friend_request(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> User:
         """|coro|
 
@@ -7772,7 +7772,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to deny friend request from.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7825,7 +7825,7 @@ class HTTPClient:
         return self.state.parser.parse_user(resp)
 
     async def remove_friend(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> User:
         """|coro|
 
@@ -7840,7 +7840,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to remove from friend list.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7897,7 +7897,7 @@ class HTTPClient:
         username: str,
         discriminator: typing.Optional[str] = None,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> User:
         """|coro|
 
@@ -7914,7 +7914,7 @@ class HTTPClient:
             The username and optionally discriminator combo separated by `#`.
         discriminator: Optional[:class:`str`]
             The user's discriminator.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7997,7 +7997,7 @@ class HTTPClient:
         return self.state.parser.parse_user(resp)
 
     async def unblock_user(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> User:
         """|coro|
 
@@ -8012,7 +8012,7 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to unblock.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8064,7 +8064,7 @@ class HTTPClient:
         self,
         webhook: ULIDOr[BaseWebhook],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: typing.Optional[str] = None,
     ) -> None:
         """|coro|
@@ -8081,7 +8081,7 @@ class HTTPClient:
         ----------
         webhook: ULIDOr[:class:`.BaseWebhook`]
             The webhook to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
@@ -8130,7 +8130,7 @@ class HTTPClient:
         self,
         webhook: ULIDOr[BaseWebhook],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -8150,7 +8150,7 @@ class HTTPClient:
         ----------
         webhook: ULIDOr[:class:`.BaseWebhook`]
             The webhook to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
@@ -8238,7 +8238,7 @@ class HTTPClient:
         token: str,
         content: typing.Optional[str] = None,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
@@ -8269,7 +8269,7 @@ class HTTPClient:
             The webhook token.
         content: Optional[:class:`str`]
             The message content.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
@@ -8424,7 +8424,7 @@ class HTTPClient:
         self,
         webhook: ULIDOr[BaseWebhook],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: typing.Optional[str] = None,
     ) -> Webhook:
         """|coro|
@@ -8443,7 +8443,7 @@ class HTTPClient:
         ----------
         webhook: ULIDOr[:class:`.BaseWebhook`]
             The webhook to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
@@ -8518,7 +8518,7 @@ class HTTPClient:
     async def change_email(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         email: str,
         current_password: str,
     ) -> None:
@@ -8531,7 +8531,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         email: :class:`str`
             The new email for current account.
@@ -8587,7 +8587,7 @@ class HTTPClient:
     async def change_password(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         new_password: str,
         current_password: str,
     ) -> None:
@@ -8600,7 +8600,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         new_password: :class:`str`
             The new password for this account. Must be at least 8 characters.
@@ -8654,7 +8654,7 @@ class HTTPClient:
     async def confirm_account_deletion(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: str,
     ) -> None:
         """|coro|
@@ -8665,7 +8665,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         token: :class:`str`
             The deletion token received.
@@ -8706,7 +8706,7 @@ class HTTPClient:
         email: str,
         password: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         invite: typing.Optional[str] = None,
         captcha: typing.Optional[str] = None,
     ) -> None:
@@ -8723,7 +8723,7 @@ class HTTPClient:
             The account email.
         password: :class:`str`
             The account password. Must be at least 8 characters.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         invite: Optional[:class:`str`]
             The instance invite code.
@@ -8791,7 +8791,7 @@ class HTTPClient:
     async def delete_account(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: str,
     ) -> None:
         """|coro|
@@ -8803,7 +8803,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -8841,7 +8841,7 @@ class HTTPClient:
     async def disable_account(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: str,
     ) -> None:
         """|coro|
@@ -8855,7 +8855,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -8888,7 +8888,7 @@ class HTTPClient:
             mfa_ticket=mfa_ticket,
         )
 
-    async def get_account(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> PartialAccount:
+    async def get_account(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> PartialAccount:
         """|coro|
 
         Retrieve account information.
@@ -8898,7 +8898,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8934,7 +8934,7 @@ class HTTPClient:
         self,
         token: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         new_password: str,
         remove_sessions: typing.Optional[bool] = None,
     ) -> None:
@@ -8946,7 +8946,7 @@ class HTTPClient:
         ----------
         token: :class:`str`
             The password reset token.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         new_password: :class:`str`
             The new password for the account. Must be at least 8 characters.
@@ -8999,7 +8999,7 @@ class HTTPClient:
     async def resend_verification(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         email: str,
         captcha: typing.Optional[str] = None,
     ) -> None:
@@ -9009,7 +9009,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         email: :class:`str`
             The email associated with the account.
@@ -9061,7 +9061,7 @@ class HTTPClient:
     async def send_password_reset(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         email: str,
         captcha: typing.Optional[str] = None,
     ) -> None:
@@ -9071,7 +9071,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         email: :class:`str`
             The email associated with the account.
@@ -9119,7 +9119,7 @@ class HTTPClient:
         )
 
     async def verify_email(
-        self, code: str, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, code: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> typing.Optional[MFATicket]:
         """|coro|
 
@@ -9129,7 +9129,7 @@ class HTTPClient:
         ----------
         code: :class:`str`
             The code from email.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -9172,7 +9172,7 @@ class HTTPClient:
         authenticated: typing.Optional[bool],
         /,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> MFATicket:
         if authenticated is None:
             authenticated = mfa_ticket is None
@@ -9191,7 +9191,7 @@ class HTTPClient:
         self,
         password: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: typing.Optional[str] = None,
         authenticated: typing.Optional[bool] = None,
     ) -> MFATicket:
@@ -9203,7 +9203,7 @@ class HTTPClient:
         ----------
         password: :class:`str`
             The current account password.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The token of existing MFA ticket to validate, if applicable.
@@ -9261,7 +9261,7 @@ class HTTPClient:
         self,
         recovery_code: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: typing.Optional[str] = None,
         authenticated: typing.Optional[bool] = None,
     ) -> MFATicket:
@@ -9273,7 +9273,7 @@ class HTTPClient:
         ----------
         recovery_code: :class:`str`
             The recovery code in format ``xxxx-yyyy``.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The token of existing MFA ticket to validate, if applicable.
@@ -9333,7 +9333,7 @@ class HTTPClient:
         self,
         totp_code: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: typing.Optional[str] = None,
         authenticated: typing.Optional[bool] = None,
     ) -> MFATicket:
@@ -9345,7 +9345,7 @@ class HTTPClient:
         ----------
         totp_code: :class:`str`
             The TOTP code, in format ``123456``.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The token of existing MFA ticket to validate, if applicable.
@@ -9401,7 +9401,7 @@ class HTTPClient:
         return await self._create_mfa_ticket(payload, mfa_ticket, authenticated, http_overrides=http_overrides)
 
     async def get_recovery_codes(
-        self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None, mfa_ticket: str
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, mfa_ticket: str
     ) -> list[str]:
         """|coro|
 
@@ -9412,7 +9412,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -9447,7 +9447,7 @@ class HTTPClient:
             routes.AUTH_MFA_FETCH_RECOVERY.compile(), bot=False, http_overrides=http_overrides, mfa_ticket=mfa_ticket
         )
 
-    async def mfa_status(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> MFAStatus:
+    async def mfa_status(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> MFAStatus:
         """|coro|
 
         Retrieves MFA status.
@@ -9457,7 +9457,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -9492,7 +9492,7 @@ class HTTPClient:
         return self.state.parser.parse_multi_factor_status(resp)
 
     async def generate_recovery_codes(
-        self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None, mfa_ticket: str
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, mfa_ticket: str
     ) -> list[str]:
         """|coro|
 
@@ -9503,7 +9503,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -9540,7 +9540,7 @@ class HTTPClient:
         return resp
 
     async def get_mfa_methods(
-        self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> list[MFAMethod]:
         """|coro|
 
@@ -9551,7 +9551,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -9584,7 +9584,7 @@ class HTTPClient:
         return list(map(MFAMethod, resp))
 
     async def disable_totp_mfa(
-        self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None, mfa_ticket: str
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, mfa_ticket: str
     ) -> None:
         """|coro|
 
@@ -9595,7 +9595,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -9631,7 +9631,7 @@ class HTTPClient:
         )
 
     async def enable_totp_mfa(
-        self, response: MFAResponse, /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, response: MFAResponse, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> None:
         """|coro|
 
@@ -9644,7 +9644,7 @@ class HTTPClient:
         ----------
         response: :class:`.MFAResponse`
             The password, TOTP or recovery code to verify. Currently can be only :class:`.ByTOTP`.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -9682,7 +9682,7 @@ class HTTPClient:
         )
 
     async def generate_totp_secret(
-        self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None, mfa_ticket: str
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, mfa_ticket: str
     ) -> str:
         """|coro|
 
@@ -9693,7 +9693,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -9742,7 +9742,7 @@ class HTTPClient:
         self,
         session: ULIDOr[PartialSession],
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         friendly_name: str,
     ) -> PartialSession:
         """|coro|
@@ -9753,7 +9753,7 @@ class HTTPClient:
         ----------
         session: ULIDOr[:class:`.PartialSession`]
             The session to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         friendly_name: :class:`str`
             The new user-friendly client name. Because of Authifier limitation, this is not :class:`UndefinedOr`.
@@ -9803,7 +9803,7 @@ class HTTPClient:
         return self.state.parser.parse_partial_session(resp)
 
     async def get_sessions(
-        self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> list[PartialSession]:
         """|coro|
 
@@ -9811,7 +9811,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -9848,7 +9848,7 @@ class HTTPClient:
         email: str,
         password: str,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         friendly_name: typing.Optional[str] = None,
     ) -> LoginResult:
         """|coro|
@@ -9861,7 +9861,7 @@ class HTTPClient:
             The email.
         password: :class:`str`
             The password. Must be at least 8 characters.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         friendly_name: Optional[:class:`str`]
             The user-friendly client name.
@@ -9925,7 +9925,7 @@ class HTTPClient:
         ticket: str,
         by: typing.Optional[MFAResponse] = None,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         friendly_name: typing.Optional[str] = None,
     ) -> typing.Union[Session, AccountDisabled]:
         """|coro|
@@ -9938,7 +9938,7 @@ class HTTPClient:
             The valid MFA ticket token.
         by: Optional[:class:`.MFAResponse`]
             The :class:`.ByRecoveryCode` or :class:`.ByTOTP` object.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         friendly_name: Optional[:class:`str`]
             The user-friendly client name.
@@ -10002,7 +10002,7 @@ class HTTPClient:
         assert not isinstance(ret, MFARequired), 'Recursion detected'
         return ret
 
-    async def logout(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> None:
+    async def logout(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the current session.
@@ -10011,7 +10011,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -10036,7 +10036,7 @@ class HTTPClient:
         await self.request(routes.AUTH_SESSION_LOGOUT.compile(), bot=False, http_overrides=http_overrides)
 
     async def revoke_session(
-        self, session: ULIDOr[PartialSession], /, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None
+        self, session: ULIDOr[PartialSession], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> None:
         """|coro|
 
@@ -10048,7 +10048,7 @@ class HTTPClient:
         ----------
         session: ULIDOr[:class:`.PartialSession`]
             The session to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -10087,7 +10087,7 @@ class HTTPClient:
     async def revoke_all_sessions(
         self,
         *,
-        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         revoke_self: typing.Optional[bool] = None,
     ) -> None:
         """|coro|
@@ -10098,7 +10098,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         revoke_self: Optional[:class:`bool`]
             Whether to revoke current session or not.
@@ -10138,6 +10138,6 @@ __all__ = (
     'DefaultRateLimitBlocker',
     '_NoopRateLimitBlocker',
     'DefaultRateLimiter',
-    'HTTPOverrideParameters',
+    'HTTPOverrideOptions',
     'HTTPClient',
 )
