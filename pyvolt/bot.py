@@ -24,8 +24,9 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from attrs import define, field
 import typing
+
+from attrs import define, field
 
 from .base import Base
 from .cache import CacheContextType, UserThroughBotOwnerCacheContext, _USER_THROUGH_BOT_OWNER
@@ -34,6 +35,7 @@ from .errors import NoData
 from .flags import BotFlags
 
 if typing.TYPE_CHECKING:
+    from . import raw
     from .http import HTTPOverrideOptions
     from .user import User
 
@@ -248,6 +250,28 @@ class Bot(BaseBot):
             raise NoData(what=self.owner_id, type='Bot.owner')
         return owner
 
+    def to_dict(self) -> raw.Bot:
+        """:class:`dict`: Convert bot to raw data."""
+        payload: raw.Bot = {
+            '_id': self.id,
+            'owner': self.owner_id,
+            'token': self.token,
+            'public': self.public,
+        }
+        if self.analytics:
+            payload['analytics'] = self.analytics
+        if self.discoverable:
+            payload['discoverable'] = self.discoverable
+        if self.interactions_url is not None:
+            payload['interactions_url'] = self.interactions_url
+        if self.terms_of_service_url is not None:
+            payload['terms_of_service_url'] = self.terms_of_service_url
+        if self.privacy_policy_url is not None:
+            payload['privacy_policy_url'] = self.privacy_policy_url
+        if self.raw_flags != 0:
+            payload['flags'] = self.raw_flags
+        return payload
+
 
 @define(slots=True)
 class PublicBot(BaseBot):
@@ -261,6 +285,18 @@ class PublicBot(BaseBot):
 
     description: str = field(repr=True, kw_only=True)
     """:class:`str`: The bot's description."""
+
+    def to_dict(self) -> raw.PublicBot:
+        """:class:`dict`: Convert public bot to raw data."""
+        payload: raw.PublicBot = {
+            '_id': self.id,
+            'username': self.name,
+        }
+        if self.internal_avatar_id is not None:
+            payload['avatar'] = self.internal_avatar_id
+        if len(self.description):
+            payload['description'] = self.description
+        return payload
 
 
 __all__ = ('BaseBot', 'Bot', 'PublicBot')
