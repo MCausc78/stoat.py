@@ -455,6 +455,8 @@ class HTTPOverrideOptions:
         Whether to explicitly receive JSON or not.
     adapter: :class:`.HTTPAdapter`
         The adapter to use when sending a HTTP request.
+    base_url: :class:`str`
+        The base API url to use when sending a HTTP request.
     bot: UndefinedOr[:class:`bool`]
         Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
     cookie: UndefinedOr[:class:`str`]
@@ -478,6 +480,7 @@ class HTTPOverrideOptions:
     if typing.TYPE_CHECKING:
         accept_json: bool
         adapter: HTTPAdapter
+        base_url: str
         bot: UndefinedOr[bool]
         cookie: UndefinedOr[str]
         headers: MultiMapping[str]
@@ -925,7 +928,11 @@ class HTTPClient:
 
         method = route.route.method
         path = route.build()
-        url = self._base + path
+
+        if http_overrides is not None and hasattr(http_overrides, 'base_url'):
+            url = http_overrides.base_url.rstrip('/') + path
+        else:
+            url = self._base + path
 
         if json is not UNDEFINED:
             kwargs['data'] = utils.to_json(json)
@@ -6832,9 +6839,7 @@ class HTTPClient:
             True,
         )
 
-    async def get_read_states(
-        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
-    ) -> list[ReadState]:
+    async def get_read_states(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[ReadState]:
         """|coro|
 
         Retrieves read states for all channels the current user in.
@@ -9539,9 +9544,7 @@ class HTTPClient:
         )
         return resp
 
-    async def get_mfa_methods(
-        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
-    ) -> list[MFAMethod]:
+    async def get_mfa_methods(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[MFAMethod]:
         """|coro|
 
         Retrieves available MFA methods.
