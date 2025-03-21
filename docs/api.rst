@@ -80,6 +80,14 @@ TemporarySubscriptionList
 .. autoclass:: TemporarySubscriptionList()
     :members:
 
+HTTPOverrideOptions
+~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: HTTPOverrideOptions
+
+.. autoclass:: HTTPOverrideOptions
+    :members:
+
 HTTPClient
 ~~~~~~~~~~
 
