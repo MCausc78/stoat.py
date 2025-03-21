@@ -44,6 +44,7 @@ from .errors import NoData
 if typing.TYPE_CHECKING:
     from . import raw
     from .channel import Channel
+    from .http import HTTPOverrideParameters
     from .message import BaseMessage
     from .state import State
 
@@ -112,6 +113,7 @@ class ReadState:
         self,
         *,
         last_acked_id: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED,
+        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
     ) -> ReadState:
         """|coro|
 
@@ -128,6 +130,8 @@ class ReadState:
         ----------
         last_acked_id: UndefinedOr[Optional[ULIDOr[:class:`.BaseMessage`]]]
             The new last acknowledged entity's ID.
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -178,7 +182,7 @@ class ReadState:
         else:
             last_acked_id = resolve_id(last_acked_id)
 
-        await self.state.http.acknowledge_message(self.channel_id, last_acked_id)
+        await self.state.http.acknowledge_message(self.channel_id, last_acked_id, http_overrides=http_overrides)
         read_state = ReadState(
             state=self.state,
             channel_id=self.channel_id,

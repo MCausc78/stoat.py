@@ -48,6 +48,7 @@ from .errors import NoData
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .http import HTTPOverrideParameters
     from .server import Server, Member
     from .user import User
 
@@ -234,7 +235,7 @@ class ServerEmoji(BaseEmoji):
             )
         return server
 
-    async def delete(self) -> None:
+    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> None:
         """|coro|
 
         Deletes the emoji.
@@ -246,6 +247,11 @@ class ServerEmoji(BaseEmoji):
 
         .. note::
             If deleting detached emoji, this will successfully return.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -290,7 +296,7 @@ class ServerEmoji(BaseEmoji):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_emoji(self.id)
+        return await self.state.http.delete_emoji(self.id, http_overrides=http_overrides)
 
     def to_dict(self) -> raw.ServerEmoji:
         """:class:`dict`: Convert server emoji to raw data."""
