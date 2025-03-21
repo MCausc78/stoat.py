@@ -34,6 +34,7 @@ from .errors import NoData
 from .flags import BotFlags
 
 if typing.TYPE_CHECKING:
+    from .http import HTTPOverrideParameters
     from .user import User
 
 _new_bot_flags = BotFlags.__new__
@@ -46,7 +47,7 @@ class BaseBot(Base):
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseBot) and self.id == other.id
 
-    async def delete(self) -> None:
+    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideParameters] = None) -> None:
         """|coro|
 
         Deletes the bot.
@@ -58,8 +59,8 @@ class BaseBot(Base):
 
         Parameters
         ----------
-        bot: ULIDOr[:class:`.BaseBot`]
-            The bot to delete.
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -89,11 +90,12 @@ class BaseBot(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.delete_bot(self.id)
+        return await self.state.http.delete_bot(self.id, http_overrides=http_overrides)
 
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideParameters] = None,
         name: UndefinedOr[str] = UNDEFINED,
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
@@ -108,6 +110,8 @@ class BaseBot(Base):
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideParameters`]
+            The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
         public: UndefinedOr[:class:`bool`]
@@ -163,6 +167,7 @@ class BaseBot(Base):
         """
         return await self.state.http.edit_bot(
             self.id,
+            http_overrides=http_overrides,
             name=name,
             public=public,
             analytics=analytics,
