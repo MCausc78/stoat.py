@@ -123,6 +123,7 @@ from .user import BaseUser, User
 if typing.TYPE_CHECKING:
     from . import raw
     from .embed import StatelessEmbed, Embed
+    from .http import HTTPOverrideOptions
     from .server import Server
     from .state import State
 
@@ -405,7 +406,7 @@ class BaseMessage(Base):
             )
         return None
 
-    async def ack(self) -> None:
+    async def ack(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Marks this message as read.
@@ -454,9 +455,9 @@ class BaseMessage(Base):
             | ``NotFound`` | The channel was not found. |
             +--------------+----------------------------+
         """
-        return await self.acknowledge()
+        return await self.acknowledge(http_overrides=http_overrides)
 
-    async def acknowledge(self) -> None:
+    async def acknowledge(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Marks this message as read.
@@ -469,6 +470,11 @@ class BaseMessage(Base):
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -505,9 +511,9 @@ class BaseMessage(Base):
             | ``NotFound`` | The channel was not found. |
             +--------------+----------------------------+
         """
-        return await self.state.http.acknowledge_message(self.channel_id, self.id)
+        return await self.state.http.acknowledge_message(self.channel_id, self.id, http_overrides=http_overrides)
 
-    async def clear_reactions(self) -> None:
+    async def clear_reactions(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Removes all the reactions from the message.
@@ -515,6 +521,11 @@ class BaseMessage(Base):
         You must have :attr:`~Permissions.manage_messages` to do this.
 
         Fires :class:`.MessageUpdateEvent` with empty :attr:`~PartialMessage.reactions` for all users who can see target channel.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -551,9 +562,9 @@ class BaseMessage(Base):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.clear_reactions(self.channel_id, self.id)
+        return await self.state.http.clear_reactions(self.channel_id, self.id, http_overrides=http_overrides)
 
-    async def delete(self) -> None:
+    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the message in a channel.
@@ -561,6 +572,11 @@ class BaseMessage(Base):
         You must have :attr:`~Permissions.manage_messages` to do this if message is not yours.
 
         Fires :class:`.MessageDeleteEvent` for all users who can see target channel.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -597,11 +613,12 @@ class BaseMessage(Base):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_message(self.channel_id, self.id)
+        return await self.state.http.delete_message(self.channel_id, self.id, http_overrides=http_overrides)
 
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         content: UndefinedOr[str] = UNDEFINED,
         embeds: UndefinedOr[list[SendableEmbed]] = UNDEFINED,
     ) -> Message:
@@ -613,6 +630,8 @@ class BaseMessage(Base):
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         content: UndefinedOr[:class:`str`]
             The new content to replace the message with. Must be between 1 and 2000 characters long.
         embeds: UndefinedOr[List[:class:`.SendableEmbed`]]
@@ -673,7 +692,9 @@ class BaseMessage(Base):
             The newly edited message.
         """
 
-        return await self.state.http.edit_message(self.channel_id, self.id, content=content, embeds=embeds)
+        return await self.state.http.edit_message(
+            self.channel_id, self.id, http_overrides=http_overrides, content=content, embeds=embeds
+        )
 
     def editing(self) -> Editing:
         """:class:`Editing`: Returns an asynchronous context manager that allows you to send an editing indicator for a message in channel for an indefinite period of time."""
@@ -684,10 +705,15 @@ class BaseMessage(Base):
             shard=self.state.shard,
         )
 
-    async def fetch(self) -> Message:
+    async def fetch(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Message:
         """|coro|
 
         Retrieves the message.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -729,9 +755,9 @@ class BaseMessage(Base):
         :class:`.Message`
             The retrieved message.
         """
-        return await self.state.http.get_message(self.channel_id, self.id)
+        return await self.state.http.get_message(self.channel_id, self.id, http_overrides=http_overrides)
 
-    async def pin(self) -> None:
+    async def pin(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Pins the message.
@@ -739,6 +765,11 @@ class BaseMessage(Base):
         You must have :attr:`~Permissions.manage_messages` to do this.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -783,11 +814,13 @@ class BaseMessage(Base):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.pin_message(self.channel_id, self.id)
+        return await self.state.http.pin_message(self.channel_id, self.id, http_overrides=http_overrides)
 
     async def react(
         self,
         emoji: ResolvableEmoji,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -801,6 +834,8 @@ class BaseMessage(Base):
         ----------
         emoji: :class:`.ResolvableEmoji`
             The emoji to react with.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -850,12 +885,15 @@ class BaseMessage(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.add_reaction_to_message(self.channel_id, self.id, emoji)
+        return await self.state.http.add_reaction_to_message(
+            self.channel_id, self.id, emoji, http_overrides=http_overrides
+        )
 
     async def reply(
         self,
         content: typing.Optional[str] = None,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         embeds: typing.Optional[list[SendableEmbed]] = None,
@@ -882,6 +920,8 @@ class BaseMessage(Base):
         ----------
         content: Optional[:class:`str`]
             The message content.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`.ResolvableResource`]]
@@ -994,6 +1034,7 @@ class BaseMessage(Base):
         return await self.state.http.send_message(
             self.channel_id,
             content=content,
+            http_overrides=http_overrides,
             nonce=nonce,
             attachments=attachments,
             replies=[Reply(self.id, mention=mention)],
@@ -1009,6 +1050,7 @@ class BaseMessage(Base):
         self,
         reason: ContentReportReason,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         additional_context: typing.Optional[str] = None,
     ) -> None:
         """|coro|
@@ -1026,6 +1068,8 @@ class BaseMessage(Base):
         ----------
         reason: :class:`.ContentReportReason`
             The reason for reporting.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
 
@@ -1067,9 +1111,11 @@ class BaseMessage(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.report_message(self.id, reason, additional_context=additional_context)
+        return await self.state.http.report_message(
+            self.id, reason, http_overrides=http_overrides, additional_context=additional_context
+        )
 
-    async def unpin(self) -> None:
+    async def unpin(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Unpins the message.
@@ -1077,6 +1123,11 @@ class BaseMessage(Base):
         You must have :attr:`~Permissions.manage_messages` to do this.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1122,12 +1173,13 @@ class BaseMessage(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.unpin_message(self.channel_id, self.id)
+        return await self.state.http.unpin_message(self.channel_id, self.id, http_overrides=http_overrides)
 
     async def unreact(
         self,
         emoji: ResolvableEmoji,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         user: typing.Optional[ULIDOr[BaseUser]] = None,
         remove_all: typing.Optional[bool] = None,
     ) -> None:
@@ -1144,6 +1196,8 @@ class BaseMessage(Base):
         ----------
         emoji: :class:`.ResolvableEmoji`
             The emoji to remove.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         user: Optional[ULIDOr[:class:`.BaseUser`]]
             The user to remove reactions from.
 
@@ -1194,7 +1248,7 @@ class BaseMessage(Base):
         """
 
         return await self.state.http.remove_reactions_from_message(
-            self.channel_id, self.id, emoji, user=user, remove_all=remove_all
+            self.channel_id, self.id, emoji, http_overrides=http_overrides, user=user, remove_all=remove_all
         )
 
 
