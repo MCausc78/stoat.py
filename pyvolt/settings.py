@@ -46,6 +46,7 @@ from .enums import (
 if typing.TYPE_CHECKING:
     from . import raw
     from .channel import Channel
+    from .http import HTTPOverrideOptions
     from .server import BaseServer
     from .state import State
 
@@ -189,6 +190,8 @@ class UserSettings:
         self,
         partial: dict[str, str],
         edited_at: typing.Optional[typing.Union[datetime, int]] = None,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
@@ -205,6 +208,8 @@ class UserSettings:
             The dict to merge into the current user settings.
         edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
             The revision.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -225,7 +230,9 @@ class UserSettings:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.edit_user_settings(partial=partial, edited_at=edited_at)
+        return await self.state.http.edit_user_settings(
+            partial=partial, edited_at=edited_at, http_overrides=http_overrides
+        )
 
 
 class AndroidUserSettings:
@@ -431,6 +438,7 @@ class AndroidUserSettings:
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         edited_at: typing.Optional[typing.Union[datetime, int]] = None,
         theme: UndefinedOr[typing.Optional[AndroidTheme]] = UNDEFINED,
         color_overrides: UndefinedOr[typing.Optional[dict[str, int]]] = UNDEFINED,
@@ -450,6 +458,8 @@ class AndroidUserSettings:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
             External parameter to pass in :meth:`.HTTPClient.edit_user_settings`.
         theme: UndefinedOr[Optional[:class:`.AndroidTheme`]]
@@ -495,7 +505,7 @@ class AndroidUserSettings:
             embed_apple_music=embed_apple_music,
             initial_special_embed_settings_payload=initial_special_embed_settings_payload,
         )
-        await self.parent.edit({'android': utils.to_json(payload)}, edited_at)
+        await self.parent.edit({'android': utils.to_json(payload)}, edited_at, http_overrides=http_overrides)
 
 
 class ReviteNotificationOptions:
@@ -1061,6 +1071,7 @@ class ReviteUserSettings:
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         edited_at: typing.Optional[typing.Union[datetime, int]] = None,
         initial_changelog_payload: UndefinedOr[raw.ReviteChangelog] = UNDEFINED,
         last_viewed_changelog_entry: UndefinedOr[typing.Union[ReviteChangelogEntry, int]] = UNDEFINED,
@@ -1093,6 +1104,8 @@ class ReviteUserSettings:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
             External parameter to pass in :meth:`.HTTPClient.edit_user_settings`.
         initial_changelog_payload: UndefinedOr[raw.ReviteChangelog]
@@ -1194,7 +1207,7 @@ class ReviteUserSettings:
         )
 
         # TypedDict whose values are all NotRequired[str] is compatible with Dict[str, str]
-        await self.parent.edit(payload, edited_at)  # type: ignore
+        await self.parent.edit(payload, edited_at, http_overrides=http_overrides)  # type: ignore
 
 
 class JoltUserSettings:
@@ -1331,6 +1344,7 @@ class JoltUserSettings:
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         edited_at: typing.Optional[typing.Union[datetime, int]] = None,
         low_data_mode: UndefinedOr[bool] = UNDEFINED,
         compact_mode: UndefinedOr[bool] = UNDEFINED,
@@ -1345,6 +1359,8 @@ class JoltUserSettings:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
             External parameter to pass in :meth:`.HTTPClient.edit_user_settings`.
         low_data_mode: UndefinedOr[:class:`bool`]
@@ -1382,7 +1398,7 @@ class JoltUserSettings:
             receive_typing_indicators=receive_typing_indicators,
         )
         # TypedDict whose values are all NotRequired[str] is compatible with Dict[str, str]
-        await self.parent.edit(payload, edited_at)  # type: ignore
+        await self.parent.edit(payload, edited_at, http_overrides=http_overrides)  # type: ignore
 
 
 __all__ = (
