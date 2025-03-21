@@ -594,8 +594,8 @@ class Role(BaseRole):
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The role's name."""
 
-    internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
-    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new server's icon, if any."""
+    internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
+    """Optional[:class:`.StatelessAsset`]: The new server's icon, if any."""
 
     permissions: PermissionOverride = field(repr=True, kw_only=True)
     """:class:`.PermissionOverride`: Permissions available to this role."""
@@ -631,17 +631,16 @@ class Role(BaseRole):
     def to_dict(self) -> raw.Role:
         """:class:`dict`: Convert role to raw data."""
 
-        if self.color is None:
-            payload = {
-                'name': self.name,
-                'permissions': self.permissions.to_field_dict(),
-            }
-        else:
-            payload = {
-                'name': self.name,
-                'permissions': self.permissions.to_field_dict(),
-                'colour': self.color,
-            }
+        payload: dict[str, typing.Any] = {
+            'name': self.name,
+        }
+        if self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+
+        payload['permissions'] = self.permissions.to_field_dict()
+
+        if self.color is not None:
+            payload['colour'] = self.color
 
         if self.hoist:
             payload['hoist'] = self.hoist
