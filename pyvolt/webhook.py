@@ -60,6 +60,7 @@ from .permissions import Permissions
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .http import HTTPOverrideOptions
     from .server import Member
     from .user import User
 
@@ -76,7 +77,9 @@ class BaseWebhook(Base):
     def _token(self) -> typing.Optional[str]:
         return None
 
-    async def delete(self, *, by_token: bool = False) -> None:
+    async def delete(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, by_token: bool = False
+    ) -> None:
         """|coro|
 
         Deletes the webhook.
@@ -85,6 +88,8 @@ class BaseWebhook(Base):
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         by_token: :class:`bool`
             Whether to use webhook token, if possible.
 
@@ -122,13 +127,14 @@ class BaseWebhook(Base):
 
         if by_token:
             token = self._token()
-            return await self.state.http.delete_webhook(self.id, token=token)
+            return await self.state.http.delete_webhook(self.id, http_overrides=http_overrides, token=token)
         else:
-            return await self.state.http.delete_webhook(self.id)
+            return await self.state.http.delete_webhook(self.id, http_overrides=http_overrides)
 
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         by_token: bool = False,
         name: UndefinedOr[str] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -142,6 +148,8 @@ class BaseWebhook(Base):
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         by_token: :class:`bool`
             Whether to use webhook token, if possible.
 
@@ -201,18 +209,22 @@ class BaseWebhook(Base):
 
             return await self.state.http.edit_webhook(
                 self.id,
+                http_overrides=http_overrides,
                 token=token,
                 name=name,
                 avatar=avatar,
                 permissions=permissions,
             )
         else:
-            return await self.state.http.edit_webhook(self.id, name=name, avatar=avatar, permissions=permissions)
+            return await self.state.http.edit_webhook(
+                self.id, http_overrides=http_overrides, name=name, avatar=avatar, permissions=permissions
+            )
 
     async def execute(
         self,
         content: typing.Optional[str] = None,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
@@ -243,6 +255,8 @@ class BaseWebhook(Base):
             The webhook token.
         content: Optional[:class:`str`]
             The message content.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`.ResolvableResource`]]
@@ -345,6 +359,7 @@ class BaseWebhook(Base):
             self.id,
             token,
             content=content,
+            http_overrides=http_overrides,
             nonce=nonce,
             attachments=attachments,
             replies=replies,
@@ -359,6 +374,7 @@ class BaseWebhook(Base):
     async def fetch(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: typing.Optional[str] = None,
     ) -> Webhook:
         """|coro|
@@ -375,6 +391,8 @@ class BaseWebhook(Base):
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
 
@@ -420,7 +438,7 @@ class BaseWebhook(Base):
         :class:`.Webhook`
             The retrieved webhook.
         """
-        return await self.state.http.get_webhook(self.id, token=token or self._token())
+        return await self.state.http.get_webhook(self.id, http_overrides=http_overrides, token=token or self._token())
 
 
 @define(slots=True)

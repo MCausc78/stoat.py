@@ -60,6 +60,7 @@ from .errors import NoData
 from .flags import ServerFlags
 
 if typing.TYPE_CHECKING:
+    from .http import HTTPOverrideOptions
     from .server import Server, Member
     from .state import State
     from .user import User
@@ -83,7 +84,9 @@ class BaseInvite:
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseInvite) and self.code == other.code
 
-    async def accept(self) -> typing.Union[Server, GroupChannel]:
+    async def accept(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> typing.Union[Server, GroupChannel]:
         """|coro|
 
         Accepts an invite.
@@ -94,6 +97,11 @@ class BaseInvite:
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -158,9 +166,9 @@ class BaseInvite:
             The joined server or group.
         """
 
-        return await self.state.http.accept_invite(self.code)
+        return await self.state.http.accept_invite(self.code, http_overrides=http_overrides)
 
-    async def delete(self) -> None:
+    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the invite.
@@ -169,6 +177,11 @@ class BaseInvite:
 
         There is an alias for this called :meth:`~.revoke`.
 
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -204,9 +217,9 @@ class BaseInvite:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_invite(self.code)
+        return await self.state.http.delete_invite(self.code, http_overrides=http_overrides)
 
-    async def revoke(self) -> None:
+    async def revoke(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the invite.
@@ -215,6 +228,11 @@ class BaseInvite:
 
         This is an alias of :meth:`~.delete`.
 
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -250,7 +268,7 @@ class BaseInvite:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_invite(self.code)
+        return await self.state.http.delete_invite(self.code, http_overrides=http_overrides)
 
 
 @define(slots=True)
@@ -432,7 +450,7 @@ class ServerPublicInvite(BaseInvite):
         """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
         return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
-    async def accept(self) -> Server:
+    async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Server:
         """|coro|
 
         Accepts an invite.
@@ -442,6 +460,11 @@ class ServerPublicInvite(BaseInvite):
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -503,7 +526,7 @@ class ServerPublicInvite(BaseInvite):
         """
         from .server import Server
 
-        server = await super().accept()
+        server = await super().accept(http_overrides=http_overrides)
         assert isinstance(server, Server)
         return server
 
@@ -620,7 +643,7 @@ class GroupPublicInvite(BaseInvite):
         """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
         return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
-    async def accept(self) -> GroupChannel:
+    async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> GroupChannel:
         """|coro|
 
         Accepts an invite.
@@ -630,6 +653,11 @@ class GroupPublicInvite(BaseInvite):
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -687,7 +715,7 @@ class GroupPublicInvite(BaseInvite):
         :class:`.GroupChannel`
             The joined group.
         """
-        group = await super().accept()
+        group = await super().accept(http_overrides=http_overrides)
         return group  # type: ignore
 
 
@@ -783,7 +811,7 @@ class GroupInvite(PrivateBaseInvite):
             )
         return creator
 
-    async def accept(self) -> GroupChannel:
+    async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> GroupChannel:
         """|coro|
 
         Accepts an invite.
@@ -793,6 +821,11 @@ class GroupInvite(PrivateBaseInvite):
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -850,7 +883,7 @@ class GroupInvite(PrivateBaseInvite):
         :class:`.GroupChannel`
             The joined group.
         """
-        group = await super().accept()
+        group = await super().accept(http_overrides=http_overrides)
         return group  # type: ignore
 
 
@@ -1027,7 +1060,7 @@ class ServerInvite(PrivateBaseInvite):
             )
         return creator
 
-    async def accept(self) -> Server:
+    async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Server:
         """|coro|
 
         Accepts an invite.
@@ -1037,6 +1070,11 @@ class ServerInvite(PrivateBaseInvite):
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1098,7 +1136,7 @@ class ServerInvite(PrivateBaseInvite):
         """
         from .server import Server
 
-        server = await super().accept()
+        server = await super().accept(http_overrides=http_overrides)
         assert isinstance(server, Server)
         return server
 
