@@ -34,19 +34,25 @@ from .cache import (
     UserThroughServerPublicInviteUserCacheContext,
     ChannelThroughGroupPublicInviteChannelCacheContext,
     UserThroughGroupPublicInviteUserCacheContext,
-    UserThroughPrivateBaseInviteCreatorCacheContext,
     ChannelThroughGroupInviteChannelCacheContext,
+    UserThroughGroupInviteCreatorCacheContext,
     ServerThroughServerInviteServerCacheContext,
     ChannelThroughServerInviteChannelCacheContext,
+    MemberOrUserThroughServerInviteCreatorCacheContext,
+    MemberThroughServerInviteCreatorCacheContext,
+    UserThroughServerInviteCreatorCacheContext,
     _SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER,
     _CHANNEL_THROUGH_SERVER_PUBLIC_INVITE_CHANNEL,
     _USER_THROUGH_SERVER_PUBLIC_INVITE_USER,
     _CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL,
     _USER_THROUGH_GROUP_PUBLIC_INVITE_USER,
-    _USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR,
     _CHANNEL_THROUGH_GROUP_INVITE_CHANNEL,
+    _USER_THROUGH_GROUP_INVITE_CREATOR,
     _SERVER_THROUGH_SERVER_INVITE_SERVER,
     _CHANNEL_THROUGH_SERVER_INVITE_CHANNEL,
+    _MEMBER_OR_USER_THROUGH_SERVER_INVITE_CREATOR,
+    _MEMBER_THROUGH_SERVER_INVITE_CREATOR,
+    _USER_THROUGH_SERVER_INVITE_CREATOR,
 )
 from .channel import GroupChannel, ServerChannel
 from .cdn import StatelessAsset, Asset
@@ -54,7 +60,8 @@ from .errors import NoData
 from .flags import ServerFlags
 
 if typing.TYPE_CHECKING:
-    from .server import Server
+    from .http import HTTPOverrideOptions
+    from .server import Server, Member
     from .state import State
     from .user import User
 
@@ -63,7 +70,7 @@ _new_server_flags = ServerFlags.__new__
 
 @define(slots=True)
 class BaseInvite:
-    """Represents a invite on Revolt."""
+    """Represents an invite on Revolt."""
 
     state: State = field(repr=False, kw_only=True)
     """:class:`.State`: State that controls this invite."""
@@ -77,13 +84,24 @@ class BaseInvite:
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseInvite) and self.code == other.code
 
-    async def accept(self) -> typing.Union[Server, GroupChannel]:
+    async def accept(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> typing.Union[Server, GroupChannel]:
         """|coro|
 
         Accepts an invite.
 
+        Fires either :class:`.PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for the current user,
+        and fires either :class:`.GroupRecipientAddEvent` or :class:`.ServerMemberJoinEvent`, and :class:`.MessageCreateEvent`,
+        both for all group recipients/server members.
+
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -148,9 +166,9 @@ class BaseInvite:
             The joined server or group.
         """
 
-        return await self.state.http.accept_invite(self.code)
+        return await self.state.http.accept_invite(self.code, http_overrides=http_overrides)
 
-    async def delete(self) -> None:
+    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the invite.
@@ -159,6 +177,11 @@ class BaseInvite:
 
         There is an alias for this called :meth:`~.revoke`.
 
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -194,9 +217,9 @@ class BaseInvite:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_invite(self.code)
+        return await self.state.http.delete_invite(self.code, http_overrides=http_overrides)
 
-    async def revoke(self) -> None:
+    async def revoke(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the invite.
@@ -205,6 +228,11 @@ class BaseInvite:
 
         This is an alias of :meth:`~.delete`.
 
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -240,7 +268,7 @@ class BaseInvite:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_invite(self.code)
+        return await self.state.http.delete_invite(self.code, http_overrides=http_overrides)
 
 
 @define(slots=True)
@@ -422,13 +450,21 @@ class ServerPublicInvite(BaseInvite):
         """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
         return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
-    async def accept(self) -> Server:
+    async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Server:
         """|coro|
 
         Accepts an invite.
 
+        Fires :class:`.ServerCreateEvent` for the current user, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent`,
+        both for all server members.
+
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -490,7 +526,7 @@ class ServerPublicInvite(BaseInvite):
         """
         from .server import Server
 
-        server = await super().accept()
+        server = await super().accept(http_overrides=http_overrides)
         assert isinstance(server, Server)
         return server
 
@@ -607,13 +643,21 @@ class GroupPublicInvite(BaseInvite):
         """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
         return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
-    async def accept(self) -> GroupChannel:
+    async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> GroupChannel:
         """|coro|
 
         Accepts an invite.
 
+        Fires :class:`.PrivateChannelCreateEvent` for the current user, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent`,
+        both for all group recipients.
+
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -671,7 +715,7 @@ class GroupPublicInvite(BaseInvite):
         :class:`.GroupChannel`
             The joined group.
         """
-        group = await super().accept()
+        group = await super().accept(http_overrides=http_overrides)
         return group  # type: ignore
 
 
@@ -692,37 +736,6 @@ class PrivateBaseInvite(BaseInvite):
 
     creator_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who created this invite."""
-
-    def get_creator(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who created this invite."""
-        state = self.state
-        cache = state.cache
-
-        if cache is None:
-            return None
-
-        ctx = (
-            UserThroughPrivateBaseInviteCreatorCacheContext(
-                type=CacheContextType.user_through_private_base_invite_creator,
-                invite=self,
-            )
-            if state.provide_cache_context('PrivateBaseInvite.creator')
-            else _USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR
-        )
-
-        return cache.get_user(self.creator_id, ctx)
-
-    @property
-    def creator(self) -> User:
-        """:class:`.User`: The user who created this invite."""
-
-        creator = self.get_creator()
-        if creator is None:
-            raise NoData(
-                what=self.creator_id,
-                type='PrivateBaseInvite.creator',
-            )
-        return creator
 
 
 @define(slots=True)
@@ -755,6 +768,25 @@ class GroupInvite(PrivateBaseInvite):
             assert isinstance(channel, GroupChannel)
         return channel
 
+    def get_creator(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who created this invite."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughGroupInviteCreatorCacheContext(
+                type=CacheContextType.user_through_group_invite_creator,
+                invite=self,
+            )
+            if state.provide_cache_context('GroupInvite.creator')
+            else _USER_THROUGH_GROUP_INVITE_CREATOR
+        )
+
+        return cache.get_user(self.creator_id, ctx)
+
     @property
     def channel(self) -> GroupChannel:
         """:class:`.GroupChannel`: The group channel this invite points to."""
@@ -767,13 +799,33 @@ class GroupInvite(PrivateBaseInvite):
             )
         return channel
 
-    async def accept(self) -> GroupChannel:
+    @property
+    def creator(self) -> User:
+        """:class:`.User`: The user who created this invite."""
+
+        creator = self.get_creator()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='GroupInvite.creator',
+            )
+        return creator
+
+    async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> GroupChannel:
         """|coro|
 
         Accepts an invite.
 
+        Fires :class:`.PrivateChannelCreateEvent` for the current user, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent`,
+        both for all group recipients.
+
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -831,7 +883,7 @@ class GroupInvite(PrivateBaseInvite):
         :class:`.GroupChannel`
             The joined group.
         """
-        group = await super().accept()
+        group = await super().accept(http_overrides=http_overrides)
         return group  # type: ignore
 
 
@@ -888,6 +940,66 @@ class ServerInvite(PrivateBaseInvite):
             assert isinstance(channel, ServerChannel)
         return channel
 
+    def get_creator(self) -> typing.Optional[typing.Union[Member, User]]:
+        """Optional[Union[:class:`.Member`, :class:`.User`]]: The user who created this invite."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughServerInviteCreatorCacheContext(
+                type=CacheContextType.member_or_user_through_server_invite_creator,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerInvite.creator')
+            else _MEMBER_OR_USER_THROUGH_SERVER_INVITE_CREATOR
+        )
+
+        member = cache.get_server_member(self.server_id, self.creator_id, ctx)
+        if member is None:
+            return cache.get_user(self.creator_id, ctx)
+        return member
+
+    def get_creator_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The user who created this invite."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberThroughServerInviteCreatorCacheContext(
+                type=CacheContextType.member_through_server_invite_creator,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerInvite.creator_as_member')
+            else _MEMBER_THROUGH_SERVER_INVITE_CREATOR
+        )
+
+        return cache.get_server_member(self.server_id, self.creator_id, ctx)
+
+    def get_creator_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who created this invite."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughServerInviteCreatorCacheContext(
+                type=CacheContextType.user_through_server_invite_creator,
+                invite=self,
+            )
+            if state.provide_cache_context('ServerInvite.creator_as_user')
+            else _USER_THROUGH_SERVER_INVITE_CREATOR
+        )
+
+        return cache.get_user(self.creator_id, ctx)
+
     @property
     def server(self) -> Server:
         """:class:`.Server`: The server this invite points to."""
@@ -912,13 +1024,57 @@ class ServerInvite(PrivateBaseInvite):
             )
         return channel
 
-    async def accept(self) -> Server:
+    @property
+    def creator(self) -> typing.Union[Member, User]:
+        """Union[:class:`.Member`, :class:`.User`]: The user who created this invite."""
+
+        creator = self.get_creator()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='ServerInvite.creator',
+            )
+        return creator
+
+    @property
+    def creator_as_member(self) -> Member:
+        """:class:`.Member`: The user who created this invite."""
+
+        creator = self.get_creator_as_member()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='ServerInvite.creator_as_member',
+            )
+        return creator
+
+    @property
+    def creator_as_user(self) -> User:
+        """:class:`.User`: The user who created this invite."""
+
+        creator = self.get_creator_as_user()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='ServerInvite.creator_as_user',
+            )
+        return creator
+
+    async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Server:
         """|coro|
 
         Accepts an invite.
 
+        Fires :class:`.ServerCreateEvent` for the current user, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent`,
+        both for all server members.
+
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -980,7 +1136,7 @@ class ServerInvite(PrivateBaseInvite):
         """
         from .server import Server
 
-        server = await super().accept()
+        server = await super().accept(http_overrides=http_overrides)
         assert isinstance(server, Server)
         return server
 

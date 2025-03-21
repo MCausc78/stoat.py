@@ -31,17 +31,25 @@ from attrs import define, field
 from .base import Base
 from .cache import (
     CacheContextType,
-    UserThroughBaseEmojiCreatorCacheContext,
+    MemberOrUserThroughServerEmojiCreatorCacheContext,
+    MemberThroughServerEmojiCreatorCacheContext,
+    UserThroughServerEmojiCreatorCacheContext,
+    UserThroughDetachedEmojiCreatorCacheContext,
     ServerThroughServerEmojiServerCacheContext,
-    _USER_THROUGH_BASE_EMOJI_CREATOR,
+    _MEMBER_OR_USER_THROUGH_SERVER_EMOJI_CREATOR,
+    _MEMBER_THROUGH_SERVER_EMOJI_CREATOR,
+    _USER_THROUGH_SERVER_EMOJI_CREATOR,
+    _USER_THROUGH_DETACHED_EMOJI_CREATOR,
     _SERVER_THROUGH_SERVER_EMOJI_SERVER,
 )
-
 from .cdn import AssetMetadata, Asset
 from .enums import AssetMetadataType
+from .errors import NoData
 
 if typing.TYPE_CHECKING:
-    from .server import Server
+    from . import raw
+    from .http import HTTPOverrideOptions
+    from .server import Server, Member
     from .user import User
 
 
@@ -60,26 +68,6 @@ class BaseEmoji(Base):
 
     nsfw: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the emoji is marked as NSFW."""
-
-    def get_creator(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who uploaded this emoji."""
-
-        state = self.state
-        cache = state.cache
-
-        if cache is None:
-            return None
-
-        ctx = (
-            UserThroughBaseEmojiCreatorCacheContext(
-                type=CacheContextType.user_through_base_emoji_creator,
-                emoji=self,
-            )
-            if state.provide_cache_context('BaseEmoji.creator')
-            else _USER_THROUGH_BASE_EMOJI_CREATOR
-        )
-
-        return cache.get_user(self.creator_id, ctx)
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseEmoji) and self.id == other.id
@@ -118,6 +106,71 @@ class ServerEmoji(BaseEmoji):
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID the emoji belongs to."""
 
+    def get_creator(self) -> typing.Optional[typing.Union[Member, User]]:
+        """Optional[Union[:class:`.Member`, :class:`.User`]]: The user who uploaded this emoji."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughServerEmojiCreatorCacheContext(
+                type=CacheContextType.member_or_user_through_server_emoji_creator,
+                emoji=self,
+            )
+            if state.provide_cache_context('ServerEmoji.creator')
+            else _MEMBER_OR_USER_THROUGH_SERVER_EMOJI_CREATOR
+        )
+
+        member = cache.get_server_member(self.server_id, self.creator_id, ctx)
+
+        if member is None:
+            return cache.get_user(self.creator_id, ctx)
+
+        return member
+
+    def get_creator_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The user who uploaded this emoji."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberThroughServerEmojiCreatorCacheContext(
+                type=CacheContextType.member_through_server_emoji_creator,
+                emoji=self,
+            )
+            if state.provide_cache_context('ServerEmoji.creator_as_member')
+            else _MEMBER_THROUGH_SERVER_EMOJI_CREATOR
+        )
+
+        return cache.get_server_member(self.server_id, self.creator_id, ctx)
+
+    def get_creator_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who uploaded this emoji."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughServerEmojiCreatorCacheContext(
+                type=CacheContextType.user_through_server_emoji_creator,
+                emoji=self,
+            )
+            if state.provide_cache_context('ServerEmoji.creator_as_user')
+            else _USER_THROUGH_SERVER_EMOJI_CREATOR
+        )
+
+        return cache.get_user(self.creator_id, ctx)
+
     def get_server(self) -> typing.Optional[Server]:
         """Optional[:class:`.Server`]: The server the emoji belongs to."""
 
@@ -138,7 +191,51 @@ class ServerEmoji(BaseEmoji):
 
         return cache.get_server(self.server_id, ctx)
 
-    async def delete(self) -> None:
+    @property
+    def creator(self) -> typing.Union[Member, User]:
+        """Union[:class:`.Member`, :class:`.User`]: The user who uploaded this emoji."""
+        creator = self.get_creator()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='ServerEmoji.creator',
+            )
+        return creator
+
+    @property
+    def creator_as_member(self) -> Member:
+        """:class:`.Member`: The user who uploaded this emoji."""
+        creator = self.get_creator_as_member()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='ServerEmoji.creator_as_member',
+            )
+        return creator
+
+    @property
+    def creator_as_user(self) -> User:
+        """:class:`.User`: The user who uploaded this emoji."""
+        creator = self.get_creator_as_user()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='ServerEmoji.creator_as_user',
+            )
+        return creator
+
+    @property
+    def server(self) -> Server:
+        """:class:`.Server`: The server the emoji belongs to."""
+        server = self.get_server()
+        if server is None:
+            raise NoData(
+                what=self.server_id,
+                type='ServerEmoji.server',
+            )
+        return server
+
+    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the emoji.
@@ -146,8 +243,15 @@ class ServerEmoji(BaseEmoji):
         You must have :attr:`~Permissions.manage_customization` to do this if you do not own
         the emoji, unless it was detached (already deleted).
 
+        May fire :class:`.EmojiDeleteEvent` for all server members.
+
         .. note::
             If deleting detached emoji, this will successfully return.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -170,11 +274,11 @@ class ServerEmoji(BaseEmoji):
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------------------+-----------------------------------------------------------+
-            | Value                            | Reason                                                    |
-            +----------------------------------+-----------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to delete a emoji. |
-            +----------------------------------+-----------------------------------------------------------+
+            +----------------------------------+------------------------------------------------------------+
+            | Value                            | Reason                                                     |
+            +----------------------------------+------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to delete an emoji. |
+            +----------------------------------+------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -192,12 +296,76 @@ class ServerEmoji(BaseEmoji):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_emoji(self.id)
+        return await self.state.http.delete_emoji(self.id, http_overrides=http_overrides)
+
+    def to_dict(self) -> raw.ServerEmoji:
+        """:class:`dict`: Convert server emoji to raw data."""
+        payload: raw.ServerEmoji = {
+            '_id': self.id,
+            'parent': {
+                'type': 'Server',
+                'id': self.server_id,
+            },
+            'creator_id': self.creator_id,
+            'name': self.name,
+        }
+        if self.animated:
+            payload['animated'] = self.animated
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        return payload
 
 
 @define(slots=True)
 class DetachedEmoji(BaseEmoji):
     """Represents a deleted emoji on Revolt."""
+
+    def get_creator(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who uploaded this emoji."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughDetachedEmojiCreatorCacheContext(
+                type=CacheContextType.user_through_detached_emoji_creator,
+                emoji=self,
+            )
+            if state.provide_cache_context('DetachedEmoji.creator')
+            else _USER_THROUGH_DETACHED_EMOJI_CREATOR
+        )
+
+        return cache.get_user(self.creator_id, ctx)
+
+    @property
+    def creator(self) -> User:
+        """:class:`.User`: The user who uploaded this emoji."""
+        creator = self.get_creator()
+        if creator is None:
+            raise NoData(
+                what=self.creator_id,
+                type='DetachedEmoji.creator',
+            )
+        return creator
+
+    def to_dict(self) -> raw.DetachedEmoji:
+        """:class:`dict`: Convert detached emoji to raw data."""
+        payload: raw.DetachedEmoji = {
+            '_id': self.id,
+            'parent': {
+                'type': 'Detached',
+            },
+            'creator_id': self.creator_id,
+            'name': self.name,
+        }
+        if self.animated:
+            payload['animated'] = self.animated
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        return payload
 
 
 Emoji = typing.Union[ServerEmoji, DetachedEmoji]

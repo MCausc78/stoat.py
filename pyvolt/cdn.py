@@ -37,12 +37,13 @@ from multidict import CIMultiDict
 
 from . import __version__, utils
 from .adapter import HTTPResponse, HTTPAdapter, AIOHTTPAdapter
+from .enums import AssetMetadataType
 from .errors import HTTPException
 
 if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
-    from .enums import AssetMetadataType
+    from . import raw
     from .state import State
 
 
@@ -61,6 +62,30 @@ class AssetMetadata:
 
     height: typing.Optional[int] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`int`]: The image/video's height, if applicable."""
+
+    def to_dict(self) -> raw.Metadata:
+        """:class:`dict`: Convert metadata to raw data."""
+
+        if self.type is AssetMetadataType.file:
+            return {'type': 'File'}
+        elif self.type is AssetMetadataType.text:
+            return {'type': 'Text'}
+        elif self.type is AssetMetadataType.image:
+            return {
+                'type': 'Image',
+                'width': self.width or 0,
+                'height': self.height or 0,
+            }
+        elif self.type is AssetMetadataType.video:
+            return {
+                'type': 'Video',
+                'width': self.width or 0,
+                'height': self.height or 0,
+            }
+        elif self.type is AssetMetadataType.audio:
+            return {'type': 'Audio'}
+        else:
+            raise TypeError(f'Unknown type: {self.type!r}')
 
 
 Tag = typing.Literal['icons', 'banners', 'emojis', 'backgrounds', 'avatars', 'attachments']
@@ -138,6 +163,37 @@ class StatelessAsset:
             state=state,
             tag=tag,
         )
+
+    def to_dict(self, tag: Tag, /) -> raw.File:
+        """:class:`dict`: Convert asset to raw data.
+
+        Parameters
+        ----------
+        tag: :class:`.Tag`
+            The asset tag.
+        """
+
+        payload: raw.File = {
+            '_id': self.id,
+            'tag': tag,
+            'filename': self.filename,
+            'metadata': self.metadata.to_dict(),
+            'content_type': self.content_type,
+            'size': self.size,
+        }
+        if self.deleted:
+            payload['deleted'] = self.deleted
+        if self.reported:
+            payload['reported'] = self.reported
+        if self.message_id is not None:
+            payload['message_id'] = self.message_id
+        if self.user_id is not None:
+            payload['user_id'] = self.user_id
+        if self.server_id is not None:
+            payload['server_id'] = self.server_id
+        if self.object_id is not None:
+            payload['object_id'] = self.object_id
+        return payload
 
 
 @define(slots=True)
@@ -382,7 +438,7 @@ async def resolve_resource(state: State, resolvable: ResolvableResource, /, *, t
 
 
 class CDNClient:
-    """Represents an HTTP client sending HTTP requests to the Revolt Autumn API.
+    """Represents a HTTP client sending HTTP requests to the Revolt Autumn API.
 
     Attributes
     ----------

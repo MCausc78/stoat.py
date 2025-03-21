@@ -51,9 +51,11 @@ from .channel import (
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
+    UnknownPrivateChannel,
     ChannelVoiceMetadata,
     TextChannel,
     VoiceChannel,
+    UnknownServerChannel,
     ServerChannel,
     Channel,
     ChannelVoiceStateContainer,
@@ -253,8 +255,8 @@ else:
 
     _strptime = datetime.strptime
 
-    def _parse_dt(date_string: str, /) -> datetime:
-        return _strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=_UTC)
+    def _parse_dt(timestamp: str, /) -> datetime:
+        return _strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=_UTC)
 
 
 class Parser:
@@ -349,7 +351,7 @@ class Parser:
     # basic start
 
     def parse_apple_music_embed_special(self, payload: raw.AppleMusicSpecial, /) -> AppleMusicEmbedSpecial:
-        """Parses a Apple Music embed special content object.
+        """Parses an Apple Music embed special content object.
 
         Parameters
         ----------
@@ -367,7 +369,7 @@ class Parser:
         )
 
     def parse_asset_metadata(self, d: raw.Metadata, /) -> AssetMetadata:
-        """Parses a asset metadata object.
+        """Parses an asset metadata object.
 
         Parameters
         ----------
@@ -386,7 +388,7 @@ class Parser:
         )
 
     def parse_asset(self, d: raw.File, /) -> StatelessAsset:
-        """Parses a asset object.
+        """Parses an asset object.
 
         Parameters
         ----------
@@ -413,7 +415,7 @@ class Parser:
         )
 
     def parse_auth_event(self, shard: Shard, payload: raw.ClientAuthEvent, /) -> AuthifierEvent:
-        """Parses a Auth event.
+        """Parses an Auth event.
 
         Parameters
         ----------
@@ -448,7 +450,7 @@ class Parser:
             raise NotImplementedError('Unimplemented auth event type', payload)
 
     def parse_authenticated_event(self, shard: Shard, payload: raw.ClientAuthenticatedEvent, /) -> AuthenticatedEvent:
-        """Parses a Authenticated event.
+        """Parses an Authenticated event.
 
         Parameters
         ----------
@@ -530,7 +532,7 @@ class Parser:
         )
 
     def parse_bans(self, payload: raw.BanListResult, /) -> list[Ban]:
-        """Parses a object with bans and associated banned users.
+        """Parses an object with bans and associated banned users.
 
         Parameters
         ----------
@@ -610,7 +612,7 @@ class Parser:
         return BotUserMetadata(owner_id=payload['owner'])
 
     def parse_bots(self, payload: raw.OwnedBotsResponse, /) -> list[Bot]:
-        """Parses a object with bots and associated bot users.
+        """Parses an object with bots and associated bot users.
 
         Parameters
         ----------
@@ -854,7 +856,7 @@ class Parser:
             state=self.state,
             channel_id=id['channel'],
             user_id=id['user'],
-            last_acked_message_id=payload.get('last_id'),
+            last_acked_id=payload.get('last_id'),
             mentioned_in=payload.get('mentions', []),
         )
 
@@ -957,7 +959,38 @@ class Parser:
             The parsed channel object.
         """
 
-        return self._channel_parsers[payload['channel_type']](payload)
+        try:
+            parser = self._channel_parsers[payload['channel_type']]
+        except KeyError:
+            if 'server' in payload:
+                server_id = payload['server']
+                if 'name' in payload:
+                    name = payload['name']
+                    if name is None or not isinstance(name, str):
+                        name = str(name)
+                else:
+                    name = ''
+                nsfw = bool(payload.get('nsfw', False))
+
+                return UnknownServerChannel(
+                    state=self.state,
+                    id=payload['_id'],
+                    server_id=server_id,
+                    payload=payload,  # type: ignore
+                    name=name,
+                    description=None,
+                    internal_icon=None,
+                    default_permissions=None,
+                    role_permissions={},
+                    nsfw=nsfw,
+                )
+            return UnknownPrivateChannel(
+                state=self.state,
+                id=payload['_id'],
+                payload=payload,  # type: ignore
+            )
+        else:
+            return parser(payload)
 
     def parse_created_report(self, payload: raw.CreatedReport, /) -> CreatedReport:
         """Parses a created report object.
@@ -1276,7 +1309,7 @@ class Parser:
         )
 
     def parse_embed(self, payload: raw.Embed, /) -> Embed:
-        """Parses a embed object.
+        """Parses an embed object.
 
         Parameters
         ----------
@@ -1291,7 +1324,7 @@ class Parser:
         return self._embed_parsers[payload['type']](payload)
 
     def parse_embed_special(self, payload: raw.Special, /) -> EmbedSpecial:
-        """Parses a embed special remote content object.
+        """Parses an embed special remote content object.
 
         Parameters
         ----------
@@ -1306,7 +1339,7 @@ class Parser:
         return self._embed_special_parsers[payload['type']](payload)
 
     def parse_emoji(self, payload: raw.Emoji, /) -> Emoji:
-        """Parses a emoji object.
+        """Parses an emoji object.
 
         Parameters
         ----------
@@ -1321,7 +1354,7 @@ class Parser:
         return self._emoji_parsers[payload['parent']['type']](payload)
 
     def parse_emoji_create_event(self, shard: Shard, payload: raw.ClientEmojiCreateEvent, /) -> ServerEmojiCreateEvent:
-        """Parses a EmojiCreate event.
+        """Parses an EmojiCreate event.
 
         Parameters
         ----------
@@ -1341,7 +1374,7 @@ class Parser:
         )
 
     def parse_emoji_delete_event(self, shard: Shard, payload: raw.ClientEmojiDeleteEvent, /) -> ServerEmojiDeleteEvent:
-        """Parses a EmojiDelete event.
+        """Parses an EmojiDelete event.
 
         Parameters
         ----------
@@ -1463,7 +1496,7 @@ class Parser:
         )
 
     def parse_image_embed(self, payload: raw.Image, /) -> ImageEmbed:
-        """Parses a image embed object.
+        """Parses an image embed object.
 
         Parameters
         ----------
@@ -1483,7 +1516,7 @@ class Parser:
         )
 
     def parse_instance(self, payload: raw.RevoltConfig, /) -> Instance:
-        """Parses a instance object.
+        """Parses an instance object.
 
         Parameters
         ----------
@@ -1505,7 +1538,7 @@ class Parser:
         )
 
     def parse_instance_build(self, payload: raw.BuildInformation, /) -> InstanceBuild:
-        """Parses a instance build object.
+        """Parses an instance build object.
 
         Parameters
         ----------
@@ -1536,7 +1569,7 @@ class Parser:
         )
 
     def parse_instance_captcha_feature(self, payload: raw.CaptchaFeature, /) -> InstanceCaptchaFeature:
-        """Parses a instance CAPTCHA feature object.
+        """Parses an instance CAPTCHA feature object.
 
         Parameters
         ----------
@@ -1554,7 +1587,7 @@ class Parser:
         )
 
     def parse_instance_features_config(self, payload: raw.RevoltFeatures, /) -> InstanceFeaturesConfig:
-        """Parses a instance features config object.
+        """Parses an instance features config object.
 
         Parameters
         ----------
@@ -1585,7 +1618,7 @@ class Parser:
         )
 
     def parse_instance_generic_feature(self, payload: raw.Feature, /) -> InstanceGenericFeature:
-        """Parses a instance generic feature object.
+        """Parses an instance generic feature object.
 
         Parameters
         ----------
@@ -1615,7 +1648,7 @@ class Parser:
     def parse_instance_voice_feature(
         self, payload: typing.Union[raw.LivekitVoiceFeature, raw.VosoVoiceFeature], livekit: bool, /
     ) -> InstanceVoiceFeature:
-        """Parses a instance voice feature object.
+        """Parses an instance voice feature object.
 
         Parameters
         ----------
@@ -1642,7 +1675,7 @@ class Parser:
             )
 
     def parse_instance_livekit_voice_node(self, payload: raw.LivekitVoiceNode, /) -> InstanceLivekitVoiceNode:
-        """Parses a instance voice node object.
+        """Parses an instance voice node object.
 
         Parameters
         ----------
@@ -1662,7 +1695,7 @@ class Parser:
         )
 
     def parse_invite(self, payload: raw.Invite, /) -> Invite:
-        """Parses a invite object.
+        """Parses an invite object.
 
         Parameters
         ----------
@@ -1752,7 +1785,7 @@ class Parser:
             joined_at=_parse_dt(payload['joined_at']),
             nick=payload.get('nickname'),
             internal_server_avatar=None if avatar is None else self.parse_asset(avatar),
-            roles=payload.get('roles', []),
+            role_ids=payload.get('roles', []),
             timed_out_until=None if timeout is None else _parse_dt(timeout),
             can_publish=payload.get('can_publish', True),
             can_receive=payload.get('can_receive', True),
@@ -1777,7 +1810,7 @@ class Parser:
         )
 
     def parse_members_with_users(self, payload: raw.AllMemberResponse, /) -> list[Member]:
-        """Parses a object with members and associated users.
+        """Parses an object with members and associated users.
 
         Parameters
         ----------
@@ -1840,7 +1873,7 @@ class Parser:
         elif user is not None:
             author = self.parse_user(user)
         else:
-            author = members.get(author_id) or users.get(author_id) or author_id
+            author = members.get(author_id) or users.get(author_id, author_id)
 
         reactions = payload.get('reactions')
 
@@ -2597,7 +2630,7 @@ class Parser:
         )
 
     def parse_messages(self, payload: raw.BulkMessageResponse, /) -> list[Message]:
-        """Parses a object with messages and associated users/members.
+        """Parses an object with messages and associated users/members.
 
         Parameters
         ----------
@@ -2704,7 +2737,7 @@ class Parser:
         )
 
     def parse_none_embed(self, _: raw.NoneEmbed, /) -> NoneEmbed:
-        """Parses a empty embed object.
+        """Parses an empty embed object.
 
         Parameters
         ----------
@@ -2719,7 +2752,7 @@ class Parser:
         return _NONE_EMBED
 
     def parse_none_embed_special(self, _: raw.NoneSpecial, /) -> NoneEmbedSpecial:
-        """Parses a empty embed special content object.
+        """Parses an empty embed special content object.
 
         Parameters
         ----------
@@ -2734,7 +2767,7 @@ class Parser:
         return _NONE_EMBED_SPECIAL
 
     def parse_own_user(self, payload: raw.User, /) -> OwnUser:
-        """Parses a own user object.
+        """Parses an own user object.
 
         Parameters
         ----------
@@ -3406,7 +3439,7 @@ class Parser:
                 joined_at=joined_at,
                 nick=None,
                 internal_server_avatar=None,
-                roles=[],
+                role_ids=[],
                 timed_out_until=None,
                 can_publish=True,
                 can_receive=True,
@@ -3473,7 +3506,7 @@ class Parser:
                 internal_server_avatar=None
                 if 'Avatar' in clear
                 else (UNDEFINED if avatar is None else self.parse_asset(avatar)),
-                roles=[] if 'Roles' in clear else (UNDEFINED if roles is None else roles),
+                role_ids=[] if 'Roles' in clear else (UNDEFINED if roles is None else roles),
                 timed_out_until=None if 'Timeout' in clear else (UNDEFINED if timeout is None else _parse_dt(timeout)),
                 can_publish=data.get('can_publish', UNDEFINED),
                 can_receive=data.get('can_receive', UNDEFINED),
@@ -3835,7 +3868,7 @@ class Parser:
         )
 
     def parse_unknown_public_invite(self, payload: dict[str, typing.Any], /) -> UnknownPublicInvite:
-        """Parses a unknown public invite object.
+        """Parses an unknown public invite object.
 
         Parameters
         ----------
@@ -3850,7 +3883,7 @@ class Parser:
         return UnknownPublicInvite(state=self.state, code=payload['code'], payload=payload)
 
     def parse_user(self, payload: raw.User, /) -> typing.Union[User, OwnUser]:
-        """Parses a user object.
+        """Parses an user object.
 
         Parameters
         ----------
@@ -3895,7 +3928,7 @@ class Parser:
         payload: raw.ClientUserMoveVoiceChannelEvent,
         /,
     ) -> UserMoveVoiceChannelEvent:
-        """Parses a UserMoveVoiceChannel event.
+        """Parses an UserMoveVoiceChannel event.
 
         Parameters
         ----------
@@ -3919,7 +3952,7 @@ class Parser:
     def parse_user_platform_wipe_event(
         self, shard: Shard, payload: raw.ClientUserPlatformWipeEvent, /
     ) -> UserPlatformWipeEvent:
-        """Parses a UserPlatformWipe event.
+        """Parses an UserPlatformWipe event.
 
         Parameters
         ----------
@@ -3943,7 +3976,7 @@ class Parser:
         )
 
     def parse_user_profile(self, payload: raw.UserProfile, /) -> StatelessUserProfile:
-        """Parses a user profile object.
+        """Parses an user profile object.
 
         Parameters
         ----------
@@ -3965,7 +3998,7 @@ class Parser:
     def parse_user_relationship_event(
         self, shard: Shard, payload: raw.ClientUserRelationshipEvent, /
     ) -> UserRelationshipUpdateEvent:
-        """Parses a UserRelationship event.
+        """Parses an UserRelationship event.
 
         Parameters
         ----------
@@ -3988,7 +4021,7 @@ class Parser:
         )
 
     def parse_user_reported_content(self, payload: raw.UserReportedContent, /) -> UserReportedContent:
-        """Parses a user reported content object.
+        """Parses an user reported content object.
 
         Parameters
         ----------
@@ -4008,7 +4041,7 @@ class Parser:
         )
 
     def parse_user_settings(self, payload: raw.UserSettings, partial: bool, /) -> UserSettings:
-        """Parses a user settings object.
+        """Parses a nuser settings object.
 
         Parameters
         ----------
@@ -4032,7 +4065,7 @@ class Parser:
     def parse_user_settings_update_event(
         self, shard: Shard, payload: raw.ClientUserSettingsUpdateEvent, /
     ) -> UserSettingsUpdateEvent:
-        """Parses a UserSettingsUpdate event.
+        """Parses an UserSettingsUpdate event.
 
         Parameters
         ----------
@@ -4066,7 +4099,7 @@ class Parser:
         )
 
     def parse_user_status(self, payload: raw.UserStatus, /) -> UserStatus:
-        """Parses a user status object.
+        """Parses an user status object.
 
         Parameters
         ----------
@@ -4086,7 +4119,7 @@ class Parser:
         )
 
     def parse_user_status_edit(self, payload: raw.UserStatus, clear: list[raw.FieldsUser], /) -> UserStatusEdit:
-        """Parses a user status edit object.
+        """Parses an user status edit object.
 
         Parameters
         ----------
@@ -4108,7 +4141,7 @@ class Parser:
         )
 
     def parse_user_update_event(self, shard: Shard, payload: raw.ClientUserUpdateEvent, /) -> UserUpdateEvent:
-        """Parses a UserUpdate event.
+        """Parses an UserUpdate event.
 
         Parameters
         ----------
@@ -4153,7 +4186,7 @@ class Parser:
         )
 
     def parse_user_voice_state(self, payload: raw.UserVoiceState, /) -> UserVoiceState:
-        """Parses a user voice state object.
+        """Parses an user voice state object.
 
         Parameters
         ----------
@@ -4176,7 +4209,7 @@ class Parser:
     def parse_user_voice_state_update_event(
         self, shard: Shard, payload: raw.ClientUserVoiceStateUpdateEvent, /
     ) -> UserVoiceStateUpdateEvent:
-        """Parses a user voice state update event.
+        """Parses an user voice state update event.
 
         Parameters
         ----------

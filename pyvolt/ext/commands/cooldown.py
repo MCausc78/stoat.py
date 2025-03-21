@@ -85,7 +85,7 @@ class BucketType(Enum):
                 if server is None:
                     return msg.author_id
 
-                roles = pyvolt.sort_member_roles(author.roles, server_roles=server.roles)
+                roles = pyvolt.sort_member_roles(author.role_ids, server_roles=server.roles)
                 try:
                     top_role = roles[-1]
                 except IndexError:

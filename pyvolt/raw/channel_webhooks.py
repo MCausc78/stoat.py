@@ -10,7 +10,9 @@ class Webhook(typing.TypedDict):
     id: str
     name: str
     avatar: typing_extensions.NotRequired[File]
-    creator_id: str  # Only available since API v0.7.17
+
+    # It's always present since API v0.7.17, we typehint it as NotRequired for `to_dict` purposes
+    creator_id: typing_extensions.NotRequired[str]
     channel_id: str
     permissions: int
     token: typing.Optional[str]

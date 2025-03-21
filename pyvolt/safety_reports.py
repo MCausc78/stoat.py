@@ -39,7 +39,7 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True)
 class BaseReport(Base):
-    """Represents a user-generated platform moderation report on Revolt."""
+    """Represents an user-generated platform moderation report on Revolt."""
 
     author_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who created this report."""
@@ -138,7 +138,7 @@ class ServerReportedContent(BaseReportedContent):
 
 @define(slots=True)
 class UserReportedContent(BaseReportedContent):
-    """Represents a user being reported."""
+    """Represents an user being reported."""
 
     reason: UserReportReason = field(repr=True, kw_only=True)
     """:class:`.UserReportReason`: The reason why user was reported."""

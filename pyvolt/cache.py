@@ -37,7 +37,7 @@ if typing.TYPE_CHECKING:
 
     from .abc import Messageable
     from .bot import Bot
-    from .emoji import ServerEmoji, Emoji
+    from .emoji import ServerEmoji, DetachedEmoji, Emoji
     from .channel import (
         DMChannel,
         GroupChannel,
@@ -98,7 +98,6 @@ if typing.TYPE_CHECKING:
     from .invite import (
         ServerPublicInvite,
         GroupPublicInvite,
-        PrivateBaseInvite,
         GroupInvite,
         ServerInvite,
     )
@@ -214,25 +213,39 @@ class CacheContextType(Enum):
     read_state_through_client_getter = 'Client.get_read_state(): Optional[ReadState]'
     server_through_client_getter = 'Client.get_server(): Optional[Server]'
     user_through_client_getter = 'Client.get_user(): Optional[User]'
-    user_through_base_emoji_creator = 'BaseEmoji.creator: User'
+    member_or_user_through_server_emoji_creator = 'ServerEmoji.creator: Union[Member, User]'
+    member_through_server_emoji_creator = 'ServerEmoji.creator_as_member: Member'
+    user_through_server_emoji_creator = 'ServerEmoji.creator_as_user: User'
+    user_through_detached_emoji_creator = 'BaseEmoji.creator: User'
     server_through_server_emoji_server = 'ServerEmoji.server: Server'
     server_through_server_public_invite_server = 'ServerPublicInvite.server: Server'
     channel_through_server_public_invite_channel = 'ServerPublicInvite.channel: ServerChannel'
     user_through_server_public_invite_user = 'ServerPublicInvite.user: User'
     channel_through_group_public_invite_channel = 'GroupPublicInvite.channel: GroupChannel'
     user_through_group_public_invite_user = 'GroupPublicInvite.user: User'
-    user_through_private_base_invite_creator = 'PrivateBaseInvite.creator: User'
     channel_through_group_invite_channel = 'GroupInvite.channel: GroupChannel'
+    user_through_group_invite_creator = 'GroupInvite.creator: User'
     server_through_server_invite_server = 'ServerInvite.server: Server'
     channel_through_server_invite_channel = 'ServerInvite.channel: ServerChannel'
+    member_or_user_through_server_invite_creator = 'ServerInvite.creator: Union[Member, User]'
+    member_through_server_invite_creator = 'ServerInvite.creator_as_member: Member'
+    user_through_server_invite_creator = 'ServerInvite.creator_as_user: User'
     user_through_user_added_system_event_user = 'UserAddedSystemEvent.user: User'
     user_through_user_added_system_event_by = 'UserAddedSystemEvent.by: User'
     user_through_user_removed_system_event_user = 'UserRemovedSystemEvent.user: User'
     user_through_user_removed_system_event_by = 'UserRemovedSystemEvent.by: User'
     member_or_user_through_user_joined_system_event_user = 'UserJoinedSystemEvent.user: Union[Member, User]'
+    member_through_user_joined_system_event_user = 'UserJoinedSystemEvent.user_as_member: Member'
+    user_through_user_joined_system_event_user = 'UserJoinedSystemEvent.user_as_user: User'
     member_or_user_through_user_left_system_event_user = 'UserLeftSystemEvent.user: Union[Member, User]'
+    member_through_user_left_system_event_user = 'UserLeftSystemEvent.user_as_member: Member'
+    user_through_user_left_system_event_user = 'UserLeftSystemEvent.user_as_user: User'
     member_or_user_through_user_kicked_system_event_user = 'UserKickedSystemEvent.user: Union[Member, User]'
+    member_through_user_kicked_system_event_user = 'UserKickedSystemEvent.user_as_member: Member'
+    user_through_user_kicked_system_event_user = 'UserKickedSystemEvent.user_as_user: User'
     member_or_user_through_user_banned_system_event_user = 'UserBannedSystemEvent.user: Union[Member, User]'
+    member_through_user_banned_system_event_user = 'UserBannedSystemEvent.user_as_member: Member'
+    user_through_user_banned_system_event_user = 'UserBannedSystemEvent.user_as_user: User'
     user_through_channel_renamed_system_event_by = 'ChannelRenamedSystemEvent.by: User'
     user_through_channel_description_changed_system_event_by = 'ChannelDescriptionChangedSystemEvent.by: User'
     user_through_channel_icon_changed_system_event_by = 'ChannelIconChangedSystemEvent.by: User'
@@ -240,15 +253,22 @@ class CacheContextType(Enum):
     user_through_channel_ownership_changed_system_event_to = 'ChannelOwnershipChangedSystemEvent.to: User'
     message_through_message_pinned_system_event_pinned_message = 'MessagePinnedSystemEvent.pinned_message: Message'
     member_or_user_through_message_pinned_system_event_by = 'MessagePinnedSystemEvent.by: Union[Member, User]'
+    member_through_message_pinned_system_event_by = 'MessagePinnedSystemEvent.by_as_member: Member'
+    user_through_message_pinned_system_event_by = 'MessagePinnedSystemEvent.by_as_user: User'
     message_through_message_unpinned_system_event_unpinned_message = (
         'MessageUnpinnedSystemEvent.unpinned_message: Message'
     )
     member_or_user_through_message_unpinned_system_event_by = 'MessageUnpinnedSystemEvent.by: Union[Member, User]'
+    member_through_message_unpinned_system_event_by = 'MessageUnpinnedSystemEvent.by_as_member: Member'
+    user_through_message_unpinned_system_event_by = 'MessageUnpinnedSystemEvent.by_as_user: User'
     user_through_call_started_system_event_by = 'CallStartedSystemEvent.by: User'
     channel_through_message_channel = 'Message.channel: Channel'
     server_through_message_server = 'Message.server: Optional[Server]'
     member_or_user_through_message_author = 'Message.author: Union[Member, User]'
+    member_through_message_author = 'Message.author_as_member: Member'
+    user_through_message_author = 'Message.author_as_user: User'
     channel_through_read_state_channel = 'ReadState.channel: Channel'
+    members_through_role_members = 'Role.members: List[Member]'
     server_through_role_server = 'Role.server: Server'
     emoji_through_server_getter = 'Server.get_emoji(): Optional[Emoji]'
     member_through_server_getter = 'Server.get_member(): Optional[Member]'
@@ -256,13 +276,34 @@ class CacheContextType(Enum):
     members_through_server_getter = 'Server.members: Dict[str, Member]'
     channel_through_server_getter = 'Server.get_channel(): Optional[ServerChannel]'
     channels_through_server_getter = 'Server.channels: List[ServerChannel]'
-    member_through_server_owner = 'Server.owner: Member'
+    member_or_user_through_server_owner = 'Server.owner: Union[Member, User]'
+    member_through_server_owner = 'Server.owner_as_member: Member'
+    user_through_server_owner = 'Server.owner_as_user: User'
     server_through_member_server = 'Member.server: Server'
-    user_through_member_getter = 'Member.user: User'
-    user_through_user_bot_owner = 'User.bot_owner: User'
+    user_through_member_user = 'Member.user: User'
+    user_through_member_bot_owner = 'Member.bot_owner: Optional[User]'
+    channel_id_through_member_dm_channel_id = 'Member.dm_channel_id: Optional[str]'
+    channel_through_member_dm_channel = 'Member.dm_channel: Optional[DMChannel]'
+    user_through_member_name = 'Member.name: str'
+    user_through_member_discriminator = 'Member.discriminator: str'
+    user_through_member_display_name = 'Member.display_name: Optional[str]'
+    user_through_member_internal_avatar = 'Member.internal_avatar: Optional[StatelessAsset]'
+    user_through_member_raw_badges = 'Member.raw_badges: int'
+    user_through_member_status = 'Member.status: Optional[UserStatus]'
+    user_through_member_raw_flags = 'Member.raw_flags: int'
+    user_through_member_privileged = 'Member.privileged: bool'
+    user_through_member_bot = 'Member.bot: Optional[BotUserMetadata]'
+    user_through_member_relationship = 'Member.relationship: RelationshipStatus'
+    user_through_member_online = 'Member.online: bool'
+    user_through_member_tag = 'Member.tag: str'
+    server_through_member_roles = 'Member.roles: List[Role]'
+    server_through_member_top_role = 'Member.top_role: Optional[Role]'
+    user_through_user_bot_owner = 'User.bot_owner: Optional[User]'
     channel_id_through_user_dm_channel_id = 'User.dm_channel_id: Optional[str]'
     channel_through_user_dm_channel = 'User.dm_channel: Optional[DMChannel]'
-    user_through_webhook_creator = 'Webhook.creator: User'
+    member_or_user_through_webhook_creator = 'Webhook.creator: Union[Member, User]'
+    member_through_webhook_creator = 'Webhook.creator_as_member: Member'
+    user_through_webhook_creator = 'Webhook.creator_as_user: User'
     channel_through_webhook_channel = 'Webhook.channel: Union[GroupChannel, TextChannel]'
 
 
@@ -276,7 +317,7 @@ class BaseCacheContext:
 
 @define(slots=True)
 class UndefinedCacheContext(BaseCacheContext):
-    """Represents a undefined cache context."""
+    """Represents an undefined cache context."""
 
 
 @define(slots=True)
@@ -713,6 +754,14 @@ class ServerEmojiCacheContext(EntityCacheContext):
 
 
 @define(slots=True)
+class DetachedEmojiCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.DetachedEmoji` entity."""
+
+    emoji: DetachedEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.DetachedEmoji`: The emoji involved."""
+
+
+@define(slots=True)
 class ClientCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`.Client`."""
 
@@ -734,14 +783,6 @@ class GroupPublicInviteCacheContext(EntityCacheContext):
 
     invite: GroupPublicInvite = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`.GroupPublicInvite`: The invite involved."""
-
-
-@define(slots=True)
-class PrivateBaseInviteCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.PrivateBaseInvite` entity."""
-
-    invite: PrivateBaseInvite = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.PrivateBaseInvite`: The invite involved."""
 
 
 @define(slots=True)
@@ -806,6 +847,14 @@ class BaseMemberCacheContext(EntityCacheContext):
 
     member: BaseMember = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`.BaseMember`: The member involved."""
+
+
+@define(slots=True)
+class MemberCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`.Member` entity."""
+
+    member: Member = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.Member`: The member involved."""
 
 
 @define(slots=True)
@@ -1040,8 +1089,28 @@ class MemberOrUserThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemE
 
 
 @define(slots=True)
+class MemberThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user as member."""
+
+
+@define(slots=True)
+class UserThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user as user."""
+
+
+@define(slots=True)
 class MemberOrUserThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
     """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class MemberThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user as member."""
+
+
+@define(slots=True)
+class UserThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user as user."""
 
 
 @define(slots=True)
@@ -1050,8 +1119,28 @@ class MemberOrUserThroughUserKickedSystemEventUserCacheContext(UserKickedSystemE
 
 
 @define(slots=True)
+class MemberThroughUserKickedSystemEventUserCacheContext(UserKickedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent`, wishing to retrieve system message's user as member."""
+
+
+@define(slots=True)
+class UserThroughUserKickedSystemEventUserCacheContext(UserKickedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent`, wishing to retrieve system message's user as user."""
+
+
+@define(slots=True)
 class MemberOrUserThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
     """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user."""
+
+
+@define(slots=True)
+class MemberThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user as member."""
+
+
+@define(slots=True)
+class UserThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user as user."""
 
 
 @define(slots=True)
@@ -1092,6 +1181,16 @@ class MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinne
 
 
 @define(slots=True)
+class MemberThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author as member."""
+
+
+@define(slots=True)
+class UserThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author as user."""
+
+
+@define(slots=True)
 class MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext(MessageUnpinnedSystemEventCacheContext):
     """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's pinned message."""
 
@@ -1099,6 +1198,16 @@ class MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext(Messag
 @define(slots=True)
 class MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
     """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author."""
+
+
+@define(slots=True)
+class MemberThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author as member."""
+
+
+@define(slots=True)
+class UserThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
+    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author as user."""
 
 
 @define(slots=True)
@@ -1122,8 +1231,23 @@ class MemberOrUserThroughMessageAuthorCacheContext(MessageCacheContext):
 
 
 @define(slots=True)
+class MemberThroughMessageAuthorCacheContext(MessageCacheContext):
+    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's author as member."""
+
+
+@define(slots=True)
+class UserThroughMessageAuthorCacheContext(MessageCacheContext):
+    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's author as user."""
+
+
+@define(slots=True)
 class ReadStateThroughTextChannelReadStateCacheContext(TextChannelCacheContext):
     """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve text channel's read state."""
+
+
+@define(slots=True)
+class MembersThroughRoleMembersCacheContext(BaseRoleCacheContext):
+    """Represents a cache context that involves an :class:`.BaseRole`, wishing to retrieve server's members."""
 
 
 @define(slots=True)
@@ -1142,8 +1266,23 @@ class ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext(Voice
 
 
 @define(slots=True)
-class UserThroughBaseEmojiCreatorCacheContext(BaseEmojiCacheContext):
-    """Represents a cache context that involves an :class:`.BaseEmoji`, wishing to retrieve emoji's creator."""
+class MemberOrUserThroughServerEmojiCreatorCacheContext(ServerEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's creator."""
+
+
+@define(slots=True)
+class MemberThroughServerEmojiCreatorCacheContext(ServerEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's creator as member."""
+
+
+@define(slots=True)
+class UserThroughServerEmojiCreatorCacheContext(ServerEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's creator as user."""
+
+
+@define(slots=True)
+class UserThroughDetachedEmojiCreatorCacheContext(DetachedEmojiCacheContext):
+    """Represents a cache context that involves an :class:`.DetachedEmoji`, wishing to retrieve emoji's creator."""
 
 
 @define(slots=True)
@@ -1168,32 +1307,47 @@ class UserThroughServerPublicInviteUserCacheContext(ServerPublicInviteCacheConte
 
 @define(slots=True)
 class ChannelThroughGroupPublicInviteChannelCacheContext(GroupPublicInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupPublicInviteCacheContext`, wishing to retrieve destination group channel."""
+    """Represents a cache context that involves an :class:`.GroupPublicInvite`, wishing to retrieve destination group channel."""
 
 
 @define(slots=True)
 class UserThroughGroupPublicInviteUserCacheContext(GroupPublicInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupPublicInviteCacheContext`, wishing to retrieve invite's creator.."""
+    """Represents a cache context that involves an :class:`.GroupPublicInvite`, wishing to retrieve invite's creator.."""
 
 
 @define(slots=True)
-class UserThroughPrivateBaseInviteCreatorCacheContext(PrivateBaseInviteCacheContext):
-    """Represents a cache context that involves an :class:`.PrivateBaseInviteCacheContext`, wishing to retrieve invite's creator."""
+class UserThroughGroupInviteCreatorCacheContext(GroupInviteCacheContext):
+    """Represents a cache context that involves an :class:`.GroupInvite`, wishing to retrieve invite's creator."""
 
 
 @define(slots=True)
 class ChannelThroughGroupInviteChannelCacheContext(GroupInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupInviteCacheContext`, wishing to retrieve destination group channel."""
+    """Represents a cache context that involves an :class:`.GroupInvite`, wishing to retrieve destination group channel."""
 
 
 @define(slots=True)
 class ServerThroughServerInviteServerCacheContext(ServerInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInviteCacheContext`, wishing to retrieve destination server."""
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve destination server."""
 
 
 @define(slots=True)
 class ChannelThroughServerInviteChannelCacheContext(ServerInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInviteCacheContext`, wishing to retrieve destination server channel."""
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve destination server channel."""
+
+
+@define(slots=True)
+class MemberOrUserThroughServerInviteCreatorCacheContext(ServerInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve invite's creator."""
+
+
+@define(slots=True)
+class MemberThroughServerInviteCreatorCacheContext(ServerInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve invite's creator."""
+
+
+@define(slots=True)
+class UserThroughServerInviteCreatorCacheContext(ServerInviteCacheContext):
+    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve invite's creator."""
 
 
 @define(slots=True)
@@ -1232,13 +1386,113 @@ class ChannelsThroughServerGetterCacheContext(BaseServerCacheContext):
 
 
 @define(slots=True)
-class MemberThroughServerOwnerCacheContext(ServerCacheContext):
+class MemberOrUserThroughServerOwnerCacheContext(ServerCacheContext):
     """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner."""
 
 
 @define(slots=True)
-class UserThroughBaseMemberGetterCacheContext(BaseMemberCacheContext):
+class MemberThroughServerOwnerCacheContext(ServerCacheContext):
+    """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner as member."""
+
+
+@define(slots=True)
+class UserThroughServerOwnerCacheContext(ServerCacheContext):
+    """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner as user."""
+
+
+@define(slots=True)
+class ServerThroughMemberServerCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's server."""
+
+
+@define(slots=True)
+class UserThroughMemberUserCacheContext(BaseMemberCacheContext):
     """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's user."""
+
+
+@define(slots=True)
+class UserThroughMemberBotOwnerCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's bot owner."""
+
+
+@define(slots=True)
+class ChannelIDThroughMemberDMChannelIDCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's DM channel ID."""
+
+
+@define(slots=True)
+class ChannelThroughMemberDMChannelCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's DM channel."""
+
+
+@define(slots=True)
+class UserThroughMemberNameCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's name."""
+
+
+@define(slots=True)
+class UserThroughMemberDiscriminatorCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's discriminator."""
+
+
+@define(slots=True)
+class UserThroughMemberDisplayNameCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's display name."""
+
+
+@define(slots=True)
+class UserThroughMemberInternalAvatarCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's stateless avatar."""
+
+
+@define(slots=True)
+class UserThroughMemberRawBadgesCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's raw badges value."""
+
+
+@define(slots=True)
+class UserThroughMemberStatusCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's status."""
+
+
+@define(slots=True)
+class UserThroughMemberRawFlagsCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's raw flags value."""
+
+
+@define(slots=True)
+class UserThroughMemberPrivilegedCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's privileged."""
+
+
+@define(slots=True)
+class UserThroughMemberBotCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's user bot-specific metadata."""
+
+
+@define(slots=True)
+class UserThroughMemberRelationshipCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's relationship."""
+
+
+@define(slots=True)
+class UserThroughMemberOnlineCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's online status."""
+
+
+@define(slots=True)
+class UserThroughMemberTagCacheContext(BaseMemberCacheContext):
+    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's tag."""
+
+
+@define(slots=True)
+class ServerThroughMemberRolesCacheContext(MemberCacheContext):
+    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's roles."""
+
+
+@define(slots=True)
+class ServerThroughMemberTopRoleCacheContext(MemberCacheContext):
+    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's roles."""
 
 
 @define(slots=True)
@@ -1257,8 +1511,18 @@ class ChannelThroughUserDMChannelIDCacheContext(BaseUserCacheContext):
 
 
 @define(slots=True)
-class UserThroughWebhookCreatorCacheContext(WebhookCacheContext):
+class MemberOrUserThroughWebhookCreatorCacheContext(WebhookCacheContext):
     """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator."""
+
+
+@define(slots=True)
+class MemberThroughWebhookCreatorCacheContext(WebhookCacheContext):
+    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator as member."""
+
+
+@define(slots=True)
+class UserThroughWebhookCreatorCacheContext(WebhookCacheContext):
+    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator as user."""
 
 
 @define(slots=True)
@@ -1412,6 +1676,9 @@ _MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE: typing.Final[UndefinedCacheContext] = 
 _READ_STATE_THROUGH_DM_CHANNEL_READ_STATE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.read_state_through_dm_channel_read_state,
 )
+_MEMBERS_THROUGH_ROLE_MEMBERS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.members_through_role_members,
+)
 _SERVER_THROUGH_ROLE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_role_server,
 )
@@ -1497,8 +1764,17 @@ _SERVER_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCa
 _USER_THROUGH_CLIENT_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_client_getter,
 )
-_USER_THROUGH_BASE_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_through_base_emoji_creator,
+_MEMBER_OR_USER_THROUGH_SERVER_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_server_emoji_creator,
+)
+_MEMBER_THROUGH_SERVER_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_server_emoji_creator,
+)
+_USER_THROUGH_SERVER_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_server_emoji_creator,
+)
+_USER_THROUGH_DETACHED_EMOJI_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_detached_emoji_creator,
 )
 _SERVER_THROUGH_SERVER_EMOJI_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_server_emoji_server,
@@ -1518,17 +1794,26 @@ _CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL: typing.Final[UndefinedCacheContext
 _USER_THROUGH_GROUP_PUBLIC_INVITE_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_group_public_invite_user,
 )
-_USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_through_private_base_invite_creator,
-)
 _CHANNEL_THROUGH_GROUP_INVITE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_group_invite_channel,
+)
+_USER_THROUGH_GROUP_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_group_invite_creator,
 )
 _SERVER_THROUGH_SERVER_INVITE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_server_invite_server,
 )
 _CHANNEL_THROUGH_SERVER_INVITE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_server_invite_channel,
+)
+_MEMBER_OR_USER_THROUGH_SERVER_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_server_invite_creator,
+)
+_MEMBER_THROUGH_SERVER_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_server_invite_creator,
+)
+_USER_THROUGH_SERVER_INVITE_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_server_invite_creator,
 )
 _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_user_added_system_event_user,
@@ -1545,14 +1830,38 @@ _USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] 
 _MEMBER_OR_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_user_joined_system_event_user,
 )
+_MEMBER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_user_joined_system_event_user,
+)
+_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_joined_system_event_user,
+)
 _MEMBER_OR_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_user_left_system_event_user,
+)
+_MEMBER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_user_left_system_event_user,
+)
+_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_left_system_event_user,
 )
 _MEMBER_OR_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_user_kicked_system_event_user,
 )
+_MEMBER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_user_kicked_system_event_user,
+)
+_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_kicked_system_event_user,
+)
 _MEMBER_OR_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_user_banned_system_event_user,
+)
+_MEMBER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_user_banned_system_event_user,
+)
+_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_user_banned_system_event_user,
 )
 _USER_THROUGH_CHANNEL_RENAMED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_channel_renamed_system_event_by,
@@ -1577,6 +1886,12 @@ _MESSAGE_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_PINNED_MESSAGE: typing.Final[Undefi
 _MEMBER_OR_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_message_pinned_system_event_by,
 )
+_MEMBER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_message_pinned_system_event_by,
+)
+_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_message_pinned_system_event_by,
+)
 _MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE: typing.Final[UndefinedCacheContext] = (
     UndefinedCacheContext(
         type=CacheContextType.message_through_message_unpinned_system_event_unpinned_message,
@@ -1585,9 +1900,16 @@ _MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE: typing.Final[Un
 _MEMBER_OR_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_message_unpinned_system_event_by,
 )
+_MEMBER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_message_unpinned_system_event_by,
+)
+_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_message_unpinned_system_event_by,
+)
 _USER_THROUGH_CALL_STARTED_SYSTEM_EVENT_BY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_call_started_system_event_by,
 )
+
 _CHANNEL_THROUGH_MESSAGE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_message_channel,
 )
@@ -1596,6 +1918,12 @@ _SERVER_THROUGH_MESSAGE_SERVER: typing.Final[UndefinedCacheContext] = UndefinedC
 )
 _MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_message_author,
+)
+_MEMBER_THROUGH_MESSAGE_AUTHOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_message_author,
+)
+_USER_THROUGH_MESSAGE_AUTHOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_message_author,
 )
 _CHANNEL_THROUGH_READ_STATE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_read_state_channel,
@@ -1618,8 +1946,71 @@ _CHANNEL_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedC
 _CHANNELS_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channels_through_server_getter,
 )
+_MEMBER_OR_USER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_server_owner,
+)
 _MEMBER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_through_server_owner,
+)
+_USER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_server_owner,
+)
+_SERVER_THROUGH_MEMBER_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_member_server,
+)
+_USER_THROUGH_MEMBER_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_user,
+)
+_USER_THROUGH_MEMBER_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_bot_owner,
+)
+_CHANNEL_ID_THROUGH_MEMBER_DM_CHANNEL_ID: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_id_through_member_dm_channel_id,
+)
+_CHANNEL_THROUGH_MEMBER_DM_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.channel_through_member_dm_channel,
+)
+_USER_THROUGH_MEMBER_NAME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_name,
+)
+_USER_THROUGH_MEMBER_DISCRIMINATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_discriminator,
+)
+_USER_THROUGH_MEMBER_DISPLAY_NAME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_display_name,
+)
+_USER_THROUGH_MEMBER_INTERNAL_AVATAR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_internal_avatar,
+)
+_USER_THROUGH_MEMBER_RAW_BADGES: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_raw_badges,
+)
+_USER_THROUGH_MEMBER_STATUS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_status,
+)
+_USER_THROUGH_MEMBER_RAW_FLAGS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_raw_flags,
+)
+_USER_THROUGH_MEMBER_PRIVILEGED: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_privileged,
+)
+_USER_THROUGH_MEMBER_BOT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_bot,
+)
+_USER_THROUGH_MEMBER_RELATIONSHIP: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_relationship,
+)
+_USER_THROUGH_MEMBER_ONLINE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_online,
+)
+_USER_THROUGH_MEMBER_TAG: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_member_tag,
+)
+_SERVER_THROUGH_MEMBER_ROLES: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_member_roles,
+)
+_SERVER_THROUGH_MEMBER_TOP_ROLE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_member_top_role,
 )
 _USER_THROUGH_USER_BOT_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_user_bot_owner,
@@ -1630,8 +2021,11 @@ _CHANNEL_THROUGH_USER_DM_CHANNEL: typing.Final[UndefinedCacheContext] = Undefine
 _CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_id_through_user_dm_channel_id,
 )
-_USER_THROUGH_MEMBER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.user_through_member_getter,
+_MEMBER_OR_USER_THROUGH_WEBHOOK_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_webhook_creator,
+)
+_MEMBER_THROUGH_WEBHOOK_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_webhook_creator,
 )
 _USER_THROUGH_WEBHOOK_CREATOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_webhook_creator,
@@ -1702,7 +2096,10 @@ ProvideCacheContextIn = typing.Literal[
     'TextChannel.read_state',
     'TextChannel.voice_states',
     'VoiceChannel.voice_states',
-    'BaseEmoji.creator',
+    'ServerEmoji.creator',
+    'ServerEmoji.creator_as_member',
+    'ServerEmoji.creator_as_user',
+    'DetachedEmoji.creator',
     'ServerEmoji.server',
     'Client.channels',
     'Client.emojis',
@@ -1724,18 +2121,29 @@ ProvideCacheContextIn = typing.Literal[
     'ServerPublicInvite.user',
     'GroupPublicInvite.channel',
     'GroupPublicInvite.user',
-    'PrivateBaseInvite.creator',
     'GroupInvite.channel',
+    'GroupInvite.creator',
     'ServerInvite.server',
     'ServerInvite.channel',
+    'ServerInvite.creator',
+    'ServerInvite.creator_as_member',
+    'ServerInvite.creator_as_user',
     'UserAddedSystemEvent.user',
     'UserAddedSystemEvent.by',
     'UserRemovedSystemEvent.user',
     'UserRemovedSystemEvent.by',
     'UserJoinedSystemEvent.user',
+    'UserJoinedSystemEvent.user_as_member',
+    'UserJoinedSystemEvent.user_as_user',
     'UserLeftSystemEvent.user',
+    'UserLeftSystemEvent.user_as_member',
+    'UserLeftSystemEvent.user_as_user',
     'UserKickedSystemEvent.user',
+    'UserKickedSystemEvent.user_as_member',
+    'UserKickedSystemEvent.user_as_user',
     'UserBannedSystemEvent.user',
+    'UserBannedSystemEvent.user_as_member',
+    'UserBannedSystemEvent.user_as_user',
     'ChannelRenamedSystemEvent.by',
     'ChannelDescriptionChangedSystemEvent.by',
     'ChannelIconChangedSystemEvent.by',
@@ -1743,13 +2151,20 @@ ProvideCacheContextIn = typing.Literal[
     'ChannelOwnershipChangedSystemEvent.to',
     'MessagePinnedSystemEvent.pinned_message',
     'MessagePinnedSystemEvent.by',
+    'MessagePinnedSystemEvent.by_as_member',
+    'MessagePinnedSystemEvent.by_as_user',
     'MessageUnpinnedSystemEvent.unpinned_message',
     'MessageUnpinnedSystemEvent.by',
+    'MessageUnpinnedSystemEvent.by_as_member',
+    'MessageUnpinnedSystemEvent.by_as_user',
     'CallStartedSystemEvent.by',
     'Message.channel',
     'Message.server',
     'Message.author',
+    'Message.author_as_member',
+    'Message.author_as_user',
     'ReadState.channel',
+    'Role.members',
     'Role.server',
     'Server.get_emoji()',
     'Server.get_member()',
@@ -1758,12 +2173,33 @@ ProvideCacheContextIn = typing.Literal[
     'Server.get_channel()',
     'Server.channels',
     'Server.owner',
+    'Server.owner_as_member',
+    'Server.owner_as_user',
     'Member.server',
     'Member.user',
+    'Member.bot_owner',
+    'Member.dm_channel_id',
+    'Member.dm_channel',
+    'Member.name',
+    'Member.discriminator',
+    'Member.display_name',
+    'Member.internal_avatar',
+    'Member.raw_badges',
+    'Member.status',
+    'Member.raw_flags',
+    'Member.privileged',
+    'Member.bot',
+    'Member.relationship',
+    'Member.online',
+    'Member.tag',
+    'Member.roles',
+    'Member.top_role',
     'User.bot_owner',
     'User.dm_channel_id',
     'User.dm_channel',
     'Webhook.creator',
+    'Webhook.creator_as_member',
+    'Webhook.creator_as_user',
     'Webhook.channel',
 ]
 
@@ -2325,7 +2761,7 @@ class Cache(ABC):
     #########
     @abstractmethod
     def get_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Retrieves a user using ID.
+        """Optional[:class:`.User`]: Retrieves an user using ID.
 
         Parameters
         ----------
@@ -3197,10 +3633,10 @@ __all__ = (
     'GroupChannelCacheContext',
     'BaseEmojiCacheContext',
     'ServerEmojiCacheContext',
+    'DetachedEmojiCacheContext',
     'ClientCacheContext',
     'ServerPublicInviteCacheContext',
     'GroupPublicInviteCacheContext',
-    'PrivateBaseInviteCacheContext',
     'GroupInviteCacheContext',
     'ServerInviteCacheContext',
     'BaseMessageCacheContext',
@@ -3209,13 +3645,13 @@ __all__ = (
     'BaseRoleCacheContext',
     'BaseServerChannelCacheContext',
     'BaseMemberCacheContext',
+    'MemberCacheContext',
     'ServerCacheContext',
     'BaseUserCacheContext',
     'UserCacheContext',
     'WebhookCacheContext',
     'MessageThroughMessageableGetterCacheContext',
     'MessagesThroughMessageableGetterCacheContext',
-    # 'MessageableMessagesGetterCacheContext',
     'UserThroughBotOwnerCacheContext',
     'UserThroughDMChannelInitiatorCacheContext',
     'MessageThroughDMChannelLastMessageCacheContext',
@@ -3233,9 +3669,17 @@ __all__ = (
     'UserThroughUserRemovedSystemEventUserCacheContext',
     'UserThroughUserRemovedSystemEventAuthorCacheContext',
     'MemberOrUserThroughUserJoinedSystemEventUserCacheContext',
+    'MemberThroughUserJoinedSystemEventUserCacheContext',
+    'UserThroughUserJoinedSystemEventUserCacheContext',
     'MemberOrUserThroughUserLeftSystemEventUserCacheContext',
+    'MemberThroughUserLeftSystemEventUserCacheContext',
+    'UserThroughUserLeftSystemEventUserCacheContext',
     'MemberOrUserThroughUserKickedSystemEventUserCacheContext',
+    'MemberThroughUserKickedSystemEventUserCacheContext',
+    'UserThroughUserKickedSystemEventUserCacheContext',
     'MemberOrUserThroughUserBannedSystemEventUserCacheContext',
+    'MemberThroughUserBannedSystemEventUserCacheContext',
+    'UserThroughUserBannedSystemEventUserCacheContext',
     'UserThroughChannelRenamedSystemEventAuthorCacheContext',
     'UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext',
     'UserThroughChannelIconChangedSystemEventAuthorCacheContext',
@@ -3243,27 +3687,40 @@ __all__ = (
     'UserThroughChannelOwnershipChangedSystemEventToCacheContext',
     'MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext',
     'MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext',
+    'MemberThroughMessagePinnedSystemEventAuthorCacheContext',
+    'UserThroughMessagePinnedSystemEventAuthorCacheContext',
     'MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext',
     'MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext',
+    'MemberThroughMessageUnpinnedSystemEventAuthorCacheContext',
+    'UserThroughMessageUnpinnedSystemEventAuthorCacheContext',
     'UserThroughCallStartedSystemEventAuthorCacheContext',
     'ChannelThroughMessageChannelCacheContext',
     'ServerThroughMessageServerCacheContext',
     'MemberOrUserThroughMessageAuthorCacheContext',
+    'MemberThroughMessageAuthorCacheContext',
+    'UserThroughMessageAuthorCacheContext',
     'ReadStateThroughTextChannelReadStateCacheContext',
+    'MembersThroughRoleMembersCacheContext',
     'ServerThroughRoleServerCacheContext',
     'ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext',
     'ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext',
-    'UserThroughBaseEmojiCreatorCacheContext',
+    'MemberOrUserThroughServerEmojiCreatorCacheContext',
+    'MemberThroughServerEmojiCreatorCacheContext',
+    'UserThroughServerEmojiCreatorCacheContext',
+    'UserThroughDetachedEmojiCreatorCacheContext',
     'ServerThroughServerEmojiServerCacheContext',
     'ServerThroughServerPublicInviteServerCacheContext',
     'ChannelThroughServerPublicInviteChannelCacheContext',
     'UserThroughServerPublicInviteUserCacheContext',
     'ChannelThroughGroupPublicInviteChannelCacheContext',
     'UserThroughGroupPublicInviteUserCacheContext',
-    'UserThroughPrivateBaseInviteCreatorCacheContext',
     'ChannelThroughGroupInviteChannelCacheContext',
+    'UserThroughGroupInviteCreatorCacheContext',
     'ServerThroughServerInviteServerCacheContext',
     'ChannelThroughServerInviteChannelCacheContext',
+    'MemberOrUserThroughServerInviteCreatorCacheContext',
+    'MemberThroughServerInviteCreatorCacheContext',
+    'UserThroughServerInviteCreatorCacheContext',
     'ChannelThroughReadStateChannelCacheContext',
     'EmojiThroughServerGetterCacheContext',
     'MemberThroughServerGetterCacheContext',
@@ -3271,10 +3728,33 @@ __all__ = (
     'MembersThroughServerGetterCacheContext',
     'ChannelThroughServerGetterCacheContext',
     'ChannelsThroughServerGetterCacheContext',
-    'UserThroughBaseMemberGetterCacheContext',
+    'MemberOrUserThroughServerOwnerCacheContext',
+    'MemberThroughServerOwnerCacheContext',
+    'UserThroughServerOwnerCacheContext',
+    'ServerThroughMemberServerCacheContext',
+    'UserThroughMemberUserCacheContext',
+    'UserThroughMemberBotOwnerCacheContext',
+    'ChannelIDThroughMemberDMChannelIDCacheContext',
+    'ChannelThroughMemberDMChannelCacheContext',
+    'UserThroughMemberNameCacheContext',
+    'UserThroughMemberDiscriminatorCacheContext',
+    'UserThroughMemberDisplayNameCacheContext',
+    'UserThroughMemberInternalAvatarCacheContext',
+    'UserThroughMemberRawBadgesCacheContext',
+    'UserThroughMemberStatusCacheContext',
+    'UserThroughMemberRawFlagsCacheContext',
+    'UserThroughMemberPrivilegedCacheContext',
+    'UserThroughMemberBotCacheContext',
+    'UserThroughMemberRelationshipCacheContext',
+    'UserThroughMemberOnlineCacheContext',
+    'UserThroughMemberTagCacheContext',
+    'ServerThroughMemberRolesCacheContext',
+    'ServerThroughMemberTopRoleCacheContext',
     'UserThroughUserBotOwnerCacheContext',
     'ChannelIDThroughUserDMChannelIDCacheContext',
     'ChannelThroughUserDMChannelIDCacheContext',
+    'MemberOrUserThroughWebhookCreatorCacheContext',
+    'MemberThroughWebhookCreatorCacheContext',
     'UserThroughWebhookCreatorCacheContext',
     'ChannelThroughWebhookChannelCacheContext',
     '_UNDEFINED',
@@ -3329,6 +3809,7 @@ __all__ = (
     '_USER_THROUGH_DM_CHANNEL_INITIATOR',
     '_MESSAGE_THROUGH_DM_CHANNEL_LAST_MESSAGE',
     '_READ_STATE_THROUGH_DM_CHANNEL_READ_STATE',
+    '_MEMBERS_THROUGH_ROLE_MEMBERS',
     '_SERVER_THROUGH_ROLE_SERVER',
     '_USER_THROUGH_DM_CHANNEL_RECIPIENT',
     '_USER_THROUGH_DM_CHANNEL_RECIPIENTS',
@@ -3356,25 +3837,39 @@ __all__ = (
     '_READ_STATE_THROUGH_CLIENT_GETTER',
     '_SERVER_THROUGH_CLIENT_GETTER',
     '_USER_THROUGH_CLIENT_GETTER',
-    '_USER_THROUGH_BASE_EMOJI_CREATOR',
+    '_MEMBER_OR_USER_THROUGH_SERVER_EMOJI_CREATOR',
+    '_MEMBER_THROUGH_SERVER_EMOJI_CREATOR',
+    '_USER_THROUGH_SERVER_EMOJI_CREATOR',
+    '_USER_THROUGH_DETACHED_EMOJI_CREATOR',
     '_SERVER_THROUGH_SERVER_EMOJI_SERVER',
     '_SERVER_THROUGH_SERVER_PUBLIC_INVITE_SERVER',
     '_CHANNEL_THROUGH_SERVER_PUBLIC_INVITE_CHANNEL',
     '_USER_THROUGH_SERVER_PUBLIC_INVITE_USER',
     '_CHANNEL_THROUGH_GROUP_PUBLIC_INVITE_CHANNEL',
     '_USER_THROUGH_GROUP_PUBLIC_INVITE_USER',
-    '_USER_THROUGH_PRIVATE_BASE_INVITE_CREATOR',
     '_CHANNEL_THROUGH_GROUP_INVITE_CHANNEL',
+    '_USER_THROUGH_GROUP_INVITE_CREATOR',
     '_SERVER_THROUGH_SERVER_INVITE_SERVER',
     '_CHANNEL_THROUGH_SERVER_INVITE_CHANNEL',
+    '_MEMBER_OR_USER_THROUGH_SERVER_INVITE_CREATOR',
+    '_MEMBER_THROUGH_SERVER_INVITE_CREATOR',
+    '_USER_THROUGH_SERVER_INVITE_CREATOR',
     '_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER',
     '_USER_THROUGH_USER_ADDED_SYSTEM_EVENT_BY',
     '_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER',
     '_USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_BY',
     '_MEMBER_OR_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER',
+    '_MEMBER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_JOINED_SYSTEM_EVENT_USER',
     '_MEMBER_OR_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER',
+    '_MEMBER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_LEFT_SYSTEM_EVENT_USER',
     '_MEMBER_OR_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER',
+    '_MEMBER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_KICKED_SYSTEM_EVENT_USER',
     '_MEMBER_OR_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER',
+    '_MEMBER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER',
+    '_USER_THROUGH_USER_BANNED_SYSTEM_EVENT_USER',
     '_USER_THROUGH_CHANNEL_RENAMED_SYSTEM_EVENT_BY',
     '_USER_THROUGH_CHANNEL_DESCRIPTION_CHANGED_SYSTEM_EVENT_BY',
     '_USER_THROUGH_CHANNEL_ICON_CHANGED_SYSTEM_EVENT_BY',
@@ -3382,12 +3877,18 @@ __all__ = (
     '_USER_THROUGH_CHANNEL_OWNERSHIP_CHANGED_SYSTEM_EVENT_TO',
     '_MESSAGE_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_PINNED_MESSAGE',
     '_MEMBER_OR_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY',
+    '_MEMBER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY',
+    '_USER_THROUGH_MESSAGE_PINNED_SYSTEM_EVENT_BY',
     '_MESSAGE_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_UNPINNED_MESSAGE',
     '_MEMBER_OR_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY',
+    '_MEMBER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY',
+    '_USER_THROUGH_MESSAGE_UNPINNED_SYSTEM_EVENT_BY',
     '_USER_THROUGH_CALL_STARTED_SYSTEM_EVENT_BY',
     '_CHANNEL_THROUGH_MESSAGE_CHANNEL',
     '_SERVER_THROUGH_MESSAGE_SERVER',
     '_MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR',
+    '_MEMBER_THROUGH_MESSAGE_AUTHOR',
+    '_USER_THROUGH_MESSAGE_AUTHOR',
     '_CHANNEL_THROUGH_READ_STATE_CHANNEL',
     '_EMOJI_THROUGH_SERVER_GETTER',
     '_MEMBER_THROUGH_SERVER_GETTER',
@@ -3395,11 +3896,33 @@ __all__ = (
     '_MEMBERS_THROUGH_SERVER_GETTER',
     '_CHANNEL_THROUGH_SERVER_GETTER',
     '_CHANNELS_THROUGH_SERVER_GETTER',
+    '_MEMBER_OR_USER_THROUGH_SERVER_OWNER',
     '_MEMBER_THROUGH_SERVER_OWNER',
+    '_USER_THROUGH_SERVER_OWNER',
+    '_SERVER_THROUGH_MEMBER_SERVER',
+    '_USER_THROUGH_MEMBER_USER',
+    '_USER_THROUGH_MEMBER_BOT_OWNER',
+    '_CHANNEL_ID_THROUGH_MEMBER_DM_CHANNEL_ID',
+    '_CHANNEL_THROUGH_MEMBER_DM_CHANNEL',
+    '_USER_THROUGH_MEMBER_NAME',
+    '_USER_THROUGH_MEMBER_DISCRIMINATOR',
+    '_USER_THROUGH_MEMBER_DISPLAY_NAME',
+    '_USER_THROUGH_MEMBER_INTERNAL_AVATAR',
+    '_USER_THROUGH_MEMBER_RAW_BADGES',
+    '_USER_THROUGH_MEMBER_STATUS',
+    '_USER_THROUGH_MEMBER_RAW_FLAGS',
+    '_USER_THROUGH_MEMBER_PRIVILEGED',
+    '_USER_THROUGH_MEMBER_BOT',
+    '_USER_THROUGH_MEMBER_RELATIONSHIP',
+    '_USER_THROUGH_MEMBER_ONLINE',
+    '_USER_THROUGH_MEMBER_TAG',
+    '_SERVER_THROUGH_MEMBER_ROLES',
+    '_SERVER_THROUGH_MEMBER_TOP_ROLE',
     '_USER_THROUGH_USER_BOT_OWNER',
     '_CHANNEL_THROUGH_USER_DM_CHANNEL',
     '_CHANNEL_ID_THROUGH_USER_DM_CHANNEL_ID',
-    '_USER_THROUGH_MEMBER_GETTER',
+    '_MEMBER_OR_USER_THROUGH_WEBHOOK_CREATOR',
+    '_MEMBER_THROUGH_WEBHOOK_CREATOR',
     '_USER_THROUGH_WEBHOOK_CREATOR',
     '_CHANNEL_THROUGH_WEBHOOK_CHANNEL',
     'ProvideCacheContextIn',

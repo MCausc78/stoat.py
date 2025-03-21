@@ -792,7 +792,7 @@ class RoleConverter(IDConverter[pyvolt.Role]):
 class InviteConverter(Converter[pyvolt.PublicInvite]):
     """Converts to a :class:`~pyvolt.PublicInvite`.
 
-    This is done via an HTTP request using :meth:`pyvolt.HTTPClient.get_invite`.
+    This is done via a HTTP request using :meth:`pyvolt.HTTPClient.get_invite`.
     """
 
     async def convert(self, ctx: Context[BotT], argument: str, /) -> pyvolt.PublicInvite:

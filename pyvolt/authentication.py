@@ -32,6 +32,7 @@ from .core import UNDEFINED, UndefinedOr
 from .enums import MFAMethod
 
 if typing.TYPE_CHECKING:
+    from .http import HTTPOverrideOptions
     from .state import State
     from . import raw
 
@@ -67,7 +68,7 @@ class MFATicket:
     """:class:`bool`: Whether this ticket has been validated (can be used for account actions)."""
 
     authorized: bool = field(repr=True, kw_only=True)
-    """:class:`bool`: Whether this ticket is authorized (can be used to log a user in)."""
+    """:class:`bool`: Whether this ticket is authorized (can be used to log an user in)."""
 
     last_totp_code: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The TOTP code at time of ticket creation."""
@@ -97,13 +98,19 @@ class PartialSession(Base):
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The user-friendly client name."""
 
-    async def edit(self, *, friendly_name: UndefinedOr[str] = UNDEFINED) -> PartialSession:
+    async def edit(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        friendly_name: UndefinedOr[str] = UNDEFINED,
+    ) -> PartialSession:
         """|coro|
 
         Edits the session.
 
         Parameters
         ----------
+
         friendly_name: UndefinedOr[:class:`str`]
             The new user-friendly client name.
 
@@ -151,13 +158,21 @@ class PartialSession(Base):
             )
         return await self.state.http.edit_session(
             self.id,
+            http_overrides=http_overrides,
             friendly_name=friendly_name,
         )
 
-    async def revoke(self) -> None:
+    async def revoke(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the session.
+
+        Fires :class:`.SessionDeleteEvent` for the provided session.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -188,7 +203,7 @@ class PartialSession(Base):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
             +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
-        return await self.state.http.revoke_session(self.id)
+        return await self.state.http.revoke_session(self.id, http_overrides=http_overrides)
 
 
 @define(slots=True)
@@ -220,7 +235,11 @@ class MFARequired:
     friendly_name: typing.Optional[str] = field(repr=True, kw_only=True)
 
     async def use_recovery_code(
-        self, code: str, *, friendly_name: UndefinedOr[typing.Optional[str]] = UNDEFINED
+        self,
+        code: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        friendly_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> typing.Union[Session, AccountDisabled]:
         """|coro|
 
@@ -230,6 +249,8 @@ class MFARequired:
         ----------
         code: :class:`str`
             The valid recovery code.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         friendly_name: UndefinedOr[Optional[:class:`str`]]
             The user-friendly client name. If set to :data:`.UNDEFINED`, this defaults to :attr:`.friendly_name`.
 
@@ -282,11 +303,16 @@ class MFARequired:
         return await self.state.http.login_with_mfa(
             self.ticket,
             ByRecoveryCode(code),
+            http_overrides=http_overrides,
             friendly_name=friendly_name,
         )
 
     async def use_totp(
-        self, code: str, *, friendly_name: UndefinedOr[typing.Optional[str]] = UNDEFINED
+        self,
+        code: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        friendly_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> typing.Union[Session, AccountDisabled]:
         """|coro|
 
@@ -296,6 +322,8 @@ class MFARequired:
         ----------
         code: :class:`str`
             The valid TOTP code.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         friendly_name: UndefinedOr[Optional[:class:`str`]]
             The user-friendly client name. If set to :data:`.UNDEFINED`, this defaults to :attr:`.friendly_name`.
 
@@ -345,7 +373,9 @@ class MFARequired:
         if friendly_name is UNDEFINED:
             friendly_name = self.friendly_name
 
-        return await self.state.http.login_with_mfa(self.ticket, ByTOTP(code), friendly_name=self.friendly_name)
+        return await self.state.http.login_with_mfa(
+            self.ticket, ByTOTP(code), http_overrides=http_overrides, friendly_name=self.friendly_name
+        )
 
 
 @define(slots=True)

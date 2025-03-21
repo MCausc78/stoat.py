@@ -974,7 +974,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         """A decorator that registers a coroutine as a pre-invoke hook.
 
         A pre-invoke hook is called directly before the command is
-        called. This makes it a useful function to set up database
+        called. This makes it an useful function to set up database
         connections or any type of set up required.
 
         This pre-invoke hook takes a sole parameter, a :class:`.Context`.
@@ -1001,7 +1001,7 @@ class Command(_BaseCommand, typing.Generic[GearT, P, T]):
         """A decorator that registers a coroutine as a post-invoke hook.
 
         A post-invoke hook is called directly after the command is
-        called. This makes it a useful function to clean-up database
+        called. This makes it an useful function to clean-up database
         connections or any type of clean up required.
 
         This post-invoke hook takes a sole parameter, a :class:`.Context`.
@@ -1184,7 +1184,7 @@ class GroupMixin(typing.Generic[GearT]):
 
     @property
     def commands(self) -> set[Command[GearT, ..., typing.Any]]:
-        """Set[:class:`.Command`]: A unique set of commands without aliases that are registered."""
+        """Set[:class:`.Command`]: An unique set of commands without aliases that are registered."""
         return set(self.all_commands.values())
 
     def recursively_remove_all_commands(self) -> None:
@@ -1885,7 +1885,7 @@ def has_role(item: str, /) -> Check[typing.Any]:
         if not isinstance(author, pyvolt.Member):
             raise NoPrivateMessage()
 
-        if item not in author.roles:
+        if item not in author.role_ids:
             raise MissingRole(missing_role=item)
 
         return True
@@ -1926,7 +1926,7 @@ def has_any_role(*items: str) -> Callable[[T], T]:
         if not isinstance(author, pyvolt.Member):
             raise NoPrivateMessage()
 
-        roles = author.roles
+        roles = author.role_ids
 
         if any(item in roles for item in items):
             return True
@@ -1951,7 +1951,7 @@ def bot_has_role(item: str, /) -> Callable[[T], T]:
         if not isinstance(me, pyvolt.Member):
             raise NoPrivateMessage()
 
-        if item not in me.roles:
+        if item not in me.role_ids:
             raise BotMissingRole(missing_role=item)
 
         return True
@@ -1974,7 +1974,7 @@ def bot_has_any_role(*items: str) -> Callable[[T], T]:
         if not isinstance(me, pyvolt.Member):
             raise NoPrivateMessage()
 
-        if any(item in me.roles for item in items):
+        if any(item in me.role_ids for item in items):
             return True
         raise BotMissingAnyRole(missing_roles=list(items))
 

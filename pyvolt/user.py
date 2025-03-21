@@ -52,6 +52,7 @@ from .errors import NoData
 if typing.TYPE_CHECKING:
     from . import raw
     from .channel import SavedMessagesChannel, DMChannel
+    from .http import HTTPOverrideOptions
     from .message import BaseMessage
     from .state import State
 
@@ -79,6 +80,16 @@ class UserStatus:
             self.text = data.text
         if data.presence is not UNDEFINED:
             self.presence = data.presence
+
+    def to_dict(self) -> raw.UserStatus:
+        """:class:`dict`: Convert user status to raw data."""
+
+        payload: raw.UserStatus = {}
+        if self.text is not None:
+            payload['text'] = self.text
+        if self.presence is not None:
+            payload['presence'] = self.presence.value
+        return payload
 
 
 class UserStatusEdit:
@@ -216,6 +227,18 @@ class UserProfileEdit:
         return remove
 
     async def to_dict(self, state: State, /) -> raw.DataUserProfile:
+        """Convert user profile edit to raw data.
+
+        Parameters
+        ----------
+        state: :class:`.State`
+            The state. Required to resolve :attr:`~.media` attribute into file ID.
+
+        Returns
+        -------
+        :class:`dict`
+            The raw data.
+        """
         payload: raw.DataUserProfile = {}
         if self.content not in (None, UNDEFINED):
             payload['content'] = self.content
@@ -240,6 +263,14 @@ class Relationship:
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, Relationship) and self.id == other.id and self.status == other.status
 
+    def to_dict(self) -> raw.Relationship:
+        """:class:`dict`: Convert relationship to raw data."""
+
+        return {
+            '_id': self.id,
+            'status': self.status.value,
+        }
+
 
 @define(slots=True)
 class Mutuals:
@@ -253,7 +284,7 @@ class Mutuals:
 
 
 class BaseUser(Base, Connectable, Messageable):
-    """Represents a user on Revolt."""
+    """Represents an user on Revolt."""
 
     def get_channel_id(self) -> str:
         return self.dm_channel_id or ''
@@ -333,13 +364,20 @@ class BaseUser(Base, Connectable, Messageable):
 
     pm = dm_channel
 
-    async def accept_friend_request(self) -> User:
+    async def accept_friend_request(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
         Accept another user's friend request.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you accepted friend request from.
+
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -405,20 +443,22 @@ class BaseUser(Base, Connectable, Messageable):
         :class:`.User`
             The user you accepted friend request from.
         """
-        return await self.state.http.accept_friend_request(self.id)
+        return await self.state.http.accept_friend_request(self.id, http_overrides=http_overrides)
 
-    async def block(self) -> User:
+    async def block(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
         Blocks an user.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and blocked user.
 
         .. note::
             This is not supposed to be used by bot accounts.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
-            The user to block.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -455,15 +495,22 @@ class BaseUser(Base, Connectable, Messageable):
             The blocked user.
         """
 
-        return await self.state.http.block_user(self.id)
+        return await self.state.http.block_user(self.id, http_overrides=http_overrides)
 
-    async def deny_friend_request(self) -> User:
+    async def deny_friend_request(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
         Denies another user's friend request.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you denide friend request from.
+
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -508,11 +555,12 @@ class BaseUser(Base, Connectable, Messageable):
             The user you denied friend request from.
         """
 
-        return await self.state.http.deny_friend_request(self.id)
+        return await self.state.http.deny_friend_request(self.id, http_overrides=http_overrides)
 
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
@@ -524,8 +572,12 @@ class BaseUser(Base, Connectable, Messageable):
 
         Edits the user.
 
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to target user.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
         avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
@@ -581,6 +633,7 @@ class BaseUser(Base, Connectable, Messageable):
         """
         return await self.state.http.edit_user(
             self.id,
+            http_overrides=http_overrides,
             display_name=display_name,
             avatar=avatar,
             status=status,
@@ -589,12 +642,17 @@ class BaseUser(Base, Connectable, Messageable):
             flags=flags,
         )
 
-    async def fetch(self) -> User:
+    async def fetch(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
-        Retrieve a user's information.
+        Retrieve user's information.
 
         You must have :attr:`~UserPermissions.access` to do this.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -628,46 +686,61 @@ class BaseUser(Base, Connectable, Messageable):
         :class:`.User`
             The retrieved user.
         """
-        return await self.state.http.get_user(self.id)
+        return await self.state.http.get_user(self.id, http_overrides=http_overrides)
 
-    async def fetch_channel_id(self) -> str:
+    async def fetch_channel_id(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> str:
         channel_id = self.dm_channel_id
         if channel_id:
             return channel_id
 
-        channel = await self.open_dm()
+        channel = await self.open_dm(http_overrides=http_overrides)
         return channel.id
 
-    async def fetch_default_avatar(self) -> bytes:
+    async def fetch_default_avatar(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> bytes:
         """|coro|
 
         Return a default user avatar based on the given ID.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Returns
         -------
         :class:`bytes`
             The image in PNG format.
         """
-        return await self.state.http.get_default_avatar(self.id)
+        return await self.state.http.get_default_avatar(self.id, http_overrides=http_overrides)
 
-    async def fetch_flags(self) -> UserFlags:
+    async def fetch_flags(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> UserFlags:
         """|coro|
 
         Retrieves flags for user.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Returns
         -------
         :class:`.UserFlags`
             The retrieved flags.
         """
-        return await self.state.http.get_user_flags(self.id)
+        return await self.state.http.get_user_flags(self.id, http_overrides=http_overrides)
 
-    async def fetch_profile(self) -> UserProfile:
+    async def fetch_profile(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> UserProfile:
         """|coro|
 
         Retrieve profile of an user.
 
         You must have :attr:`~UserPermissions.view_profile` to do this.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -702,14 +775,19 @@ class BaseUser(Base, Connectable, Messageable):
             The retrieved user profile.
         """
 
-        return await self.state.http.get_user_profile(self.id)
+        return await self.state.http.get_user_profile(self.id, http_overrides=http_overrides)
 
-    async def mutual_friend_ids(self) -> list[str]:
+    async def mutual_friend_ids(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[str]:
         """|coro|
 
         Retrieves a list of mutual friend user IDs with another user.
 
         You must have :attr:`~UserPermissions.view_profile` to do this.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -760,15 +838,20 @@ class BaseUser(Base, Connectable, Messageable):
             The found mutual friend user IDs.
         """
 
-        mutuals = await self.state.http.get_mutuals_with(self.id)
+        mutuals = await self.state.http.get_mutuals_with(self.id, http_overrides=http_overrides)
         return mutuals.user_ids
 
-    async def mutual_server_ids(self) -> list[str]:
+    async def mutual_server_ids(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[str]:
         """|coro|
 
         Retrieves a list of mutual server IDs with another user.
 
         You must have :attr:`~UserPermissions.view_profile` to do this.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -818,15 +901,20 @@ class BaseUser(Base, Connectable, Messageable):
         List[:class:`str`]
             The found mutual server IDs.
         """
-        mutuals = await self.state.http.get_mutuals_with(self.id)
+        mutuals = await self.state.http.get_mutuals_with(self.id, http_overrides=http_overrides)
         return mutuals.server_ids
 
-    async def mutuals(self) -> Mutuals:
+    async def mutuals(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Mutuals:
         """|coro|
 
         Retrieves a list of mutual friends and servers with another user.
 
         You must have :attr:`~UserPermissions.view_profile` to do this.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -876,9 +964,11 @@ class BaseUser(Base, Connectable, Messageable):
         :class:`.Mutuals`
             The found mutuals.
         """
-        return await self.state.http.get_mutuals_with(self.id)
+        return await self.state.http.get_mutuals_with(self.id, http_overrides=http_overrides)
 
-    async def open_dm(self) -> typing.Union[SavedMessagesChannel, DMChannel]:
+    async def open_dm(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> typing.Union[SavedMessagesChannel, DMChannel]:
         """|coro|
 
         Retrieve a DM (or create if it doesn't exist) with another user.
@@ -886,6 +976,13 @@ class BaseUser(Base, Connectable, Messageable):
         If target is current user, a :class:`.SavedMessagesChannel` is always returned.
 
         You must have :attr:`~UserPermissions.send_messages` to do this.
+
+        May fire :class:`.PrivateChannelCreateEvent` for the current user and user you opened DM with.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -928,15 +1025,22 @@ class BaseUser(Base, Connectable, Messageable):
             The private channel.
         """
 
-        return await self.state.http.open_dm(self.id)
+        return await self.state.http.open_dm(self.id, http_overrides=http_overrides)
 
-    async def remove_friend(self) -> User:
+    async def remove_friend(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
         Removes the user from friend list.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
+
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -981,18 +1085,21 @@ class BaseUser(Base, Connectable, Messageable):
             The user you removed from friend list.
         """
 
-        return await self.state.http.remove_friend(self.id)
+        return await self.state.http.remove_friend(self.id, http_overrides=http_overrides)
 
     async def report(
         self,
         reason: UserReportReason,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         additional_context: typing.Optional[str] = None,
         message_context: typing.Optional[ULIDOr[BaseMessage]] = None,
     ) -> None:
         """|coro|
 
-        Report an user to the instance moderation team.
+        Report the user to the instance moderation team.
+
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1001,10 +1108,14 @@ class BaseUser(Base, Connectable, Messageable):
         ----------
         reason: :class:`.UserReportReason`
             The reason for reporting user.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
         message_context: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message context.
+
+            Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
 
         Raises
         ------
@@ -1047,17 +1158,25 @@ class BaseUser(Base, Connectable, Messageable):
         return await self.state.http.report_user(
             self.id,
             reason,
+            http_overrides=http_overrides,
             additional_context=additional_context,
             message_context=message_context,
         )
 
-    async def unblock(self) -> User:
+    async def unblock(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
         Unblocks an user.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and unblocked user.
+
         .. note::
             This is not supposed to be used by bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1095,7 +1214,7 @@ class BaseUser(Base, Connectable, Messageable):
         :class:`.User`
             The unblocked user.
         """
-        return await self.state.http.unblock_user(self.id)
+        return await self.state.http.unblock_user(self.id, http_overrides=http_overrides)
 
 
 @define(slots=True)
@@ -1160,7 +1279,7 @@ class PartialUser(BaseUser):
 
 @define(slots=True)
 class DisplayUser(BaseUser):
-    """Represents a user on Revolt that can be easily displayed in UI."""
+    """Represents an user on Revolt that can be easily displayed in UI."""
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The username of the user."""
@@ -1188,13 +1307,20 @@ class DisplayUser(BaseUser):
         """
         return f'{self.name}#{self.discriminator}'
 
-    async def send_friend_request(self) -> User:
+    async def send_friend_request(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
         Sends a friend request to this user.
 
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you sent friend request to.
+
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1263,18 +1389,24 @@ class DisplayUser(BaseUser):
             The user you sent friend request to.
         """
 
-        return await self.state.http.send_friend_request(self.name, self.discriminator)
+        return await self.state.http.send_friend_request(self.name, self.discriminator, http_overrides=http_overrides)
 
 
 @define(slots=True)
 class BotUserMetadata:
-    """Represents a bot-specific metadata for a user."""
+    """Represents a bot-specific metadata for an user."""
 
     owner_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who owns bot."""
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BotUserMetadata) and self.owner_id == other.owner_id
+
+    def to_dict(self) -> raw.BotInformation:
+        """:class:`dict`: Convert bot user metadata to raw data."""
+        return {
+            'owner': self.owner_id,
+        }
 
 
 def calculate_user_permissions(
@@ -1326,7 +1458,7 @@ def calculate_user_permissions(
 
 @define(slots=True)
 class User(DisplayUser):
-    """Represents a user on Revolt."""
+    """Represents an user on Revolt."""
 
     display_name: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The user's display name."""
@@ -1347,7 +1479,7 @@ class User(DisplayUser):
     """Optional[:class:`.BotUserMetadata`]: The information about the bot."""
 
     relationship: RelationshipStatus = field(repr=True, kw_only=True)
-    """:class:`.RelationshipStatus`: The current session user's relationship with this user."""
+    """:class:`.RelationshipStatus`: The current user's relationship with this user."""
 
     online: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the user is currently online."""
@@ -1501,6 +1633,31 @@ class User(DisplayUser):
         """:class:`bool`: Whether this user have given other funny joke (Called as "It's Morbin Time" in Revite)."""
         return self.badges.reserved_relevant_joke_badge_2
 
+    def to_dict(self) -> raw.User:
+        """:class:`dict`: Convert user to raw data."""
+        payload: dict[str, typing.Any] = {
+            '_id': self.id,
+            'username': self.name,
+            'discriminator': self.discriminator,
+        }
+        if self.display_name is not None:
+            payload['display_name'] = self.display_name
+        if self.internal_avatar is not None:
+            payload['avatar'] = self.internal_avatar.to_dict('avatars')
+        if self.raw_badges != 0:
+            payload['badges'] = self.raw_badges
+        if self.status is not None:
+            payload['status'] = self.status.to_dict()
+        if self.raw_flags != 0:
+            payload['flags'] = self.raw_flags
+        if self.privileged:
+            payload['privileged'] = self.privileged
+        if self.bot is not None:
+            payload['bot'] = self.bot.to_dict()
+        payload['relationship'] = self.relationship.value
+        payload['online'] = self.online
+        return payload  # type: ignore
+
 
 @define(slots=True)
 class OwnUser(User):
@@ -1512,6 +1669,7 @@ class OwnUser(User):
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
@@ -1523,8 +1681,12 @@ class OwnUser(User):
 
         Edits the current user.
 
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
         avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
@@ -1580,6 +1742,7 @@ class OwnUser(User):
         """
 
         return await self.state.http.edit_my_user(
+            http_overrides=http_overrides,
             display_name=display_name,
             avatar=avatar,
             status=status,
@@ -1587,6 +1750,33 @@ class OwnUser(User):
             badges=badges,
             flags=flags,
         )
+
+    def to_dict(self) -> raw.User:
+        """:class:`dict`: Convert user to raw data."""
+        payload: dict[str, typing.Any] = {
+            '_id': self.id,
+            'username': self.name,
+            'discriminator': self.discriminator,
+        }
+        if self.display_name is not None:
+            payload['display_name'] = self.display_name
+        if self.internal_avatar is not None:
+            payload['avatar'] = self.internal_avatar.to_dict('avatars')
+        if len(self.relations):
+            payload['relations'] = [relationship.to_dict() for relationship in self.relations.values()]
+        if self.raw_badges != 0:
+            payload['badges'] = self.raw_badges
+        if self.status is not None:
+            payload['status'] = self.status.to_dict()
+        if self.raw_flags != 0:
+            payload['flags'] = self.raw_flags
+        if self.privileged:
+            payload['privileged'] = self.privileged
+        if self.bot is not None:
+            payload['bot'] = self.bot.to_dict()
+        payload['relationship'] = self.relationship.value
+        payload['online'] = self.online
+        return payload  # type: ignore
 
 
 @define(slots=True)

@@ -70,7 +70,7 @@ from .core import (
 )
 from .emoji import Emoji
 from .events import BaseEvent
-from .http import HTTPClient
+from .http import HTTPOverrideOptions, HTTPClient
 from .parser import Parser
 from .server import BaseServer, Server, Member
 from .shard import EventHandler, Shard, ShardImpl
@@ -93,11 +93,13 @@ if typing.TYPE_CHECKING:
         BaseEvent,
         MessageDeleteBulkEvent,
         ChannelDeleteEvent,
-        ChannelStartTypingEvent,
-        ChannelStopTypingEvent,
         ChannelUpdateEvent,
         GroupRecipientAddEvent,
         GroupRecipientRemoveEvent,
+        ChannelStartTypingEvent,
+        ChannelStopTypingEvent,
+        MessageStartEditingEvent,
+        MessageStopEditingEvent,
         LogoutEvent,
         MessageAckEvent,
         MessageAppendEvent,
@@ -455,7 +457,7 @@ def _parents_of(type: type[BaseEvent], /) -> tuple[type[BaseEvent], ...]:
 
 
 class EventSubscription(typing.Generic[EventT]):
-    """Represents a event subscription.
+    """Represents an event subscription.
 
     Attributes
     ----------
@@ -508,6 +510,8 @@ class TemporarySubscription(typing.Generic[EventT]):
         'future',
         'check',
         'coro',
+        'manual_process',
+        'stop_dispatching_on_success',
     )
 
     def __init__(
@@ -519,6 +523,8 @@ class TemporarySubscription(typing.Generic[EventT]):
         future: asyncio.Future[EventT],
         check: Callable[[EventT], utils.MaybeAwaitable[bool]],
         coro: Coroutine[typing.Any, typing.Any, EventT],
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> None:
         self.client: Client = client
         self.id: int = id
@@ -526,6 +532,8 @@ class TemporarySubscription(typing.Generic[EventT]):
         self.future: asyncio.Future[EventT] = future
         self.check: Callable[[EventT], utils.MaybeAwaitable[bool]] = check
         self.coro: Coroutine[typing.Any, typing.Any, EventT] = coro
+        self.manual_process: bool = manual_process
+        self.stop_dispatching_on_success: bool = stop_dispatching_on_success
 
     def __await__(self) -> Generator[typing.Any, typing.Any, EventT]:
         return self.coro.__await__()
@@ -593,6 +601,8 @@ class TemporarySubscriptionList(typing.Generic[EventT]):
         'exception',
         'expected',
         'queue',
+        'manual_process',
+        'stop_dispatching_on_success',
     )
 
     def __init__(
@@ -603,6 +613,8 @@ class TemporarySubscriptionList(typing.Generic[EventT]):
         id: int,
         event: type[EventT],
         check: Callable[[EventT], utils.MaybeAwaitable[bool]],
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> None:
         self.client: Client = client
         self.id: int = id
@@ -612,8 +624,9 @@ class TemporarySubscriptionList(typing.Generic[EventT]):
         self.result: list[EventT] = []
         self.exception: typing.Optional[Exception] = None
         self.expected: int = expected
-
         self.queue: asyncio.Queue[int] = asyncio.Queue(expected)
+        self.manual_process: bool = manual_process
+        self.stop_dispatching_on_success: bool = stop_dispatching_on_success
 
     async def wait(self) -> list[EventT]:
         if len(self.result) < self.expected:
@@ -837,7 +850,7 @@ class Client:
         """Handles library errors. By default, this logs exception.
 
         .. note::
-            This won't be called if handling ``Ready`` will raise a exception as it is fatal.
+            This won't be called if handling ``Ready`` will raise an exception as it is fatal.
         """
 
         type = payload['type']
@@ -863,7 +876,9 @@ class Client:
         event.before_dispatch()
         await event.abefore_dispatch()
 
-        for i, type in enumerate(types):
+        manual_process = False
+
+        for _, type in enumerate(types):
             handlers, temporary_handlers = self._handlers.get(type, _DEFAULT_HANDLERS)
             if _L.isEnabledFor(logging.DEBUG):
                 _L.debug(
@@ -874,6 +889,8 @@ class Client:
                 )
 
             remove = None
+            stop_dispatching_on_success = True
+
             for handler in temporary_handlers.values():
                 r = handler._handle(event, name)
                 if isawaitable(r):
@@ -881,11 +898,14 @@ class Client:
 
                 if r:
                     remove = handler.id
+                    manual_process = handler.manual_process
+                    stop_dispatching_on_success = handler.stop_dispatching_on_success
                     break
 
             if remove is not None:
                 del temporary_handlers[remove]
-                break
+                if stop_dispatching_on_success:
+                    break
 
             for handler in handlers.values():
                 r = handler._handle(event, name)
@@ -904,12 +924,13 @@ class Client:
         if handler:
             await self._run_callback(handler, event, name)
 
-        if event.is_canceled:
-            _L.debug('%s processing was canceled', event.__class__.__name__)
-        else:
-            _L.debug('Processing %s', event.__class__.__name__)
-            event.process()
-            await event.aprocess()
+        if not manual_process:
+            if event.is_canceled:
+                _L.debug('%s processing was canceled', event.__class__.__name__)
+            else:
+                _L.debug('Processing %s', event.__class__.__name__)
+                event.process()
+                await event.aprocess()
 
         hook = getattr(event, 'call_object_handlers_hook', None)
         if not hook:
@@ -927,12 +948,12 @@ class Client:
                 _L.exception('on_user_error (task: %s) raised an exception', name)
 
     def dispatch(self, event: BaseEvent, /) -> asyncio.Task[None]:
-        """Dispatches a event.
+        """Dispatches an event.
 
         Examples
         --------
 
-        Dispatch a event when someone sends silent message: ::
+        Dispatch an event when someone sends silent message: ::
 
             from attrs import define, field
             import pyvolt
@@ -1121,8 +1142,10 @@ class Client:
         /,
         *,
         check: typing.Optional[Callable[[EventT], bool]] = None,
-        count: typing.Literal[1] = 1,
+        count: typing.Literal[1] = ...,
         timeout: typing.Optional[float] = None,
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> TemporarySubscription[EventT]: ...
 
     @typing.overload
@@ -1134,6 +1157,8 @@ class Client:
         check: typing.Optional[Callable[[EventT], bool]] = None,
         count: typing.Literal[0] = ...,
         timeout: typing.Optional[float] = None,
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> typing.NoReturn: ...
 
     @typing.overload
@@ -1145,6 +1170,8 @@ class Client:
         check: typing.Optional[Callable[[EventT], bool]] = None,
         count: int = 1,
         timeout: typing.Optional[float] = None,
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> TemporarySubscriptionList[EventT]: ...
 
     def wait_for(
@@ -1155,12 +1182,14 @@ class Client:
         check: typing.Optional[Callable[[EventT], bool]] = None,
         count: int = 1,
         timeout: typing.Optional[float] = None,
+        manual_process: bool = False,
+        stop_dispatching_on_success: bool = True,
     ) -> typing.Union[TemporarySubscription[EventT], TemporarySubscriptionList[EventT]]:
         """|coro|
 
         Waits for a WebSocket event to be dispatched.
 
-        This could be used to wait for a user to reply to a message,
+        This could be used to wait for an user to reply to a message,
         or to react to a message, or to edit a message in a self-contained
         way.
 
@@ -1174,7 +1203,7 @@ class Client:
         Examples
         --------
 
-        Waiting for a user reply: ::
+        Waiting for an user reply: ::
 
             @client.on(pyvolt.MessageCreateEvent)
             async def on_message_create(event):
@@ -1209,7 +1238,7 @@ class Client:
                         await channel.send('\N{THUMBS UP SIGN}')
 
         Parameters
-        ------------
+        ----------
         event: Type[EventT]
             The event to wait for.
         check: Optional[Callable[[EventT], :class:`bool`]]
@@ -1217,16 +1246,20 @@ class Client:
         timeout: Optional[:class:`float`]
             The number of seconds to wait before timing out and raising
             :exc:`asyncio.TimeoutError`.
+        manual_process: :class:`bool`
+            Whether to not process the event at all when it gets dispatched. Defaults to ``False``.
+        stop_dispatching_on_success: :class:`bool`
+            Whether to stop dispatching when event arrives. Defaults to ``True``.
 
         Raises
-        -------
+        ------
         :class:`TypeError`
             If ``count`` parameter was negative or zero.
         :class:`asyncio.TimeoutError`
             If a timeout is provided and it was reached.
 
         Returns
-        --------
+        -------
         Union[:class:`~pyvolt.TemporarySubscription`, :class:`~pyvolt.TemporarySubscriptionList`]
             The subscription. This can be ``await``'ed.
         """
@@ -1244,6 +1277,8 @@ class Client:
                 id=self._get_i(),
                 event=event,
                 check=check,
+                manual_process=manual_process,
+                stop_dispatching_on_success=stop_dispatching_on_success,
             )
 
             try:
@@ -1262,6 +1297,8 @@ class Client:
             future=future,
             check=check,
             coro=coro,
+            manual_process=manual_process,
+            stop_dispatching_on_success=stop_dispatching_on_success,
         )
 
         try:
@@ -1620,7 +1657,9 @@ class Client:
             return PartialMessageable(state=self.state, id=channel_id)
         return channel
 
-    async def fetch_channel(self, channel_id: str, /) -> Channel:
+    async def fetch_channel(
+        self, channel_id: str, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> Channel:
         """|coro|
 
         Fetch a :class:`~pyvolt.Channel` with the specified ID.
@@ -1633,6 +1672,8 @@ class Client:
         ----------
         channel: ULIDOr[:class:`~pyvolt.BaseChannel`]
             The channel to fetch.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1667,10 +1708,10 @@ class Client:
             The retrieved channel.
         """
 
-        return await self.http.get_channel(channel_id)
+        return await self.http.get_channel(channel_id, http_overrides=http_overrides)
 
     def get_emoji(self, emoji_id: str, /) -> typing.Optional[Emoji]:
-        """Retrieves a emoji from cache.
+        """Retrieves an emoji from cache.
 
         Parameters
         ----------
@@ -1699,7 +1740,9 @@ class Client:
 
         return cache.get_emoji(emoji_id, ctx)
 
-    async def fetch_emoji(self, emoji_id: str, /) -> Emoji:
+    async def fetch_emoji(
+        self, emoji_id: str, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> Emoji:
         """|coro|
 
         Retrieves a custom emoji.
@@ -1710,6 +1753,8 @@ class Client:
         ----------
         emoji: ULIDOr[:class:`~pyvolt.BaseEmoji`]
             The emoji to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1728,7 +1773,7 @@ class Client:
             The retrieved emoji.
         """
 
-        return await self.http.get_emoji(emoji_id)
+        return await self.http.get_emoji(emoji_id, http_overrides=http_overrides)
 
     def get_read_state(self, channel_id: str, /) -> typing.Optional[ReadState]:
         """Retrieves a read state from cache.
@@ -1808,7 +1853,13 @@ class Client:
             return BaseServer(state=self.state, id=server_id)
         return server
 
-    async def fetch_server(self, server_id: str, *, populate_channels: typing.Optional[bool] = None) -> Server:
+    async def fetch_server(
+        self,
+        server_id: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        populate_channels: typing.Optional[bool] = None,
+    ) -> Server:
         """|coro|
 
         Retrieves a :class:`~pyvolt.Server`.
@@ -1819,6 +1870,8 @@ class Client:
         ----------
         server: ULIDOr[:class:`~pyvolt.BaseServer`]
             The server to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         populate_channels: Optional[:class:`bool`]
             Whether to populate :attr:`~pyvolt.Server.channels`.
 
@@ -1846,7 +1899,7 @@ class Client:
         :class:`pyvolt.Server`
             The retrieved server.
         """
-        return await self.http.get_server(server_id, populate_channels=populate_channels)
+        return await self.http.get_server(server_id, http_overrides=http_overrides, populate_channels=populate_channels)
 
     @typing.overload
     def get_user(self, user_id: str, /, *, partial: typing.Literal[False] = False) -> typing.Optional[User]:  # type: ignore
@@ -1856,7 +1909,7 @@ class Client:
     def get_user(self, user_id: str, /, *, partial: typing.Literal[True] = ...) -> typing.Union[User, BaseUser]: ...
 
     def get_user(self, user_id: str, /, *, partial: bool = False) -> typing.Optional[typing.Union[User, BaseUser]]:
-        """Retrieves a user from cache.
+        """Retrieves an user from cache.
 
         Parameters
         ----------
@@ -1892,22 +1945,24 @@ class Client:
             return BaseUser(state=self.state, id=user_id)
         return user
 
-    async def fetch_user(self, user_id: str, /) -> User:
+    async def fetch_user(self, user_id: str, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
-        Retrieves a user from API. This is shortcut to :meth:`pyvolt.HTTPClient.get_user`.
+        Retrieves an user from API. This is shortcut to :meth:`pyvolt.HTTPClient.get_user`.
 
         Parameters
         ----------
         user_id: :class:`str`
             The user ID.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Returns
         -------
         :class:`~pyvolt.User`
             The user.
         """
-        return await self.http.get_user(user_id)
+        return await self.http.get_user(user_id, http_overrides=http_overrides)
 
     @property
     def settings(self) -> UserSettings:
@@ -1919,12 +1974,21 @@ class Client:
         """:class:`~pyvolt.User`: The Revolt sentinel user."""
         return self._state.system
 
+    async def setup_hook(self) -> None:
+        """|coro|
+
+        A hook that is called when client starts up.
+        """
+
     async def start(self) -> None:
         """|coro|
 
         Starts up the client.
+
+        Calls :meth:`.setup_hook` before connecting.
         """
         self.closed = False
+        await self.setup_hook()
         await self._state.shard.connect()
 
     async def close(self, *, http: bool = True, cleanup_websocket: bool = True) -> None:
@@ -1962,7 +2026,7 @@ class Client:
         cleanup: bool = True,
     ) -> None:
         """A blocking call that abstracts away the event loop
-        initialisation from you.
+        initialization from you.
 
         If you want more control over the event loop then this
         function should not be used. Use :meth:`.start` coroutine.
@@ -2049,11 +2113,13 @@ class Client:
         def on_channel_create(self, arg: BaseChannelCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_message_delete_bulk(self, arg: MessageDeleteBulkEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_delete(self, arg: ChannelDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
-        def on_channel_start_typing(self, arg: ChannelStartTypingEvent, /) -> utils.MaybeAwaitable[None]: ...
-        def on_channel_stop_typing(self, arg: ChannelStopTypingEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_channel_update(self, arg: ChannelUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_recipient_add(self, arg: GroupRecipientAddEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_recipient_remove(self, arg: GroupRecipientRemoveEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_channel_start_typing(self, arg: ChannelStartTypingEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_channel_stop_typing(self, arg: ChannelStopTypingEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_start_editing(self, arg: MessageStartEditingEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_message_stop_editing(self, arg: MessageStopEditingEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_logout(self, arg: LogoutEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_message_ack(self, arg: MessageAckEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_message_append(self, arg: MessageAppendEvent, /) -> utils.MaybeAwaitable[None]: ...
@@ -2099,6 +2165,7 @@ class Client:
         self,
         name: str,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         description: typing.Optional[str] = None,
         icon: typing.Optional[ResolvableResource] = None,
         recipients: typing.Optional[list[ULIDOr[BaseUser]]] = None,
@@ -2108,6 +2175,8 @@ class Client:
 
         Creates a new group.
 
+        Fires :class:`.PrivateChannelCreateEvent` for the current user and all specified recipients.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -2115,6 +2184,8 @@ class Client:
         ----------
         name: :class:`str`
             The group name. Must be between 1 and 32 characters long.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         description: Optional[:class:`str`]
             The group description. Can be only up to 1024 characters.
         icon: Optional[:class:`~pyvolt.ResolvableResource`]
@@ -2179,14 +2250,23 @@ class Client:
             The new group.
         """
 
-        return await self.http.create_group(name, description=description, icon=icon, recipients=recipients, nsfw=nsfw)
+        return await self.http.create_group(
+            name, http_overrides=http_overrides, description=description, icon=icon, recipients=recipients, nsfw=nsfw
+        )
 
     async def create_server(
-        self, name: str, *, description: typing.Optional[str] = None, nsfw: typing.Optional[bool] = None
+        self,
+        name: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        description: typing.Optional[str] = None,
+        nsfw: typing.Optional[bool] = None,
     ) -> Server:
         """|coro|
 
         Create a new server.
+
+        Fires :class:`.ServerCreateEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2195,6 +2275,8 @@ class Client:
         ----------
         name: :class:`str`
             The server name.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         description: Optional[:class:`str`]
             The server description.
         nsfw: Optional[:class:`bool`]
@@ -2239,7 +2321,7 @@ class Client:
             The created server.
         """
 
-        return await self.http.create_server(name, description=description, nsfw=nsfw)
+        return await self.http.create_server(name, http_overrides=http_overrides, description=description, nsfw=nsfw)
 
 
 __all__ = (

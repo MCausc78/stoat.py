@@ -80,12 +80,60 @@ TemporarySubscriptionList
 .. autoclass:: TemporarySubscriptionList()
     :members:
 
+HTTPOverrideOptions
+~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: HTTPOverrideOptions
+
+.. autoclass:: HTTPOverrideOptions
+    :members:
+
 HTTPClient
 ~~~~~~~~~~
 
 .. attributetable:: HTTPClient
 
 .. autoclass:: HTTPClient
+    :members:
+
+HTTPAdapter
+~~~~~~~~~~~
+
+.. attributetable:: HTTPAdapter
+
+.. autoclass:: HTTPAdapter
+    :members:
+
+AIOHTTPAdapter
+~~~~~~~~~~~~~~~
+
+.. attributetable:: AIOHTTPAdapter
+
+.. autoclass:: AIOHTTPAdapter
+    :members:
+
+HTTPResponse
+~~~~~~~~~~~~
+
+.. attributetable:: HTTPResponse
+
+.. autoclass:: HTTPResponse
+    :members:
+
+AIOHTTPResponseWrapper
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: AIOHTTPResponseWrapper
+
+.. autoclass:: AIOHTTPResponseWrapper
+    :members:
+
+HTTPWebSocket
+~~~~~~~~~~~~~
+
+.. attributetable:: HTTPWebSocket
+
+.. autoclass:: HTTPWebSocket
     :members:
 
 Route
@@ -160,6 +208,14 @@ Shard
 .. autoclass:: Shard
     :members:
 
+ShardImpl
+~~~~~~~~~
+
+.. attributetable:: ShardImpl
+
+.. autoclass:: ShardImpl
+    :members:
+
 EventHandler
 ~~~~~~~~~~~~
 
@@ -214,7 +270,7 @@ Content
 
 .. class:: Content
 
-    A union of types that can be resolved into content.
+    An union of types that can be resolved into content.
 
     The following classes are included in this union:
 
@@ -230,7 +286,7 @@ ResolvableResource
 
 .. class:: ResolvableResource
 
-    A union of types that can be resolved into resource.
+    An union of types that can be resolved into resource.
 
     The following classes are included in this union:
 
@@ -464,12 +520,18 @@ CacheContextType
     .. attribute:: emojis_through_client_getter
 
         The context comes from :attr:`Client.emojis`.
+    .. attribute:: read_states_through_client_getter
+
+        The context comes from :attr:`Client.read_states`.
     .. attribute:: servers_through_client_getter
 
         The context comes from :attr:`Client.servers`.
     .. attribute:: users_through_client_getter
 
         The context comes from :attr:`Client.users`.
+    .. attribute:: voice_states_through_client_getter
+
+        The context comes from :attr:`Client.voice_states`
     .. attribute:: user_ids_through_client_dm_channel_ids
 
         The context comes from :attr:`Client.dm_channel_ids`.
@@ -494,9 +556,18 @@ CacheContextType
     .. attribute:: user_through_client_getter
 
         The context comes from :meth:`Client.get_user`.
-    .. attribute:: user_through_base_emoji_creator
-
-        The context comes from :attr:`BaseEmoji.creator`.
+    .. attribute:: member_or_user_through_server_emoji_creator
+        
+        The context comes from :attr:`ServerEmoji.creator`
+    .. attribute:: member_through_server_emoji_creator
+        
+        The context comes from :attr:`ServerEmoji.creator_as_member`
+    .. attribute:: user_through_server_emoji_creator
+        
+        The context comes from :attr:`ServerEmoji.creator_as_user`
+    .. attribute:: user_through_detached_emoji_creator
+        
+        The context comes from :attr:`ServeBaseEmojirEmoji.creator`
     .. attribute:: server_through_server_emoji_server
 
         The context comes from :attr:`ServerEmoji.server`.
@@ -515,18 +586,27 @@ CacheContextType
     .. attribute:: user_through_group_public_invite_user
 
         The context comes from :attr:`GroupPublicInvite.user`.
-    .. attribute:: user_through_private_base_invite_creator
-
-        The context comes from :attr:`PrivateBaseInvite.creator`.
     .. attribute:: channel_through_group_invite_channel
 
         The context comes from :attr:`GroupInvite.channel`.
+    .. attribute:: user_through_group_invite_creator
+
+        The context comes from :attr:`GroupInvite.creator`.
     .. attribute:: server_through_server_invite_server
 
         The context comes from :attr:`ServerInvite.server`.
     .. attribute:: channel_through_server_invite_channel
 
         The context comes from :attr:`ServerInvite.channel`.
+    .. attribute:: member_or_user_through_server_invite_creator
+    
+        The context comes from :attr:`ServerInvite.creator`.
+    .. attribute:: member_through_server_invite_creator
+    
+        The context comes from :attr:`ServerInvite.creator_as_member`.
+    .. attribute:: user_through_server_invite_creator
+    
+        The context comes from :attr:`ServerInvite.creator_as_user`.
     .. attribute:: user_through_user_added_system_event_user
 
         The context comes from :attr:`UserAddedSystemEvent.user`.
@@ -542,15 +622,39 @@ CacheContextType
     .. attribute:: member_or_user_through_user_joined_system_event_user
 
         The context comes from :attr:`UserJoinedSystemEvent.user`.
+    .. attribute:: member_through_user_joined_system_event_user
+
+        The context comes from :attr:`UserJoinedSystemEvent.user_as_member`.
+    .. attribute:: user_through_user_joined_system_event_user
+
+        The context comes from :attr:`UserJoinedSystemEvent.user_as_user`.
     .. attribute:: member_or_user_through_user_left_system_event_user
 
         The context comes from :attr:`UserLeftSystemEvent.user`.
+    .. attribute:: member_through_user_left_system_event_user
+
+        The context comes from :attr:`UserLeftSystemEvent.user_as_member`.
+    .. attribute:: user_through_user_left_system_event_user
+
+        The context comes from :attr:`UserLeftSystemEvent.user_as_user`.
     .. attribute:: member_or_user_through_user_kicked_system_event_user
 
         The context comes from :attr:`UserKickedSystemEvent.user`.
+    .. attribute:: member_through_user_kicked_system_event_user
+
+        The context comes from :attr:`UserKickedSystemEvent.user_as_member`.
+    .. attribute:: user_through_user_kicked_system_event_user
+
+        The context comes from :attr:`UserKickedSystemEvent.user_as_user`.
     .. attribute:: member_or_user_through_user_banned_system_event_user
 
         The context comes from :attr:`UserBannedSystemEvent.user`.
+    .. attribute:: member_through_user_banned_system_event_user
+
+        The context comes from :attr:`UserBannedSystemEvent.user_as_member`.
+    .. attribute:: user_through_user_banned_system_event_user
+
+        The context comes from :attr:`UserBannedSystemEvent.user_as_user`.
     .. attribute:: user_through_channel_renamed_system_event_by
 
         The context comes from :attr:`ChannelRenamedSystemEvent.by`.
@@ -572,12 +676,24 @@ CacheContextType
     .. attribute:: member_or_user_through_message_pinned_system_event_by
 
         The context comes from :attr:`MessagePinnedSystemEvent.by`.
+    .. attribute:: member_through_message_pinned_system_event_by
+
+        The context comes from :attr:`MessagePinnedSystemEvent.by_as_member`.
+    .. attribute:: user_through_message_pinned_system_event_by
+
+        The context comes from :attr:`MessagePinnedSystemEvent.by_as_user`.
     .. attribute:: message_through_message_unpinned_system_event_unpinned_message
 
         The context comes from :attr:`MessageUnpinnedSystemEvent.unpinned_message`.
     .. attribute:: member_or_user_through_message_unpinned_system_event_by
 
         The context comes from :attr:`MessageUnpinnedSystemEvent.by`.
+    .. attribute:: member_through_message_unpinned_system_event_by
+
+        The context comes from :attr:`MessageUnpinnedSystemEvent.by_as_member`.
+    .. attribute:: user_through_message_unpinned_system_event_by
+
+        The context comes from :attr:`MessageUnpinnedSystemEvent.by_as_user`.
     .. attribute:: user_through_call_started_system_event_by
 
         The context comes from :attr:`CallStartedSystemEvent.by`.
@@ -590,6 +706,13 @@ CacheContextType
     .. attribute:: member_or_user_through_message_author
 
         The context comes from :attr:`Message.author`.
+    .. attribute:: member_through_message_author
+
+        The context comes from :attr:`Message.author_as_member`.
+    .. attribute:: user_through_message_author
+
+        The context comes from :attr:`Message.author_as_user`.
+
     .. attribute:: channel_through_read_state_channel
 
         The context comes from :attr:`ReadState.channel`.
@@ -614,15 +737,66 @@ CacheContextType
     .. attribute:: channels_through_server_getter
 
         The context comes from :attr:`Server.channels`.
-    .. attribute:: member_through_server_owner
+    .. attribute:: member_or_user_through_server_owner
 
         The context comes from :attr:`Server.owner`.
+    .. attribute:: member_through_server_owner
+
+        The context comes from :attr:`Server.owner_as_member`.
+    .. attribute:: user_through_server_owner
+
+        The context comes from :attr:`Server.owner_as_user`.
     .. attribute:: server_through_member_server
 
         The context comes from :attr:`Member.server`.
-    .. attribute:: user_through_member_getter
+    .. attribute:: user_through_member_user
 
         The context comes from :attr:`Member.user`.
+    .. attribute:: user_through_member_bot_owner
+
+        The context comes from :attr:`Member.bot_owner`.
+    .. attribute:: channel_id_through_member_dm_channel_id
+
+        The context comes from :attr:`Member.dm_channel_id`.
+    .. attribute:: channel_through_member_dm_channel
+
+        The context comes from :attr:`Member.dm_channel`.
+    .. attribute:: user_through_member_name
+
+        The context comes from :attr:`Member.name`.
+    .. attribute:: user_through_member_discriminator
+
+        The context comes from :attr:`Member.discriminator`.
+    .. attribute:: user_through_member_display_name
+
+        The context comes from :attr:`Member.display_name`.
+    .. attribute:: user_through_member_internal_avatar
+
+        The context comes from :attr:`Member.internal_avatar`.
+    .. attribute:: user_through_member_raw_badges
+
+        The context comes from :attr:`Member.raw_badges`.
+    .. attribute:: user_through_member_status
+
+        The context comes from :attr:`Member.status`.
+    .. attribute:: user_through_member_raw_flags
+
+        The context comes from :attr:`Member.raw_flags`.
+    .. attribute:: user_through_member_privileged
+
+        The context comes from :attr:`Member.privileged`.
+    .. attribute:: user_through_member_bot
+
+        The context comes from :attr:`Member.bot`.
+    .. attribute:: user_through_member_relationship
+
+        The context comes from :attr:`Member.relationship`.
+    .. attribute:: user_through_member_online
+
+        The context comes from :attr:`Member.online`.
+    .. attribute:: user_through_member_tag
+
+        The context comes from :attr:`Member.tag`.
     .. attribute:: user_through_user_bot_owner
 
         The context comes from :attr:`User.bot_owner`.
@@ -632,9 +806,15 @@ CacheContextType
     .. attribute:: channel_through_user_dm_channel
 
         The context comes from :attr:`User.dm_channel`.
-    .. attribute:: user_through_webhook_creator
+    .. attribute:: member_or_user_through_webhook_creator
 
         The context comes from :attr:`Webhook.creator`.
+    .. attribute:: member_through_webhook_creator
+
+        The context comes from :attr:`Webhook.creator_as_member`.
+    .. attribute:: user_through_webhook_creator
+
+        The context comes from :attr:`Webhook.creator_as_user`.
     .. attribute:: channel_through_webhook_channel
 
         The context comes from :attr:`Webhook.channel`.
@@ -1187,12 +1367,12 @@ GroupPublicInviteCacheContext
     :members:
     :inherited-members:
 
-PrivateBaseInviteCacheContext
+GroupPublicInviteCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: PrivateBaseInviteCacheContext
+.. attributetable:: GroupPublicInviteCacheContext
 
-.. autoclass:: PrivateBaseInviteCacheContext
+.. autoclass:: GroupPublicInviteCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1273,6 +1453,16 @@ BaseMemberCacheContext
 .. attributetable:: BaseMemberCacheContext
 
 .. autoclass:: BaseMemberCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberCacheContext
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberCacheContext
+
+.. autoclass:: MemberCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1507,12 +1697,52 @@ MemberOrUserThroughUserJoinedSystemEventUserCacheContext
     :members:
     :inherited-members:
 
+MemberThroughUserJoinedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughUserJoinedSystemEventUserCacheContext
+
+.. autoclass:: MemberThroughUserJoinedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserJoinedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserJoinedSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserJoinedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 MemberOrUserThroughUserLeftSystemEventUserCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MemberOrUserThroughUserLeftSystemEventUserCacheContext
 
 .. autoclass:: MemberOrUserThroughUserLeftSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughUserLeftSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughUserLeftSystemEventUserCacheContext
+
+.. autoclass:: MemberThroughUserLeftSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserLeftSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserLeftSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserLeftSystemEventUserCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1527,12 +1757,52 @@ MemberOrUserThroughUserKickedSystemEventUserCacheContext
     :members:
     :inherited-members:
 
+MemberThroughUserKickedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughUserKickedSystemEventUserCacheContext
+
+.. autoclass:: MemberThroughUserKickedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserKickedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserKickedSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserKickedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 MemberOrUserThroughUserBannedSystemEventUserCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: MemberOrUserThroughUserBannedSystemEventUserCacheContext
 
 .. autoclass:: MemberOrUserThroughUserBannedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughUserBannedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughUserBannedSystemEventUserCacheContext
+
+.. autoclass:: MemberThroughUserBannedSystemEventUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughUserBannedSystemEventUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughUserBannedSystemEventUserCacheContext
+
+.. autoclass:: UserThroughUserBannedSystemEventUserCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1607,6 +1877,26 @@ MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext
     :members:
     :inherited-members:
 
+MemberThroughMessagePinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughMessagePinnedSystemEventAuthorCacheContext
+
+.. autoclass:: MemberThroughMessagePinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMessagePinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMessagePinnedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughMessagePinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1623,6 +1913,26 @@ MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext
 .. attributetable:: MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext
 
 .. autoclass:: MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughMessageUnpinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughMessageUnpinnedSystemEventAuthorCacheContext
+
+.. autoclass:: MemberThroughMessageUnpinnedSystemEventAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMessageUnpinnedSystemEventAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMessageUnpinnedSystemEventAuthorCacheContext
+
+.. autoclass:: UserThroughMessageUnpinnedSystemEventAuthorCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1667,6 +1977,26 @@ MemberOrUserThroughMessageAuthorCacheContext
     :members:
     :inherited-members:
 
+MemberThroughMessageAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughMessageAuthorCacheContext
+
+.. autoclass:: MemberThroughMessageAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMessageAuthorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMessageAuthorCacheContext
+
+.. autoclass:: UserThroughMessageAuthorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 ReadStateThroughTextChannelReadStateCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1707,12 +2037,42 @@ ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext
     :members:
     :inherited-members:
 
-UserThroughBaseEmojiCreatorCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+MemberOrUserThroughServerEmojiCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: UserThroughBaseEmojiCreatorCacheContext
+.. attributetable:: MemberOrUserThroughServerEmojiCreatorCacheContext
 
-.. autoclass:: UserThroughBaseEmojiCreatorCacheContext
+.. autoclass:: MemberOrUserThroughServerEmojiCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughServerEmojiCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughServerEmojiCreatorCacheContext
+
+.. autoclass:: MemberThroughServerEmojiCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughServerEmojiCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughServerEmojiCreatorCacheContext
+
+.. autoclass:: UserThroughServerEmojiCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughDetachedEmojiCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughDetachedEmojiCreatorCacheContext
+
+.. autoclass:: UserThroughDetachedEmojiCreatorCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1777,22 +2137,22 @@ UserThroughGroupPublicInviteUserCacheContext
     :members:
     :inherited-members:
 
-UserThroughPrivateBaseInviteCreatorCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: UserThroughPrivateBaseInviteCreatorCacheContext
-
-.. autoclass:: UserThroughPrivateBaseInviteCreatorCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
 ChannelThroughGroupInviteChannelCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. attributetable:: ChannelThroughGroupInviteChannelCacheContext
 
 .. autoclass:: ChannelThroughGroupInviteChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughGroupInviteCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughGroupInviteCreatorCacheContext
+
+.. autoclass:: UserThroughGroupInviteCreatorCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1816,6 +2176,37 @@ ChannelThroughServerInviteChannelCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
+MemberOrUserThroughServerInviteCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughServerInviteCreatorCacheContext
+
+.. autoclass:: MemberOrUserThroughServerInviteCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughServerInviteCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughServerInviteCreatorCacheContext
+
+.. autoclass:: MemberThroughServerInviteCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughServerInviteCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughServerInviteCreatorCacheContext
+
+.. autoclass:: UserThroughServerInviteCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 
 ChannelThroughReadStateChannelCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1886,13 +2277,224 @@ ChannelsThroughServerGetterCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+    
+MemberOrUserThroughServerOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-UserThroughBaseMemberGetterCacheContext
+.. attributetable:: MemberOrUserThroughServerOwnerCacheContext
+
+.. autoclass:: MemberOrUserThroughServerOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughServerOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughServerOwnerCacheContext
+
+.. autoclass:: MemberThroughServerOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughServerOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughServerOwnerCacheContext
+
+.. autoclass:: UserThroughServerOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+
+ServerThroughMemberServerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughMemberServerCacheContext
+
+.. autoclass:: ServerThroughMemberServerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberUserCacheContext
+
+.. autoclass:: UserThroughMemberUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberBotOwnerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberBotOwnerCacheContext
+
+.. autoclass:: UserThroughMemberBotOwnerCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelIDThroughMemberDMChannelIDCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelIDThroughMemberDMChannelIDCacheContext
+
+.. autoclass:: ChannelIDThroughMemberDMChannelIDCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ChannelThroughMemberDMChannelCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ChannelThroughMemberDMChannelCacheContext
+
+.. autoclass:: ChannelThroughMemberDMChannelCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberNameCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberNameCacheContext
+
+.. autoclass:: UserThroughMemberNameCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberDiscriminatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberDiscriminatorCacheContext
+
+.. autoclass:: UserThroughMemberDiscriminatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberDisplayNameCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberDisplayNameCacheContext
+
+.. autoclass:: UserThroughMemberDisplayNameCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberInternalAvatarCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberInternalAvatarCacheContext
+
+.. autoclass:: UserThroughMemberInternalAvatarCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberRawBadgesCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberRawBadgesCacheContext
+
+.. autoclass:: UserThroughMemberRawBadgesCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberStatusCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberStatusCacheContext
+
+.. autoclass:: UserThroughMemberStatusCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberRawFlagsCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberRawFlagsCacheContext
+
+.. autoclass:: UserThroughMemberRawFlagsCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberPrivilegedCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: UserThroughBaseMemberGetterCacheContext
+.. attributetable:: UserThroughMemberPrivilegedCacheContext
 
-.. autoclass:: UserThroughBaseMemberGetterCacheContext
+.. autoclass:: UserThroughMemberPrivilegedCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberBotCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberBotCacheContext
+
+.. autoclass:: UserThroughMemberBotCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberRelationshipCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberRelationshipCacheContext
+
+.. autoclass:: UserThroughMemberRelationshipCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberOnlineCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberOnlineCacheContext
+
+.. autoclass:: UserThroughMemberOnlineCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughMemberTagCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughMemberTagCacheContext
+
+.. autoclass:: UserThroughMemberTagCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughMemberRolesCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughMemberRolesCacheContext
+
+.. autoclass:: ServerThroughMemberRolesCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughMemberTopRoleCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughMemberTopRoleCacheContext
+
+.. autoclass:: ServerThroughMemberTopRoleCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1927,6 +2529,26 @@ ChannelThroughUserDMChannelIDCacheContext
     :members:
     :inherited-members:
 
+MemberOrUserThroughWebhookCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughWebhookCreatorCacheContext
+
+.. autoclass:: MemberOrUserThroughWebhookCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughWebhookCreatorCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughWebhookCreatorCacheContext
+
+.. autoclass:: MemberThroughWebhookCreatorCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 UserThroughWebhookCreatorCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1936,6 +2558,7 @@ UserThroughWebhookCreatorCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
+
 
 ChannelThroughWebhookChannelCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2018,7 +2641,7 @@ ChannelCreateEvent
 
 .. class:: ChannelCreateEvent
 
-    A union of private/server channel create events.
+    An union of private/server channel create events.
     
     The following classes are included in this union:
 
@@ -2492,7 +3115,7 @@ Enumerations
 The API provides some enumerations for certain types of strings to avoid the API
 from being stringly typed in case the strings change in the future.
 
-All enumerations are subclasses of an custom class which mimics the behaviour
+All enumerations are subclasses of a custom class which mimics the behaviour
 of :class:`enum.Enum`.
 
 Enum
@@ -2565,6 +3188,9 @@ Channel
     .. attribute:: voice
 
         A voice channel.
+    .. attribute:: unknown
+
+        The channel type is unknown.
 
 Discover
 ~~~~~~~~
@@ -3179,7 +3805,7 @@ Discover
 
 .. class:: Presence
     
-    Specifies the presence of a user.
+    Specifies the presence of an user.
 
     .. attribute:: online
 
@@ -3497,7 +4123,7 @@ MFAResponse
 
 .. class:: MFAResponse
 
-    A union of all possible MFA verification responses.
+    An union of all possible MFA verification responses.
     
     The following classes are included in this union:
 
@@ -3510,7 +4136,7 @@ LoginResult
 
 .. class:: LoginResult
 
-    A union of all login responses.
+    An union of all login responses.
     
     The following classes are included in this union:
 
@@ -3748,6 +4374,15 @@ GroupChannel
     :members:
     :inherited-members:
 
+UnknownPrivateChannel
+~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UnknownPrivateChannel
+
+.. autoclass:: UnknownPrivateChannel
+    :members:
+    :inherited-members:
+
 BaseServerChannel
 ~~~~~~~~~~~~~~~~~
 
@@ -3783,12 +4418,21 @@ VoiceChannel
     :members:
     :inherited-members:
 
+UnknownServerChannel
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UnknownServerChannel
+
+.. autoclass:: UnknownServerChannel
+    :members:
+    :inherited-members:
+
 PrivateChannel
 ~~~~~~~~~~~~~~
 
 .. class:: PrivateChannel
     
-    A union of all channels that do not belong to a server.
+    An union of all channels that do not belong to a server.
     
     The following classes are included in this union:
 
@@ -3801,7 +4445,7 @@ ServerChannel
     
 .. class:: ServerChannel
 
-    A union of all channels that belong to a server.
+    An union of all channels that belong to a server.
     
     The following classes are included in this union:
 
@@ -3813,7 +4457,7 @@ TextableChannel
 
 .. class:: TextableChannel
 
-    A union of all channels that can have messages in them.
+    An union of all channels that can have messages in them.
     
     The following classes are included in this union:
     
@@ -3823,12 +4467,24 @@ TextableChannel
     - :class:`.TextChannel`
     - :class:`.VoiceChannel`
 
+UnknownChannel
+~~~~~~~~~~~~~~
+
+.. class:: UnknownChannel
+
+    An union of all channels that are not recognized by library.
+    
+    The following classes are included in this union:
+    
+    - :class:`.UnknownPrivateChannel`
+    - :class:`.UnknownServerChannel`
+
 Channel
 ~~~~~~~
 
 .. class:: Channel
 
-    A union of all channels.
+    An union of all channels.
 
     Union types such as this exist to help determine which exact channel type has some field during development.
 
@@ -3837,8 +4493,10 @@ Channel
     - :class:`.SavedMessagesChannel`
     - :class:`.DMChannel`
     - :class:`.GroupChannel`
+    - :class:`.UnknownPrivateChannel`
     - :class:`.TextChannel`
     - :class:`.VoiceChannel`
+    - :class:`.UnknownServerChannel`
 
 ChannelVoiceStateContainer
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4021,7 +4679,7 @@ EmbedSpecial
 
 .. class:: EmbedSpecial
 
-    A union of all embed special types.
+    An union of all embed special types.
 
     The following classes are included in this union:
     
@@ -4040,7 +4698,7 @@ StatelessEmbed
 
 .. class:: StatelessEmbed
 
-    A union of all stateless embed types.
+    An union of all stateless embed types.
 
     The following classes are included in this union:
     
@@ -4055,7 +4713,7 @@ Embed
 
 .. class:: Embed
 
-    A union of all embed types.
+    An union of all embed types.
 
     The following classes are included in this union:
     
@@ -4103,7 +4761,7 @@ Emoji
 
 .. class:: Emoji
 
-    A union of all emoji types.
+    An union of all emoji types.
 
     The following classes are included in this union:
     
@@ -4115,7 +4773,7 @@ ResolvableEmoji
 
 .. class:: ResolvableEmoji
 
-    A union of either :class:`.BaseEmoji` or :class:`str` (which is either unicode emoji or emoji ID).
+    An union of either :class:`.BaseEmoji` or :class:`str` (which is either unicode emoji or emoji ID).
 
 .. autofunction:: resolve_emoji
 
@@ -4469,7 +5127,7 @@ StatelessSystemEvent
 
 .. class:: StatelessSystemEvent
 
-    A union of all stateless system events that message may hold.
+    An union of all stateless system events that message may hold.
 
     The following classes are included in this union:
 
@@ -4493,7 +5151,7 @@ SystemEvent
 
 .. class:: SystemEvent
 
-    A union of all system events that message may hold.
+    An union of all system events that message may hold.
 
     The following classes are included in this union:
 
@@ -4830,6 +5488,11 @@ The following exceptions are thrown by the library.
     :members:
     :inherited-members:
     :exclude-members: add_note, with_traceback
+
+.. autoexception:: WebSocketConnectionFailure
+    :show-inheritance:
+    :members:
+    :inherited-members:
 
 .. autoexception:: HTTPException
     :show-inheritance:

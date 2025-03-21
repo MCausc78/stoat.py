@@ -31,6 +31,16 @@ To install the library, you can just run the following command:
     # Windows
     py -3 -m pip install -U pyvolt-re
 
+Or to install alpha master (with all new features):
+
+.. code:: sh
+
+    # Linux/macOS
+    python3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+
+    # Windows
+    py -3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+
 Quick Example
 -------------
 

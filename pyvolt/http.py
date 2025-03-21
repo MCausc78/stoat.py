@@ -31,7 +31,7 @@ from inspect import isawaitable
 import logging
 import typing
 
-from multidict import CIMultiDict
+from multidict import CIMultiDict, MultiMapping
 
 from . import __version__, routes, utils
 from .adapter import HTTPResponse, HTTPAdapter, AIOHTTPAdapter
@@ -65,6 +65,7 @@ from .core import (
     resolve_id,
 )
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
+from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
 from .errors import (
     HTTPException,
     NoEffect,
@@ -108,7 +109,6 @@ if typing.TYPE_CHECKING:
     from . import raw
     from .bot import BaseBot, Bot, PublicBot
     from .channel import TextableChannel
-    from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
     from .instance import Instance
     from .read_state import ReadState
     from .settings import UserSettings
@@ -206,7 +206,7 @@ class RateLimiter(ABC):
     def on_bucket_update(
         self, response: HTTPResponse, route: routes.CompiledRoute, old_bucket: str, new_bucket: str, /
     ) -> None:
-        """Called when route updates their bucket key.
+        """Called when route updates it's bucket key.
 
         The :meth:`default implementation <DefaultRateLimiter.on_bucket_update>` will remove old
         bucket from internal mapping.
@@ -426,13 +426,104 @@ class DefaultRateLimiter(RateLimiter):
             del self._routes_to_bucket[key]
 
 
+_HTTP_OVERRIDE_PARAMETER_KEYS: tuple[str, ...] = (
+    'adapter',
+    'accept_json',
+    'base_url',
+    'bot',
+    'cookie',
+    'headers',
+    'idempotency_key',
+    'json',
+    'mfa_ticket',
+    'token',
+    'rate_limiter',
+    'user_agent',
+)
+
+
+class HTTPOverrideOptions:
+    """Represents overrides for outgoing HTTP request.
+
+    All parameters are optional.
+
+    The attributes are same as parameters, but may be not present if not set.
+
+    Parameters
+    ----------
+    accept_json: :class:`bool`
+        Whether to explicitly receive JSON or not.
+    adapter: :class:`.HTTPAdapter`
+        The adapter to use when sending a HTTP request.
+    base_url: :class:`str`
+        The base API url to use when sending a HTTP request.
+    bot: UndefinedOr[:class:`bool`]
+        Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+    cookie: UndefinedOr[:class:`str`]
+        The cookies to use when performing a request.
+    headers: MultiMapping[:class:`str`]
+        The headers.
+    idempotency_key: Optional[:class:`str`]
+        The idempotency key.
+    json: UndefinedOr[typing.Any]
+        The JSON payload to pass in.
+    mfa_ticket: Optional[:class:`str`]
+        The MFA ticket to pass in headers.
+    token: UndefinedOr[Optional[:class:`str`]]
+        The token to use when requesting the route.
+    user_agent: UndefinedOr[:class:`str`]
+        The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+    """
+
+    __slots__ = _HTTP_OVERRIDE_PARAMETER_KEYS
+
+    if typing.TYPE_CHECKING:
+        accept_json: bool
+        adapter: HTTPAdapter
+        base_url: str
+        bot: UndefinedOr[bool]
+        cookie: UndefinedOr[str]
+        headers: MultiMapping[str]
+        idempotency_key: typing.Optional[str]
+        json: UndefinedOr[typing.Any]
+        mfa_ticket: typing.Optional[str]
+        token: UndefinedOr[typing.Optional[str]]
+        user_agent: UndefinedOr[str]
+
+    def __init__(self, /, **kwargs) -> None:
+        self.update(**kwargs)
+
+    def update(self, /, **kwargs) -> Self:
+        r"""Updates overrides.
+
+        Parameters
+        ----------
+        \*\*kwargs
+            The parameters to update overrides with.
+
+        Returns
+        -------
+        Self
+            The overrides for chaining.
+        """
+        for k, v in kwargs.items():
+            if k not in _HTTP_OVERRIDE_PARAMETER_KEYS:
+                raise TypeError(f'Invalid parameter: {k}')
+            setattr(self, k, v)
+        return self
+
+    def populate(self, **kwargs) -> utils.MaybeAwaitable[None]:
+        """Populate overrides."""
+        ...
+
+
 def _resolve_member_id(target: typing.Union[str, BaseUser, BaseMember], /) -> str:
     ret: str = getattr(target, 'id', target)  # type: ignore
     return ret
 
 
 class HTTPClient:
-    """Represents an HTTP client sending HTTP requests to the Revolt API.
+    """Represents a HTTP client sending HTTP requests to the Revolt API.
 
     Attributes
     ----------
@@ -540,7 +631,7 @@ class HTTPClient:
         return self._base
 
     def url_for(self, route: routes.CompiledRoute, /) -> str:
-        """Returns a URL for route.
+        """Returns URL for route.
 
         Parameters
         ----------
@@ -601,8 +692,10 @@ class HTTPClient:
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
         cookie: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        idempotency_key: typing.Optional[str] = None,
         json_body: bool = False,
         mfa_ticket: typing.Optional[str] = None,
+        overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> utils.MaybeAwaitable[None]:
@@ -620,10 +713,14 @@ class HTTPClient:
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
-        json: UndefinedOr[typing.Any]
-            The JSON payload to pass in.
+        idempotency_key: Optional[:class:`str`]
+            The idempotency key.
+        json_body: :class:`bool`
+            Whether the request body is JSON.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
@@ -664,6 +761,9 @@ class HTTPClient:
         if user_agent is not None:
             headers['User-Agent'] = user_agent
 
+        if idempotency_key is not None:
+            headers['Idempotency-Key'] = idempotency_key
+
         if mfa_ticket is not None:
             headers['X-Mfa-Ticket'] = mfa_ticket
 
@@ -673,6 +773,7 @@ class HTTPClient:
         url: str,
         *,
         headers: CIMultiDict[typing.Any],
+        overrides: typing.Optional[HTTPOverrideOptions] = None,
         **kwargs,
     ) -> HTTPResponse:
         """Perform an actual HTTP request.
@@ -687,6 +788,8 @@ class HTTPClient:
             The URL to send HTTP request to.
         headers: CIMultiDict[Any]
             The HTTP headers.
+        overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         \\*\\*kwargs
             The keyword arguments to pass to :meth:`HTTPAdapter.request`.
 
@@ -695,7 +798,11 @@ class HTTPClient:
         :class:`.HTTPResponse`
             The response.
         """
-        adapter = await self.get_adapter()
+        if overrides and hasattr(overrides, 'adapter') and overrides.adapter is not UNDEFINED:
+            adapter = overrides.adapter
+        else:
+            adapter = await self.get_adapter()
+
         return await adapter.request(
             method,
             url,
@@ -710,6 +817,8 @@ class HTTPClient:
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
         cookie: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        idempotency_key: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         mfa_ticket: typing.Optional[str] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
@@ -730,7 +839,11 @@ class HTTPClient:
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
-        json_body: UndefinedOr[typing.Any]
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+        idempotency_key: Optional[:class:`str`]
+            The idempotency key.
+        json: UndefinedOr[typing.Any]
             The JSON payload to pass in.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
@@ -760,14 +873,53 @@ class HTTPClient:
 
         retries = 0
 
+        if http_overrides is not None:
+            tmp = http_overrides.populate(
+                route=route,
+                accept_json=accept_json,
+                bot=bot,
+                cookie=cookie,
+                headers=headers,
+                idempotency_key=idempotency_key,
+                json=json,
+                mfa_ticket=mfa_ticket,
+                token=token,
+                user_agent=user_agent,
+                kwargs=kwargs,
+            )
+
+            if isawaitable(tmp):
+                await tmp
+
+            if hasattr(tmp, 'accept_json'):
+                accept_json = http_overrides.accept_json
+            if hasattr(tmp, 'bot'):
+                bot = http_overrides.bot
+            if hasattr(tmp, 'cookie'):
+                cookie = http_overrides.cookie
+            if hasattr(tmp, 'headers'):
+                headers = CIMultiDict(http_overrides.headers)
+            if hasattr(tmp, 'idempotency_key'):
+                idempotency_key = http_overrides.idempotency_key
+            if hasattr(tmp, 'json'):
+                json = http_overrides.json
+            if hasattr(tmp, 'mfa_ticket'):
+                mfa_ticket = http_overrides.mfa_ticket
+            if hasattr(tmp, 'token'):
+                token = http_overrides.token
+            if hasattr(tmp, 'user_agent'):
+                user_agent = http_overrides.user_agent
+
         tmp = self.add_headers(
             headers,
             route,
             accept_json=accept_json,
             bot=bot,
             cookie=cookie,
+            idempotency_key=idempotency_key,
             json_body=json is not UNDEFINED,
             mfa_ticket=mfa_ticket,
+            overrides=http_overrides,
             token=token,
             user_agent=user_agent,
         )
@@ -776,7 +928,11 @@ class HTTPClient:
 
         method = route.route.method
         path = route.build()
-        url = self._base + path
+
+        if http_overrides is not None and hasattr(http_overrides, 'base_url'):
+            url = http_overrides.base_url.rstrip('/') + path
+        else:
+            url = self._base + path
 
         if json is not UNDEFINED:
             kwargs['data'] = utils.to_json(json)
@@ -875,9 +1031,11 @@ class HTTPClient:
         *,
         accept_json: bool = True,
         bot: UndefinedOr[bool] = UNDEFINED,
-        mfa_ticket: typing.Optional[str] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        idempotency_key: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
+        mfa_ticket: typing.Optional[str] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
@@ -894,6 +1052,10 @@ class HTTPClient:
             Whether to explicitly receive JSON or not. Defaults to ``True``.
         bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+        idempotency_key: Optional[:class:`str`]
+            The idempotency key.
         json: UndefinedOr[typing.Any]
             The JSON payload to pass in.
         log: :class:`bool`
@@ -922,6 +1084,8 @@ class HTTPClient:
             route,
             accept_json=accept_json,
             bot=bot,
+            http_overrides=http_overrides,
+            idempotency_key=idempotency_key,
             json=json,
             mfa_ticket=mfa_ticket,
             token=token,
@@ -953,10 +1117,15 @@ class HTTPClient:
         if adapter is not None:
             await adapter.close()
 
-    async def query_node(self) -> Instance:
+    async def query_node(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Instance:
         """|coro|
 
         Retrieves the instance information.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -968,11 +1137,11 @@ class HTTPClient:
         :class:`.Instance`
             The instance.
         """
-        resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), token=None)
+        resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), http_overrides=http_overrides, token=None)
         return self.state.parser.parse_instance(resp)
 
     # Bots control
-    async def create_bot(self, name: str) -> Bot:
+    async def create_bot(self, name: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Bot:
         """|coro|
 
         Creates a new Revolt bot.
@@ -984,6 +1153,8 @@ class HTTPClient:
         ----------
         name: :class:`str`
             The bot name. Must be between 2 and 32 characters and not contain whitespace characters.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1032,17 +1203,23 @@ class HTTPClient:
             The created bot.
         """
         payload: raw.DataCreateBot = {'name': name}
-        resp: raw.BotWithUserResponse = await self.request(routes.BOTS_CREATE.compile(), json=payload)
+        resp: raw.BotWithUserResponse = await self.request(
+            routes.BOTS_CREATE.compile(), http_overrides=http_overrides, json=payload
+        )
 
         # TODO: Remove when Revolt will fix this
         if resp['user']['relationship'] == 'User':
             resp['user']['relationship'] = 'None'
         return self.state.parser.parse_bot(resp, resp['user'])
 
-    async def delete_bot(self, bot: ULIDOr[BaseBot], /) -> None:
+    async def delete_bot(
+        self, bot: ULIDOr[BaseBot], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
         """|coro|
 
         Deletes a bot.
+
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1051,6 +1228,8 @@ class HTTPClient:
         ----------
         bot: ULIDOr[:class:`.BaseBot`]
             The bot to delete.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1079,12 +1258,13 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        await self.request(routes.BOTS_DELETE.compile(bot_id=resolve_id(bot)))
+        await self.request(routes.BOTS_DELETE.compile(bot_id=resolve_id(bot)), http_overrides=http_overrides)
 
     async def edit_bot(
         self,
         bot: ULIDOr[BaseBot],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: UndefinedOr[str] = UNDEFINED,
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
@@ -1095,10 +1275,14 @@ class HTTPClient:
 
         Edits the bot.
 
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
+
         Parameters
         ----------
         bot: ULIDOr[:class:`.BaseBot`]
             The bot to edit.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
         public: UndefinedOr[:class:`bool`]
@@ -1171,7 +1355,9 @@ class HTTPClient:
             payload['remove'] = remove
 
         resp: raw.BotWithUserResponse = await self.request(
-            routes.BOTS_EDIT.compile(bot_id=resolve_id(bot)), json=payload
+            routes.BOTS_EDIT.compile(bot_id=resolve_id(bot)),
+            http_overrides=http_overrides,
+            json=payload,
         )
 
         # TODO: Remove when Revolt will fix this
@@ -1183,7 +1369,9 @@ class HTTPClient:
             resp['user'],
         )
 
-    async def get_bot(self, bot: ULIDOr[BaseBot], /) -> Bot:
+    async def get_bot(
+        self, bot: ULIDOr[BaseBot], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> Bot:
         """|coro|
 
         Retrieves the bot with the given ID.
@@ -1197,6 +1385,8 @@ class HTTPClient:
         ----------
         bot: ULIDOr[:class:`.BaseBot`]
             The bot to fetch.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1230,16 +1420,23 @@ class HTTPClient:
         :class:`.Bot`
             The retrieved bot.
         """
-        resp: raw.FetchBotResponse = await self.request(routes.BOTS_FETCH.compile(bot_id=resolve_id(bot)))
+        resp: raw.FetchBotResponse = await self.request(
+            routes.BOTS_FETCH.compile(bot_id=resolve_id(bot)), http_overrides=http_overrides
+        )
         return self.state.parser.parse_bot(resp['bot'], resp['user'])
 
-    async def get_owned_bots(self) -> list[Bot]:
+    async def get_owned_bots(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[Bot]:
         """|coro|
 
         Retrieves all bots owned by you.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1265,10 +1462,14 @@ class HTTPClient:
         List[:class:`.Bot`]
             The owned bots.
         """
-        resp: raw.OwnedBotsResponse = await self.request(routes.BOTS_FETCH_OWNED.compile())
+        resp: raw.OwnedBotsResponse = await self.request(
+            routes.BOTS_FETCH_OWNED.compile(), http_overrides=http_overrides
+        )
         return self.state.parser.parse_bots(resp)
 
-    async def get_public_bot(self, bot: ULIDOr[BaseBot], /) -> PublicBot:
+    async def get_public_bot(
+        self, bot: ULIDOr[BaseBot], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> PublicBot:
         """|coro|
 
         Retrieves the public bot with the given ID.
@@ -1280,6 +1481,8 @@ class HTTPClient:
         ----------
         bot: ULIDOr[:class:`.BaseBot`]
             The bot to fetch.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1313,7 +1516,9 @@ class HTTPClient:
         :class:`.PublicBot`
             The retrieved bot.
         """
-        resp: raw.PublicBot = await self.request(routes.BOTS_FETCH_PUBLIC.compile(bot_id=resolve_id(bot)))
+        resp: raw.PublicBot = await self.request(
+            routes.BOTS_FETCH_PUBLIC.compile(bot_id=resolve_id(bot)), http_overrides=http_overrides
+        )
         return self.state.parser.parse_public_bot(resp)
 
     @typing.overload
@@ -1321,6 +1526,7 @@ class HTTPClient:
         self,
         bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         server: ULIDOr[BaseServer],
     ) -> None: ...
 
@@ -1329,6 +1535,7 @@ class HTTPClient:
         self,
         bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         group: ULIDOr[GroupChannel],
     ) -> None: ...
 
@@ -1336,6 +1543,7 @@ class HTTPClient:
         self,
         bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         server: typing.Optional[ULIDOr[BaseServer]] = None,
         group: typing.Optional[ULIDOr[GroupChannel]] = None,
     ) -> None:
@@ -1347,6 +1555,9 @@ class HTTPClient:
 
         If destination is a server, you must have :attr:`~Permissions.manage_server` to do this, otherwise :attr:`~Permissions.create_invites` is required.
 
+        For groups, fires :class:`.PrivateChannelCreateEvent` for bot, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent` for all group recipients.
+        For servers, fires :class:`.ServerCreateEvent` for bot, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent` for all server members.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1354,6 +1565,8 @@ class HTTPClient:
         ----------
         bot: ULIDOr[Union[:class:`.BaseBot`, :class:`.BaseUser`]]
             The bot.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         server: Optional[ULIDOr[:class:`.BaseServer`]]
             The destination server.
         group: Optional[ULIDOr[:class:`.GroupChannel`]]
@@ -1436,15 +1649,25 @@ class HTTPClient:
         else:
             raise RuntimeError('Unreachable')
 
-        await self.request(routes.BOTS_INVITE.compile(bot_id=resolve_id(bot)), json=payload)
+        await self.request(
+            routes.BOTS_INVITE.compile(bot_id=resolve_id(bot)), http_overrides=http_overrides, json=payload
+        )
 
     # Channels control
-    async def acknowledge_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+    async def acknowledge_message(
+        self,
+        channel: ULIDOr[TextableChannel],
+        message: ULIDOr[BaseMessage],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Marks a message as read.
 
         You must have :attr:`~Permissions.view_channel` to do this.
+
+        Fires :class:`.MessageAckEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1455,6 +1678,8 @@ class HTTPClient:
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1495,15 +1720,28 @@ class HTTPClient:
             routes.CHANNELS_CHANNEL_ACK.compile(
                 channel_id=resolve_id(channel),
                 message_id=resolve_id(message),
-            )
+            ),
+            http_overrides=http_overrides,
         )
 
-    async def close_channel(self, channel: ULIDOr[BaseChannel], silent: typing.Optional[bool] = None) -> None:
+    async def close_channel(
+        self,
+        channel: ULIDOr[BaseChannel],
+        silent: typing.Optional[bool] = None,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Deletes a server channel, leaves a group or closes a group.
 
         You must have :attr:`~Permissions.view_channel` to do this. If target channel is server channel, :attr:`~Permissions.manage_channels` is also required.
+
+        For DMs, fires :class:`.ChannelUpdateEvent` for the current user and DM recipient.
+        For groups, if the current user is group owner, fires :class:`.PrivateChannelDeleteEvent` for all group recipients (including group owner),
+        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user,
+        and :class:`.GroupRecipientRemoveEvent` is fired for rest of group recipients.
+        For server channels, :class:`.ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`.ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -1511,6 +1749,8 @@ class HTTPClient:
             The channel to close.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1554,6 +1794,7 @@ class HTTPClient:
         # this endpoint can return NoEffect and its 200 OK for some reason
         await self.request(
             routes.CHANNELS_CHANNEL_DELETE.compile(channel_id=resolve_id(channel)),
+            http_overrides=http_overrides,
             params=params,
         )
 
@@ -1561,6 +1802,7 @@ class HTTPClient:
         self,
         channel: ULIDOr[BaseChannel],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         owner: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
@@ -1575,10 +1817,16 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
+        Fires :class:`.ChannelUpdateEvent` for all users who still can see target channel,
+        optionally :class:`.ServerChannelCreateEvent` for all users who now can see target server channel, and
+        optionally :class:`.ChannelDeleteEvent` for users who no longer can see target server channel.
+
         Parameters
         ----------
         channel: ULIDOr[:class:`.BaseChannel`]
             The channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -1650,6 +1898,7 @@ class HTTPClient:
         """
         payload: raw.DataEditChannel = {}
         remove: list[raw.FieldsChannel] = []
+
         if name is not UNDEFINED:
             payload['name'] = name
         if description is not UNDEFINED:
@@ -1670,15 +1919,20 @@ class HTTPClient:
             payload['archived'] = archived
         if default_permissions is not UNDEFINED:
             remove.append('DefaultPermissions')
+
         if len(remove) > 0:
             payload['remove'] = remove
+
         resp: raw.Channel = await self.request(
             routes.CHANNELS_CHANNEL_EDIT.compile(channel_id=resolve_id(channel)),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_channel(resp)
 
-    async def get_channel(self, channel: ULIDOr[BaseChannel], /) -> Channel:
+    async def get_channel(
+        self, channel: ULIDOr[BaseChannel], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> Channel:
         """|coro|
 
         Fetch a :class:`.Channel` with the specified ID.
@@ -1689,6 +1943,8 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.BaseChannel`]
             The channel to fetch.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1722,7 +1978,9 @@ class HTTPClient:
         :class:`.Channel`
             The retrieved channel.
         """
-        resp: raw.Channel = await self.request(routes.CHANNELS_CHANNEL_FETCH.compile(channel_id=resolve_id(channel)))
+        resp: raw.Channel = await self.request(
+            routes.CHANNELS_CHANNEL_FETCH.compile(channel_id=resolve_id(channel)), http_overrides=http_overrides
+        )
         return self.state.parser.parse_channel(resp)
 
     async def add_group_recipient(
@@ -1730,12 +1988,16 @@ class HTTPClient:
         channel: ULIDOr[GroupChannel],
         /,
         user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
         Adds another user to the group.
 
         You must have :attr:`~Permissions.create_invites` to do this.
+
+        Fires :class:`.PrivateChannelCreateEvent` for added recipient, and :class:`.GroupRecipientAddEvent` for rest of group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1746,6 +2008,8 @@ class HTTPClient:
             The group.
         user: ULIDOr[:class:`.BaseUser`]
             The user to add.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1805,13 +2069,16 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
-            routes.CHANNELS_GROUP_ADD_MEMBER.compile(channel_id=resolve_id(channel), user_id=resolve_id(user))
+            routes.CHANNELS_GROUP_ADD_MEMBER.compile(
+                channel_id=resolve_id(channel), user_id=resolve_id(user), http_overrides=http_overrides
+            )
         )
 
     async def create_group(
         self,
         name: str,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         description: typing.Optional[str] = None,
         icon: typing.Optional[ResolvableResource] = None,
         recipients: typing.Optional[list[ULIDOr[BaseUser]]] = None,
@@ -1821,6 +2088,8 @@ class HTTPClient:
 
         Creates a new group.
 
+        Fires :class:`.PrivateChannelCreateEvent` for the current user and all specified recipients.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -1828,6 +2097,8 @@ class HTTPClient:
         ----------
         name: :class:`str`
             The group name. Must be between 1 and 32 characters long.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         description: Optional[:class:`str`]
             The group description. Can be only up to 1024 characters.
         icon: Optional[:class:`.ResolvableResource`]
@@ -1900,7 +2171,9 @@ class HTTPClient:
             payload['users'] = list(map(resolve_id, recipients))
         if nsfw is not None:
             payload['nsfw'] = nsfw
-        resp: raw.GroupChannel = await self.request(routes.CHANNELS_GROUP_CREATE.compile(), json=payload)
+        resp: raw.GroupChannel = await self.request(
+            routes.CHANNELS_GROUP_CREATE.compile(), http_overrides=http_overrides, json=payload
+        )
         return self.state.parser.parse_group_channel(
             resp,
             (True, []),
@@ -1910,10 +2183,14 @@ class HTTPClient:
         self,
         channel: ULIDOr[GroupChannel],
         user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
         Removes a recipient from the group.
+
+        Fires :class:`.PrivateChannelDeleteEvent` for removed recipient, and :class:`.GroupRecipientRemoveEvent` for rest of group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1924,6 +2201,8 @@ class HTTPClient:
             The group.
         user: ULIDOr[:class:`.BaseUser`]
             The user to remove.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1978,10 +2257,16 @@ class HTTPClient:
             routes.CHANNELS_GROUP_REMOVE_MEMBER.compile(
                 channel_id=resolve_id(channel),
                 user_id=resolve_id(user),
-            )
+            ),
+            http_overrides=http_overrides,
         )
 
-    async def create_channel_invite(self, channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]]) -> Invite:
+    async def create_channel_invite(
+        self,
+        channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> Invite:
         """|coro|
 
         Creates an invite to channel. The destination channel must be a group or server channel.
@@ -1993,6 +2278,8 @@ class HTTPClient:
         ----------
         channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.ServerChannel`]]
             The invite destination channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -2044,12 +2331,16 @@ class HTTPClient:
         :class:`.Invite`
             The invite that was created.
         """
-        resp: raw.Invite = await self.request(routes.CHANNELS_INVITE_CREATE.compile(channel_id=resolve_id(channel)))
+        resp: raw.Invite = await self.request(
+            routes.CHANNELS_INVITE_CREATE.compile(channel_id=resolve_id(channel)), http_overrides=http_overrides
+        )
         return self.state.parser.parse_invite(resp)
 
     async def get_group_recipients(
         self,
         channel: ULIDOr[GroupChannel],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> list[User]:
         """|coro|
 
@@ -2059,6 +2350,8 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.GroupChannel`]
             The group channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -2111,16 +2404,25 @@ class HTTPClient:
         resp: list[raw.User] = await self.request(
             routes.CHANNELS_MEMBERS_FETCH.compile(
                 channel_id=resolve_id(channel),
-            )
+            ),
+            http_overrides=http_overrides,
         )
         return list(map(self.state.parser.parse_user, resp))
 
-    async def delete_messages(self, channel: ULIDOr[TextableChannel], messages: Sequence[ULIDOr[BaseMessage]]) -> None:
+    async def delete_messages(
+        self,
+        channel: ULIDOr[TextableChannel],
+        messages: Sequence[ULIDOr[BaseMessage]],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Deletes multiple messages.
 
         You must have :attr:`~Permissions.manage_messages` to do this regardless whether you authored the message or not.
+
+        Fires :class:`.MessageDeleteBulkEvent` for all users who can see target channel.
 
         Parameters
         ----------
@@ -2128,6 +2430,8 @@ class HTTPClient:
             The channel.
         messages: Sequence[ULIDOr[:class:`.BaseMessage`]]
             The messages to delete.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -2173,18 +2477,27 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         """
-        payload: raw.OptionsBulkDelete = {'ids': [resolve_id(message) for message in messages]}
+        payload: raw.OptionsBulkDelete = {'ids': list(map(resolve_id, messages))}
         await self.request(
             routes.CHANNELS_MESSAGE_DELETE_BULK.compile(channel_id=resolve_id(channel)),
+            http_overrides=http_overrides,
             json=payload,
         )
 
-    async def clear_reactions(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+    async def clear_reactions(
+        self,
+        channel: ULIDOr[TextableChannel],
+        message: ULIDOr[BaseMessage],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Removes all the reactions from the message.
 
         You must have :attr:`~Permissions.manage_messages` to do this.
+
+        Fires :class:`.MessageUpdateEvent` with empty :attr:`~PartialMessage.reactions` for all users who can see target channel.
 
         Parameters
         ----------
@@ -2192,6 +2505,8 @@ class HTTPClient:
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -2232,15 +2547,24 @@ class HTTPClient:
             routes.CHANNELS_MESSAGE_CLEAR_REACTIONS.compile(
                 channel_id=resolve_id(channel),
                 message_id=resolve_id(message),
-            )
+            ),
+            http_overrides=http_overrides,
         )
 
-    async def delete_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+    async def delete_message(
+        self,
+        channel: ULIDOr[TextableChannel],
+        message: ULIDOr[BaseMessage],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Deletes the message in a channel.
 
         You must have :attr:`~Permissions.manage_messages` to do this if message is not yours.
+
+        Fires :class:`.MessageDeleteEvent` for all users who can see target channel.
 
         Parameters
         ----------
@@ -2248,6 +2572,8 @@ class HTTPClient:
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -2288,7 +2614,8 @@ class HTTPClient:
             routes.CHANNELS_MESSAGE_DELETE.compile(
                 channel_id=resolve_id(channel),
                 message_id=resolve_id(message),
-            )
+            ),
+            http_overrides=http_overrides,
         )
 
     async def edit_message(
@@ -2296,6 +2623,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         content: UndefinedOr[str] = UNDEFINED,
         embeds: UndefinedOr[list[SendableEmbed]] = UNDEFINED,
     ) -> Message:
@@ -2303,12 +2631,16 @@ class HTTPClient:
 
         Edits a message in channel.
 
+        Fires :class:`.MessageUpdateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
             The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
             The message to edit.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         content: UndefinedOr[:class:`str`]
             The new content to replace the message with. Must be between 1 and 2000 characters long.
         embeds: UndefinedOr[List[:class:`.SendableEmbed`]]
@@ -2380,11 +2712,18 @@ class HTTPClient:
                 channel_id=resolve_id(channel),
                 message_id=resolve_id(message),
             ),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_message(resp)
 
-    async def get_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> Message:
+    async def get_message(
+        self,
+        channel: ULIDOr[TextableChannel],
+        message: ULIDOr[BaseMessage],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> Message:
         """|coro|
 
         Retrieves a message.
@@ -2395,6 +2734,8 @@ class HTTPClient:
             The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
             The message to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -2440,16 +2781,25 @@ class HTTPClient:
             routes.CHANNELS_MESSAGE_FETCH.compile(
                 channel_id=resolve_id(channel),
                 message_id=resolve_id(message),
-            )
+            ),
+            http_overrides=http_overrides,
         )
         return self.state.parser.parse_message(resp)
 
-    async def pin_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+    async def pin_message(
+        self,
+        channel: ULIDOr[TextableChannel],
+        message: ULIDOr[BaseMessage],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Pins a message.
 
         You must have :attr:`~Permissions.manage_messages` to do this.
+
+        Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
@@ -2457,6 +2807,8 @@ class HTTPClient:
             The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
             The message to pin.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -2505,13 +2857,15 @@ class HTTPClient:
             routes.CHANNELS_MESSAGE_PIN.compile(
                 channel_id=resolve_id(channel),
                 message_id=resolve_id(message),
-            )
+            ),
+            http_overrides=http_overrides,
         )
 
     async def get_messages(
         self,
         channel: ULIDOr[TextableChannel],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
         after: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -2529,6 +2883,8 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
             The channel to retrieve messages from.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
 
@@ -2605,6 +2961,7 @@ class HTTPClient:
 
         resp: raw.BulkMessageResponse = await self.request(
             routes.CHANNELS_MESSAGE_QUERY.compile(channel_id=resolve_id(channel)),
+            http_overrides=http_overrides,
             params=params,
         )
         return self.state.parser.parse_messages(resp)
@@ -2614,12 +2971,16 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         message: ULIDOr[BaseMessage],
         emoji: ResolvableEmoji,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
         React to a given message.
 
         You must have :attr:`~Permissions.react` to do this.
+
+        Fires :class:`.MessageReactEvent` for all users who can see target channel.
 
         Parameters
         ----------
@@ -2629,6 +2990,8 @@ class HTTPClient:
             The message to react to.
         emoji: :class:`.ResolvableEmoji`
             The emoji to react with.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -2682,7 +3045,8 @@ class HTTPClient:
                 channel_id=resolve_id(channel),
                 message_id=resolve_id(message),
                 emoji=resolve_emoji(emoji),
-            )
+            ),
+            http_overrides=http_overrides,
         )
 
     async def search_for_messages(
@@ -2690,6 +3054,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         query: typing.Optional[str] = None,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         pinned: typing.Optional[bool] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -2715,6 +3080,8 @@ class HTTPClient:
             The channel to search in.
         query: Optional[:class:`str`]
             The full-text search query. See `MongoDB documentation <https://www.mongodb.com/docs/manual/text-search/>`_ for more information.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
         limit: Optional[:class:`int`]
@@ -2806,6 +3173,7 @@ class HTTPClient:
 
         resp: raw.BulkMessageResponse = await self.request(
             routes.CHANNELS_MESSAGE_SEARCH.compile(channel_id=resolve_id(channel)),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_messages(resp)
@@ -2815,6 +3183,7 @@ class HTTPClient:
         channel: ULIDOr[TextableChannel],
         content: typing.Optional[str] = None,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
@@ -2835,12 +3204,16 @@ class HTTPClient:
 
         If message mentions any roles, you must have :attr:`~Permissions.mention_roles` to do that.
 
+        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
             The destination channel.
         content: Optional[:class:`str`]
             The message content.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`.ResolvableResource`]]
@@ -2993,23 +3366,28 @@ class HTTPClient:
         if flags is not None:
             payload['flags'] = flags
 
-        headers = {}
-        if nonce is not None:
-            headers['Idempotency-Key'] = nonce
-
         resp: raw.Message = await self.request(
             routes.CHANNELS_MESSAGE_SEND.compile(channel_id=resolve_id(channel)),
+            http_overrides=http_overrides,
             json=payload,
-            headers=headers,
+            idempotency_key=nonce,
         )
         return self.state.parser.parse_message(resp)
 
-    async def unpin_message(self, channel: ULIDOr[TextableChannel], message: ULIDOr[BaseMessage]) -> None:
+    async def unpin_message(
+        self,
+        channel: ULIDOr[TextableChannel],
+        message: ULIDOr[BaseMessage],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Unpins a message.
 
         You must have :attr:`~Permissions.manage_messages` to do this.
+
+        Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
@@ -3017,6 +3395,8 @@ class HTTPClient:
             The channel.
         message: ULIDOr[:class:`.BaseMessage`]
             The message.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -3065,7 +3445,8 @@ class HTTPClient:
             routes.CHANNELS_MESSAGE_PIN.compile(
                 channel_id=resolve_id(channel),
                 message_id=resolve_id(message),
-            )
+            ),
+            http_overrides=http_overrides,
         )
 
     async def remove_reactions_from_message(
@@ -3074,6 +3455,7 @@ class HTTPClient:
         message: ULIDOr[BaseUser],
         emoji: ResolvableEmoji,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         user: typing.Optional[ULIDOr[BaseUser]] = None,
         remove_all: typing.Optional[bool] = None,
     ) -> None:
@@ -3083,6 +3465,9 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.react` to do this.
 
+        Fires :class:`.MessageClearReactionEvent` if ``remove_all`` is ``True`` or :class:`.MessageUnreactEvent`, for all users
+        who can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[:class:`.TextableChannel`]
@@ -3091,6 +3476,8 @@ class HTTPClient:
             The message.
         emoji: :class:`.ResolvableEmoji`
             The emoji to remove.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         user: Optional[ULIDOr[:class:`.BaseUser`]]
             The user to remove reactions from.
 
@@ -3150,6 +3537,7 @@ class HTTPClient:
                 message_id=resolve_id(message),
                 emoji=resolve_emoji(emoji),
             ),
+            http_overrides=http_overrides,
             params=params,
         )
 
@@ -3158,6 +3546,7 @@ class HTTPClient:
         channel: ULIDOr[ServerChannel],
         role: ULIDOr[BaseRole],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> ServerChannel:
@@ -3169,12 +3558,18 @@ class HTTPClient:
 
         The provided channel must be a :class:`.ServerChannel`.
 
+        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel,
+        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`.ChannelDeleteEvent` for users who no longer can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[:class:`.ServerChannel`]
             The channel.
         role: ULIDOr[:class:`.BaseRole`]
             The role.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         allow: :class:`.Permissions`
             The permissions to allow for role in channel.
         deny: :class:`.Permissions`
@@ -3238,6 +3633,7 @@ class HTTPClient:
                 channel_id=resolve_id(channel),
                 role_id=resolve_id(role),
             ),
+            http_overrides=http_overrides,
             json=payload,
         )
         ret = self.state.parser.parse_channel(resp)
@@ -3248,6 +3644,8 @@ class HTTPClient:
         self,
         channel: ULIDOr[GroupChannel],
         permissions: Permissions,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> GroupChannel: ...
 
     @typing.overload
@@ -3255,12 +3653,16 @@ class HTTPClient:
         self,
         channel: ULIDOr[ServerChannel],
         permissions: PermissionOverride,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> ServerChannel: ...
 
     async def set_default_channel_permissions(
         self,
         channel: ULIDOr[typing.Union[GroupChannel, ServerChannel]],
         permissions: typing.Union[Permissions, PermissionOverride],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> typing.Union[GroupChannel, ServerChannel]:
         """|coro|
 
@@ -3270,12 +3672,18 @@ class HTTPClient:
 
         Channel must be a :class:`GroupChannel`, or :class:`.ServerChannel`.
 
+        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel, and for server channels,
+        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`.ChannelDeleteEvent` is fired for users who no longer can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.ServerChannel`]]
             The channel to set default permissions for.
         permissions: Union[:class:`.Permissions`, :class:`.PermissionOverride`]
             The new permissions. Must be :class:`.Permissions` for groups and :class:`.PermissionOverride` for server channels.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -3336,6 +3744,7 @@ class HTTPClient:
         }
         resp: raw.Channel = await self.request(
             routes.CHANNELS_PERMISSIONS_SET_DEFAULT.compile(channel_id=resolve_id(channel)),
+            http_overrides=http_overrides,
             json=payload,
         )
         r = self.state.parser.parse_channel(resp)
@@ -3345,6 +3754,7 @@ class HTTPClient:
         self,
         channel: ULIDOr[typing.Union[DMChannel, GroupChannel, TextChannel, VoiceChannel]],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         node: UndefinedOr[str] = UNDEFINED,
     ) -> tuple[str, str]:
         """|coro|
@@ -3352,6 +3762,9 @@ class HTTPClient:
         Asks the voice server for a token to join the call.
 
         You must have :attr:`~Permissions.connect` to do this.
+
+        For Livekit instances, fires :class:`.MessageCreateEvent` and :class:`.VoiceChannelJoinEvent` / :class:`.VoiceChannelMoveEvent`
+        for all users who can see target channel.
 
         Parameters
         ----------
@@ -3362,6 +3775,8 @@ class HTTPClient:
             whether :attr:`InstanceFeaturesConfig.livekit_voice` is ``False``), then
             a channel with type of :attr:`~ChannelType.text` cannot be passed and
             will raise :class:`HTTPException` with ``CannotJoinCall`` type.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         node: UndefinedOr[:class:`str`]
             The node's name to use for starting a call.
 
@@ -3430,12 +3845,12 @@ class HTTPClient:
         route = routes.CHANNELS_VOICE_JOIN.compile(channel_id=resolve_id(channel))
 
         if node is UNDEFINED:
-            resp = await self.request(route)
+            resp = await self.request(route, http_overrides=http_overrides)
         else:
             payload: raw.DataJoinCall = {
                 'node': node,
             }
-            resp = await self.request(route, json=payload)
+            resp = await self.request(route, http_overrides=http_overrides, json=payload)
 
         return resp['token'], resp.get('url', '')
 
@@ -3443,6 +3858,7 @@ class HTTPClient:
         self,
         channel: ULIDOr[typing.Union[GroupChannel, TextChannel]],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: str,
         avatar: typing.Optional[ResolvableResource] = None,
     ) -> Webhook:
@@ -3452,10 +3868,14 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
 
+        Fires :class:`.WebhookCreateEvent` for all users who can see target channel.
+
         Parameters
         ----------
         channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.TextChannel`]]
             The channel to create webhook in.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
         avatar: Optional[:class:`.ResolvableResource`]
@@ -3514,11 +3934,14 @@ class HTTPClient:
             payload['avatar'] = await resolve_resource(self.state, avatar, tag='avatars')
         resp: raw.Webhook = await self.request(
             routes.CHANNELS_WEBHOOK_CREATE.compile(channel_id=resolve_id(channel)),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_webhook(resp)
 
-    async def get_channel_webhooks(self, channel: ULIDOr[ServerChannel]) -> list[Webhook]:
+    async def get_channel_webhooks(
+        self, channel: ULIDOr[ServerChannel], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[Webhook]:
         """|coro|
 
         Retrieves all webhooks in a channel.
@@ -3529,6 +3952,8 @@ class HTTPClient:
         ----------
         channel: ULIDOr[:class:`.ServerChannel`]
             The channel to retrieve webhooks from.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -3579,7 +4004,8 @@ class HTTPClient:
             The webhooks for this channel.
         """
         resp: list[raw.Webhook] = await self.request(
-            routes.CHANNELS_WEBHOOK_FETCH_ALL.compile(channel_id=resolve_id(channel))
+            routes.CHANNELS_WEBHOOK_FETCH_ALL.compile(channel_id=resolve_id(channel)),
+            http_overrides=http_overrides,
         )
         return list(map(self.state.parser.parse_webhook, resp))
 
@@ -3588,6 +4014,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: str,
         nsfw: typing.Optional[bool] = None,
         image: ResolvableResource,
@@ -3598,6 +4025,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_customization` to do this.
 
+        Fires :class:`.EmojiCreateEvent` for all server members.
+
         .. note::
             This can only be used by non-bot accounts.
 
@@ -3605,6 +4034,8 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to create emoji in.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         name: :class:`str`
             The emoji name. Must be between 1 and 32 chars long. Can only contain ASCII digits, underscore and lowercase letters.
         nsfw: Optional[:class:`bool`]
@@ -3679,17 +4110,22 @@ class HTTPClient:
 
         resp: raw.ServerEmoji = await self.request(
             routes.CUSTOMISATION_EMOJI_CREATE.compile(attachment_id=attachment_id),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_server_emoji(resp)
 
-    async def delete_emoji(self, emoji: ULIDOr[ServerEmoji]) -> None:
+    async def delete_emoji(
+        self, emoji: ULIDOr[ServerEmoji], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
         """|coro|
 
-        Deletes a emoji.
+        Deletes an emoji.
 
         You must have :attr:`~Permissions.manage_customization` to do this if you do not own
         the emoji, unless it was detached (already deleted).
+
+        May fire :class:`.EmojiDeleteEvent` for all server members.
 
         .. note::
             If deleting detached emoji, this will successfully return.
@@ -3698,6 +4134,8 @@ class HTTPClient:
         ----------
         emoji: ULIDOr[:class:`.ServerEmoji`]
             The emoji to delete.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -3723,7 +4161,7 @@ class HTTPClient:
             +----------------------------------+-----------------------------------------------------------+
             | Value                            | Reason                                                    |
             +----------------------------------+-----------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to delete a emoji. |
+            | ``MissingPermission``            | You do not have the proper permissions to delete an emoji. |
             +----------------------------------+-----------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
@@ -3742,9 +4180,13 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        await self.request(routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=resolve_id(emoji)))
+        await self.request(
+            routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=resolve_id(emoji)), http_overrides=http_overrides
+        )
 
-    async def get_emoji(self, emoji: ULIDOr[BaseEmoji]) -> Emoji:
+    async def get_emoji(
+        self, emoji: ULIDOr[BaseEmoji], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> Emoji:
         """|coro|
 
         Retrieves a custom emoji.
@@ -3753,6 +4195,8 @@ class HTTPClient:
         ----------
         emoji: ULIDOr[:class:`.BaseEmoji`]
             The emoji to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -3771,15 +4215,19 @@ class HTTPClient:
             The retrieved emoji.
         """
         resp: raw.Emoji = await self.request(
-            routes.CUSTOMISATION_EMOJI_FETCH.compile(emoji_id=resolve_id(emoji)), token=None
+            routes.CUSTOMISATION_EMOJI_FETCH.compile(emoji_id=resolve_id(emoji)),
+            http_overrides=http_overrides,
+            token=None,
         )
         return self.state.parser.parse_emoji(resp)
 
     # Invites control
-    async def delete_invite(self, code: typing.Union[str, BaseInvite], /) -> None:
+    async def delete_invite(
+        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
         """|coro|
 
-        Deletes a invite.
+        Deletes an invite.
 
         You must have :class:`~Permissions.manage_server` if deleting server invite.
 
@@ -3787,6 +4235,8 @@ class HTTPClient:
         ----------
         code: Union[:class:`str`, :class:`.BaseInvite`]
             The invite code.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -3824,9 +4274,11 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         invite_code = code.code if isinstance(code, BaseInvite) else code
-        await self.request(routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code))
+        await self.request(routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code), http_overrides=http_overrides)
 
-    async def get_invite(self, code: typing.Union[str, BaseInvite], /) -> PublicInvite:
+    async def get_invite(
+        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> PublicInvite:
         """|coro|
 
         Retrieves an invite.
@@ -3835,6 +4287,8 @@ class HTTPClient:
         ----------
         code: Union[:class:`str`, :class:`.BaseInvite`]
             The code to retrieve invite from.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -3855,14 +4309,21 @@ class HTTPClient:
         invite_code = code.code if isinstance(code, BaseInvite) else code
         resp: raw.InviteResponse = await self.request(
             routes.INVITES_INVITE_FETCH.compile(invite_code=invite_code),
+            http_overrides=http_overrides,
             token=None,
         )
         return self.state.parser.parse_public_invite(resp)
 
-    async def accept_invite(self, code: typing.Union[str, BaseInvite], /) -> typing.Union[Server, GroupChannel]:
+    async def accept_invite(
+        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> typing.Union[Server, GroupChannel]:
         """|coro|
 
         Accepts an invite.
+
+        Fires either :class:`.PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for the current user,
+        and fires either :class:`.GroupRecipientAddEvent` or :class:`.ServerMemberJoinEvent`, and :class:`.MessageCreateEvent`,
+        both for all group recipients/server members.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -3871,6 +4332,8 @@ class HTTPClient:
         ----------
         code: Union[:class:`str`, :class:`.BaseInvite`]
             The invite code.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -3935,7 +4398,9 @@ class HTTPClient:
             The joined server or group.
         """
         invite_code = code.code if isinstance(code, BaseInvite) else code
-        resp: raw.InviteJoinResponse = await self.request(routes.INVITES_INVITE_JOIN.compile(invite_code=invite_code))
+        resp: raw.InviteJoinResponse = await self.request(
+            routes.INVITES_INVITE_JOIN.compile(invite_code=invite_code), http_overrides=http_overrides
+        )
         if resp['type'] == 'Server':
             return self.state.parser.parse_server(
                 resp['server'],
@@ -3952,7 +4417,9 @@ class HTTPClient:
             raise NotImplementedError(resp)
 
     # Onboarding control
-    async def complete_onboarding(self, username: str) -> OwnUser:
+    async def complete_onboarding(
+        self, username: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> OwnUser:
         """|coro|
 
         Complete onboarding by setting up an username, and allow connections to WebSocket.
@@ -3961,6 +4428,8 @@ class HTTPClient:
         ----------
         username: :class:`str`
             The username to use. Must be between 2 and 32 characters and not contain whitespace characters.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -4013,15 +4482,24 @@ class HTTPClient:
             The updated user.
         """
         payload: raw.DataOnboard = {'username': username}
-        resp: raw.User = await self.request(routes.ONBOARD_COMPLETE.compile(), json=payload)
+        resp: raw.User = await self.request(
+            routes.ONBOARD_COMPLETE.compile(),
+            http_overrides=http_overrides,
+            json=payload,
+        )
         return self.state.parser.parse_own_user(resp)
 
-    async def onboarding_status(self) -> bool:
+    async def onboarding_status(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> bool:
         """|coro|
 
         Determines whether the current session requires to complete onboarding.
 
         You may skip calling this if you're restoring from an existing session.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -4039,17 +4517,21 @@ class HTTPClient:
         :class:`bool`
             Whether the onboarding is completed.
         """
-        d: raw.DataHello = await self.request(routes.ONBOARD_HELLO.compile())
+        d: raw.DataHello = await self.request(routes.ONBOARD_HELLO.compile(), http_overrides=http_overrides)
         return d['onboarding']
 
     # Web Push control
-    async def push_subscribe(self, *, endpoint: str, p256dh: str, auth: str) -> None:
+    async def push_subscribe(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, endpoint: str, p256dh: str, auth: str
+    ) -> None:
         """|coro|
 
-        Create a new Web Push subscription. If an subscription already exists on this session, it will be removed.
+        Create a new Web Push subscription. If a subscription already exists on this session, it will be removed.
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         endpoint: :class:`str`
             The HTTP `endpoint <https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/endpoint>`_ associated with push subscription.
         p256dh: :class:`str`
@@ -4083,13 +4565,19 @@ class HTTPClient:
         }
         await self.request(
             routes.PUSH_SUBSCRIBE.compile(),
+            http_overrides=http_overrides,
             json=payload,
         )
 
-    async def unsubscribe(self) -> None:
+    async def unsubscribe(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Remove the Web Push subscription associated with the current session.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -4110,22 +4598,27 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
             +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.PUSH_UNSUBSCRIBE.compile())
+        await self.request(routes.PUSH_UNSUBSCRIBE.compile(), http_overrides=http_overrides)
 
     # Safety control
-    async def _report_content(self, payload: raw.DataReportContent, /) -> None:
-        await self.request(routes.SAFETY_REPORT_CONTENT.compile(), json=payload)
+    async def _report_content(
+        self, payload: raw.DataReportContent, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
+        await self.request(routes.SAFETY_REPORT_CONTENT.compile(), http_overrides=http_overrides, json=payload)
 
     async def report_message(
         self,
         message: ULIDOr[BaseMessage],
         reason: ContentReportReason,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         additional_context: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
         Report a message to the instance moderation team.
+
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
@@ -4134,8 +4627,12 @@ class HTTPClient:
         ----------
         message: ULIDOr[:class:`.BaseMessage`]
             The message to report.
+
+            Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
         reason: :class:`.ContentReportReason`
             The reason for reporting.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
 
@@ -4185,18 +4682,21 @@ class HTTPClient:
         }
         if additional_context is not None:
             payload['additional_context'] = additional_context
-        await self._report_content(payload)
+        await self._report_content(payload, http_overrides=http_overrides)
 
     async def report_server(
         self,
         server: ULIDOr[BaseServer],
         reason: ContentReportReason,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         additional_context: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
         Report a server to the instance moderation team.
+
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
@@ -4207,6 +4707,8 @@ class HTTPClient:
             The server to report.
         reason: :class:`.ContentReportReason`
             The reason for reporting.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
 
@@ -4256,19 +4758,22 @@ class HTTPClient:
         }
         if additional_context is not None:
             payload['additional_context'] = additional_context
-        await self._report_content(payload)
+        await self._report_content(payload, http_overrides=http_overrides)
 
     async def report_user(
         self,
         user: ULIDOr[BaseUser],
         reason: UserReportReason,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         additional_context: typing.Optional[str] = None,
         message_context: typing.Optional[ULIDOr[BaseMessage]] = None,
     ) -> None:
         """|coro|
 
         Report an user to the instance moderation team.
+
+        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
@@ -4279,10 +4784,14 @@ class HTTPClient:
             The user to report.
         reason: :class:`.UserReportReason`
             The reason for reporting user.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
         message_context: Optional[ULIDOr[:class:`.BaseMessage`]]
             The message context.
+
+            Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
 
         Raises
         ------
@@ -4334,7 +4843,7 @@ class HTTPClient:
         if additional_context is not None:
             payload['additional_context'] = additional_context
 
-        await self._report_content(payload)
+        await self._report_content(payload, http_overrides=http_overrides)
 
     # Servers control
     async def ban(
@@ -4342,13 +4851,16 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         user: typing.Union[str, BaseUser, BaseMember],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         reason: typing.Optional[str] = None,
     ) -> Ban:
         """|coro|
 
-        Bans a user from the server.
+        Bans an user from the server.
 
         You must have :attr:`~Permissions.ban_members` to do this.
+
+        May fire :class:`.ServerMemberRemoveEvent` for banned user and all server members.
 
         Parameters
         ----------
@@ -4356,6 +4868,8 @@ class HTTPClient:
             The server.
         user: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The user to ban from the server.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         reason: Optional[:class:`str`]
             The ban reason. Can be only up to 1024 characters long.
 
@@ -4416,6 +4930,7 @@ class HTTPClient:
         payload: raw.DataBanCreate = {'reason': reason}
         response: raw.ServerBan = await self.request(
             routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=_resolve_member_id(user)),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_ban(
@@ -4423,7 +4938,9 @@ class HTTPClient:
             {},
         )
 
-    async def get_bans(self, server: ULIDOr[BaseServer]) -> list[Ban]:
+    async def get_bans(
+        self, server: ULIDOr[BaseServer], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[Ban]:
         """|coro|
 
         Retrieves all bans on a server.
@@ -4434,6 +4951,8 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -4467,13 +4986,21 @@ class HTTPClient:
         List[:class:`.Ban`]
             The ban entries.
         """
-        resp: raw.BanListResult = await self.request(routes.SERVERS_BAN_LIST.compile(server_id=resolve_id(server)))
+        resp: raw.BanListResult = await self.request(
+            routes.SERVERS_BAN_LIST.compile(server_id=resolve_id(server)), http_overrides=http_overrides
+        )
         return self.state.parser.parse_bans(resp)
 
-    async def unban(self, server: ULIDOr[BaseServer], user: ULIDOr[BaseUser]) -> None:
+    async def unban(
+        self,
+        server: ULIDOr[BaseServer],
+        user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
-        Unbans a user from the server.
+        Unbans an user from the server.
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
@@ -4483,6 +5010,8 @@ class HTTPClient:
             The server.
         user: ULIDOr[:class:`.BaseUser`]
             The user to unban from the server.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -4513,6 +5042,7 @@ class HTTPClient:
         """
         await self.request(
             routes.SERVERS_BAN_REMOVE.compile(server_id=resolve_id(server), user_id=resolve_id(user)),
+            http_overrides=http_overrides,
         )
 
     @typing.overload
@@ -4520,6 +5050,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: typing.Literal[ChannelType.text] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -4531,6 +5062,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: None = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -4542,6 +5074,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: typing.Literal[ChannelType.voice] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -4553,6 +5086,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: ChannelType = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -4563,6 +5097,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         type: typing.Optional[ChannelType] = None,
         name: str,
         description: typing.Optional[str] = None,
@@ -4574,12 +5109,16 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
+        Fires :class:`.ServerChannelCreateEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to create channel in.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         type: Optional[:class:`.ChannelType`]
-            The channel type. Defaults to :attr:`.ChannelType.text` if not provided.
+            The channel type. Defaults to :attr:`~.ChannelType.text` if not provided.
         name: :class:`str`
             The channel name. Must be between 1 and 32 characters.
         description: Optional[:class:`str`]
@@ -4648,11 +5187,14 @@ class HTTPClient:
             payload['nsfw'] = nsfw
         resp: raw.ServerChannel = await self.request(
             routes.SERVERS_CHANNEL_CREATE.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_channel(resp)
 
-    async def get_server_emojis(self, server: ULIDOr[BaseServer]) -> list[ServerEmoji]:
+    async def get_server_emojis(
+        self, server: ULIDOr[BaseServer], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[ServerEmoji]:
         """|coro|
 
         Retrieves all custom :class:`.ServerEmoji`'s that belong to a server.
@@ -4661,6 +5203,8 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -4695,11 +5239,14 @@ class HTTPClient:
             The retrieved emojis.
         """
         resp: list[raw.ServerEmoji] = await self.request(
-            routes.SERVERS_EMOJI_LIST.compile(server_id=resolve_id(server))
+            routes.SERVERS_EMOJI_LIST.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
         )
         return list(map(self.state.parser.parse_server_emoji, resp))
 
-    async def get_server_invites(self, server: ULIDOr[BaseServer]) -> list[ServerInvite]:
+    async def get_server_invites(
+        self, server: ULIDOr[BaseServer], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[ServerInvite]:
         """|coro|
 
         Retrieves all invites that belong to a server.
@@ -4710,6 +5257,8 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -4752,7 +5301,8 @@ class HTTPClient:
             The retrieved invites.
         """
         resp: list[raw.ServerInvite] = await self.request(
-            routes.SERVERS_INVITES_FETCH.compile(server_id=resolve_id(server))
+            routes.SERVERS_INVITES_FETCH.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
         )
         return list(map(self.state.parser.parse_server_invite, resp))
 
@@ -4761,6 +5311,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         member: typing.Union[str, BaseUser, BaseMember],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nick: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         roles: UndefinedOr[typing.Optional[list[ULIDOr[BaseRole]]]] = UNDEFINED,
@@ -4773,12 +5324,23 @@ class HTTPClient:
 
         Edits a member.
 
+        Fires :class:`.ServerMemberUpdateEvent` for all server members,
+        and optionally fires multiple/single :class:`.ServerChannelCreateEvent` / :class:`.ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
+
+        For Livekit instances:
+
+        - If ``voice`` parameter is provided, fires :class:`.VoiceChannelMoveEvent` / :class:`.VoiceChannelLeaveEvent`
+          if specified as ``None``, otherwise :class:`.VoiceChannelLeaveEvent` is fired. The specified events are fired for all users who can see voice channel the member is currently in.
+        - If any of ``roles``, ``can_publish`` or ``can_receive`` parameters is provided, may fire :class:`.UserVoiceStateUpdateEvent` for all users who can see voice channel the member is currently in.
+
         Parameters
         ----------
         server: :class:`.BaseServer`
             The server.
         member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The member.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
 
@@ -4925,11 +5487,14 @@ class HTTPClient:
                 server_id=resolve_id(server),
                 member_id=_resolve_member_id(member),
             ),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_member(resp)
 
-    async def query_members_by_name(self, server: ULIDOr[BaseServer], query: str) -> list[Member]:
+    async def query_members_by_name(
+        self, server: ULIDOr[BaseServer], query: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[Member]:
         """|coro|
 
         Query members by a given name.
@@ -4943,6 +5508,8 @@ class HTTPClient:
             The server.
         query: :class:`str`
             The query to search members for.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -4982,6 +5549,7 @@ class HTTPClient:
         }
         resp: raw.AllMemberResponse = await self.request(
             routes.SERVERS_MEMBER_EXPERIMENTAL_QUERY.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
             params=params,
         )
         return self.state.parser.parse_members_with_users(resp)
@@ -4990,6 +5558,8 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         member: typing.Union[str, BaseUser, BaseMember],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> Member:
         """|coro|
 
@@ -5001,6 +5571,8 @@ class HTTPClient:
             The server to retrieve member in.
         member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The user to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -5038,12 +5610,17 @@ class HTTPClient:
             routes.SERVERS_MEMBER_FETCH.compile(
                 server_id=resolve_id(server),
                 member_id=_resolve_member_id(member),
-            )
+            ),
+            http_overrides=http_overrides,
         )
         return self.state.parser.parse_member(resp)
 
     async def get_members(
-        self, server: ULIDOr[BaseServer], *, exclude_offline: typing.Optional[bool] = None
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        exclude_offline: typing.Optional[bool] = None,
     ) -> list[Member]:
         """|coro|
 
@@ -5053,6 +5630,8 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
 
@@ -5093,13 +5672,18 @@ class HTTPClient:
             params['exclude_offline'] = utils._bool(exclude_offline)
         resp: raw.AllMemberResponse = await self.request(
             routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
             log=False,
             params=params,
         )
         return self.state.parser.parse_members_with_users(resp)
 
     async def get_member_list(
-        self, server: ULIDOr[BaseServer], *, exclude_offline: typing.Optional[bool] = None
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        exclude_offline: typing.Optional[bool] = None,
     ) -> MemberList:
         """|coro|
 
@@ -5109,6 +5693,8 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
 
@@ -5149,15 +5735,24 @@ class HTTPClient:
             params['exclude_offline'] = utils._bool(exclude_offline)
         resp: raw.AllMemberResponse = await self.request(
             routes.SERVERS_MEMBER_FETCH_ALL.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
             log=False,
             params=params,
         )
         return self.state.parser.parse_member_list(resp)
 
-    async def kick_member(self, server: ULIDOr[BaseServer], member: typing.Union[str, BaseUser, BaseMember]) -> None:
+    async def kick_member(
+        self,
+        server: ULIDOr[BaseServer],
+        member: typing.Union[str, BaseUser, BaseMember],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Kicks a member from the server.
+
+        Fires :class:`.ServerMemberRemoveEvent` for kicked user and all server members.
 
         Parameters
         ----------
@@ -5165,6 +5760,8 @@ class HTTPClient:
             The server.
         member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
             The member to kick.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -5214,7 +5811,8 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
-            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_member_id(member))
+            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_member_id(member)),
+            http_overrides=http_overrides,
         )
 
     async def set_server_permissions_for_role(
@@ -5222,6 +5820,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> Server:
@@ -5231,12 +5830,16 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server.
         role: ULIDOr[:class:`.BaseRole`]
             The role.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         allow: :class:`.Permissions`
             The permissions to allow for the specified role.
         deny: :class:`.Permissions`
@@ -5290,6 +5893,7 @@ class HTTPClient:
         payload: raw.DataSetRolePermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
         resp: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET.compile(server_id=resolve_id(server), role_id=resolve_id(role)),
+            http_overrides=http_overrides,
             json=payload,
         )
 
@@ -5299,6 +5903,8 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         permissions: Permissions,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> Server:
         """|coro|
 
@@ -5306,12 +5912,16 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
+        Fires :class:`.ServerUpdateEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to set default permissions for.
         permissions: :class:`.Permissions`
             The new permissions.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -5358,6 +5968,7 @@ class HTTPClient:
         payload: raw.DataPermissionsValue = {'permissions': permissions.value}
         d: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET_DEFAULT.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_server(
@@ -5365,17 +5976,28 @@ class HTTPClient:
             (True, d['channels']),
         )
 
-    async def create_role(self, server: ULIDOr[BaseServer], *, name: str, rank: typing.Optional[int] = None) -> Role:
+    async def create_role(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        name: str,
+        rank: typing.Optional[int] = None,
+    ) -> Role:
         """|coro|
 
         Creates a new server role.
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to create role in.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
         rank: Optional[:class:`int`]
@@ -5437,16 +6059,25 @@ class HTTPClient:
         payload: raw.DataCreateRole = {'name': name, 'rank': rank}
         d: raw.NewRoleResponse = await self.request(
             routes.SERVERS_ROLES_CREATE.compile(server_id=server_id),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_role(d['role'], d['id'], server_id)
 
-    async def delete_role(self, server: ULIDOr[BaseServer], role: ULIDOr[BaseRole]) -> None:
+    async def delete_role(
+        self,
+        server: ULIDOr[BaseServer],
+        role: ULIDOr[BaseRole],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Deletes a server role.
 
         You must have :attr:`~Permissions.manage_roles` to do this.
+
+        Fires :class:`.ServerRoleDeleteEvent` for all server members.
 
         Parameters
         ----------
@@ -5454,6 +6085,8 @@ class HTTPClient:
             The server.
         role: ULIDOr[:class:`.BaseRole`]
             The role to delete.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -5492,13 +6125,17 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        await self.request(routes.SERVERS_ROLES_DELETE.compile(server_id=resolve_id(server), role_id=resolve_id(role)))
+        await self.request(
+            routes.SERVERS_ROLES_DELETE.compile(server_id=resolve_id(server), role_id=resolve_id(role)),
+            http_overrides=http_overrides,
+        )
 
     async def edit_role(
         self,
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: UndefinedOr[str] = UNDEFINED,
         icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         color: UndefinedOr[typing.Optional[str]] = UNDEFINED,
@@ -5511,12 +6148,16 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
+        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server the role in.
         role: ULIDOr[:class:`.BaseRole`]
             The role to edit.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
         icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
@@ -5600,6 +6241,7 @@ class HTTPClient:
 
         resp: raw.Role = await self.request(
             routes.SERVERS_ROLES_EDIT.compile(server_id=resolve_id(server), role_id=resolve_id(role)),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_role(
@@ -5612,6 +6254,8 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         role: ULIDOr[BaseRole],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> Role:
         """|coro|
 
@@ -5623,6 +6267,8 @@ class HTTPClient:
             The server.
         role: ULIDOr[:class:`.BaseRole`]
             The role to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -5651,14 +6297,18 @@ class HTTPClient:
         server_id = resolve_id(server)
         role_id = resolve_id(role)
 
-        resp: raw.Role = await self.request(routes.SERVERS_ROLES_FETCH.compile(server_id=server_id, role_id=role_id))
+        resp: raw.Role = await self.request(
+            routes.SERVERS_ROLES_FETCH.compile(server_id=server_id, role_id=role_id), http_overrides=http_overrides
+        )
         return self.state.parser.parse_role(
             resp,
             role_id,
             server_id,
         )
 
-    async def mark_server_as_read(self, server: ULIDOr[BaseServer], /) -> None:
+    async def mark_server_as_read(
+        self, server: ULIDOr[BaseServer], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
         """|coro|
 
         Marks all channels in a server as read.
@@ -5670,6 +6320,8 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to mark as read.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -5707,14 +6359,23 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        await self.request(routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server)))
+        await self.request(
+            routes.SERVERS_SERVER_ACK.compile(server_id=resolve_id(server)), http_overrides=http_overrides
+        )
 
     async def create_server(
-        self, name: str, *, description: typing.Optional[str] = None, nsfw: typing.Optional[bool] = None
+        self,
+        name: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        description: typing.Optional[str] = None,
+        nsfw: typing.Optional[bool] = None,
     ) -> Server:
         """|coro|
 
         Create a new server.
+
+        Fires :class:`.ServerCreateEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -5723,6 +6384,8 @@ class HTTPClient:
         ----------
         name: :class:`str`
             The server name.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         description: Optional[:class:`str`]
             The server description.
         nsfw: Optional[:class:`bool`]
@@ -5772,21 +6435,29 @@ class HTTPClient:
         if nsfw is not None:
             payload['nsfw'] = nsfw
 
-        resp: raw.CreateServerLegacyResponse = await self.request(routes.SERVERS_SERVER_CREATE.compile(), json=payload)
+        resp: raw.CreateServerLegacyResponse = await self.request(
+            routes.SERVERS_SERVER_CREATE.compile(), http_overrides=http_overrides, json=payload
+        )
         return self.state.parser.parse_server(
             resp['server'],
             (False, resp['channels']),
         )
 
-    async def delete_server(self, server: ULIDOr[BaseServer], /) -> None:
+    async def delete_server(
+        self, server: ULIDOr[BaseServer], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
         """|coro|
 
         Deletes a server if owner, or leaves otherwise.
+
+        Fires :class:`.ServerDeleteEvent` (if owner) or :class:`.ServerMemberRemoveEvent` for all server members.
 
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to delete or leave.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -5815,17 +6486,30 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        await self.request(routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)))
+        await self.request(
+            routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)), http_overrides=http_overrides
+        )
 
-    async def leave_server(self, server: ULIDOr[BaseServer], /, *, silent: typing.Optional[bool] = None) -> None:
+    async def leave_server(
+        self,
+        server: ULIDOr[BaseServer],
+        /,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        silent: typing.Optional[bool] = None,
+    ) -> None:
         """|coro|
 
         Leaves a server if not owner, or deletes otherwise.
+
+        Fires :class:`.ServerMemberRemoveEvent` or :class:`.ServerDeleteEvent` (if owner) for all server members.
 
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to leave.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         silent: Optional[:class:`bool`]
             Whether to silently leave server or not.
 
@@ -5856,18 +6540,21 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        p: raw.OptionsServerDelete = {}
+        params: raw.OptionsServerDelete = {}
         if silent is not None:
-            p['leave_silently'] = utils._bool(silent)
+            params['leave_silently'] = utils._bool(silent)
         await self.request(
             routes.SERVERS_SERVER_DELETE.compile(server_id=resolve_id(server)),
-            params=p,
+            http_overrides=http_overrides,
+            params=params,
         )
 
     async def edit_server(
         self,
         server: ULIDOr[BaseServer],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        mfa_ticket: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -5885,10 +6572,16 @@ class HTTPClient:
 
         To provide any of parameters below (except for ``categories``, ``discoverable`` and ``flags``), you must have :attr:`~Permissions.manage_server`.
 
+        Fires :class:`.ServerUpdateEvent` for all server members.
+
         Parameters
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to edit.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+        mfa_ticket: Optional[:class:`str`]
+            The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
         name: UndefinedOr[:class:`str`]
             The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -5936,11 +6629,13 @@ class HTTPClient:
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------------+----------------------------------------+
-            | Value              | Reason                                 |
-            +--------------------+----------------------------------------+
-            | ``InvalidSession`` | The current bot/user token is invalid. |
-            +--------------------+----------------------------------------+
+            +------------------------+----------------------------------------+
+            | Value                  | Reason                                 |
+            +------------------------+----------------------------------------+
+            | ``InvalidCredentials`` | The provided MFA ticket was invalid.   |
+            +------------------------+----------------------------------------+
+            | ``InvalidSession``     | The current bot/user token is invalid. |
+            +------------------------+----------------------------------------+
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -6031,6 +6726,8 @@ class HTTPClient:
 
         d: raw.Server = await self.request(
             routes.SERVERS_SERVER_EDIT.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            mfa_ticket=mfa_ticket,
             json=payload,
         )
         return self.state.parser.parse_server(
@@ -6042,6 +6739,7 @@ class HTTPClient:
         self,
         server: ULIDOr[BaseServer],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         populate_channels: typing.Optional[bool] = None,
     ) -> Server:
         """|coro|
@@ -6052,6 +6750,8 @@ class HTTPClient:
         ----------
         server: ULIDOr[:class:`.BaseServer`]
             The server to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         populate_channels: Optional[:class:`bool`]
             Whether to populate :attr:`Server.channels`.
 
@@ -6085,6 +6785,7 @@ class HTTPClient:
 
         resp: raw.FetchServerResponse = await self.request(
             routes.SERVERS_SERVER_FETCH.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
             params=params,
         )
         return self.state.parser.parse_server(
@@ -6093,7 +6794,9 @@ class HTTPClient:
         )
 
     # Sync control
-    async def get_user_settings(self, keys: typing.Optional[list[str]] = None) -> UserSettings:
+    async def get_user_settings(
+        self, keys: typing.Optional[list[str]] = None, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> UserSettings:
         """|coro|
 
         Retrieve user settings.
@@ -6105,6 +6808,8 @@ class HTTPClient:
         ----------
         keys: Optional[List[:class:`str`]]
             The keys of user settings to retrieve. To retrieve all user settings, pass ``None`` or empty list.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6134,19 +6839,26 @@ class HTTPClient:
         if keys is None:
             keys = []
         payload: raw.OptionsFetchSettings = {'keys': keys}
-        resp: raw.UserSettings = await self.request(routes.SYNC_GET_SETTINGS.compile(), json=payload)
+        resp: raw.UserSettings = await self.request(
+            routes.SYNC_GET_SETTINGS.compile(), http_overrides=http_overrides, json=payload
+        )
         return self.state.parser.parse_user_settings(
             resp,
             True,
         )
 
-    async def get_read_states(self) -> list[ReadState]:
+    async def get_read_states(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[ReadState]:
         """|coro|
 
         Retrieves read states for all channels the current user in.
 
         .. note::
             This is not supposed to be used by bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6172,17 +6884,23 @@ class HTTPClient:
         List[:class:`.ReadState`]
             The channel read states.
         """
-        resp: list[raw.ChannelUnread] = await self.request(routes.SYNC_GET_UNREADS.compile())
+        resp: list[raw.ChannelUnread] = await self.request(
+            routes.SYNC_GET_UNREADS.compile(), http_overrides=http_overrides
+        )
         return list(map(self.state.parser.parse_channel_unread, resp))
 
     async def edit_user_settings(
         self,
         partial: dict[str, str],
         edited_at: typing.Optional[typing.Union[datetime, int]] = None,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
         Edits the current user settings.
+
+        Fires :class:`.UserSettingsUpdateEvent` for the current user.
 
         .. note::
             This is not supposed to be used by bot accounts.
@@ -6193,6 +6911,8 @@ class HTTPClient:
             The dict to merge into the current user settings.
         edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
             The revision.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6228,13 +6948,19 @@ class HTTPClient:
             else:
                 payload[k] = utils.to_json(v)
 
-        await self.request(routes.SYNC_SET_SETTINGS.compile(), json=payload, params=params)
+        await self.request(
+            routes.SYNC_SET_SETTINGS.compile(), http_overrides=http_overrides, json=payload, params=params
+        )
 
     # Users control
-    async def accept_friend_request(self, user: ULIDOr[BaseUser]) -> User:
+    async def accept_friend_request(
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> User:
         """|coro|
 
         Accept another user's friend request.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you accepted friend request from.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -6243,6 +6969,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to accept friend request from.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6308,15 +7036,21 @@ class HTTPClient:
         :class:`.User`
             The user you accepted friend request from.
         """
-        resp: raw.User = await self.request(routes.USERS_ADD_FRIEND.compile(user_id=resolve_id(user)))
+        resp: raw.User = await self.request(
+            routes.USERS_ADD_FRIEND.compile(user_id=resolve_id(user)), http_overrides=http_overrides
+        )
         if resp.get('type') == 'NoEffect':
             raise NoEffect(resp)  # type: ignore
         return self.state.parser.parse_user(resp)
 
-    async def block_user(self, user: ULIDOr[BaseUser], /) -> User:
+    async def block_user(
+        self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> User:
         """|coro|
 
         Blocks an user.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and blocked user.
 
         .. note::
             This is not supposed to be used by bot accounts.
@@ -6325,6 +7059,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to block.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6360,21 +7096,29 @@ class HTTPClient:
         :class:`.User`
             The blocked user.
         """
-        resp: raw.User = await self.request(routes.USERS_BLOCK_USER.compile(user_id=resolve_id(user)))
+        resp: raw.User = await self.request(
+            routes.USERS_BLOCK_USER.compile(user_id=resolve_id(user)), http_overrides=http_overrides
+        )
         if resp.get('type') == 'NoEffect':
             raise NoEffect(resp)  # type: ignore
         return self.state.parser.parse_user(resp)
 
-    async def change_username(self, *, username: str, current_password: str) -> OwnUser:
+    async def change_username(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, username: str, current_password: str
+    ) -> OwnUser:
         """|coro|
 
         Change your username.
+
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         username: :class:`str`
             The new username. Must be between 2 and 32 characters and not contain whitespace characters.
         current_password: :class:`str`
@@ -6433,6 +7177,7 @@ class HTTPClient:
         payload: raw.DataChangeUsername = {'username': username, 'password': current_password}
         resp: raw.User = await self.request(
             routes.USERS_CHANGE_USERNAME.compile(),
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_own_user(resp)
@@ -6442,6 +7187,7 @@ class HTTPClient:
         route: routes.CompiledRoute,
         /,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
@@ -6473,11 +7219,12 @@ class HTTPClient:
             payload['flags'] = flags.value
         if len(remove) > 0:
             payload['remove'] = remove
-        return await self.request(route, json=payload)
+        return await self.request(route, http_overrides=http_overrides, json=payload)
 
     async def edit_my_user(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
@@ -6489,8 +7236,12 @@ class HTTPClient:
 
         Edits the current user.
 
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
         avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
@@ -6546,6 +7297,7 @@ class HTTPClient:
         """
         resp = await self._edit_user(
             routes.USERS_EDIT_SELF_USER.compile(),
+            http_overrides=http_overrides,
             display_name=display_name,
             avatar=avatar,
             status=status,
@@ -6559,6 +7311,7 @@ class HTTPClient:
         self,
         user: ULIDOr[BaseUser],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         display_name: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         status: UndefinedOr[UserStatusEdit] = UNDEFINED,
@@ -6568,12 +7321,16 @@ class HTTPClient:
     ) -> User:
         """|coro|
 
-        Edits a user.
+        Edits an user.
+
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to target user.
 
         Parameters
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to edit.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
         avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
@@ -6629,6 +7386,7 @@ class HTTPClient:
         """
         resp = await self._edit_user(
             routes.USERS_EDIT_USER.compile(user_id=resolve_id(user)),
+            http_overrides=http_overrides,
             display_name=display_name,
             avatar=avatar,
             status=status,
@@ -6640,10 +7398,17 @@ class HTTPClient:
 
     async def get_private_channels(
         self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> list[typing.Union[SavedMessagesChannel, DMChannel, GroupChannel]]:
         """|coro|
 
         Retrieves all opened DMs, groups the current user in, and "Saved Notes" channel.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6671,10 +7436,12 @@ class HTTPClient:
         """
         resp: list[
             typing.Union[raw.SavedMessagesChannel, raw.DirectMessageChannel, raw.GroupChannel]
-        ] = await self.request(routes.USERS_FETCH_DMS.compile())
+        ] = await self.request(routes.USERS_FETCH_DMS.compile(), http_overrides=http_overrides)
         return list(map(self.state.parser.parse_channel, resp))  # type: ignore[return-value]
 
-    async def get_user_profile(self, user: ULIDOr[BaseUser]) -> UserProfile:
+    async def get_user_profile(
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> UserProfile:
         """|coro|
 
         Retrieve profile of an user.
@@ -6685,6 +7452,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to retrieve profile of.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6719,13 +7488,20 @@ class HTTPClient:
             The retrieved user profile.
         """
         user_id = resolve_id(user)
-        resp: raw.UserProfile = await self.request(routes.USERS_FETCH_PROFILE.compile(user_id=user_id))
+        resp: raw.UserProfile = await self.request(
+            routes.USERS_FETCH_PROFILE.compile(user_id=user_id), http_overrides=http_overrides
+        )
         return self.state.parser.parse_user_profile(resp).attach_state(self.state, user_id)
 
-    async def get_me(self) -> OwnUser:
+    async def get_me(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> OwnUser:
         """|coro|
 
         Retrieves your user data.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6743,13 +7519,15 @@ class HTTPClient:
         :class:`.OwnUser`
             The retrieved user.
         """
-        resp: raw.User = await self.request(routes.USERS_FETCH_SELF.compile())
+        resp: raw.User = await self.request(routes.USERS_FETCH_SELF.compile(), http_overrides=http_overrides)
         return self.state.parser.parse_own_user(resp)
 
-    async def get_user(self, user: ULIDOr[BaseUser], /) -> User:
+    async def get_user(
+        self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> User:
         """|coro|
 
-        Retrieve a user's information.
+        Retrieve user's information.
 
         You must have :attr:`~UserPermissions.access` to do this.
 
@@ -6757,6 +7535,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6790,10 +7570,14 @@ class HTTPClient:
         :class:`.User`
             The retrieved user.
         """
-        resp: raw.User = await self.request(routes.USERS_FETCH_USER.compile(user_id=resolve_id(user)))
+        resp: raw.User = await self.request(
+            routes.USERS_FETCH_USER.compile(user_id=resolve_id(user)), http_overrides=http_overrides
+        )
         return self.state.parser.parse_user(resp)
 
-    async def get_user_flags(self, user: ULIDOr[BaseUser], /) -> UserFlags:
+    async def get_user_flags(
+        self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> UserFlags:
         """|coro|
 
         Retrieves flags for user.
@@ -6802,6 +7586,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to retrieve flags for.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Returns
         -------
@@ -6811,11 +7597,14 @@ class HTTPClient:
         # Apparently, this is only method that doesn't raise anything
         resp: raw.FlagResponse = await self.request(
             routes.USERS_FETCH_USER_FLAGS.compile(user_id=resolve_id(user)),
+            http_overrides=http_overrides,
             token=None,
         )
         return UserFlags(resp['flags'])
 
-    async def get_mutuals_with(self, user: ULIDOr[BaseUser]) -> Mutuals:
+    async def get_mutuals_with(
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> Mutuals:
         """|coro|
 
         Retrieves a list of mutual friends and servers with another user.
@@ -6826,6 +7615,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to retrieve mutuals with.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6875,10 +7666,14 @@ class HTTPClient:
         :class:`.Mutuals`
             The found mutuals.
         """
-        resp: raw.MutualResponse = await self.request(routes.USERS_FIND_MUTUAL.compile(user_id=resolve_id(user)))
+        resp: raw.MutualResponse = await self.request(
+            routes.USERS_FIND_MUTUAL.compile(user_id=resolve_id(user)), http_overrides=http_overrides
+        )
         return self.state.parser.parse_mutuals(resp)
 
-    async def get_default_avatar(self, user: ULIDOr[BaseUser]) -> bytes:
+    async def get_default_avatar(
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> bytes:
         """|coro|
 
         Return a default user avatar based on the given ID.
@@ -6887,6 +7682,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to retrieve default avatar of.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Returns
         -------
@@ -6895,15 +7692,18 @@ class HTTPClient:
         """
         response = await self.raw_request(
             routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=resolve_id(user)),
-            token=None,
             accept_json=False,
+            http_overrides=http_overrides,
+            token=None,
         )
         avatar = await response.read()
         if not response.closed:
             response.close()
         return avatar
 
-    async def open_dm(self, user: ULIDOr[BaseUser]) -> typing.Union[SavedMessagesChannel, DMChannel]:
+    async def open_dm(
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> typing.Union[SavedMessagesChannel, DMChannel]:
         """|coro|
 
         Retrieve a DM (or create if it doesn't exist) with another user.
@@ -6912,10 +7712,14 @@ class HTTPClient:
 
         You must have :attr:`~UserPermissions.send_messages` to do this.
 
+        May fire :class:`.PrivateChannelCreateEvent` for the current user and user you opened DM with.
+
         Parameters
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to open DM with.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -6958,16 +7762,21 @@ class HTTPClient:
             The private channel.
         """
         resp: typing.Union[raw.SavedMessagesChannel, raw.DirectMessageChannel] = await self.request(
-            routes.USERS_OPEN_DM.compile(user_id=resolve_id(user))
+            routes.USERS_OPEN_DM.compile(user_id=resolve_id(user)),
+            http_overrides=http_overrides,
         )
         channel = self.state.parser.parse_channel(resp)
         assert isinstance(channel, (SavedMessagesChannel, DMChannel))
         return channel
 
-    async def deny_friend_request(self, user: ULIDOr[BaseUser]) -> User:
+    async def deny_friend_request(
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> User:
         """|coro|
 
         Denies another user's friend request.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you denide friend request from.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -6976,6 +7785,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to deny friend request from.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -7019,15 +7830,21 @@ class HTTPClient:
         :class:`.User`
             The user you denied friend request from.
         """
-        resp: raw.User = await self.request(routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user)))
+        resp: raw.User = await self.request(
+            routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user)), http_overrides=http_overrides
+        )
         if resp.get('type') == 'NoEffect':
             raise NoEffect(resp)  # type: ignore
         return self.state.parser.parse_user(resp)
 
-    async def remove_friend(self, user: ULIDOr[BaseUser]) -> User:
+    async def remove_friend(
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> User:
         """|coro|
 
         Removes the user from friend list.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -7036,6 +7853,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to remove from friend list.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -7079,15 +7898,25 @@ class HTTPClient:
         :class:`.User`
             The user you removed from friend list.
         """
-        resp: raw.User = await self.request(routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user)))
+        resp: raw.User = await self.request(
+            routes.USERS_REMOVE_FRIEND.compile(user_id=resolve_id(user)), http_overrides=http_overrides
+        )
         if resp.get('type') == 'NoEffect':
             raise NoEffect(resp)  # type: ignore
         return self.state.parser.parse_user(resp)
 
-    async def send_friend_request(self, username: str, discriminator: typing.Optional[str] = None) -> User:
+    async def send_friend_request(
+        self,
+        username: str,
+        discriminator: typing.Optional[str] = None,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> User:
         """|coro|
 
         Sends a friend request to another user.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you sent friend request to.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -7098,6 +7927,8 @@ class HTTPClient:
             The username and optionally discriminator combo separated by `#`.
         discriminator: Optional[:class:`str`]
             The user's discriminator.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -7171,16 +8002,21 @@ class HTTPClient:
 
         resp: raw.User = await self.request(
             routes.USERS_SEND_FRIEND_REQUEST.compile(),
+            http_overrides=http_overrides,
             json=payload,
         )
         if resp.get('type') == 'NoEffect':
             raise NoEffect(resp)  # type: ignore
         return self.state.parser.parse_user(resp)
 
-    async def unblock_user(self, user: ULIDOr[BaseUser]) -> User:
+    async def unblock_user(
+        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> User:
         """|coro|
 
         Unblocks an user.
+
+        Fires :class:`.UserRelationshipUpdateEvent` for the current user and unblocked user.
 
         .. note::
             This is not supposed to be used by bot accounts.
@@ -7189,6 +8025,8 @@ class HTTPClient:
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to unblock.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -7227,13 +8065,21 @@ class HTTPClient:
             The unblocked user.
         """
 
-        resp: raw.User = await self.request(routes.USERS_UNBLOCK_USER.compile(user_id=resolve_id(user)))
+        resp: raw.User = await self.request(
+            routes.USERS_UNBLOCK_USER.compile(user_id=resolve_id(user)), http_overrides=http_overrides
+        )
         if resp.get('type') == 'NoEffect':
             raise NoEffect(resp)  # type: ignore
         return self.state.parser.parse_user(resp)
 
     # Webhooks control
-    async def delete_webhook(self, webhook: ULIDOr[BaseWebhook], *, token: typing.Optional[str] = None) -> None:
+    async def delete_webhook(
+        self,
+        webhook: ULIDOr[BaseWebhook],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        token: typing.Optional[str] = None,
+    ) -> None:
         """|coro|
 
         Deletes a webhook.
@@ -7242,10 +8088,14 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_webhooks` to do this if ``token`` parameter is ``None`` or missing.
 
+        Fires :class:`.WebhookDeleteEvent` for all users who can see webhook channel.
+
         Parameters
         ----------
         webhook: ULIDOr[:class:`.BaseWebhook`]
             The webhook to delete.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
 
@@ -7279,10 +8129,13 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         if token is None:
-            await self.request(routes.WEBHOOKS_WEBHOOK_DELETE.compile(webhook_id=resolve_id(webhook)))
+            await self.request(
+                routes.WEBHOOKS_WEBHOOK_DELETE.compile(webhook_id=resolve_id(webhook)), http_overrides=http_overrides
+            )
         else:
             await self.request(
                 routes.WEBHOOKS_WEBHOOK_DELETE_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
+                http_overrides=http_overrides,
                 token=None,
             )
 
@@ -7290,6 +8143,7 @@ class HTTPClient:
         self,
         webhook: ULIDOr[BaseWebhook],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -7303,10 +8157,14 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_webhooks` to do this if ``token`` parameter is ``None`` or missing.
 
+        Fires :class:`.WebhookUpdateEvent` for all users who can see webhook channel.
+
         Parameters
         ----------
         webhook: ULIDOr[:class:`.BaseWebhook`]
             The webhook to edit.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
         name: UndefinedOr[:class:`str`]
@@ -7375,11 +8233,13 @@ class HTTPClient:
         if token is None:
             resp: raw.Webhook = await self.request(
                 routes.WEBHOOKS_WEBHOOK_EDIT.compile(webhook_id=resolve_id(webhook)),
+                http_overrides=http_overrides,
                 json=payload,
             )
         else:
             resp = await self.request(
                 routes.WEBHOOKS_WEBHOOK_EDIT_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
+                http_overrides=http_overrides,
                 json=payload,
                 token=None,
             )
@@ -7391,6 +8251,7 @@ class HTTPClient:
         token: str,
         content: typing.Optional[str] = None,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
@@ -7411,6 +8272,8 @@ class HTTPClient:
 
         If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
 
+        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
+
         Parameters
         ----------
         webhook: ULIDOr[:class:`.BaseWebhook`]
@@ -7419,6 +8282,8 @@ class HTTPClient:
             The webhook token.
         content: Optional[:class:`str`]
             The message content.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`.ResolvableResource`]]
@@ -7559,14 +8424,11 @@ class HTTPClient:
         if flags is not None:
             payload['flags'] = flags
 
-        headers = {}
-        if nonce is not None:
-            headers['Idempotency-Key'] = nonce
-
         resp: raw.Message = await self.request(
             routes.WEBHOOKS_WEBHOOK_EXECUTE.compile(webhook_id=resolve_id(webhook), webhook_token=token),
+            http_overrides=http_overrides,
+            idempotency_key=nonce,
             json=payload,
-            headers=headers,
             token=None,
         )
         return self.state.parser.parse_message(resp)
@@ -7575,6 +8437,7 @@ class HTTPClient:
         self,
         webhook: ULIDOr[BaseWebhook],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: typing.Optional[str] = None,
     ) -> Webhook:
         """|coro|
@@ -7593,6 +8456,8 @@ class HTTPClient:
         ----------
         webhook: ULIDOr[:class:`.BaseWebhook`]
             The webhook to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
 
@@ -7641,12 +8506,14 @@ class HTTPClient:
 
         if token is None:
             r1: raw.ResponseWebhook = await self.request(
-                routes.WEBHOOKS_WEBHOOK_FETCH.compile(webhook_id=resolve_id(webhook))
+                routes.WEBHOOKS_WEBHOOK_FETCH.compile(webhook_id=resolve_id(webhook)),
+                http_overrides=http_overrides,
             )
             return self.state.parser.parse_response_webhook(r1)
         else:
             r2: raw.Webhook = await self.request(
                 routes.WEBHOOKS_WEBHOOK_FETCH_TOKEN.compile(webhook_id=resolve_id(webhook), webhook_token=token),
+                http_overrides=http_overrides,
                 token=None,
             )
             return self.state.parser.parse_webhook(r2)
@@ -7664,6 +8531,7 @@ class HTTPClient:
     async def change_email(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         email: str,
         current_password: str,
     ) -> None:
@@ -7676,6 +8544,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         email: :class:`str`
             The new email for current account.
         current_password: :class:`str`
@@ -7722,6 +8592,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_CHANGE_EMAIL.compile(),
+            http_overrides=http_overrides,
             bot=False,
             json=payload,
         )
@@ -7729,6 +8600,7 @@ class HTTPClient:
     async def change_password(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         new_password: str,
         current_password: str,
     ) -> None:
@@ -7741,6 +8613,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         new_password: :class:`str`
             The new password for this account. Must be at least 8 characters.
         current_password: :class:`str`
@@ -7785,6 +8659,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_CHANGE_PASSWORD.compile(),
+            http_overrides=http_overrides,
             bot=False,
             json=payload,
         )
@@ -7792,14 +8667,19 @@ class HTTPClient:
     async def confirm_account_deletion(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: str,
     ) -> None:
         """|coro|
 
         Schedule an account for deletion by confirming the received token.
 
+        Fires :class:`.LogoutEvent` for the current user.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         token: :class:`str`
             The deletion token received.
 
@@ -7829,6 +8709,7 @@ class HTTPClient:
         payload: raw.a.DataAccountDeletion = {'token': token}
         await self.request(
             routes.AUTH_ACCOUNT_CONFIRM_DELETION.compile(),
+            http_overrides=http_overrides,
             json=payload,
             token=None,
         )
@@ -7838,6 +8719,7 @@ class HTTPClient:
         email: str,
         password: str,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         invite: typing.Optional[str] = None,
         captcha: typing.Optional[str] = None,
     ) -> None:
@@ -7854,6 +8736,8 @@ class HTTPClient:
             The account email.
         password: :class:`str`
             The account password. Must be at least 8 characters.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         invite: Optional[:class:`str`]
             The instance invite code.
         captcha: Optional[:class:`str`]
@@ -7877,7 +8761,7 @@ class HTTPClient:
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
             | ``InvalidInvite``       | The provided instance invite was not found.                                                                                                                                                                        |
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-            | ``MissingInvite``       | The instance requires a invite to register, but you did not provide it.                                                                                                                                            |
+            | ``MissingInvite``       | The instance requires an invite to register, but you did not provide it.                                                                                                                                           |
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
             | ``ShortPassword``       | The provided password was less than 8 characters long.                                                                                                                                                             |
             +-------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
@@ -7912,6 +8796,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_CREATE_ACCOUNT.compile(),
+            http_overrides=http_overrides,
             json=payload,
             token=None,
         )
@@ -7919,6 +8804,7 @@ class HTTPClient:
     async def delete_account(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: str,
     ) -> None:
         """|coro|
@@ -7930,6 +8816,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
 
@@ -7956,22 +8844,32 @@ class HTTPClient:
             | ``InternalError`` | Somehow something went wrong during scheduling account deletion. |                                                                |
             +-------------------+------------------------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.AUTH_ACCOUNT_DELETE_ACCOUNT.compile(), bot=False, mfa_ticket=mfa_ticket)
+        await self.request(
+            routes.AUTH_ACCOUNT_DELETE_ACCOUNT.compile(),
+            bot=False,
+            http_overrides=http_overrides,
+            mfa_ticket=mfa_ticket,
+        )
 
     async def disable_account(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: str,
     ) -> None:
         """|coro|
 
         Disable an account.
 
+        Fires :class:`.LogoutEvent` for the current user.
+
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
 
@@ -7996,15 +8894,25 @@ class HTTPClient:
             | ``InternalError`` | Somehow something went wrong during disabling account. |                                                                |
             +-------------------+--------------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(), bot=False, mfa_ticket=mfa_ticket)
+        await self.request(
+            routes.AUTH_ACCOUNT_DISABLE_ACCOUNT.compile(),
+            bot=False,
+            http_overrides=http_overrides,
+            mfa_ticket=mfa_ticket,
+        )
 
-    async def get_account(self) -> PartialAccount:
+    async def get_account(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> PartialAccount:
         """|coro|
 
         Retrieve account information.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -8030,11 +8938,18 @@ class HTTPClient:
         :class:`.PartialAccount`
             The retrieved account.
         """
-        resp: raw.a.AccountInfo = await self.request(routes.AUTH_ACCOUNT_FETCH_ACCOUNT.compile(), bot=False)
+        resp: raw.a.AccountInfo = await self.request(
+            routes.AUTH_ACCOUNT_FETCH_ACCOUNT.compile(), bot=False, http_overrides=http_overrides
+        )
         return self.state.parser.parse_partial_account(resp)
 
     async def confirm_password_reset(
-        self, token: str, *, new_password: str, remove_sessions: typing.Optional[bool] = None
+        self,
+        token: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        new_password: str,
+        remove_sessions: typing.Optional[bool] = None,
     ) -> None:
         """|coro|
 
@@ -8044,6 +8959,8 @@ class HTTPClient:
         ----------
         token: :class:`str`
             The password reset token.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         new_password: :class:`str`
             The new password for the account. Must be at least 8 characters.
         remove_sessions: Optional[:class:`bool`]
@@ -8087,6 +9004,7 @@ class HTTPClient:
         }
         await self.request(
             routes.AUTH_ACCOUNT_PASSWORD_RESET.compile(),
+            http_overrides=http_overrides,
             json=payload,
             token=None,
         )
@@ -8094,6 +9012,7 @@ class HTTPClient:
     async def resend_verification(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         email: str,
         captcha: typing.Optional[str] = None,
     ) -> None:
@@ -8103,6 +9022,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         email: :class:`str`
             The email associated with the account.
         captcha: Optional[:class:`str`]
@@ -8145,17 +9066,26 @@ class HTTPClient:
         payload: raw.a.DataResendVerification = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_RESEND_VERIFICATION.compile(),
+            http_overrides=http_overrides,
             json=payload,
             token=None,
         )
 
-    async def send_password_reset(self, *, email: str, captcha: typing.Optional[str] = None) -> None:
+    async def send_password_reset(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        email: str,
+        captcha: typing.Optional[str] = None,
+    ) -> None:
         """|coro|
 
         Send an email to reset account password.
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         email: :class:`str`
             The email associated with the account.
         captcha: Optional[:class:`str`]
@@ -8196,11 +9126,14 @@ class HTTPClient:
         payload: raw.a.DataSendPasswordReset = {'email': email, 'captcha': captcha}
         await self.request(
             routes.AUTH_ACCOUNT_SEND_PASSWORD_RESET.compile(),
+            http_overrides=http_overrides,
             json=payload,
             token=None,
         )
 
-    async def verify_email(self, code: str) -> typing.Optional[MFATicket]:
+    async def verify_email(
+        self, code: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> typing.Optional[MFATicket]:
         """|coro|
 
         Verify an email address.
@@ -8209,6 +9142,8 @@ class HTTPClient:
         ----------
         code: :class:`str`
             The code from email.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -8234,7 +9169,9 @@ class HTTPClient:
         Optional[:class:`.MFATicket`]
             The MFA ticket.
         """
-        response = await self.request(routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), token=None)
+        response = await self.request(
+            routes.AUTH_ACCOUNT_VERIFY_EMAIL.compile(code=code), http_overrides=http_overrides, token=None
+        )
         if response is not None and isinstance(response, dict) and 'ticket' in response:
             return self.state.parser.parse_mfa_ticket(response['ticket'])
         else:
@@ -8242,7 +9179,13 @@ class HTTPClient:
 
     # MFA authentication control
     async def _create_mfa_ticket(
-        self, payload: raw.a.MFAResponse, mfa_ticket: typing.Optional[str], authenticated: typing.Optional[bool], /
+        self,
+        payload: raw.a.MFAResponse,
+        mfa_ticket: typing.Optional[str],
+        authenticated: typing.Optional[bool],
+        /,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> MFATicket:
         if authenticated is None:
             authenticated = mfa_ticket is None
@@ -8250,6 +9193,7 @@ class HTTPClient:
         resp: raw.a.MFATicket = await self.request(
             routes.AUTH_MFA_CREATE_TICKET.compile(),
             bot=False,
+            http_overrides=http_overrides,
             json=payload,
             mfa_ticket=mfa_ticket,
             token=token,
@@ -8257,7 +9201,12 @@ class HTTPClient:
         return self.state.parser.parse_mfa_ticket(resp)
 
     async def create_password_ticket(
-        self, password: str, *, mfa_ticket: typing.Optional[str] = None, authenticated: typing.Optional[bool] = None
+        self,
+        password: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        mfa_ticket: typing.Optional[str] = None,
+        authenticated: typing.Optional[bool] = None,
     ) -> MFATicket:
         """|coro|
 
@@ -8267,6 +9216,8 @@ class HTTPClient:
         ----------
         password: :class:`str`
             The current account password.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The token of existing MFA ticket to validate, if applicable.
         authenticated: :class:`bool`
@@ -8317,12 +9268,13 @@ class HTTPClient:
             The MFA ticket created.
         """
         payload: raw.a.PasswordMFAResponse = {'password': password}
-        return await self._create_mfa_ticket(payload, mfa_ticket, authenticated)
+        return await self._create_mfa_ticket(payload, mfa_ticket, authenticated, http_overrides=http_overrides)
 
     async def create_recovery_code_ticket(
         self,
         recovery_code: str,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: typing.Optional[str] = None,
         authenticated: typing.Optional[bool] = None,
     ) -> MFATicket:
@@ -8334,6 +9286,8 @@ class HTTPClient:
         ----------
         recovery_code: :class:`str`
             The recovery code in format ``xxxx-yyyy``.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The token of existing MFA ticket to validate, if applicable.
         authenticated: :class:`bool`
@@ -8386,10 +9340,15 @@ class HTTPClient:
         """
 
         payload: raw.a.RecoveryMFAResponse = {'recovery_code': recovery_code}
-        return await self._create_mfa_ticket(payload, mfa_ticket, authenticated)
+        return await self._create_mfa_ticket(payload, mfa_ticket, authenticated, http_overrides=http_overrides)
 
     async def create_totp_ticket(
-        self, totp_code: str, *, mfa_ticket: typing.Optional[str] = None, authenticated: typing.Optional[bool] = None
+        self,
+        totp_code: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        mfa_ticket: typing.Optional[str] = None,
+        authenticated: typing.Optional[bool] = None,
     ) -> MFATicket:
         """|coro|
 
@@ -8399,6 +9358,8 @@ class HTTPClient:
         ----------
         totp_code: :class:`str`
             The TOTP code, in format ``123456``.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The token of existing MFA ticket to validate, if applicable.
         authenticated: :class:`bool`
@@ -8450,9 +9411,11 @@ class HTTPClient:
         """
 
         payload: raw.a.TotpMFAResponse = {'totp_code': totp_code}
-        return await self._create_mfa_ticket(payload, mfa_ticket, authenticated)
+        return await self._create_mfa_ticket(payload, mfa_ticket, authenticated, http_overrides=http_overrides)
 
-    async def get_recovery_codes(self, *, mfa_ticket: str) -> list[str]:
+    async def get_recovery_codes(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, mfa_ticket: str
+    ) -> list[str]:
         """|coro|
 
         Retrieve recovery codes.
@@ -8462,6 +9425,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
 
@@ -8491,15 +9456,22 @@ class HTTPClient:
         List[:class:`str`]
             The retrieved recovery codes.
         """
-        return await self.request(routes.AUTH_MFA_FETCH_RECOVERY.compile(), bot=False, mfa_ticket=mfa_ticket)
+        return await self.request(
+            routes.AUTH_MFA_FETCH_RECOVERY.compile(), bot=False, http_overrides=http_overrides, mfa_ticket=mfa_ticket
+        )
 
-    async def mfa_status(self) -> MFAStatus:
+    async def mfa_status(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> MFAStatus:
         """|coro|
 
         Retrieves MFA status.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -8527,10 +9499,14 @@ class HTTPClient:
         :class:`.MFAStatus`
             The MFA status.
         """
-        resp: raw.a.MultiFactorStatus = await self.request(routes.AUTH_MFA_FETCH_STATUS.compile(), bot=False)
+        resp: raw.a.MultiFactorStatus = await self.request(
+            routes.AUTH_MFA_FETCH_STATUS.compile(), bot=False, http_overrides=http_overrides
+        )
         return self.state.parser.parse_multi_factor_status(resp)
 
-    async def generate_recovery_codes(self, *, mfa_ticket: str) -> list[str]:
+    async def generate_recovery_codes(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, mfa_ticket: str
+    ) -> list[str]:
         """|coro|
 
         Regenerates recovery codes for this account.
@@ -8540,6 +9516,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
 
@@ -8570,17 +9548,22 @@ class HTTPClient:
             The regenerated recovery codes.
         """
         resp: list[str] = await self.request(
-            routes.AUTH_MFA_GENERATE_RECOVERY.compile(), bot=False, mfa_ticket=mfa_ticket
+            routes.AUTH_MFA_GENERATE_RECOVERY.compile(), bot=False, http_overrides=http_overrides, mfa_ticket=mfa_ticket
         )
         return resp
 
-    async def get_mfa_methods(self) -> list[MFAMethod]:
+    async def get_mfa_methods(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[MFAMethod]:
         """|coro|
 
         Retrieves available MFA methods.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -8606,10 +9589,14 @@ class HTTPClient:
         List[:class:`.MFAMethod`]
             The available MFA methods.
         """
-        resp: list[raw.a.MFAMethod] = await self.request(routes.AUTH_MFA_GET_MFA_METHODS.compile(), bot=False)
+        resp: list[raw.a.MFAMethod] = await self.request(
+            routes.AUTH_MFA_GET_MFA_METHODS.compile(), bot=False, http_overrides=http_overrides
+        )
         return list(map(MFAMethod, resp))
 
-    async def disable_totp_mfa(self, *, mfa_ticket: str) -> None:
+    async def disable_totp_mfa(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, mfa_ticket: str
+    ) -> None:
         """|coro|
 
         Disables TOTP-based MFA for this account.
@@ -8619,6 +9606,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
 
@@ -8648,10 +9637,13 @@ class HTTPClient:
         await self.request(
             routes.AUTH_MFA_TOTP_DISABLE.compile(),
             bot=False,
+            http_overrides=http_overrides,
             mfa_ticket=mfa_ticket,
         )
 
-    async def enable_totp_mfa(self, response: MFAResponse, /) -> None:
+    async def enable_totp_mfa(
+        self, response: MFAResponse, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
         """|coro|
 
         Enables TOTP-based MFA for this account.
@@ -8663,6 +9655,8 @@ class HTTPClient:
         ----------
         response: :class:`.MFAResponse`
             The password, TOTP or recovery code to verify. Currently can be only :class:`.ByTOTP`.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -8694,10 +9688,13 @@ class HTTPClient:
         await self.request(
             routes.AUTH_MFA_TOTP_ENABLE.compile(),
             bot=False,
+            http_overrides=http_overrides,
             json=response.to_dict(),
         )
 
-    async def generate_totp_secret(self, *, mfa_ticket: str) -> str:
+    async def generate_totp_secret(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, mfa_ticket: str
+    ) -> str:
         """|coro|
 
         Generates a TOTP secret.
@@ -8707,6 +9704,8 @@ class HTTPClient:
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
 
@@ -8743,13 +9742,20 @@ class HTTPClient:
         resp: raw.a.ResponseTotpSecret = await self.request(
             routes.AUTH_MFA_TOTP_GENERATE_SECRET.compile(),
             bot=False,
+            http_overrides=http_overrides,
             mfa_ticket=mfa_ticket,
         )
         return resp['secret']
 
     # Session authentication control
 
-    async def edit_session(self, session: ULIDOr[PartialSession], *, friendly_name: str) -> PartialSession:
+    async def edit_session(
+        self,
+        session: ULIDOr[PartialSession],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        friendly_name: str,
+    ) -> PartialSession:
         """|coro|
 
         Edits a session.
@@ -8758,6 +9764,8 @@ class HTTPClient:
         ----------
         session: ULIDOr[:class:`.PartialSession`]
             The session to edit.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         friendly_name: :class:`str`
             The new user-friendly client name. Because of Authifier limitation, this is not :class:`UndefinedOr`.
 
@@ -8800,14 +9808,22 @@ class HTTPClient:
         resp: raw.a.SessionInfo = await self.request(
             routes.AUTH_SESSION_EDIT.compile(session_id=resolve_id(session)),
             bot=False,
+            http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_partial_session(resp)
 
-    async def get_sessions(self) -> list[PartialSession]:
+    async def get_sessions(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[PartialSession]:
         """|coro|
 
         Retrieves all sessions associated with this account.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -8833,11 +9849,18 @@ class HTTPClient:
         List[:class:`.PartialSession`]
             The sessions.
         """
-        resp: list[raw.a.SessionInfo] = await self.request(routes.AUTH_SESSION_FETCH_ALL.compile())
+        resp: list[raw.a.SessionInfo] = await self.request(
+            routes.AUTH_SESSION_FETCH_ALL.compile(), http_overrides=http_overrides
+        )
         return list(map(self.state.parser.parse_partial_session, resp))
 
     async def login_with_email(
-        self, email: str, password: str, *, friendly_name: typing.Optional[str] = None
+        self,
+        email: str,
+        password: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        friendly_name: typing.Optional[str] = None,
     ) -> LoginResult:
         """|coro|
 
@@ -8849,6 +9872,8 @@ class HTTPClient:
             The email.
         password: :class:`str`
             The password. Must be at least 8 characters.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         friendly_name: Optional[:class:`str`]
             The user-friendly client name.
 
@@ -8901,7 +9926,9 @@ class HTTPClient:
             'password': password,
             'friendly_name': friendly_name,
         }
-        resp: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), token=None, json=payload)
+        resp: raw.a.ResponseLogin = await self.request(
+            routes.AUTH_SESSION_LOGIN.compile(), http_overrides=http_overrides, json=payload, token=None
+        )
         return self.state.parser.parse_response_login(resp, friendly_name)
 
     async def login_with_mfa(
@@ -8909,6 +9936,7 @@ class HTTPClient:
         ticket: str,
         by: typing.Optional[MFAResponse] = None,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         friendly_name: typing.Optional[str] = None,
     ) -> typing.Union[Session, AccountDisabled]:
         """|coro|
@@ -8921,6 +9949,8 @@ class HTTPClient:
             The valid MFA ticket token.
         by: Optional[:class:`.MFAResponse`]
             The :class:`.ByRecoveryCode` or :class:`.ByTOTP` object.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         friendly_name: Optional[:class:`str`]
             The user-friendly client name.
 
@@ -8976,15 +10006,24 @@ class HTTPClient:
             'mfa_response': None if by is None else by.to_dict(),
             'friendly_name': friendly_name,
         }
-        resp: raw.a.ResponseLogin = await self.request(routes.AUTH_SESSION_LOGIN.compile(), json=payload, token=None)
+        resp: raw.a.ResponseLogin = await self.request(
+            routes.AUTH_SESSION_LOGIN.compile(), http_overrides=http_overrides, json=payload, token=None
+        )
         ret = self.state.parser.parse_response_login(resp, friendly_name)
         assert not isinstance(ret, MFARequired), 'Recursion detected'
         return ret
 
-    async def logout(self) -> None:
+    async def logout(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes the current session.
+
+        Fires :class:`.SessionDeleteEvent` for the current session.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -9005,17 +10044,23 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
             +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.AUTH_SESSION_LOGOUT.compile(), bot=False)
+        await self.request(routes.AUTH_SESSION_LOGOUT.compile(), bot=False, http_overrides=http_overrides)
 
-    async def revoke_session(self, session: ULIDOr[PartialSession], /) -> None:
+    async def revoke_session(
+        self, session: ULIDOr[PartialSession], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
         """|coro|
 
         Deletes a specific active session.
+
+        Fires :class:`.SessionDeleteEvent` for the provided session.
 
         Parameters
         ----------
         session: ULIDOr[:class:`.PartialSession`]
             The session to delete.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -9046,15 +10091,26 @@ class HTTPClient:
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
             +-------------------+------------------------------------------------+----------------------------------------------------------------+
         """
-        await self.request(routes.AUTH_SESSION_REVOKE.compile(session_id=resolve_id(session)))
+        await self.request(
+            routes.AUTH_SESSION_REVOKE.compile(session_id=resolve_id(session)), http_overrides=http_overrides
+        )
 
-    async def revoke_all_sessions(self, *, revoke_self: typing.Optional[bool] = None) -> None:
+    async def revoke_all_sessions(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        revoke_self: typing.Optional[bool] = None,
+    ) -> None:
         """|coro|
 
         Deletes all active sessions, optionally including current one.
 
+        Fires :class:`.SessionDeleteAllEvent` for the all sessions (may include current session if ``revoke_self`` is ``True``).
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         revoke_self: Optional[:class:`bool`]
             Whether to revoke current session or not.
 
@@ -9080,7 +10136,7 @@ class HTTPClient:
         params = {}
         if revoke_self is not None:
             params['revoke_self'] = utils._bool(revoke_self)
-        await self.request(routes.AUTH_SESSION_REVOKE_ALL.compile(), params=params)
+        await self.request(routes.AUTH_SESSION_REVOKE_ALL.compile(), http_overrides=http_overrides, params=params)
 
 
 __all__ = (
@@ -9093,5 +10149,6 @@ __all__ = (
     'DefaultRateLimitBlocker',
     '_NoopRateLimitBlocker',
     'DefaultRateLimiter',
+    'HTTPOverrideOptions',
     'HTTPClient',
 )

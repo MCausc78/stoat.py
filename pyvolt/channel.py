@@ -79,8 +79,10 @@ from .flags import (
 from .read_state import ReadState
 
 if typing.TYPE_CHECKING:
+    from . import raw
     from .bot import BaseBot
     from .cdn import StatelessAsset, Asset, ResolvableResource
+    from .http import HTTPOverrideOptions
     from .invite import Invite
     from .message import BaseMessage, Message
     from .permissions import PermissionOverride
@@ -111,15 +113,25 @@ class BaseChannel(Base):
 
         return f'<#{self.id}>'
 
-    async def close(self, *, silent: typing.Optional[bool] = None) -> None:
+    async def close(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, silent: typing.Optional[bool] = None
+    ) -> None:
         """|coro|
 
         Deletes a server channel, leaves a group or closes a group.
 
         You must have :attr:`~Permissions.view_channel` to do this. If target channel is server channel, :attr:`~Permissions.manage_channels` is also required.
 
+        For DMs, fires :class:`.ChannelUpdateEvent` for the current user and DM recipient.
+        For groups, if the current user is group owner, fires :class:`.PrivateChannelDeleteEvent` for all group recipients (including group owner),
+        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user,
+        and :class:`.GroupRecipientRemoveEvent` is fired for rest of group recipients.
+        For server channels, :class:`.ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`.ServerUpdateEvent` for all server members.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
 
@@ -159,11 +171,12 @@ class BaseChannel(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.close_channel(self.id, silent=silent)
+        return await self.state.http.close_channel(self.id, http_overrides=http_overrides, silent=silent)
 
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         owner: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
@@ -178,8 +191,14 @@ class BaseChannel(Base):
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
+        Fires :class:`.ChannelUpdateEvent` for all users who still can see target channel,
+        optionally :class:`.ServerChannelCreateEvent` for all users who now can see target server channel, and
+        optionally :class:`.ChannelDeleteEvent` for users who no longer can see target server channel.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -251,6 +270,7 @@ class BaseChannel(Base):
         """
         return await self.state.http.edit_channel(
             self.id,
+            http_overrides=http_overrides,
             name=name,
             description=description,
             owner=owner,
@@ -491,6 +511,16 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
         return calculate_saved_messages_channel_permissions(target.id, self.user_id)
 
+    def to_dict(self) -> raw.SavedMessagesChannel:
+        """:class:`dict`: Convert channel to raw data."""
+
+        payload: raw.SavedMessagesChannel = {
+            'channel_type': 'SavedMessages',
+            '_id': self.id,
+            'user': self.user_id,
+        }
+        return payload
+
 
 @define(slots=True)
 class DMChannel(BaseChannel, Connectable, Messageable):
@@ -592,7 +622,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
                     state=state,
                     channel_id=self.id,
                     user_id=state.my_id,
-                    last_acked_message_id=default_acked_message_id,
+                    last_acked_id=default_acked_message_id,
                     mentioned_in=[],
                 )
             return None
@@ -612,7 +642,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
                 state=state,
                 channel_id=self.id,
                 user_id=state.my_id,
-                last_acked_message_id=default_acked_message_id,
+                last_acked_id=default_acked_message_id,
                 mentioned_in=[],
             )
             cache.store_read_state(read_state, ctx)
@@ -761,6 +791,19 @@ class DMChannel(BaseChannel, Connectable, Messageable):
             )
         )
 
+    def to_dict(self) -> raw.DirectMessageChannel:
+        """:class:`dict`: Convert channel to raw data."""
+
+        payload: raw.DirectMessageChannel = {
+            'channel_type': 'DirectMessage',
+            '_id': self.id,
+            'active': self.active,
+            'recipients': list(self.recipient_ids),
+        }
+        if self.last_message_id is not None:
+            payload['last_message_id'] = self.last_message_id
+        return payload
+
 
 @define(slots=True)
 class GroupChannel(BaseChannel, Connectable, Messageable):
@@ -883,7 +926,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
                     state=state,
                     channel_id=self.id,
                     user_id=state.my_id,
-                    last_acked_message_id=default_acked_message_id,
+                    last_acked_id=default_acked_message_id,
                     mentioned_in=[],
                 )
             return None
@@ -903,7 +946,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
                 state=state,
                 channel_id=self.id,
                 user_id=state.my_id,
-                last_acked_message_id=default_acked_message_id,
+                last_acked_id=default_acked_message_id,
                 mentioned_in=[],
             )
             cache.store_read_state(read_state, ctx)
@@ -1042,12 +1085,16 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
     async def add(
         self,
         user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
         Adds another user to the group.
 
         You must have :attr:`~Permissions.create_invites` to do this.
+
+        Fires :class:`.PrivateChannelCreateEvent` for added recipient, and :class:`.GroupRecipientAddEvent` for rest of group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1056,6 +1103,8 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         ----------
         user: ULIDOr[:class:`.BaseUser`]
             The user to add.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1112,17 +1161,21 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.add_group_recipient(self.id, user)
+        return await self.state.http.add_group_recipient(self.id, user, http_overrides=http_overrides)
 
     async def add_bot(
         self,
         bot: ULIDOr[typing.Union[BaseBot, BaseUser]],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> None:
         """|coro|
 
         Invites a bot to a group.
 
         You must have :attr:`~Permissions.create_invites` to do this.
+
+        Fires :class:`.PrivateChannelCreateEvent` for bot, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent` for all group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1131,10 +1184,8 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         ----------
         bot: ULIDOr[Union[:class:`.BaseBot`, :class:`.BaseUser`]]
             The bot.
-        server: Optional[ULIDOr[:class:`.BaseServer`]]
-            The destination server.
-        group: Optional[ULIDOr[:class:`.GroupChannel`]]
-            The destination group.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1195,15 +1246,20 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         :class:`TypeError`
             You specified ``server`` and ``group`` parameters, or passed no parameters.
         """
-        return await self.state.http.invite_bot(bot, group=self.id)
+        return await self.state.http.invite_bot(bot, http_overrides=http_overrides, group=self.id)
 
-    async def create_invite(self) -> Invite:
+    async def create_invite(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Invite:
         """|coro|
 
-        Creates an invite to channel. The destination channel must be a group or server channel.
+        Creates an invite to group channel.
 
         .. note::
             This can only be used by non-bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1256,11 +1312,12 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
             The invite that was created.
         """
 
-        return await self.state.http.create_channel_invite(self.id)
+        return await self.state.http.create_channel_invite(self.id, http_overrides=http_overrides)
 
     async def create_webhook(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: str,
         avatar: typing.Optional[ResolvableResource] = None,
     ) -> Webhook:
@@ -1270,8 +1327,12 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
 
+        Fires :class:`.WebhookCreateEvent` for all users who can see target channel.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
         avatar: Optional[:class:`.ResolvableResource`]
@@ -1325,17 +1386,25 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         :class:`.Webhook`
             The created webhook.
         """
-        return await self.state.http.create_webhook(self.id, name=name, avatar=avatar)
+        return await self.state.http.create_webhook(self.id, http_overrides=http_overrides, name=name, avatar=avatar)
 
-    async def leave(self, *, silent: typing.Optional[bool] = None) -> None:
+    async def leave(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, silent: typing.Optional[bool] = None
+    ) -> None:
         """|coro|
 
         Leaves a group or closes a group.
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
+        Fires :class:`.PrivateChannelDeleteEvent` for all group recipients (including group owner) if the current user is group owner,
+        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user,
+        and :class:`.GroupRecipientRemoveEvent` is fired for rest of group recipients.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
 
@@ -1375,19 +1444,25 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.close(silent=silent)
+        return await self.close(http_overrides=http_overrides, silent=silent)
 
-    async def set_default_permissions(self, permissions: Permissions) -> GroupChannel:
+    async def set_default_permissions(
+        self, permissions: Permissions, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> GroupChannel:
         """|coro|
 
         Sets default permissions for everyone in a channel.
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
+        Fires :class:`.ChannelUpdateEvent` for all group recipients.
+
         Parameters
         ----------
         permissions: :class:`.Permissions`
             The new permissions.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1432,7 +1507,9 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
             The updated group with new permissions.
         """
 
-        result = await self.state.http.set_default_channel_permissions(self.id, permissions)
+        result = await self.state.http.set_default_channel_permissions(
+            self.id, permissions, http_overrides=http_overrides
+        )
         assert isinstance(result, GroupChannel)
         return result
 
@@ -1470,8 +1547,48 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
             )
         )
 
+    def to_dict(self) -> raw.GroupChannel:
+        """:class:`dict`: Convert channel to raw data."""
 
-PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel]
+        payload: dict[str, typing.Any] = {
+            'channel_type': 'Group',
+            '_id': self.id,
+            'name': self.name,
+            'owner': self.owner_id,
+        }
+        if self.description is not None:
+            payload['description'] = self.description
+        payload['recipients'] = self.recipient_ids
+        if self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.last_message_id is not None:
+            payload['last_message_id'] = self.last_message_id
+        if self.raw_permissions is not None:
+            payload['permissions'] = self.raw_permissions
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        return payload  # type: ignore
+
+
+@define(slots=True)
+class UnknownPrivateChannel(BaseChannel):
+    """Represents a private channel that is not recognized by library yet."""
+
+    payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
+    """Dict[:class:`str`, Any]: The raw channel data."""
+
+    @property
+    def type(self) -> typing.Literal[ChannelType.unknown]:
+        """Literal[:attr:`.ChannelType.unknown`]: The channel's type."""
+        return ChannelType.unknown
+
+    def to_dict(self) -> dict[str, typing.Any]:
+        """:class:`dict`: Convert channel to raw data."""
+
+        return self.payload
+
+
+PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, UnknownPrivateChannel]
 
 
 @define(slots=True)
@@ -1526,37 +1643,88 @@ class BaseServerChannel(BaseChannel):
         """:class:`.Server`: The server that channel belongs to."""
         server = self.get_server()
         if server is None:
-            raise NoData(self.server_id, 'channel server')
+            raise NoData(what=self.server_id, type='BaseServerChannel.server')
         return server
 
-    async def create_invite(self) -> Invite:
+    async def create_invite(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Invite:
         """|coro|
 
-        Creates an invite to channel. The destination channel must be a server channel.
+        Creates an invite to server channel.
 
         .. note::
             This can only be used by non-bot accounts.
 
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
         Raises
         ------
-        Forbidden
-            You do not have permissions to create invite in that channel.
-        HTTPException
-            Creating invite failed.
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------------+
+            | Value                | Reason                                             |
+            +----------------------+----------------------------------------------------+
+            | ``InvalidOperation`` | The target channel is not group or server channel. |
+            +----------------------+----------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.          |
+            +----------------------+----------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------------+
+            | Value                 | Reason                                                               |
+            +-----------------------+----------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create invites in channel. |
+            +-----------------------+----------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------+-----------------------------------+
+            | Value          | Reason                            |
+            +----------------+-----------------------------------+
+            | ``NotFound``   | The target channel was not found. |
+            +----------------+-----------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
 
         Returns
         -------
         :class:`.Invite`
             The invite that was created.
         """
-        return await self.state.http.create_channel_invite(self.id)
 
-    async def delete(self) -> None:
+        return await self.state.http.create_channel_invite(self.id, http_overrides=http_overrides)
+
+    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
         Deletes a server channel.
 
         You must have :attr:`~Permissions.view_channel` and :attr:`~Permissions.manage_channels` to do this.
+
+        For server channels, :class:`.ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`.ServerUpdateEvent` for all server members.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1594,14 +1762,19 @@ class BaseServerChannel(BaseChannel):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.close()
+        return await self.close(http_overrides=http_overrides)
 
-    async def fetch_webhooks(self) -> list[Webhook]:
+    async def fetch_webhooks(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[Webhook]:
         """|coro|
 
         Retrieves all webhooks in a channel.
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1651,12 +1824,13 @@ class BaseServerChannel(BaseChannel):
         List[:class:`.Webhook`]
             The webhooks for this channel.
         """
-        return await self.state.http.get_channel_webhooks(self.id)
+        return await self.state.http.get_channel_webhooks(self.id, http_overrides=http_overrides)
 
     async def set_role_permissions(
         self,
         role: ULIDOr[BaseRole],
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> ServerChannel:
@@ -1666,10 +1840,20 @@ class BaseServerChannel(BaseChannel):
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
+        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel,
+        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`.ChannelDeleteEvent` for users who no longer can see target channel.
+
         Parameters
         ----------
         role: ULIDOr[:class:`.BaseRole`]
             The role.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+        allow: :class:`.Permissions`
+            The permissions to allow for role in channel.
+        deny: :class:`.Permissions`
+            The permissions to deny for role in channel.
 
         Raises
         ------
@@ -1715,20 +1899,30 @@ class BaseServerChannel(BaseChannel):
         :class:`.ServerChannel`
             The updated server channel with new permissions.
         """
-        result = await self.state.http.set_channel_permissions_for_role(self.id, role, allow=allow, deny=deny)
+        result = await self.state.http.set_channel_permissions_for_role(
+            self.id, role, http_overrides=http_overrides, allow=allow, deny=deny
+        )
         return result
 
-    async def set_default_permissions(self, permissions: PermissionOverride) -> ServerChannel:
+    async def set_default_permissions(
+        self, permissions: PermissionOverride, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> ServerChannel:
         """|coro|
 
         Sets default permissions for everyone in a channel.
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
+        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel,
+        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`.ChannelDeleteEvent` is fired for users who no longer can see target channel.
+
         Parameters
         ----------
         permissions: :class:`.PermissionOverride`
             The new permissions.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1773,7 +1967,9 @@ class BaseServerChannel(BaseChannel):
             The updated server channel with new permissions.
         """
 
-        result = await self.state.http.set_default_channel_permissions(self.id, permissions)
+        result = await self.state.http.set_default_channel_permissions(
+            self.id, permissions, http_overrides=http_overrides
+        )
         return result  # type: ignore
 
     def locally_update(self, data: PartialChannel, /) -> None:
@@ -1857,7 +2053,7 @@ class BaseServerChannel(BaseChannel):
             can_publish=True,
             can_receive=True,
         )
-        roles = sort_member_roles(target.roles, safe=safe, server_roles=server.roles)
+        roles = sort_member_roles(target.role_ids, safe=safe, server_roles=server.roles)
         result = calculate_server_channel_permissions(
             initial_permissions,
             roles,
@@ -1876,8 +2072,14 @@ class ChannelVoiceMetadata:
     max_users: int = field(repr=True, kw_only=True)
     """:class:`int`: The maximium amount of users allowed in the voice channel at once.
     
-    Zero means a infinite amount of users can connect to voice channel.
+    Zero means an infinite amount of users can connect to voice channel.
     """
+
+    def to_dict(self) -> raw.VoiceInformation:
+        """:class:`dict`: Convert channel voice state container to raw data."""
+        return {
+            'max_users': None if self.max_users == 0 else self.max_users,
+        }
 
 
 @define(slots=True)
@@ -1958,7 +2160,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
                     state=state,
                     channel_id=self.id,
                     user_id=state.my_id,
-                    last_acked_message_id=default_acked_message_id,
+                    last_acked_id=default_acked_message_id,
                     mentioned_in=[],
                 )
             return None
@@ -1978,7 +2180,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
                 state=state,
                 channel_id=self.id,
                 user_id=state.my_id,
-                last_acked_message_id=default_acked_message_id,
+                last_acked_id=default_acked_message_id,
                 mentioned_in=[],
             )
             cache.store_read_state(read_state, ctx)
@@ -2056,6 +2258,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
     async def create_webhook(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: str,
         avatar: typing.Optional[ResolvableResource] = None,
     ) -> Webhook:
@@ -2065,8 +2268,12 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
 
+        Fires :class:`.WebhookCreateEvent` for all users who can see target channel.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
         avatar: Optional[:class:`.ResolvableResource`]
@@ -2120,7 +2327,32 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         :class:`.Webhook`
             The created webhook.
         """
-        return await self.state.http.create_webhook(self.id, name=name, avatar=avatar)
+        return await self.state.http.create_webhook(self.id, http_overrides=http_overrides, name=name, avatar=avatar)
+
+    def to_dict(self) -> raw.TextChannel:
+        """:class:`dict`: Convert channel to raw data."""
+
+        payload: dict[str, typing.Any] = {
+            'channel_type': 'TextChannel',
+            '_id': self.id,
+            'server': self.server_id,
+            'name': self.name,
+        }
+        if self.description is not None:
+            payload['description'] = self.description
+        if self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.last_message_id is not None:
+            payload['last_message_id'] = self.last_message_id
+        if self.default_permissions is not None:
+            payload['default_permissions'] = self.default_permissions.to_field_dict()
+        if len(self.role_permissions):
+            payload['role_permissions'] = {k: v.to_field_dict() for k, v in self.role_permissions.items()}
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        if self.voice is not None:
+            payload['voice'] = self.voice.to_dict()
+        return payload  # type: ignore
 
 
 @define(slots=True)
@@ -2172,10 +2404,57 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
             else res
         )
 
+    def to_dict(self) -> raw.VoiceChannel:
+        """:class:`dict`: Convert channel to raw data."""
+
+        payload: dict[str, typing.Any] = {
+            'channel_type': 'VoiceChannel',
+            '_id': self.id,
+            'server': self.server_id,
+            'name': self.name,
+        }
+        if self.description is not None:
+            payload['description'] = self.description
+        if self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.default_permissions is not None:
+            payload['default_permissions'] = self.default_permissions.to_field_dict()
+        if len(self.role_permissions):
+            payload['role_permissions'] = {k: v.to_field_dict() for k, v in self.role_permissions.items()}
+        if self.nsfw:
+            payload['nsfw'] = self.nsfw
+        return payload  # type: ignore
+
+
+@define(slots=True)
+class UnknownServerChannel(BaseServerChannel):
+    """Represents a server channel that is not recognized by library yet."""
+
+    payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
+    """Dict[:class:`str`, Any]: The raw channel data."""
+
+    @property
+    def type(self) -> typing.Literal[ChannelType.unknown]:
+        """Literal[:attr:`.ChannelType.unknown`]: The channel's type."""
+        return ChannelType.unknown
+
+    def to_dict(self) -> dict[str, typing.Any]:
+        """:class:`dict`: Convert channel to raw data."""
+        return self.payload
+
 
 ServerChannel = typing.Union[TextChannel, VoiceChannel]
 TextableChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, TextChannel, VoiceChannel]
-Channel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, TextChannel, VoiceChannel]
+UnknownChannel = typing.Union[UnknownPrivateChannel, UnknownServerChannel]
+Channel = typing.Union[
+    SavedMessagesChannel,
+    DMChannel,
+    GroupChannel,
+    UnknownPrivateChannel,
+    TextChannel,
+    VoiceChannel,
+    UnknownServerChannel,
+]
 
 
 @define(slots=True)
@@ -2258,13 +2537,16 @@ __all__ = (
     'SavedMessagesChannel',
     'DMChannel',
     'GroupChannel',
+    'UnknownPrivateChannel',
     'PrivateChannel',
     'BaseServerChannel',
     'ChannelVoiceMetadata',
     'TextChannel',
     'VoiceChannel',
+    'UnknownServerChannel',
     'ServerChannel',
     'TextableChannel',
+    'UnknownChannel',
     'Channel',
     'ChannelVoiceStateContainer',
     'PartialMessageable',

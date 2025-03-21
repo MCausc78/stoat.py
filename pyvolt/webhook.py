@@ -31,13 +31,17 @@ from attrs import define, field
 from .base import Base
 from .cache import (
     CacheContextType,
+    MemberOrUserThroughWebhookCreatorCacheContext,
+    MemberThroughWebhookCreatorCacheContext,
     UserThroughWebhookCreatorCacheContext,
     ChannelThroughWebhookChannelCacheContext,
+    _MEMBER_OR_USER_THROUGH_WEBHOOK_CREATOR,
+    _MEMBER_THROUGH_WEBHOOK_CREATOR,
     _USER_THROUGH_WEBHOOK_CREATOR,
     _CHANNEL_THROUGH_WEBHOOK_CHANNEL,
 )
 from .cdn import StatelessAsset, Asset, ResolvableResource
-from .channel import GroupChannel, TextChannel
+from .channel import GroupChannel, BaseServerChannel, TextChannel
 from .core import (
     UNDEFINED,
     UndefinedOr,
@@ -55,6 +59,9 @@ from .message import (
 from .permissions import Permissions
 
 if typing.TYPE_CHECKING:
+    from . import raw
+    from .http import HTTPOverrideOptions
+    from .server import Member
     from .user import User
 
 _new_permissions = Permissions.__new__
@@ -70,13 +77,19 @@ class BaseWebhook(Base):
     def _token(self) -> typing.Optional[str]:
         return None
 
-    async def delete(self, *, by_token: bool = False) -> None:
+    async def delete(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, by_token: bool = False
+    ) -> None:
         """|coro|
 
         Deletes the webhook.
 
+        Fires :class:`.WebhookDeleteEvent` for all users who can see webhook channel.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         by_token: :class:`bool`
             Whether to use webhook token, if possible.
 
@@ -114,13 +127,14 @@ class BaseWebhook(Base):
 
         if by_token:
             token = self._token()
-            return await self.state.http.delete_webhook(self.id, token=token)
+            return await self.state.http.delete_webhook(self.id, http_overrides=http_overrides, token=token)
         else:
-            return await self.state.http.delete_webhook(self.id)
+            return await self.state.http.delete_webhook(self.id, http_overrides=http_overrides)
 
     async def edit(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         by_token: bool = False,
         name: UndefinedOr[str] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -130,8 +144,12 @@ class BaseWebhook(Base):
 
         Edits the webhook.
 
+        Fires :class:`.WebhookUpdateEvent` for all users who can see webhook channel.
+
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         by_token: :class:`bool`
             Whether to use webhook token, if possible.
 
@@ -191,18 +209,22 @@ class BaseWebhook(Base):
 
             return await self.state.http.edit_webhook(
                 self.id,
+                http_overrides=http_overrides,
                 token=token,
                 name=name,
                 avatar=avatar,
                 permissions=permissions,
             )
         else:
-            return await self.state.http.edit_webhook(self.id, name=name, avatar=avatar, permissions=permissions)
+            return await self.state.http.edit_webhook(
+                self.id, http_overrides=http_overrides, name=name, avatar=avatar, permissions=permissions
+            )
 
     async def execute(
         self,
         content: typing.Optional[str] = None,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
@@ -223,6 +245,8 @@ class BaseWebhook(Base):
 
         If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
 
+        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
+
         Parameters
         ----------
         webhook: ULIDOr[:class:`.BaseWebhook`]
@@ -231,6 +255,8 @@ class BaseWebhook(Base):
             The webhook token.
         content: Optional[:class:`str`]
             The message content.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`.ResolvableResource`]]
@@ -333,6 +359,7 @@ class BaseWebhook(Base):
             self.id,
             token,
             content=content,
+            http_overrides=http_overrides,
             nonce=nonce,
             attachments=attachments,
             replies=replies,
@@ -347,6 +374,7 @@ class BaseWebhook(Base):
     async def fetch(
         self,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: typing.Optional[str] = None,
     ) -> Webhook:
         """|coro|
@@ -363,6 +391,8 @@ class BaseWebhook(Base):
 
         Parameters
         ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
 
@@ -408,7 +438,7 @@ class BaseWebhook(Base):
         :class:`.Webhook`
             The retrieved webhook.
         """
-        return await self.state.http.get_webhook(self.id, token=token or self._token())
+        return await self.state.http.get_webhook(self.id, http_overrides=http_overrides, token=token or self._token())
 
 
 @define(slots=True)
@@ -470,8 +500,66 @@ class Webhook(BaseWebhook):
     token: typing.Optional[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The webhook's private token."""
 
-    def get_creator(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]]: The user who created this webhook."""
+    def get_creator(self) -> typing.Optional[typing.Union[Member, User]]:
+        """Optional[Union[:class:`.Member`, :class:`.User`]]: The user who created this webhook."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        creator_id = self.creator_id
+        if not creator_id:
+            return None
+
+        ctx = (
+            MemberOrUserThroughWebhookCreatorCacheContext(
+                type=CacheContextType.member_or_user_through_webhook_creator,
+                webhook=self,
+            )
+            if state.provide_cache_context('Webhook.creator')
+            else _MEMBER_OR_USER_THROUGH_WEBHOOK_CREATOR
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+
+        ret = None
+        if isinstance(channel, BaseServerChannel):
+            ret = cache.get_server_member(channel.server_id, self.creator_id, ctx)
+
+        if ret is None:
+            return cache.get_user(creator_id, ctx)
+        return ret
+
+    def get_creator_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The user who created this webhook."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        creator_id = self.creator_id
+        if not creator_id:
+            return None
+
+        ctx = (
+            MemberThroughWebhookCreatorCacheContext(
+                type=CacheContextType.member_through_webhook_creator,
+                webhook=self,
+            )
+            if state.provide_cache_context('Webhook.creator_as_member')
+            else _MEMBER_THROUGH_WEBHOOK_CREATOR
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+
+        if isinstance(channel, BaseServerChannel):
+            return cache.get_server_member(channel.server_id, self.creator_id, ctx)
+        return None
+
+    def get_creator_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The user who created this webhook."""
         state = self.state
         cache = state.cache
 
@@ -487,7 +575,7 @@ class Webhook(BaseWebhook):
                 type=CacheContextType.user_through_webhook_creator,
                 webhook=self,
             )
-            if state.provide_cache_context('Webhook.creator')
+            if state.provide_cache_context('Webhook.creator_as_user')
             else _USER_THROUGH_WEBHOOK_CREATOR
         )
 
@@ -543,11 +631,27 @@ class Webhook(BaseWebhook):
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
-    def creator(self) -> User:
-        """:class:`.User`: The user who created this webhook."""
+    def creator(self) -> typing.Union[Member, User]:
+        """Union[:class:`.Member`, :class:`.User`]: The user who created this webhook."""
         creator = self.get_creator()
         if creator is None:
             raise NoData(what=self.creator_id, type='Webhook.creator')
+        return creator
+
+    @property
+    def creator_as_member(self) -> Member:
+        """:class:`.Member`: The user who created this webhook."""
+        creator = self.get_creator_as_member()
+        if creator is None:
+            raise NoData(what=self.creator_id, type='Webhook.creator_as_member')
+        return creator
+
+    @property
+    def creator_as_user(self) -> User:
+        """:class:`.User`: The user who created this webhook."""
+        creator = self.get_creator_as_user()
+        if creator is None:
+            raise NoData(what=self.creator_id, type='Webhook.creator_as_user')
         return creator
 
     @property
@@ -564,6 +668,21 @@ class Webhook(BaseWebhook):
         ret = _new_permissions(Permissions)
         ret.value = self.raw_permissions
         return ret
+
+    def to_dict(self) -> raw.Webhook:
+        """:class:`dict`: Convert webhook to raw data."""
+        payload: dict[str, typing.Any] = {
+            'id': self.id,
+            'name': self.name,
+        }
+        if self.internal_avatar is not None:
+            payload['avatar'] = self.internal_avatar.to_dict('avatars')
+        if len(self.creator_id):
+            payload['creator_id'] = self.creator_id
+        payload['channel_id'] = self.channel_id
+        payload['permissions'] = self.raw_permissions
+        payload['token'] = self.token
+        return payload  # type: ignore
 
 
 __all__ = (

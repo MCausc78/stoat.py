@@ -268,7 +268,7 @@ class Gear(metaclass=GearMeta):
         """Returns a :class:`list` of (event, function) listener pairs that are defined in this gear.
 
         Returns
-        --------
+        -------
         List[Tuple[Type[:class:`pyvolt.BaseEvent`], :ref:`coroutine <coroutine>`]]
             The listeners defined in this gear.
         """
@@ -286,13 +286,13 @@ class Gear(metaclass=GearMeta):
         This is the gear equivalent of :meth:`.Bot.listen`.
 
         Parameters
-        ------------
+        ----------
         to: Optional[Type[:class:`BaseEvent`]]
             The class of the event being listened to. If not provided, it
             defaults to the argument's type.
 
         Raises
-        --------
+        ------
         :class:`TypeError`
             The event was not passed.
         """

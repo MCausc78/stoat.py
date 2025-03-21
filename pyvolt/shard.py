@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
+from datetime import datetime
 from inspect import isawaitable
 import logging
 import typing
@@ -37,6 +38,7 @@ from .adapter import WebSocketConnectionFailure, HTTPWebSocket, HTTPAdapter, AIO
 from .core import ULIDOr, resolve_id
 from .enums import ShardFormat
 from .errors import PyvoltException, ShardClosedError, AuthenticationError, ConnectError
+from .utils import _UTC
 
 if typing.TYPE_CHECKING:
     from datetime import datetime
@@ -99,6 +101,7 @@ class EventHandler(ABC):
 
 
 DEFAULT_SHARD_USER_AGENT = f'pyvolt (https://github.com/MCausc78/pyvolt, {__version__})'
+_fromtimestamp = datetime.fromtimestamp
 
 
 class Shard(ABC):
@@ -391,6 +394,40 @@ class ShardImpl(Shard):
         self.recv = self._recv_json if format is ShardFormat.json else self._recv_msgpack
         self.send = self._send_json if format is ShardFormat.json else self._send_msgpack
 
+    def _maybe_fix_timestamps(self, payload: raw.ClientEvent, /) -> None:
+        if payload['type'] == 'Ready':
+            for member_data in payload.get('members', ()):
+                self._maybe_fix_member(member_data)
+        elif payload['type'] == 'Message':
+            self._maybe_fix_message(payload)
+        elif payload['type'] == 'MessageUpdate':
+            data = payload['data']
+
+            edited_at = data.get('edited')
+            if edited_at is not None and isinstance(edited_at, int):
+                data['edited'] = _fromtimestamp(edited_at, _UTC).isoformat()
+        elif payload['type'] == 'ServerMemberUpdate':
+            data = payload['data']
+
+            timeout = data.get('timeout')
+            if timeout is not None and isinstance(timeout, int):
+                data['timeout'] = _fromtimestamp(timeout, _UTC).isoformat()
+
+    def _maybe_fix_member(self, payload: raw.Member, /) -> None:
+        joined_at = payload['joined_at']
+
+        if isinstance(joined_at, int):
+            payload['joined_at'] = _fromtimestamp(joined_at, _UTC).isoformat()
+
+        timeout = payload.get('timeout')
+        if timeout is not None and isinstance(timeout, int):
+            payload['timeout'] = _fromtimestamp(timeout, _UTC).isoformat()
+
+    def _maybe_fix_message(self, payload: raw.Message, /) -> None:
+        edited_at = payload.get('edited')
+        if edited_at is not None and isinstance(edited_at, int):
+            payload['edited'] = _fromtimestamp(edited_at, _UTC).isoformat()
+
     def is_closed(self) -> bool:
         return self._closed and not self._socket
 
@@ -599,6 +636,9 @@ class ShardImpl(Shard):
         k: raw.ClientEvent = msgpack.unpackb(adapter.payload_from_frame(frame), use_list=True)  # type: ignore
         if k['type'] != 'Ready':
             _L.debug('Received %s', k)
+
+        self._maybe_fix_timestamps(k)
+
         return k
 
     def get_headers(self) -> dict[str, str]:

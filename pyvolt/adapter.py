@@ -248,7 +248,7 @@ class HTTPAdapter(ABC, typing.Generic[F]):
 
     @abstractmethod
     def is_error_frame(self, frame: F, /) -> bool:
-        """:class:`bool`: Returns whether the provided frame is a ERROR pseudo-frame."""
+        """:class:`bool`: Returns whether the provided frame is an ERROR pseudo-frame."""
         ...
 
     @abstractmethod
@@ -402,7 +402,7 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
         )
 
     def is_error_frame(self, frame: aiohttp.WSMessage, /) -> bool:
-        """:class:`bool`: Returns whether the provided frame is a ERROR pseudo-frame."""
+        """:class:`bool`: Returns whether the provided frame is an ERROR pseudo-frame."""
         return frame.type is aiohttp.WSMsgType.ERROR
 
     def is_binary_frame(self, frame: aiohttp.WSMessage, /) -> bool:

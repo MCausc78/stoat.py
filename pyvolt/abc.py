@@ -48,6 +48,7 @@ if typing.TYPE_CHECKING:
 
     from .cdn import ResolvableResource
     from .enums import MessageSort
+    from .http import HTTPOverrideOptions
     from .message import Reply, MessageInteractions, MessageMasquerade, SendableEmbed, BaseMessage, Message
     from .state import State
 
@@ -74,7 +75,7 @@ class Messageable:
     def _get_state(self) -> State:
         return self.state
 
-    async def fetch_channel_id(self) -> str:
+    async def fetch_channel_id(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> str:
         """:class:`str`: Retrieves the channel's ID."""
         return self.get_channel_id()
 
@@ -138,28 +139,36 @@ class Messageable:
 
         return messages
 
-    async def begin_typing(self) -> None:
+    async def begin_typing(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """Begins typing in channel, until :meth:`~.end_typing` is called."""
         state = self._get_state()
-        channel_id = await self.fetch_channel_id()
+        channel_id = await self.fetch_channel_id(http_overrides=http_overrides)
         return await state.shard.begin_typing(channel_id)
 
-    async def end_typing(self) -> None:
+    async def end_typing(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """Ends typing in channel."""
         state = self._get_state()
-        channel_id = await self.fetch_channel_id()
+        channel_id = await self.fetch_channel_id(http_overrides=http_overrides)
         await state.shard.end_typing(channel_id)
 
     # We can't use normal references like :class:`HTTPException` or :class:`.MessageInteractions`,
     # because it breaks references in commands extension.
     # Use :class:`~pyvolt.HTTPException` and :class:`~pyvolt.MessageInteractions` explicitly.
 
-    async def acknowledge(self, message: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED) -> None:
+    async def acknowledge(
+        self,
+        message: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED,
+        *,
+        channel_http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
         """|coro|
 
         Marks the destination channel as read.
 
         You must have :attr:`~Permissions.view_channel` to do this.
+
+        Fires :class:`.MessageAckEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -168,6 +177,10 @@ class Messageable:
         ----------
         message: ULIDOr[:class:`.BaseMessage`]
             The message to mark as read.
+        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides for getting channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -206,16 +219,23 @@ class Messageable:
         """
 
         state = self._get_state()
-        channel_id = await self.fetch_channel_id()
+        channel_id = await self.fetch_channel_id(http_overrides=channel_http_overrides)
 
         if message is UNDEFINED:
             message = _ulid_new()
         elif message is None:
             message = ZID
 
-        await state.http.acknowledge_message(channel_id, message)
+        await state.http.acknowledge_message(channel_id, message, http_overrides=http_overrides)
 
-    async def fetch_message(self, message: ULIDOr[BaseMessage], /) -> Message:
+    async def fetch_message(
+        self,
+        message: ULIDOr[BaseMessage],
+        /,
+        *,
+        channel_http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> Message:
         """|coro|
 
         Retrieves a message.
@@ -226,6 +246,10 @@ class Messageable:
             The channel the message is in.
         message: ULIDOr[:class:`.BaseMessage`]
             The message to retrieve.
+        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides for getting channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -268,12 +292,14 @@ class Messageable:
             The retrieved message.
         """
 
-        channel = await self.fetch_channel_id()
-        return await self.state.http.get_message(channel, message)
+        channel = await self.fetch_channel_id(http_overrides=channel_http_overrides)
+        return await self.state.http.get_message(channel, message, http_overrides=http_overrides)
 
     async def history(
         self,
         *,
+        channel_http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
         after: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -289,8 +315,10 @@ class Messageable:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`~pyvolt.TextableChannel`]
-            The channel to retrieve messages from.
+        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides for getting channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
 
@@ -350,9 +378,10 @@ class Messageable:
         List[:class:`~pyvolt.Message`]
             The messages retrieved.
         """
-        channel = await self.fetch_channel_id()
+        channel = await self.fetch_channel_id(http_overrides=channel_http_overrides)
         return await self.state.http.get_messages(
             channel,
+            http_overrides=http_overrides,
             limit=limit,
             before=before,
             after=after,
@@ -365,6 +394,8 @@ class Messageable:
         self,
         query: typing.Optional[str] = None,
         *,
+        channel_http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         pinned: typing.Optional[bool] = None,
         limit: typing.Optional[int] = None,
         before: typing.Optional[ULIDOr[BaseMessage]] = None,
@@ -388,6 +419,10 @@ class Messageable:
         ----------
         query: Optional[:class:`str`]
             The full-text search query. See `MongoDB documentation <https://www.mongodb.com/docs/manual/text-search/>`_ for more information.
+        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides for getting channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
         limit: Optional[:class:`int`]
@@ -463,11 +498,12 @@ class Messageable:
         """
 
         state = self._get_state()
-        channel_id = await self.fetch_channel_id()
+        channel_id = await self.fetch_channel_id(http_overrides=channel_http_overrides)
 
         return await state.http.search_for_messages(
             channel_id,
             query=query,
+            http_overrides=http_overrides,
             pinned=pinned,
             limit=limit,
             before=before,
@@ -480,6 +516,8 @@ class Messageable:
         self,
         content: typing.Optional[str] = None,
         *,
+        channel_http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         nonce: typing.Optional[str] = None,
         attachments: typing.Optional[list[ResolvableResource]] = None,
         replies: typing.Optional[list[typing.Union[Reply, ULIDOr[BaseMessage]]]] = None,
@@ -500,10 +538,16 @@ class Messageable:
 
         If message mentions any roles, you must :attr:`~pyvolt.Permission.mention_roles` to do that.
 
+        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see destination channel.
+
         Parameters
         ----------
         content: Optional[:class:`str`]
             The message content.
+        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides for getting channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
         attachments: Optional[List[:class:`~pyvolt.ResolvableResource`]]
@@ -613,11 +657,12 @@ class Messageable:
         """
 
         state = self._get_state()
-        channel_id = await self.fetch_channel_id()
+        channel_id = await self.fetch_channel_id(http_overrides=channel_http_overrides)
 
         return await state.http.send_message(
             channel_id,
             content,
+            http_overrides=http_overrides,
             nonce=nonce,
             attachments=attachments,
             replies=replies,
@@ -654,7 +699,7 @@ class Connectable:
 
     state: State
 
-    async def fetch_channel_id(self) -> str:
+    async def fetch_channel_id(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> str:
         """:class:`str`: Retrieves the channel's ID."""
         return self.get_channel_id()
 
@@ -665,6 +710,8 @@ class Connectable:
     async def join_call(
         self,
         *,
+        channel_http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         node: UndefinedOr[str] = UNDEFINED,
     ) -> tuple[str, str]:
         """|coro|
@@ -673,8 +720,15 @@ class Connectable:
 
         You must have :attr:`~Permissions.connect` to do this.
 
+        For Livekit instances, fires :class:`.MessageCreateEvent` and :class:`.VoiceChannelJoinEvent` / :class:`.VoiceChannelMoveEvent`
+        for all users who can see target channel.
+
         Parameters
         ----------
+        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides for getting channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         node: UndefinedOr[:class:`str`]
             The node's name to use for starting a call.
 
@@ -739,25 +793,93 @@ class Connectable:
             The token for authenticating with the voice server, and node WebSocket URL (can be empty if instance does not use Livekit).
         """
 
-        channel_id = await self.fetch_channel_id()
+        channel_id = await self.fetch_channel_id(http_overrides=channel_http_overrides)
         state = self.state
 
-        return await state.http.join_call(channel_id, node=node)
+        return await state.http.join_call(channel_id, http_overrides=http_overrides, node=node)
 
-    async def connect(self) -> Room:
-        """Connects to a destination voice channel and returns a `Room <https://docs.livekit.io/python/livekit/rtc/room.html#livekit.rtc.room.Room>`_ associated with destination."""
+    async def connect(
+        self,
+        *,
+        channel_http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> Room:
+        """Connects to a destination voice channel and returns a `Room <https://docs.livekit.io/python/livekit/rtc/room.html#livekit.rtc.room.Room>`_ associated with destination.
+
+        Parameters
+        ----------
+        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides for getting channel.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                                                            |
+            +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyConnected``  | The current user was already connected to this voice channel.                                                                     |
+            +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotConnected``      | The current user was already connected to other voice channel.                                                                    |
+            +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``CannotJoinCall``    | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
+            +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``  | The voice server is unavailable.                                                                                                  |
+            +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``  | ???. Only applicable to instances using Livekit                                                                                   |
+            +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``VosoUnavailable``   | The voice server is unavailable.                                                                                                  |
+            +-----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------+
+            | Value                            | Reason                                                 |
+            +----------------------------------+--------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to join a call. |
+            +----------------------------------+--------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                          | Populated attributes                                                |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.  | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went during retrieving token. |                                                                     |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+        """
 
         try:
             from livekit.rtc import Room  # type: ignore
         except ImportError:
             raise TypeError('Livekit is unavailable') from None
         else:
-            channel_id = await self.fetch_channel_id()
+            channel_id = await self.fetch_channel_id(http_overrides=channel_http_overrides)
 
             state = self.state
 
             room = Room()
-            token, url = await state.http.join_call(channel_id)
+            token, url = await state.http.join_call(channel_id, http_overrides=http_overrides)
 
             await room.connect(url, token)
             return room

@@ -650,7 +650,7 @@ DEFAULT_SERVER_PERMISSIONS: typing.Final[Permissions] = DEFAULT_PERMISSIONS | Pe
 )
 
 
-@doc_flags('Wraps up a user permission flag value.')
+@doc_flags('Wraps up an user permission flag value.')
 class UserPermissions(BaseFlags, support_kwargs=True):
     __slots__ = ()
 
@@ -690,7 +690,7 @@ class ServerFlags(BaseFlags, support_kwargs=True):
         return 1 << 1
 
 
-@doc_flags('Wraps up a User Badges flag value.')
+@doc_flags('Wraps up an user badges flag value.')
 class UserBadges(BaseFlags, support_kwargs=True):
     __slots__ = ()
 
@@ -757,7 +757,7 @@ class UserBadges(BaseFlags, support_kwargs=True):
         return 1 << 10
 
 
-@doc_flags('Wraps up a User Flags flag value.')
+@doc_flags('Wraps up an user flags flag value.')
 class UserFlags(BaseFlags, support_kwargs=True):
     __slots__ = ()
 

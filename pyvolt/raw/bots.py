@@ -16,7 +16,7 @@ class Bot(typing.TypedDict):
     interactions_url: typing_extensions.NotRequired[str]
     terms_of_service_url: typing_extensions.NotRequired[str]
     privacy_policy_url: typing_extensions.NotRequired[str]
-    flags: int
+    flags: typing_extensions.NotRequired[int]
 
 
 FieldsBot = typing.Literal['Token', 'InteractionsURL']
