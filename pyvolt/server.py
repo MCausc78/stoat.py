@@ -3824,7 +3824,7 @@ class BaseMember(Connectable, Messageable):
         Edits the member.
 
         Fires :class:`.ServerMemberUpdateEvent` for all server members,
-        and optionally fires multiple/single :class:`.ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
+        and optionally fires multiple/single :class:`.ServerChannelCreateEvent` / :class:`.ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
 
         For Livekit instances:
 
@@ -4387,6 +4387,81 @@ class BaseMember(Connectable, Messageable):
             additional_context=additional_context,
             message_context=message_context,
         )
+
+    async def timeout(
+        self,
+        length: typing.Optional[typing.Union[datetime, timedelta, float, int]],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> Member:
+        """|coro|
+
+        Timeouts the member.
+
+        You must have :attr:`~Permissions.timeout_members` to do this.
+
+        Fires :class:`.ServerMemberUpdateEvent` for all server members.
+
+        Parameters
+        ----------
+        length: UndefinedOr[Optional[Union[:class:`~datetime.datetime`, :class:`~datetime.timedelta`, :class:`float`, :class:`int`]]]
+            The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
+
+            This must be a timezone-aware datetime object. Consider using :func:`pyvolt.utils.utcnow()`.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+---------------------------------+
+            | Value                     | Reason                          |
+            +---------------------------+---------------------------------+
+            | ``CannotTimeoutYourself`` | You tried to time out yourself. |
+            +---------------------------+---------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit this member. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------+
+            | Value        | Reason                           |
+            +--------------+----------------------------------+
+            | ``NotFound`` | The server/member was not found. |
+            +--------------+----------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                              | Populated attributes                                                |
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.      | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during editing member. |                                                                     |
+            +-------------------+-----------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`.Member`
+            The newly updated member.
+        """
+        return await self.state.http.edit_member(self.server_id, self.id, http_overrides=http_overrides, timeout=length)
 
     async def unblock(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|

@@ -5325,7 +5325,7 @@ class HTTPClient:
         Edits a member.
 
         Fires :class:`.ServerMemberUpdateEvent` for all server members,
-        and optionally fires multiple/single :class:`.ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
+        and optionally fires multiple/single :class:`.ServerChannelCreateEvent` / :class:`.ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
 
         For Livekit instances:
 
