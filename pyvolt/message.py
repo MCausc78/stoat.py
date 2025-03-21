@@ -404,7 +404,7 @@ class BaseMessage(Base):
                 what=server_id,
                 type='Message.server',
             )
-        return None
+        return server
 
     async def ack(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|

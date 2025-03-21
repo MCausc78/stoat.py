@@ -255,8 +255,8 @@ else:
 
     _strptime = datetime.strptime
 
-    def _parse_dt(date_string: str, /) -> datetime:
-        return _strptime(date_string, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=_UTC)
+    def _parse_dt(timestamp: str, /) -> datetime:
+        return _strptime(timestamp, '%Y-%m-%dT%H:%M:%S.%fZ').replace(tzinfo=_UTC)
 
 
 class Parser:
