@@ -70,7 +70,7 @@ from .core import (
 )
 from .emoji import Emoji
 from .events import BaseEvent
-from .http import HTTPClient
+from .http import HTTPOverrideOptions, HTTPClient
 from .parser import Parser
 from .server import BaseServer, Server, Member
 from .shard import EventHandler, Shard, ShardImpl
@@ -1657,7 +1657,9 @@ class Client:
             return PartialMessageable(state=self.state, id=channel_id)
         return channel
 
-    async def fetch_channel(self, channel_id: str, /) -> Channel:
+    async def fetch_channel(
+        self, channel_id: str, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> Channel:
         """|coro|
 
         Fetch a :class:`~pyvolt.Channel` with the specified ID.
@@ -1670,6 +1672,8 @@ class Client:
         ----------
         channel: ULIDOr[:class:`~pyvolt.BaseChannel`]
             The channel to fetch.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1704,7 +1708,7 @@ class Client:
             The retrieved channel.
         """
 
-        return await self.http.get_channel(channel_id)
+        return await self.http.get_channel(channel_id, http_overrides=http_overrides)
 
     def get_emoji(self, emoji_id: str, /) -> typing.Optional[Emoji]:
         """Retrieves an emoji from cache.
@@ -1736,7 +1740,9 @@ class Client:
 
         return cache.get_emoji(emoji_id, ctx)
 
-    async def fetch_emoji(self, emoji_id: str, /) -> Emoji:
+    async def fetch_emoji(
+        self, emoji_id: str, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> Emoji:
         """|coro|
 
         Retrieves a custom emoji.
@@ -1747,6 +1753,8 @@ class Client:
         ----------
         emoji: ULIDOr[:class:`~pyvolt.BaseEmoji`]
             The emoji to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         ------
@@ -1765,7 +1773,7 @@ class Client:
             The retrieved emoji.
         """
 
-        return await self.http.get_emoji(emoji_id)
+        return await self.http.get_emoji(emoji_id, http_overrides=http_overrides)
 
     def get_read_state(self, channel_id: str, /) -> typing.Optional[ReadState]:
         """Retrieves a read state from cache.
@@ -1845,7 +1853,13 @@ class Client:
             return BaseServer(state=self.state, id=server_id)
         return server
 
-    async def fetch_server(self, server_id: str, *, populate_channels: typing.Optional[bool] = None) -> Server:
+    async def fetch_server(
+        self,
+        server_id: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        populate_channels: typing.Optional[bool] = None,
+    ) -> Server:
         """|coro|
 
         Retrieves a :class:`~pyvolt.Server`.
@@ -1856,6 +1870,8 @@ class Client:
         ----------
         server: ULIDOr[:class:`~pyvolt.BaseServer`]
             The server to retrieve.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         populate_channels: Optional[:class:`bool`]
             Whether to populate :attr:`~pyvolt.Server.channels`.
 
@@ -1883,7 +1899,7 @@ class Client:
         :class:`pyvolt.Server`
             The retrieved server.
         """
-        return await self.http.get_server(server_id, populate_channels=populate_channels)
+        return await self.http.get_server(server_id, http_overrides=http_overrides, populate_channels=populate_channels)
 
     @typing.overload
     def get_user(self, user_id: str, /, *, partial: typing.Literal[False] = False) -> typing.Optional[User]:  # type: ignore
@@ -1929,7 +1945,7 @@ class Client:
             return BaseUser(state=self.state, id=user_id)
         return user
 
-    async def fetch_user(self, user_id: str, /) -> User:
+    async def fetch_user(self, user_id: str, /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
         Retrieves an user from API. This is shortcut to :meth:`pyvolt.HTTPClient.get_user`.
@@ -1938,13 +1954,15 @@ class Client:
         ----------
         user_id: :class:`str`
             The user ID.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Returns
         -------
         :class:`~pyvolt.User`
             The user.
         """
-        return await self.http.get_user(user_id)
+        return await self.http.get_user(user_id, http_overrides=http_overrides)
 
     @property
     def settings(self) -> UserSettings:
@@ -2147,6 +2165,7 @@ class Client:
         self,
         name: str,
         *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         description: typing.Optional[str] = None,
         icon: typing.Optional[ResolvableResource] = None,
         recipients: typing.Optional[list[ULIDOr[BaseUser]]] = None,
@@ -2165,6 +2184,8 @@ class Client:
         ----------
         name: :class:`str`
             The group name. Must be between 1 and 32 characters long.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         description: Optional[:class:`str`]
             The group description. Can be only up to 1024 characters.
         icon: Optional[:class:`~pyvolt.ResolvableResource`]
@@ -2229,10 +2250,17 @@ class Client:
             The new group.
         """
 
-        return await self.http.create_group(name, description=description, icon=icon, recipients=recipients, nsfw=nsfw)
+        return await self.http.create_group(
+            name, http_overrides=http_overrides, description=description, icon=icon, recipients=recipients, nsfw=nsfw
+        )
 
     async def create_server(
-        self, name: str, *, description: typing.Optional[str] = None, nsfw: typing.Optional[bool] = None
+        self,
+        name: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        description: typing.Optional[str] = None,
+        nsfw: typing.Optional[bool] = None,
     ) -> Server:
         """|coro|
 
@@ -2247,6 +2275,8 @@ class Client:
         ----------
         name: :class:`str`
             The server name.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
         description: Optional[:class:`str`]
             The server description.
         nsfw: Optional[:class:`bool`]
@@ -2291,7 +2321,7 @@ class Client:
             The created server.
         """
 
-        return await self.http.create_server(name, description=description, nsfw=nsfw)
+        return await self.http.create_server(name, http_overrides=http_overrides, description=description, nsfw=nsfw)
 
 
 __all__ = (
