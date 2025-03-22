@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from os import urandom
-from time import time_ns
+from time import time
 import typing
 
 # https://github.com/mdomke/python-ulid/blob/main/ulid/__init__.py
@@ -204,7 +204,7 @@ def _ulid_encode_randomness(v: bytes, /) -> str:
 
 
 def _ulid_new() -> str:
-    timestamp = (time_ns() // 1000000).to_bytes(6, byteorder='big')
+    timestamp = int(time() * 1000).to_bytes(6, byteorder='big')
     randomness = urandom(10)
     return _ulid_encode(timestamp + randomness)
 

@@ -3105,6 +3105,12 @@ Permissions Calculator
 Utility Functions
 -----------------
 
+.. autofunction:: ulid_new
+
+.. autofunction:: ulid_timestamp
+
+.. autofunction:: ulid_time
+
 .. autofunction:: sort_member_roles
 
 .. _revolt-api-enums:
