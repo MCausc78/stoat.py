@@ -139,4 +139,4 @@ class ChannelVoiceState(typing.TypedDict):
 
 
 class DataJoinCall(typing.TypedDict):
-    node: str
+    node: typing.Optional[str]

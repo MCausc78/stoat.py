@@ -3231,7 +3231,7 @@ class HTTPClient:
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.manage_roles` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 
@@ -3755,7 +3755,7 @@ class HTTPClient:
         channel: ULIDOr[typing.Union[DMChannel, GroupChannel, TextChannel, VoiceChannel]],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
-        node: UndefinedOr[str] = UNDEFINED,
+        node: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> tuple[str, str]:
         """|coro|
 
@@ -3777,29 +3777,33 @@ class HTTPClient:
             will raise :class:`HTTPException` with ``CannotJoinCall`` type.
         http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
-        node: UndefinedOr[:class:`str`]
+        node: UndefinedOr[Optional[:class:`str`]]
             The node's name to use for starting a call.
+
+            Can be ``None`` to tell server choose the node automatically.
 
         Raises
         ------
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | Value                | Reason                                                                                                                            |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``AlreadyConnected`` | The current user was already connected to this voice channel.                                                                     |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``CannotJoinCall``   | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidOperation`` | The voice server is unavailable.                                                                                                  |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotConnected``     | The current user was already connected to other voice channel.                                                                    |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotAVoiceChannel`` | ???. Only applicable to instances using Livekit                                                                                   |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``VosoUnavailable``  | The voice server is unavailable.                                                                                                  |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                                            |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyConnected``   | The current user was already connected to this voice channel.                                                                     |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``CannotJoinCall``     | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``   | The voice server is unavailable.                                                                                                  |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``LivekitUnavailable`` | The voice server is unavailable. Only applicable to instances using Livekit.                                                      |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotConnected``       | The current user was already connected to other voice channel.                                                                    |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``   | ???. Only applicable to instances using Livekit                                                                                   |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``VosoUnavailable``    | The voice server is unavailable. Not applicable to instances using Livekit.                                                       |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5380,13 +5384,15 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +---------------------------+-----------------------------------------------------------------------+
-            | Value                     | Reason                                                                |
-            +---------------------------+-----------------------------------------------------------------------+
-            | ``CannotTimeoutYourself`` | You tried to time out yourself.                                       |
-            +---------------------------+-----------------------------------------------------------------------+
-            | ``NotAVoiceChannel``      | The channel passed in ``voice`` parameter was not voice-like channel. |
-            +---------------------------+-----------------------------------------------------------------------+
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                                                            |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``CannotTimeoutYourself`` | You tried to time out yourself.                                                                                   |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``LivekitUnavailable``    | The voice server is unavailable. Only applicable to instances using Livekit.                                      |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``      | The channel passed in ``voice`` parameter was not voice-like channel. Only applicable to instances using Livekit. |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -8293,7 +8299,7 @@ class HTTPClient:
 
             Webhook must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.manage_roles` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 

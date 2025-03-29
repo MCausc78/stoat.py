@@ -939,7 +939,7 @@ class BaseMessage(Base):
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.manage_roles` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 
