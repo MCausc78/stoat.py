@@ -283,6 +283,7 @@ class Mutuals:
     """List[:class:`str`]: The server's IDs that both users are in."""
 
 
+@define(slots=True)
 class BaseUser(Base, Connectable, Messageable):
     """Represents an user on Revolt."""
 
@@ -294,9 +295,22 @@ class BaseUser(Base, Connectable, Messageable):
         return self is self.state.system
 
     def __eq__(self, other: object, /) -> bool:
+        if self is other:
+            return True
+
         from .server import BaseMember
 
-        return self is other or isinstance(other, (BaseUser, BaseMember)) and self.id == other.id
+        return isinstance(other, (BaseMember, BaseUser)) and self.id == other.id
+
+    def __ne__(self, other: object, /) -> bool:
+        if self is other:
+            return False
+
+        from .server import BaseMember
+
+        if isinstance(other, (BaseMember, BaseUser)):
+            return self.id != other.id
+        return True
 
     @property
     def mention(self) -> str:

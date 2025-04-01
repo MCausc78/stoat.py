@@ -188,7 +188,8 @@ class CacheContextType(Enum):
     user_through_group_channel_owner = 'GroupChannel.owner: User'
     read_state_through_group_channel_read_state = 'GroupChannel.read_state: ReadState'
     user_through_group_channel_recipients = 'GroupChannel.recipients: List[User]'
-    server_through_server_channel = 'BaseServerChannel.server: Server'
+    member_through_server_channel_me = 'BaseServerChannel.me: Member'
+    server_through_server_channel_server = 'BaseServerChannel.server: Server'
     message_through_text_channel_last_message = 'TextChannel.last_message: Optional[Message]'
     read_state_through_text_channel_read_state = 'TextChannel.read_state: ReadState'
     channel_voice_state_container_through_text_channel_voice_states = (
@@ -267,6 +268,12 @@ class CacheContextType(Enum):
     member_or_user_through_message_author = 'Message.author: Union[Member, User]'
     member_through_message_author = 'Message.author_as_member: Member'
     user_through_message_author = 'Message.author_as_user: User'
+
+    member_or_users_through_message_mentions = 'Message.mentions: List[Union[Member, User]]'
+    members_through_message_mentions = 'Message.mentions_as_members: List[Member]'
+    users_through_message_mentions = 'Message.mentions_as_users: List[User]'
+    server_through_message_role_mentions = 'Message.role_mentions: List[Role]'
+
     channel_through_read_state_channel = 'ReadState.channel: Channel'
     members_through_role_members = 'Role.members: List[Member]'
     server_through_role_server = 'Role.server: Server'
@@ -276,6 +283,7 @@ class CacheContextType(Enum):
     members_through_server_getter = 'Server.members: Dict[str, Member]'
     channel_through_server_getter = 'Server.get_channel(): Optional[ServerChannel]'
     channels_through_server_getter = 'Server.channels: List[ServerChannel]'
+    member_through_server_me = 'Server.me: Member'
     member_or_user_through_server_owner = 'Server.owner: Union[Member, User]'
     member_through_server_owner = 'Server.owner_as_member: Member'
     user_through_server_owner = 'Server.owner_as_user: User'
@@ -1054,7 +1062,12 @@ class UserThroughGroupChannelRecipientsCacheContext(GroupChannelCacheContext):
 
 
 @define(slots=True)
-class ServerThroughServerChannelCacheContext(BaseServerChannelCacheContext):
+class MemberThroughServerChannelMeCacheContext(BaseServerChannelCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServerChannel`, wishing to retrieve own member for the server the channel belongs to."""
+
+
+@define(slots=True)
+class ServerThroughServerChannelServerCacheContext(BaseServerChannelCacheContext):
     """Represents a cache context that involves an :class:`.BaseServerChannel`, wishing to retrieve server the channel belongs to."""
 
 
@@ -1386,6 +1399,11 @@ class ChannelsThroughServerGetterCacheContext(BaseServerCacheContext):
 
 
 @define(slots=True)
+class MemberThroughServerMeCacheContext(BaseServerCacheContext):
+    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve own member for server."""
+
+
+@define(slots=True)
 class MemberOrUserThroughServerOwnerCacheContext(ServerCacheContext):
     """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner."""
 
@@ -1700,8 +1718,11 @@ _READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE: typing.Final[UndefinedCacheContext
 _USER_THROUGH_GROUP_CHANNEL_RECIPIENTS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_group_channel_recipients,
 )
-_SERVER_THROUGH_SERVER_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
-    type=CacheContextType.server_through_server_channel,
+_MEMBER_THROUGH_SERVER_CHANNEL_ME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_server_channel_me,
+)
+_SERVER_THROUGH_SERVER_CHANNEL_SERVER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_server_channel_server,
 )
 _MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.message_through_text_channel_last_message,
@@ -1946,6 +1967,9 @@ _CHANNEL_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedC
 _CHANNELS_THROUGH_SERVER_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channels_through_server_getter,
 )
+_MEMBER_THROUGH_SERVER_ME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_server_me,
+)
 _MEMBER_OR_USER_THROUGH_SERVER_OWNER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_or_user_through_server_owner,
 )
@@ -2092,6 +2116,7 @@ ProvideCacheContextIn = typing.Literal[
     'GroupChannel.owner',
     'GroupChannel.read_state',
     'GroupChannel.recipients',
+    'BaseServerChannel.me',
     'BaseServerChannel.server',
     'TextChannel.read_state',
     'TextChannel.voice_states',
@@ -2163,6 +2188,10 @@ ProvideCacheContextIn = typing.Literal[
     'Message.author',
     'Message.author_as_member',
     'Message.author_as_user',
+    'Message.mentions',
+    'Message.mentions_as_members',
+    'Message.mentions_as_users',
+    'Message.role_mentions',
     'ReadState.channel',
     'Role.members',
     'Role.server',
@@ -2172,6 +2201,7 @@ ProvideCacheContextIn = typing.Literal[
     'Server.members',
     'Server.get_channel()',
     'Server.channels',
+    'Server.me',
     'Server.owner',
     'Server.owner_as_member',
     'Server.owner_as_user',
@@ -3662,7 +3692,8 @@ __all__ = (
     'ReadStateThroughGroupChannelReadStateCacheContext',
     'UserThroughGroupChannelOwnerCacheContext',
     'UserThroughGroupChannelRecipientsCacheContext',
-    'ServerThroughServerChannelCacheContext',
+    'MemberThroughServerChannelMeCacheContext',
+    'ServerThroughServerChannelServerCacheContext',
     'MessageThroughTextChannelLastMessageCacheContext',
     'UserThroughUserAddedSystemEventUserCacheContext',
     'UserThroughUserAddedSystemEventAuthorCacheContext',
@@ -3728,6 +3759,7 @@ __all__ = (
     'MembersThroughServerGetterCacheContext',
     'ChannelThroughServerGetterCacheContext',
     'ChannelsThroughServerGetterCacheContext',
+    'MemberThroughServerMeCacheContext',
     'MemberOrUserThroughServerOwnerCacheContext',
     'MemberThroughServerOwnerCacheContext',
     'UserThroughServerOwnerCacheContext',
@@ -3817,7 +3849,8 @@ __all__ = (
     '_USER_THROUGH_GROUP_CHANNEL_OWNER',
     '_READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE',
     '_USER_THROUGH_GROUP_CHANNEL_RECIPIENTS',
-    '_SERVER_THROUGH_SERVER_CHANNEL',
+    '_MEMBER_THROUGH_SERVER_CHANNEL_ME',
+    '_SERVER_THROUGH_SERVER_CHANNEL_SERVER',
     '_MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE',
     '_READ_STATE_THROUGH_TEXT_CHANNEL_READ_STATE',
     '_CHANNEL_VOICE_STATE_CONTAINER_THROUGH_TEXT_CHANNEL_VOICE_STATES',
@@ -3896,6 +3929,7 @@ __all__ = (
     '_MEMBERS_THROUGH_SERVER_GETTER',
     '_CHANNEL_THROUGH_SERVER_GETTER',
     '_CHANNELS_THROUGH_SERVER_GETTER',
+    '_MEMBER_THROUGH_SERVER_ME',
     '_MEMBER_OR_USER_THROUGH_SERVER_OWNER',
     '_MEMBER_THROUGH_SERVER_OWNER',
     '_USER_THROUGH_SERVER_OWNER',

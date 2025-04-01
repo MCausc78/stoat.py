@@ -42,6 +42,7 @@ from .cache import (
     MembersThroughServerGetterCacheContext,
     ChannelThroughServerGetterCacheContext,
     ChannelsThroughServerGetterCacheContext,
+    MemberThroughServerMeCacheContext,
     MemberOrUserThroughServerOwnerCacheContext,
     MemberThroughServerOwnerCacheContext,
     UserThroughServerOwnerCacheContext,
@@ -72,6 +73,7 @@ from .cache import (
     _MEMBERS_THROUGH_SERVER_GETTER,
     _CHANNEL_THROUGH_SERVER_GETTER,
     _CHANNELS_THROUGH_SERVER_GETTER,
+    _MEMBER_THROUGH_SERVER_ME,  ###
     _MEMBER_OR_USER_THROUGH_SERVER_OWNER,
     _MEMBER_THROUGH_SERVER_OWNER,
     _USER_THROUGH_SERVER_OWNER,
@@ -2720,6 +2722,28 @@ class Server(BaseServer):
             if t.id == channel_id:
                 return t
 
+    def get_me(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The own user for this server."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        state.my_id
+
+        ctx = (
+            MemberThroughServerMeCacheContext(
+                type=CacheContextType.member_through_server_me,
+                server=self,
+            )
+            if state.provide_cache_context('Server.me')
+            else _MEMBER_THROUGH_SERVER_ME
+        )
+
+        return cache.get_server_member(self.id, state.my_id, ctx)
+
     def get_owner(self) -> typing.Optional[typing.Union[Member, User]]:
         """Optional[Union[:class:`.Member`, :class:`.User`]]: The server's owner."""
 
@@ -2852,6 +2876,15 @@ class Server(BaseServer):
     def icon(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The server icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
+
+    @property
+    def me(self) -> Member:
+        """:class:`.Member`: The own user for this server."""
+
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='Server.me')
+        return me
 
     @property
     def owner(self) -> typing.Union[Member, User]:
@@ -3174,11 +3207,24 @@ class BaseMember(Connectable, Messageable):
         return cache.get_user(self._user, ctx)
 
     def __eq__(self, other: object, /) -> bool:
+        if self is other:
+            return True
+
         return (
-            self is other
-            or ((isinstance(other, BaseMember) and self.server_id == other.server_id) or isinstance(other, BaseUser))
-            and self.id == other.id
-        )
+            (isinstance(other, BaseMember) and self.server_id == other.server_id) or isinstance(other, BaseUser)
+        ) and self.id == other.id
+
+    def __ne__(self, other: object, /) -> bool:
+        if self is other:
+            return False
+
+        if isinstance(other, BaseMember):
+            return self.server_id != other.server_id and self.id != other.id
+
+        if isinstance(other, BaseUser):
+            return self.id != other.id
+
+        return True
 
     def __hash__(self) -> int:
         return hash((self.server_id, self.id))

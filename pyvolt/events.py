@@ -476,7 +476,17 @@ class ChannelDeleteEvent(ShardEvent):
         # TODO: Remove when backend will tell us to update all channels. (ServerUpdate event)
         if isinstance(self.channel, BaseServerChannel):
             server = cache.get_server(self.channel.server_id, self.cache_context)
-            if server:
+            if server is not None:
+                # smc = server.system_messages
+                # if smc is not None:
+                #     if smc.user_joined == self.channel_id:
+                #         smc.user_joined = None
+                #     if smc.user_left == self.channel_id:
+                #         smc.user_left = None
+                #     if smc.user_kicked == self.channel_id:
+                #         smc.user_kicked = None
+                #     if smc.user_banned == self.channel_id:
+                #         smc.user_banned = None
                 try:
                     server.internal_channels[1].remove(self.channel.id)  # type: ignore # cached servers have only channel IDs internally
                 except ValueError:
@@ -538,7 +548,7 @@ class GroupRecipientAddEvent(ShardEvent):
         if cache is None:
             return False
 
-        if not self.group:
+        if self.group is None:
             return False
 
         self.group._join(self.user_id)
@@ -596,7 +606,7 @@ class GroupRecipientRemoveEvent(ShardEvent):
         if cache is None:
             return False
 
-        if not self.group:
+        if self.group is None:
             return False
 
         self.group._leave(self.user_id)
@@ -695,7 +705,7 @@ class MessageAckEvent(ShardEvent):
         )
 
         read_state = cache.get_read_state(self.channel_id, ctx)
-        if read_state:
+        if read_state is not None:
             # opposite effect cannot be done
             if read_state.last_acked_id and self.message_id >= read_state.last_acked_id:
                 acked_message_id = read_state.last_acked_id
@@ -749,7 +759,7 @@ class MessageCreateEvent(ShardEvent):
             channel.last_message_id = self.message.id
 
         read_state = cache.get_read_state(self.message.channel_id, ctx)
-        if read_state:
+        if read_state is not None:
             flags = self.message.flags
 
             # TODO: Maybe ignore @everyone and @online pings in DM and groups?
@@ -767,7 +777,7 @@ class MessageCreateEvent(ShardEvent):
                 cache.store_read_state(read_state, ctx)
 
         channel = cache.get_channel(self.message.channel_id, ctx)
-        if channel and isinstance(
+        if channel is not None and isinstance(
             channel,
             (DMChannel, GroupChannel, TextChannel),
         ):
@@ -1165,7 +1175,7 @@ class MessageDeleteBulkEvent(ShardEvent):
 
         for message_id in self.message_ids:
             message = cache.get_message(self.channel_id, message_id, self.cache_context)
-            if message:
+            if message is not None:
                 self.messages.append(message)
 
     def process(self) -> bool:
@@ -1731,11 +1741,32 @@ class ServerRoleDeleteEvent(ShardEvent):
     def process(self) -> bool:
         cache = self.shard.state.cache
 
-        if cache is None or self.server is None:
+        if cache is None:
             return False
 
-        self.server.roles.pop(self.role_id, None)
-        cache.store_server(self.server, self.cache_context)
+        role_id = self.role_id
+        if self.server is not None:
+            self.server.roles.pop(role_id, None)
+            channel_ids = self.server.channel_ids
+            for channel_id in channel_ids:
+                channel = cache.get_channel(channel_id, self.cache_context)
+                if channel is not None and isinstance(channel, BaseServerChannel):
+                    channel.role_permissions.pop(role_id, None)
+            cache.store_server(self.server, self.cache_context)
+
+        # TODO: A Cache function to remove role from all members
+        members = cache.get_server_members_mapping_of(self.server_id, self.cache_context)
+        if members is not None:
+            removed = False
+
+            for member in members.values():
+                if role_id in member.role_ids:
+                    member.role_ids.remove(role_id)
+                    removed = True
+
+            if removed:
+                cache.overwrite_server_members(self.server_id, dict(members), self.cache_context)
+
         return True
 
 
@@ -1865,18 +1896,18 @@ class UserRelationshipUpdateEvent(ShardEvent):
     def process(self) -> bool:
         me = self.shard.state.me
 
-        if me:
+        if me is not None:
             if self.new_user.relationship is RelationshipStatus.none:
                 me.relations.pop(self.new_user.id, None)
             else:
                 relation = me.relations.get(self.new_user.id)
 
-                if relation:
-                    me.relations[self.new_user.id].status = self.new_user.relationship
-                else:
+                if relation is None:
                     me.relations[self.new_user.id] = Relationship(
                         id=self.new_user.id, status=self.new_user.relationship
                     )
+                else:
+                    me.relations[self.new_user.id].status = self.new_user.relationship
 
         cache = self.shard.state.cache
         if cache is None:
@@ -2313,7 +2344,7 @@ class UserVoiceStateUpdateEvent(ShardEvent):
         before = container.participants.get(self.state.user_id)
         self.before = before
 
-        if before:
+        if before is not None:
             after = copy(before)
             after.locally_update(self.state)
             self.after = after

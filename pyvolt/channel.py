@@ -40,7 +40,8 @@ from .cache import (
     ReadStateThroughGroupChannelReadStateCacheContext,
     UserThroughGroupChannelOwnerCacheContext,
     UserThroughGroupChannelRecipientsCacheContext,
-    ServerThroughServerChannelCacheContext,
+    MemberThroughServerChannelMeCacheContext,
+    ServerThroughServerChannelServerCacheContext,
     MessageThroughTextChannelLastMessageCacheContext,
     ReadStateThroughTextChannelReadStateCacheContext,
     ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext,
@@ -54,7 +55,8 @@ from .cache import (
     _USER_THROUGH_GROUP_CHANNEL_OWNER,
     _READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE,
     _USER_THROUGH_GROUP_CHANNEL_RECIPIENTS,
-    _SERVER_THROUGH_SERVER_CHANNEL,
+    _MEMBER_THROUGH_SERVER_CHANNEL_ME,
+    _SERVER_THROUGH_SERVER_CHANNEL_SERVER,
     _MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE,
     _READ_STATE_THROUGH_TEXT_CHANNEL_READ_STATE,
     _CHANNEL_VOICE_STATE_CONTAINER_THROUGH_TEXT_CHANNEL_VOICE_STATES,
@@ -736,6 +738,16 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
         return a if me.id != a else b
 
+    @property
+    def server(self) -> None:
+        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        return None
+
+    @property
+    def type(self) -> typing.Literal[ChannelType.private]:
+        """Literal[:attr:`.ChannelType.private`]: The channel's type."""
+        return ChannelType.private
+
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
 
@@ -751,11 +763,6 @@ class DMChannel(BaseChannel, Connectable, Messageable):
             self.active = data.active
         if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
-
-    @property
-    def type(self) -> typing.Literal[ChannelType.private]:
-        """Literal[:attr:`.ChannelType.private`]: The channel's type."""
-        return ChannelType.private
 
     def permissions_for(self, target: typing.Union[User, Member], /) -> Permissions:
         """Calculate permissions for given user.
@@ -1076,6 +1083,11 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
             return recipients
         else:
             return self._recipients[1]  # type: ignore
+
+    @property
+    def server(self) -> None:
+        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        return None
 
     @property
     def type(self) -> typing.Literal[ChannelType.group]:
@@ -1578,6 +1590,11 @@ class UnknownPrivateChannel(BaseChannel):
     """Dict[:class:`str`, Any]: The raw channel data."""
 
     @property
+    def server(self) -> None:
+        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        return None
+
+    @property
     def type(self) -> typing.Literal[ChannelType.unknown]:
         """Literal[:attr:`.ChannelType.unknown`]: The channel's type."""
         return ChannelType.unknown
@@ -1614,6 +1631,25 @@ class BaseServerChannel(BaseChannel):
     nsfw: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether this channel is marked as not safe for work."""
 
+    def get_me(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The own user for this server."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberThroughServerChannelMeCacheContext(
+                type=CacheContextType.member_through_server_channel_me,
+                channel=self,
+            )
+            if state.provide_cache_context('BaseServerChannel.me')
+            else _MEMBER_THROUGH_SERVER_CHANNEL_ME
+        )
+
+        return cache.get_server_member(self.server_id, state.my_id, ctx)
+
     def get_server(self) -> typing.Optional[Server]:
         """Optional[:class:`.Server`]: The server that channel belongs to."""
         state = self.state
@@ -1623,12 +1659,12 @@ class BaseServerChannel(BaseChannel):
             return None
 
         ctx = (
-            ServerThroughServerChannelCacheContext(
-                type=CacheContextType.server_through_server_channel,
+            ServerThroughServerChannelServerCacheContext(
+                type=CacheContextType.server_through_server_channel_server,
                 channel=self,
             )
             if state.provide_cache_context('BaseServerChannel.server')
-            else _SERVER_THROUGH_SERVER_CHANNEL
+            else _SERVER_THROUGH_SERVER_CHANNEL_SERVER
         )
 
         return cache.get_server(self.server_id, ctx)
@@ -1637,6 +1673,14 @@ class BaseServerChannel(BaseChannel):
     def icon(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The custom channel icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
+
+    @property
+    def me(self) -> Member:
+        """Optional[:class:`.Member`]: The own user for this server."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='BaseServerChannel.me')
+        return me
 
     @property
     def server(self) -> Server:
@@ -2030,7 +2074,7 @@ class BaseServerChannel(BaseChannel):
         """
         server = self.get_server()
         if server is None:
-            raise NoData(self.server_id, 'server')
+            raise NoData(what=self.server_id, type='BaseServerChannel.permissions_for')
 
         if with_ownership and server.owner_id == target.id:
             return Permissions.all()

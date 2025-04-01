@@ -499,7 +499,7 @@ CacheContextType
     .. attribute:: user_through_group_channel_recipients
 
         The context comes from :attr:`GroupChannel.recipients`.
-    .. attribute:: server_through_server_channel
+    .. attribute:: server_through_server_channel_server
 
         The context comes from :attr:`BaseServerChannel.server`.
     .. attribute:: message_through_text_channel_last_message
@@ -712,7 +712,18 @@ CacheContextType
     .. attribute:: user_through_message_author
 
         The context comes from :attr:`Message.author_as_user`.
-
+    .. attribute:: member_or_users_through_message_mentions
+        
+        The context comes from :attr:`Message.mentions`.
+    .. attribute:: members_through_message_mentions
+    
+        The context comes from :attr:`Message.mentions_as_members`.
+    .. attribute:: users_through_message_mentions
+    
+        The context comes from :attr:`Message.mentions_as_users`.
+    .. attribute:: server_through_message_role_mentions
+    
+        The context comes from :attr:`Message.role_mentions`.
     .. attribute:: channel_through_read_state_channel
 
         The context comes from :attr:`ReadState.channel`.
@@ -1627,12 +1638,12 @@ UserThroughGroupChannelRecipientsCacheContext
     :members:
     :inherited-members:
 
-ServerThroughServerChannelCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ServerThroughServerChannelServerCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: ServerThroughServerChannelCacheContext
+.. attributetable:: ServerThroughServerChannelServerCacheContext
 
-.. autoclass:: ServerThroughServerChannelCacheContext
+.. autoclass:: ServerThroughServerChannelServerCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -2277,7 +2288,17 @@ ChannelsThroughServerGetterCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
-    
+
+MemberThroughServerMeCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughServerMeCacheContext
+
+.. autoclass:: MemberThroughServerMeCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 MemberOrUserThroughServerOwnerCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
