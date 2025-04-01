@@ -478,6 +478,10 @@ class SavedMessagesChannel(BaseChannel, Messageable):
     def get_channel_id(self) -> str:
         return self.id
 
+    def get_me(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The own user."""
+        return self.state.me
+
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
 
@@ -491,6 +495,14 @@ class SavedMessagesChannel(BaseChannel, Messageable):
         """
         # PartialChannel has no fields that are related to SavedMessages yet
         pass
+
+    @property
+    def me(self) -> User:
+        """:class:`.User`: The own user."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='GroupChannel.me')
+        return me
 
     @property
     def type(self) -> typing.Literal[ChannelType.saved_messages]:
@@ -582,6 +594,10 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         )
 
         return cache.get_message(self.id, last_message_id, ctx)
+
+    def get_me(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The own user."""
+        return self.state.me
 
     @typing.overload
     def get_read_state(
@@ -697,6 +713,11 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         return (a, b)
 
     @property
+    def initiator_id(self) -> str:
+        """:class:`str`: The user's ID that started this PM."""
+        return self.recipient_ids[0]
+
+    @property
     def last_message(self) -> typing.Optional[Message]:
         """Optional[:class:`.Message`]: The last message sent in the channel."""
 
@@ -706,6 +727,14 @@ class DMChannel(BaseChannel, Connectable, Messageable):
                 return None
             raise NoData(what=self.last_message_id, type='DMChannel.last_message')
         return message
+
+    @property
+    def me(self) -> User:
+        """:class:`.User`: The own user."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='GroupChannel.me')
+        return me
 
     @property
     def read_state(self) -> ReadState:
@@ -719,11 +748,6 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         if recipient is None:
             raise NoData(what=self.recipient_id, type='DMChannel.recipient')
         return recipient
-
-    @property
-    def initiator_id(self) -> str:
-        """:class:`str`: The user's ID that started this PM."""
-        return self.recipient_ids[0]
 
     @property
     def recipient_id(self) -> str:
@@ -873,6 +897,10 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         return cache.get_message(self.id, last_message_id, ctx)
 
+    def get_me(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The own user."""
+        return self.state.me
+
     def get_owner(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: The user who owns this group."""
         state = self.state
@@ -1021,6 +1049,22 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         return message
 
     @property
+    def me(self) -> User:
+        """:class:`.User`: The own user."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='GroupChannel.me')
+        return me
+
+    @property
+    def owner(self) -> User:
+        """:class:`.User`: The user who owns this group."""
+        owner = self.get_owner()
+        if owner is None:
+            raise NoData(what=self.owner_id, type='GroupChannel.owner')
+        return owner
+
+    @property
     def permissions(self) -> typing.Optional[Permissions]:
         """Optional[:class:`.Permissions`]: The permissions assigned to members of this group.
 
@@ -1032,14 +1076,6 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         ret = _new_permissions(Permissions)
         ret.value = self.raw_permissions
         return ret
-
-    @property
-    def owner(self) -> User:
-        """:class:`.User`: The user who owns this group."""
-        owner = self.get_owner()
-        if owner is None:
-            raise NoData(what=self.owner_id, type='GroupChannel.owner')
-        return owner
 
     @property
     def read_state(self) -> ReadState:
@@ -1588,6 +1624,18 @@ class UnknownPrivateChannel(BaseChannel):
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, Any]: The raw channel data."""
+
+    def get_me(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The own user."""
+        return self.state.me
+
+    @property
+    def me(self) -> User:
+        """:class:`.User`: The own user."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='GroupChannel.me')
+        return me
 
     @property
     def server(self) -> None:
