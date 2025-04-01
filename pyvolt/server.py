@@ -64,6 +64,7 @@ from .cache import (
     UserThroughMemberOnlineCacheContext,
     UserThroughMemberTagCacheContext,
     ServerThroughMemberRolesCacheContext,
+    ServerThroughMemberServerPermissionsCacheContext,
     ServerThroughMemberTopRoleCacheContext,
     _MEMBERS_THROUGH_ROLE_MEMBERS,
     _SERVER_THROUGH_ROLE_SERVER,
@@ -95,6 +96,7 @@ from .cache import (
     _USER_THROUGH_MEMBER_ONLINE,
     _USER_THROUGH_MEMBER_TAG,
     _SERVER_THROUGH_MEMBER_ROLES,
+    _SERVER_THROUGH_MEMBER_SERVER_PERMISSIONS,
     _SERVER_THROUGH_MEMBER_TOP_ROLE,
 )
 from .cdn import StatelessAsset, Asset, ResolvableResource
@@ -2849,7 +2851,7 @@ class Server(BaseServer):
             id: str = channel_id  # type: ignore
             channel = cache.get_channel(id, ctx)
 
-            if channel:
+            if channel is not None:
                 if channel.__class__ not in (
                     TextChannel,
                     VoiceChannel,
@@ -4685,6 +4687,31 @@ class Member(BaseMember):
     def server_avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
+
+    @property
+    def server_permissions(self) -> Permissions:
+        """:class:`.Permissions`: The permissions for this member in the server."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            raise NoData(what=self.server_id, type='Member.server_permissions')
+
+        ctx = (
+            ServerThroughMemberServerPermissionsCacheContext(
+                type=CacheContextType.server_through_member_server_permissions,
+                member=self,
+            )
+            if state.provide_cache_context('Member.server_permissions')
+            else _SERVER_THROUGH_MEMBER_SERVER_PERMISSIONS
+        )
+
+        server = cache.get_server(self.server_id, ctx)
+        if server is None:
+            raise NoData(what=self.server_id, type='Member.server_permissions')
+
+        return server.permissions_for(self)
 
     @property
     def top_role(self) -> typing.Optional[Role]:

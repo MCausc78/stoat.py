@@ -268,12 +268,10 @@ class CacheContextType(Enum):
     member_or_user_through_message_author = 'Message.author: Union[Member, User]'
     member_through_message_author = 'Message.author_as_member: Member'
     user_through_message_author = 'Message.author_as_user: User'
-
     member_or_users_through_message_mentions = 'Message.mentions: List[Union[Member, User]]'
     members_through_message_mentions = 'Message.mentions_as_members: List[Member]'
     users_through_message_mentions = 'Message.mentions_as_users: List[User]'
-    server_through_message_role_mentions = 'Message.role_mentions: List[Role]'
-
+    role_through_message_role_mentions = 'Message.role_mentions: List[Role]'
     channel_through_read_state_channel = 'ReadState.channel: Channel'
     members_through_role_members = 'Role.members: List[Member]'
     server_through_role_server = 'Role.server: Server'
@@ -305,6 +303,7 @@ class CacheContextType(Enum):
     user_through_member_online = 'Member.online: bool'
     user_through_member_tag = 'Member.tag: str'
     server_through_member_roles = 'Member.roles: List[Role]'
+    server_through_member_server_permissions = 'Member.server_permissions: Permissions'
     server_through_member_top_role = 'Member.top_role: Optional[Role]'
     user_through_user_bot_owner = 'User.bot_owner: Optional[User]'
     channel_id_through_user_dm_channel_id = 'User.dm_channel_id: Optional[str]'
@@ -1254,6 +1253,26 @@ class UserThroughMessageAuthorCacheContext(MessageCacheContext):
 
 
 @define(slots=True)
+class MemberOrUsersThroughMessageMentionsCacheContext(MessageCacheContext):
+    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's mentions as members or users."""
+
+
+@define(slots=True)
+class MembersThroughMessageMentionsCacheContext(MessageCacheContext):
+    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's mentions as members."""
+
+
+@define(slots=True)
+class UsersThroughMessageMentionsCacheContext(MessageCacheContext):
+    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's mentions as users."""
+
+
+@define(slots=True)
+class RoleThroughMessageRoleMentionsCacheContext(MessageCacheContext):
+    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's role mentions."""
+
+
+@define(slots=True)
 class ReadStateThroughTextChannelReadStateCacheContext(TextChannelCacheContext):
     """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve text channel's read state."""
 
@@ -1509,8 +1528,13 @@ class ServerThroughMemberRolesCacheContext(MemberCacheContext):
 
 
 @define(slots=True)
+class ServerThroughMemberServerPermissionsCacheContext(MemberCacheContext):
+    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's permissions."""
+
+
+@define(slots=True)
 class ServerThroughMemberTopRoleCacheContext(MemberCacheContext):
-    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's roles."""
+    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's top role."""
 
 
 @define(slots=True)
@@ -1946,6 +1970,18 @@ _MEMBER_THROUGH_MESSAGE_AUTHOR: typing.Final[UndefinedCacheContext] = UndefinedC
 _USER_THROUGH_MESSAGE_AUTHOR: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_message_author,
 )
+_MEMBER_OR_USERS_THROUGH_MESSAGE_MENTIONS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_users_through_message_mentions,
+)
+_MEMBERS_THROUGH_MESSAGE_MENTIONS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.members_through_message_mentions,
+)
+_USERS_THROUGH_MESSAGE_MENTIONS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.users_through_message_mentions,
+)
+_ROLE_THROUGH_MESSAGE_ROLE_MENTIONS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.role_through_message_role_mentions,
+)
 _CHANNEL_THROUGH_READ_STATE_CHANNEL: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.channel_through_read_state_channel,
 )
@@ -2032,6 +2068,9 @@ _USER_THROUGH_MEMBER_TAG: typing.Final[UndefinedCacheContext] = UndefinedCacheCo
 )
 _SERVER_THROUGH_MEMBER_ROLES: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_member_roles,
+)
+_SERVER_THROUGH_MEMBER_SERVER_PERMISSIONS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_member_server_permissions,
 )
 _SERVER_THROUGH_MEMBER_TOP_ROLE: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_through_member_top_role,
@@ -2223,6 +2262,7 @@ ProvideCacheContextIn = typing.Literal[
     'Member.online',
     'Member.tag',
     'Member.roles',
+    'Member.server_permissions',
     'Member.top_role',
     'User.bot_owner',
     'User.dm_channel_id',
@@ -3730,6 +3770,10 @@ __all__ = (
     'MemberOrUserThroughMessageAuthorCacheContext',
     'MemberThroughMessageAuthorCacheContext',
     'UserThroughMessageAuthorCacheContext',
+    'MemberOrUsersThroughMessageMentionsCacheContext',
+    'MembersThroughMessageMentionsCacheContext',
+    'UsersThroughMessageMentionsCacheContext',
+    'RoleThroughMessageRoleMentionsCacheContext',
     'ReadStateThroughTextChannelReadStateCacheContext',
     'MembersThroughRoleMembersCacheContext',
     'ServerThroughRoleServerCacheContext',
@@ -3781,6 +3825,7 @@ __all__ = (
     'UserThroughMemberOnlineCacheContext',
     'UserThroughMemberTagCacheContext',
     'ServerThroughMemberRolesCacheContext',
+    'ServerThroughMemberServerPermissionsCacheContext',
     'ServerThroughMemberTopRoleCacheContext',
     'UserThroughUserBotOwnerCacheContext',
     'ChannelIDThroughUserDMChannelIDCacheContext',
@@ -3922,6 +3967,10 @@ __all__ = (
     '_MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR',
     '_MEMBER_THROUGH_MESSAGE_AUTHOR',
     '_USER_THROUGH_MESSAGE_AUTHOR',
+    '_MEMBER_OR_USERS_THROUGH_MESSAGE_MENTIONS',
+    '_MEMBERS_THROUGH_MESSAGE_MENTIONS',
+    '_USERS_THROUGH_MESSAGE_MENTIONS',
+    '_ROLE_THROUGH_MESSAGE_ROLE_MENTIONS',
     '_CHANNEL_THROUGH_READ_STATE_CHANNEL',
     '_EMOJI_THROUGH_SERVER_GETTER',
     '_MEMBER_THROUGH_SERVER_GETTER',
@@ -3951,6 +4000,7 @@ __all__ = (
     '_USER_THROUGH_MEMBER_ONLINE',
     '_USER_THROUGH_MEMBER_TAG',
     '_SERVER_THROUGH_MEMBER_ROLES',
+    '_SERVER_THROUGH_MEMBER_SERVER_PERMISSIONS',
     '_SERVER_THROUGH_MEMBER_TOP_ROLE',
     '_USER_THROUGH_USER_BOT_OWNER',
     '_CHANNEL_THROUGH_USER_DM_CHANNEL',

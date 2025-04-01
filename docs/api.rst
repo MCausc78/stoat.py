@@ -721,7 +721,7 @@ CacheContextType
     .. attribute:: users_through_message_mentions
     
         The context comes from :attr:`Message.mentions_as_users`.
-    .. attribute:: server_through_message_role_mentions
+    .. attribute:: role_through_message_role_mentions
     
         The context comes from :attr:`Message.role_mentions`.
     .. attribute:: channel_through_read_state_channel
@@ -808,6 +808,15 @@ CacheContextType
     .. attribute:: user_through_member_tag
 
         The context comes from :attr:`Member.tag`.
+    .. attribute:: server_through_member_roles
+    
+        The context comes from :attr:`Member.roles`.
+    .. attribute:: server_through_member_server_permissions
+    
+        The context comes from :attr:`Member.server_permissions`.
+    .. attribute:: server_through_member_top_role
+    
+        The context comes from :attr:`Member.top_role`.
     .. attribute:: user_through_user_bot_owner
 
         The context comes from :attr:`User.bot_owner`.
@@ -1638,6 +1647,16 @@ UserThroughGroupChannelRecipientsCacheContext
     :members:
     :inherited-members:
 
+MemberThroughServerChannelMeCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughServerChannelMeCacheContext
+
+.. autoclass:: MemberThroughServerChannelMeCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 ServerThroughServerChannelServerCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2006,6 +2025,46 @@ UserThroughMessageAuthorCacheContext
 .. autoclass:: UserThroughMessageAuthorCacheContext
     :show-inheritance:
     :members:
+    :inherited-members:
+
+MemberOrUsersThroughMessageMentionsCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUsersThroughMessageMentionsCacheContext
+
+.. autoclass:: MemberOrUsersThroughMessageMentionsCacheContext
+    :show-inheritance:
+    :memberes:
+    :inherited-members:
+
+MembersThroughMessageMentionsCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MembersThroughMessageMentionsCacheContext
+
+.. autoclass:: MembersThroughMessageMentionsCacheContext
+    :show-inheritance:
+    :memberes:
+    :inherited-members:
+
+UsersThroughMessageMentionsCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UsersThroughMessageMentionsCacheContext
+
+.. autoclass:: UsersThroughMessageMentionsCacheContext
+    :show-inheritance:
+    :memberes:
+    :inherited-members:
+
+RoleThroughMessageRoleMentionsCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: RoleThroughMessageRoleMentionsCacheContext
+
+.. autoclass:: RoleThroughMessageRoleMentionsCacheContext
+    :show-inheritance:
+    :memberes:
     :inherited-members:
 
 ReadStateThroughTextChannelReadStateCacheContext
@@ -2506,6 +2565,16 @@ ServerThroughMemberRolesCacheContext
 .. attributetable:: ServerThroughMemberRolesCacheContext
 
 .. autoclass:: ServerThroughMemberRolesCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughMemberServerPermissionsCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughMemberServerPermissionsCacheContext
+
+.. autoclass:: ServerThroughMemberServerPermissionsCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
