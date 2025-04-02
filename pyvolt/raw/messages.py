@@ -175,6 +175,7 @@ class SendableEmbed(typing.TypedDict):
 class ReplyIntent(typing.TypedDict):
     id: str
     mention: bool
+    fail_if_not_exists: typing_extensions.NotRequired[bool]
 
 
 class DataMessageSend(typing.TypedDict):

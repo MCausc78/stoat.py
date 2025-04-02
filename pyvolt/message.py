@@ -147,20 +147,32 @@ class Reply:
         The ID of the message that being replied to.
     mention: :class:`bool`
         Whether to mention author of referenced message or not.
+    fail_if_not_exists: Optional[:class:`bool`]
+        Whether the HTTP request should fail with an error, if message does not exist. Defaults to ``True``.
     """
 
-    __slots__ = ('id', 'mention')
+    __slots__ = (
+        'id',
+        'mention',
+        'fail_if_not_exists',
+    )
 
-    def __init__(self, id: ULIDOr[BaseMessage], mention: bool = False) -> None:
-        self.id = resolve_id(id)
-        self.mention = mention
+    def __init__(
+        self, id: ULIDOr[BaseMessage], mention: bool = False, *, fail_if_not_exists: typing.Optional[bool] = None
+    ) -> None:
+        self.id: str = resolve_id(id)
+        self.mention: bool = mention
+        self.fail_if_not_exists: typing.Optional[bool] = fail_if_not_exists
 
     def to_dict(self) -> raw.ReplyIntent:
         """:class:`dict`: Convert reply to raw data."""
-        return {
+        payload: raw.ReplyIntent = {
             'id': self.id,
             'mention': self.mention,
         }
+        if self.fail_if_not_exists is not None:
+            payload['fail_if_not_exists'] = self.fail_if_not_exists
+        return payload
 
 
 class MessageInteractions:
@@ -770,7 +782,7 @@ class BaseMessage(Base):
 
         Pins the message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
@@ -1128,7 +1140,7 @@ class BaseMessage(Base):
 
         Unpins the message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 

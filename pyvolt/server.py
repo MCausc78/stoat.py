@@ -1042,7 +1042,7 @@ class BaseServer(Base):
         Fires :class:`.EmojiCreateEvent` for all server members.
 
         .. note::
-            This can only be used by non-bot accounts.
+            Prior to API v0.8.4, this could only be used by non-bot accounts.
 
         Parameters
         ----------
@@ -1060,15 +1060,15 @@ class BaseServer(Base):
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+---------------------------------------------------------------+
-            | Value                | Reason                                                        |
-            +----------------------+---------------------------------------------------------------+
-            | ``FailedValidation`` | The payload was invalid.                                      |
-            +----------------------+---------------------------------------------------------------+
-            | ``IsBot``            | The current token belongs to bot account.                     |
-            +----------------------+---------------------------------------------------------------+
-            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance. |
-            +----------------------+---------------------------------------------------------------+
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | Value                | Reason                                                                                                                     |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                                                                                                   |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account. Only applicable to instances running API whose version is lower than ``v0.8.3``. |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance.                                                              |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 

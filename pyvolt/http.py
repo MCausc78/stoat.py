@@ -2143,11 +2143,11 @@ class HTTPClient:
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------+----------------------------------+
-            | Value        | Reason                           |
-            +--------------+----------------------------------+
-            | ``NotFound`` | One of recipients was not found. |
-            +--------------+----------------------------------+
+            +--------------+-------------------------------------------------------------------------------+
+            | Value        | Reason                                                                        |
+            +--------------+-------------------------------------------------------------------------------+
+            | ``NotFound`` | One of recipients was not found, or the provided file for icon was not found. |
+            +--------------+-------------------------------------------------------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -2797,7 +2797,7 @@ class HTTPClient:
 
         Pins a message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
@@ -3385,7 +3385,7 @@ class HTTPClient:
 
         Unpins a message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
@@ -4032,7 +4032,7 @@ class HTTPClient:
         Fires :class:`.EmojiCreateEvent` for all server members.
 
         .. note::
-            This can only be used by non-bot accounts.
+            Prior to API v0.8.4, this could only be used by non-bot accounts.
 
         Parameters
         ----------
@@ -4052,15 +4052,15 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+---------------------------------------------------------------+
-            | Value                | Reason                                                        |
-            +----------------------+---------------------------------------------------------------+
-            | ``FailedValidation`` | The payload was invalid.                                      |
-            +----------------------+---------------------------------------------------------------+
-            | ``IsBot``            | The current token belongs to bot account.                     |
-            +----------------------+---------------------------------------------------------------+
-            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance. |
-            +----------------------+---------------------------------------------------------------+
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | Value                | Reason                                                                                                                     |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                                                                                                   |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account. Only applicable to instances running API whose version is lower than ``v0.8.3``. |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance.                                                              |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -4134,6 +4134,9 @@ class HTTPClient:
         .. note::
             If deleting detached emoji, this will successfully return.
 
+        .. note::
+            Prior to API v0.8.4, this could only be used by non-bot accounts.
+
         Parameters
         ----------
         emoji: ULIDOr[:class:`.ServerEmoji`]
@@ -4146,11 +4149,11 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------+-------------------------------------------+
-            | Value     | Reason                                    |
-            +-----------+-------------------------------------------+
-            | ``IsBot`` | The current token belongs to bot account. |
-            +-----------+-------------------------------------------+
+            +-----------+----------------------------------------------------------------------------------------------------------------------------+
+            | Value     | Reason                                                                                                                     |
+            +-----------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. Only applicable to instances running API whose version is lower than ``v0.8.3``. |
+            +-----------+----------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 

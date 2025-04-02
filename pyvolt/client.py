@@ -2230,11 +2230,11 @@ class Client:
         :class:`~pyvolt.NotFound`
             Possible values for :attr:`~pyvolt.HTTPException.type`:
 
-            +--------------+----------------------------------+
-            | Value        | Reason                           |
-            +--------------+----------------------------------+
-            | ``NotFound`` | One of recipients was not found. |
-            +--------------+----------------------------------+
+            +--------------+-------------------------------------------------------------------------------+
+            | Value        | Reason                                                                        |
+            +--------------+-------------------------------------------------------------------------------+
+            | ``NotFound`` | One of recipients was not found, or the provided file for icon was not found. |
+            +--------------+-------------------------------------------------------------------------------+
         :class:`~pyvolt.InternalServerError`
             Possible values for :attr:`~pyvolt.HTTPException.type`:
 
