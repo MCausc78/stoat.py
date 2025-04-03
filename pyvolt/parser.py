@@ -3895,6 +3895,7 @@ class Parser:
         try:
             relationship = payload['relationship']
         except KeyError:
+            # In API <v0.7.x, relationship key may be missing sometimes
             relationship = 'None'
 
         if relationship == 'User':
