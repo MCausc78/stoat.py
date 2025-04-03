@@ -3,7 +3,7 @@
 .. _tokens:
 
 Tokens
-=======
+======
 
 Tokens are how we authenticate with Revolt.
 
@@ -11,7 +11,7 @@ Regular (and bot) tokens are exactly 64 characters long and generated with `nano
 and contain only ``_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`` characters.
 
 How do I obtain mine?
-----------------------
+---------------------
 
 Although the library does support authenticating traditionally, it's fairly easier to obtain your token manually.
 

@@ -2803,7 +2803,7 @@ class Parser:
             raw_flags=payload.get('flags', 0),
             privileged=privileged,
             bot=None if bot is None else self.parse_bot_user_metadata(bot),
-            relationship=RelationshipStatus(payload['relationship']),
+            relationship=RelationshipStatus(payload.get('relationship', 'User')),
             online=payload['online'],
         )
 
@@ -3892,7 +3892,12 @@ class Parser:
             The parsed user object.
         """
 
-        if payload['relationship'] == 'User':
+        try:
+            relationship = payload['relationship']
+        except KeyError:
+            relationship = 'None'
+
+        if relationship == 'User':
             return self.parse_own_user(payload)
 
         avatar = payload.get('avatar')
@@ -3914,7 +3919,7 @@ class Parser:
             raw_flags=payload.get('flags', 0),
             privileged=payload.get('privileged', False),
             bot=None if bot is None else self.parse_bot_user_metadata(bot),
-            relationship=RelationshipStatus(payload['relationship']),
+            relationship=RelationshipStatus(relationship),
             online=payload['online'],
         )
 

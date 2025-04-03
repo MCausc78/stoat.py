@@ -483,8 +483,10 @@ class CDNClient:
             ret = self._adapter(self)
             if isawaitable(ret):
                 ret = await ret
+            await ret.startup()
             self._adapter = ret
             return ret
+
         return self._adapter
 
     def maybe_get_adapter(self) -> typing.Optional[HTTPAdapter]:

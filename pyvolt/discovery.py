@@ -179,7 +179,7 @@ class DiscoverableTheme:
     """List[:class:`str`]: The theme tags."""
 
     overrides: dict[ReviteThemeVariable, str] = field(repr=True, kw_only=True)
-    """Dict[:class:`.ReviteThemeVariable`, :class:`str`]: The theme overrides in format `{css_class: css_color}`."""
+    """Dict[:class:`.ReviteThemeVariable`, :class:`str`]: The theme overrides in format ``{css_class: css_color}``."""
 
     version: str = field(repr=True, kw_only=True)
     """:class:`str`: The theme version."""
@@ -325,6 +325,7 @@ class DiscoveryClient:
             ret = self._adapter(self)
             if isawaitable(ret):
                 ret = await ret
+            await ret.startup()
             self._adapter = ret
             return ret
         return self._adapter
