@@ -152,6 +152,8 @@ if typing.TYPE_CHECKING:
 else:
 
     class Enum(metaclass=EnumMeta):
+        """An enum class that mimics behavior of :class:`enum.Enum`."""
+
         @classmethod
         def try_value(cls, value) -> typing.Any:
             try:

@@ -106,15 +106,19 @@ class DiscoverableServer(BaseServer):
 
 @define(slots=True)
 class DiscoverableServersPage:
+    """A data class representing results for getting all listed servers."""
+
     servers: list[DiscoverableServer] = field(repr=True, kw_only=True)
     """List[:class:`.DiscoverableServer`]: The listed servers, up to 200 servers."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
-    """List[:class:`str`]: Popular tags used in discovery servers."""
+    """List[:class:`str`]: The popular tags used in discoverable servers."""
 
 
 @define(slots=True)
 class DiscoverableBot(BaseBot):
+    """Represents a bot on Revolt Discovery."""
+
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The bot's name."""
 
@@ -151,15 +155,22 @@ class DiscoverableBot(BaseBot):
 
 @define(slots=True)
 class DiscoverableBotsPage:
+    """A data class representing results for getting all listed bots."""
+
     bots: list[DiscoverableBot] = field(repr=True, kw_only=True)
     """List[:class:`.DiscoverableBot`]: The listed bots, up to 200 bots."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
-    """List[:class:`str`]: Popular tags used in discovery bots."""
+    """List[:class:`str`]: The popular tags used in discoverable bots."""
 
 
 @define(slots=True)
 class DiscoverableTheme:
+    """Represents a theme on Revolt Discovery.
+
+    Themes are currently only available in Discover.
+    """
+
     state: State = field(repr=False)
     """:class:`.State`: State that controls this theme."""
 
@@ -217,6 +228,8 @@ class DiscoverableTheme:
 
 @define(slots=True)
 class DiscoverableThemesPage:
+    """A data class representing results for getting all listed themes."""
+
     themes: list[DiscoverableTheme] = field(repr=True, kw_only=True)
     """List[:class:`.DiscoverableTheme`]: The listed themes, up to 200 themes."""
 
@@ -285,12 +298,25 @@ class ThemeSearchResult:
     """List[:class:`str`]: All of tags that listed themes have."""
 
 
-DISCOVERY_BUILD_ID: str = '9I_qurZmA2SKF8CAOcQAv'
-
-RE_DISCOVERY_BUILD_ID: re.Pattern = re.compile(r'"buildId":\s*"([0-9A-Za-z_-]+)"')
+DISCOVERY_BUILD_ID: typing.Final[str] = '9I_qurZmA2SKF8CAOcQAv'
+RE_DISCOVERY_BUILD_ID: typing.Final[re.Pattern[str]] = re.compile(r'"buildId":\s*"([0-9A-Za-z_-]+)"')
 
 
 class DiscoveryClient:
+    """Represents a client that sends requests to Discover.
+
+    Parameters
+    ----------
+    adapter: Optional[Union[MaybeAwaitableFunc[[:class:`.DiscoveryClient`], :class:`.HTTPAdapter`], :class:`.HTTPAdapter`]]
+        The adapter to use when making HTTP requests.
+    base_url: Optional[:class:`str`]
+        The base Discover API URL.
+    state: :class:`State`
+        The state.
+    user_agent: :class:`str`
+        The HTTP user agent to use when making requests.
+    """
+
     __slots__ = (
         '_adapter',
         '_base',
@@ -304,14 +330,16 @@ class DiscoveryClient:
         adapter: typing.Optional[
             typing.Union[utils.MaybeAwaitableFunc[[DiscoveryClient], HTTPAdapter], HTTPAdapter]
         ] = None,
-        base: typing.Optional[str] = None,
+        base_url: typing.Optional[str] = None,
         state: State,
         user_agent: str = '',
     ) -> None:
         self._adapter: typing.Optional[
             typing.Union[utils.MaybeAwaitableFunc[[DiscoveryClient], HTTPAdapter], HTTPAdapter]
         ] = adapter
-        self._base: str = f'https://rvlt.gg/_next/data/{DISCOVERY_BUILD_ID}' if base is None else base.rstrip('/')
+        self._base: str = (
+            f'https://rvlt.gg/_next/data/{DISCOVERY_BUILD_ID}' if base_url is None else base_url.rstrip('/')
+        )
         self.state: State = state
         self.user_agent: str = user_agent or DEFAULT_DISCOVERY_USER_AGENT
 
@@ -354,9 +382,9 @@ class DiscoveryClient:
 
         Raises
         ------
-        DiscoverError
+        :class:`DiscoverError`
             Fetching the main page failed.
-        InvalidData
+        :class:`InvalidData`
             If library is unable look up build ID.
 
         Returns

@@ -472,7 +472,7 @@ class HTTPOverrideOptions:
     token: UndefinedOr[Optional[:class:`str`]]
         The token to use when requesting the route.
     user_agent: UndefinedOr[:class:`str`]
-        The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+        The user agent to use for HTTP request. Defaults to :attr:`HTTPClient.user_agent`.
     """
 
     __slots__ = _HTTP_OVERRIDE_PARAMETER_KEYS

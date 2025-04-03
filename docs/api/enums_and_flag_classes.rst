@@ -13,7 +13,7 @@ Enumerations
 The API provides some enumerations for certain types of strings to avoid the API
 from being stringly typed in case the strings change in the future.
 
-All enumerations are subclasses of a custom class which mimics the behaviour
+All enumerations are subclasses of a custom class which mimics the behavior
 of :class:`enum.Enum`.
 
 Enum

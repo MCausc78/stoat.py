@@ -98,7 +98,10 @@ _new_permissions = Permissions.__new__
 
 @define(slots=True)
 class BaseChannel(Base):
-    """Represents channel on Revolt."""
+    """Represents channel on Revolt.
+
+    This classes derives from :class:`.Base`.
+    """
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseChannel) and self.id == other.id
@@ -302,7 +305,10 @@ class BaseChannel(Base):
 
 @define(slots=True)
 class PartialChannel(BaseChannel):
-    """Represents a partial channel on Revolt."""
+    """Represents a partial channel on Revolt.
+
+    This classes derives from :class:`.BaseChannel`.
+    """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The new channel name, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
@@ -470,7 +476,10 @@ def calculate_server_channel_permissions(
 
 @define(slots=True)
 class SavedMessagesChannel(BaseChannel, Messageable):
-    """Represents a personal "Saved Notes" channel which allows users to save messages."""
+    """Represents a personal "Saved Notes" channel which allows users to save messages.
+
+    This classes derives from :class:`.BaseChannel` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The ID of the user this channel belongs to."""
@@ -538,7 +547,10 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
 @define(slots=True)
 class DMChannel(BaseChannel, Connectable, Messageable):
-    """Represents a private channel between two users."""
+    """Represents a private channel between two users.
+
+    This classes derives from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     active: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the DM channel is currently open on both sides."""
@@ -838,7 +850,10 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
 @define(slots=True)
 class GroupChannel(BaseChannel, Connectable, Messageable):
-    """Represesnts Revolt group channel between 1 or more participants."""
+    """Represesnts a Revolt group channel between 1 or more participants.
+
+    This classes derives from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The group's name."""
@@ -1620,7 +1635,10 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
 @define(slots=True)
 class UnknownPrivateChannel(BaseChannel):
-    """Represents a private channel that is not recognized by library yet."""
+    """Represents a private channel that is not recognized by library yet.
+
+    This classes derives from :class:`.BaseChannel`.
+    """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, Any]: The raw channel data."""
@@ -1658,6 +1676,11 @@ PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, Unk
 
 @define(slots=True)
 class BaseServerChannel(BaseChannel):
+    """A base class for server channels.
+
+    This classes derives from :class:`.BaseChannel`.
+    """
+
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server ID that channel belongs to."""
 
@@ -2176,7 +2199,10 @@ class ChannelVoiceMetadata:
 
 @define(slots=True)
 class TextChannel(BaseServerChannel, Connectable, Messageable):
-    """Represents a text channel that belongs to a server on Revolt."""
+    """Represents a text channel that belongs to a server on Revolt.
+
+    This classes derives from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     last_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The last message ID sent in the channel."""
@@ -2451,6 +2477,8 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 class VoiceChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a voice channel that belongs to a server on Revolt.
 
+    This classes derives from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+
     .. deprecated:: 0.7.0
         The voice channel type was deprecated in favour of :attr:`TextChannel.voice`.
     """
@@ -2520,7 +2548,10 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
 
 @define(slots=True)
 class UnknownServerChannel(BaseServerChannel):
-    """Represents a server channel that is not recognized by library yet."""
+    """Represents a server channel that is not recognized by library yet.
+
+    This classes derives from :class:`.BaseServerChannel`.
+    """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, Any]: The raw channel data."""
