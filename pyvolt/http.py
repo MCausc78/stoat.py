@@ -1106,7 +1106,9 @@ class HTTPClient:
 
             _L.debug('%s %s has received %s [too large response]', method, url, response.status)
 
-        response.close()
+        tmp = response.close()
+        if isawaitable(tmp):
+            await tmp
         return result
 
     async def cleanup(self) -> None:
