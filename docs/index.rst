@@ -57,6 +57,6 @@ These pages go into great detail about everything the API can do.
 .. toctree::
   :maxdepth: 1
 
-  api
+  API reference <api/index.rst>
   pyvolt.ext.chunking API reference <ext/chunking/api.rst>
   pyvolt.ext.commands API reference <ext/commands/api.rst>
