@@ -181,7 +181,7 @@ class MessageInteractions:
     Attributes
     ----------
     reactions: List[:class:`str`]
-        The reactions which should always appear and be distinct.
+        The reactions which should always appear and be distinct. Must be either emoji ID, or an unicode emoji.
     restrict_reactions: :class:`bool`
         Whether reactions should be restricted to the given list.
 
@@ -312,7 +312,7 @@ class SendableEmbed:
 
 @define(slots=True)
 class MessageWebhook:
-    """Specifies information about the webhook bundled with Message."""
+    """Specifies information about the webhook bundled with :class:`~pyvolt.Message`."""
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The webhook's name. Can be between 1 to 32 characters."""
@@ -366,7 +366,7 @@ class BaseMessage(Base):
         Returns
         -------
         Tuple[Optional[:class:`.Server`], :class:`str`]
-            The server and server ID.
+            The server and server ID (may be empty).
         """
         state = self.state
         cache = state.cache

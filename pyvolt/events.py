@@ -153,6 +153,8 @@ class ReadyEvent(ShardEvent):
 
     .. warning::
         This event may be dispatched multiple times due to periodic reconnects.
+
+        Consider subclassing :class:`.Client` and overriding :meth:`~Client.setup_hook` if you wish to prepare before starting up.
     """
 
     event_name: typing.ClassVar[typing.Literal['ready']] = 'ready'
@@ -2381,14 +2383,28 @@ class AuthenticatedEvent(ShardEvent):
 
 @define(slots=True)
 class BeforeConnectEvent(ShardEvent):
-    """Dispatched before connection to Revolt WebSocket is made."""
+    """Dispatched before connection to Revolt WebSocket is made.
+
+    .. warning::
+
+        Similarly to :class:`.ReadyEvent`, this event may be dispatched multiple times.
+
+        Consider subclassing :class:`.Client` and overriding :meth:`~Client.setup_hook` if you wish to prepare before starting up.
+    """
 
     event_name: typing.ClassVar[str] = 'before_connect'
 
 
 @define(slots=True)
 class AfterConnectEvent(ShardEvent):
-    """Dispatched after connection to Revolt WebSocket is made."""
+    """Dispatched after connection to Revolt WebSocket is made.
+
+    .. warning::
+
+        Similarly to :class:`.ReadyEvent`, this event may be dispatched multiple times.
+
+        Consider subclassing :class:`.Client` and overriding :meth:`~Client.setup_hook` if you wish to prepare before starting up.
+    """
 
     event_name: typing.ClassVar[str] = 'after_connect'
 
