@@ -127,8 +127,8 @@ if typing.TYPE_CHECKING:
 class CacheContextType(Enum):
     custom = 'CUSTOM'
     undefined = 'UNDEFINED'
-    user_request = 'USER_REQUEST'
-    library_request = 'LIBRARY_REQUEST'
+    # user_request = 'USER_REQUEST'
+    # library_request = 'LIBRARY_REQUEST'
 
     ready_event = 'ReadyEvent'
     private_channel_create_event = 'PrivateChannelCreateEvent'
@@ -1573,7 +1573,7 @@ class ChannelThroughWebhookChannelCacheContext(WebhookCacheContext):
 
 
 _UNDEFINED: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.undefined)
-_USER_REQUEST: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.user_request)
+# _USER_REQUEST: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.user_request)
 _READY_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.ready_event)
 _PRIVATE_CHANNEL_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.private_channel_create_event,
@@ -3835,7 +3835,7 @@ __all__ = (
     'UserThroughWebhookCreatorCacheContext',
     'ChannelThroughWebhookChannelCacheContext',
     '_UNDEFINED',
-    '_USER_REQUEST',
+    # '_USER_REQUEST',
     '_READY_EVENT',
     '_PRIVATE_CHANNEL_CREATE_EVENT',
     '_SERVER_CHANNEL_CREATE_EVENT',

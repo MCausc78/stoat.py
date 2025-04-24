@@ -44,15 +44,12 @@ CacheContextType
 
     Specifies a type of cache context.
 
+    .. attribute:: custom
+
+        The context is custom.
     .. attribute:: undefined
 
         The context is not provided.
-    .. attribute:: user_request
-
-        The end user is asking for object.
-    .. attribute:: library_request
-
-        The library needs the object for internal purposes.
     .. attribute:: ready_event
 
         The context relates to :class:`.ReadyEvent` event.
@@ -221,6 +218,9 @@ CacheContextType
     .. attribute:: user_through_group_channel_recipients
 
         The context comes from :attr:`GroupChannel.recipients`.
+    .. attribute:: member_through_server_channel_me
+
+        The context comes from :attr:`BaseServerChannel.me`.
     .. attribute:: server_through_server_channel_server
 
         The context comes from :attr:`BaseServerChannel.server`.
@@ -242,6 +242,9 @@ CacheContextType
     .. attribute:: emojis_through_client_getter
 
         The context comes from :attr:`Client.emojis`.
+    .. attribute:: server_members_through_client_getter
+        
+        The context comes from :attr:`Client.members`
     .. attribute:: read_states_through_client_getter
 
         The context comes from :attr:`Client.read_states`.
@@ -449,6 +452,9 @@ CacheContextType
     .. attribute:: channel_through_read_state_channel
 
         The context comes from :attr:`ReadState.channel`.
+    .. attribute:: members_through_role_members
+        
+        The context comes from :attr:`Role.members`.
     .. attribute:: server_through_role_server
 
         The context comes from :attr:`Role.server`.
@@ -470,6 +476,9 @@ CacheContextType
     .. attribute:: channels_through_server_getter
 
         The context comes from :attr:`Server.channels`.
+    .. attribute:: member_through_server_me
+        
+        The context comes from :attr:`Server.me`.
     .. attribute:: member_or_user_through_server_owner
 
         The context comes from :attr:`Server.owner`.
@@ -1795,6 +1804,16 @@ ReadStateThroughTextChannelReadStateCacheContext
 .. attributetable:: ReadStateThroughTextChannelReadStateCacheContext
 
 .. autoclass:: ReadStateThroughTextChannelReadStateCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MembersThroughRoleMembersCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MembersThroughRoleMembersCacheContext
+
+.. autoclass:: MembersThroughRoleMembersCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

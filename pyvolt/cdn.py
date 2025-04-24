@@ -464,7 +464,7 @@ class CDNClient:
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if base is None:
-            base = 'https://autumn.revolt.chat'
+            base = 'https://cdn.revoltusercontent.com'
 
         self._adapter: typing.Optional[
             typing.Union[utils.MaybeAwaitableFunc[[CDNClient], HTTPAdapter], HTTPAdapter]

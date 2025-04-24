@@ -857,7 +857,7 @@ class Parser:
             channel_id=id['channel'],
             user_id=id['user'],
             last_acked_id=payload.get('last_id'),
-            mentioned_in=payload.get('mentions', []),
+            mentioned_in=payload['mentions'] if 'mentions' in payload else [],
         )
 
     def parse_channel_update_event(self, shard: Shard, payload: raw.ClientChannelUpdateEvent, /) -> ChannelUpdateEvent:
@@ -1785,7 +1785,7 @@ class Parser:
             joined_at=_parse_dt(payload['joined_at']),
             nick=payload.get('nickname'),
             internal_server_avatar=None if avatar is None else self.parse_asset(avatar),
-            role_ids=payload.get('roles', []),
+            role_ids=payload['roles'] if 'roles' in payload else [],
             timed_out_until=None if timeout is None else _parse_dt(timeout),
             can_publish=payload.get('can_publish', True),
             can_receive=payload.get('can_receive', True),
@@ -1889,9 +1889,9 @@ class Parser:
             internal_attachments=list(map(self.parse_asset, payload.get('attachments', ()))),
             edited_at=None if edited_at is None else _parse_dt(edited_at),
             internal_embeds=list(map(self.parse_embed, payload.get('embeds', ()))),  # type: ignore
-            mention_ids=payload.get('mentions', []),
-            role_mention_ids=payload.get('role_mentions', []),
-            replies=payload.get('replies', []),
+            mention_ids=payload['mentions'] if 'mentions' in payload else [],
+            role_mention_ids=payload['role_mentions'] if 'role_mentions' in payload else [],
+            replies=payload['replies'] if 'replies' in payload else [],
             reactions={} if reactions is None else {k: tuple(v) for k, v in reactions.items()},
             interactions=None if interactions is None else self.parse_message_interactions(interactions),
             masquerade=None if masquerade is None else self.parse_message_masquerade(masquerade),
@@ -2124,7 +2124,7 @@ class Parser:
         """
 
         return MessageInteractions(
-            reactions=payload.get('reactions', []),
+            reactions=payload['reactions'] if 'reactions' in payload else [],
             restrict_reactions=payload.get('restrict_reactions', False),
         )
 
@@ -2968,7 +2968,10 @@ class Parser:
         channels: list[Channel] = list(map(self.parse_channel, payload.get('channels', ())))  # type: ignore
         members = list(map(self.parse_member, payload.get('members', ())))
         emojis = list(map(self.parse_server_emoji, payload.get('emojis', ())))
-        user_settings = self.parse_user_settings(payload.get('user_settings', {}), False)
+        if 'user_settings' in payload:
+            user_settings = self.parse_user_settings(payload['user_settings'], False)
+        else:
+            user_settings = self.parse_user_settings({}, False)
         read_states = list(map(self.parse_channel_unread, payload.get('channel_unreads', ())))
         voice_states = list(map(self.parse_channel_voice_state, payload.get('voice_states', ())))
 
@@ -2979,7 +2982,7 @@ class Parser:
             channels=channels,
             members=members,
             emojis=emojis,
-            me=me,  # type: ignore
+            me=me,
             user_settings=user_settings,
             read_states=read_states,
             voice_states=voice_states,
@@ -3265,9 +3268,10 @@ class Parser:
         system_messages = payload.get('system_messages')
 
         roles = {}
-        for id, role_data in payload.get('roles', {}).items():
-            role_id = id
-            roles[role_id] = self.parse_role(role_data, role_id, server_id)
+        if 'roles' in payload:
+            for id, role_data in payload['roles'].items():
+                role_id = id
+                roles[role_id] = self.parse_role(role_data, role_id, server_id)
 
         icon = payload.get('icon')
         banner = payload.get('banner')
@@ -3796,7 +3800,6 @@ class Parser:
 
         icon = payload.get('icon')
         default_permissions = payload.get('default_permissions')
-        role_permissions = payload.get('role_permissions', {})
 
         try:
             last_message_id = payload['last_message_id']  # pyright: ignore[reportTypedDictNotRequiredAccess]
@@ -3816,7 +3819,11 @@ class Parser:
             default_permissions=(
                 None if default_permissions is None else self.parse_permission_override_field(default_permissions)
             ),
-            role_permissions={k: self.parse_permission_override_field(v) for k, v in role_permissions.items()},
+            role_permissions={
+                k: self.parse_permission_override_field(v) for k, v in payload['role_permissions'].items()
+            }
+            if 'role_permissions' in payload
+            else {},
             nsfw=payload.get('nsfw', False),
             voice=None if voice is None else self.parse_voice_information(voice),
         )
@@ -4280,7 +4287,6 @@ class Parser:
 
         icon = payload.get('icon')
         default_permissions = payload.get('default_permissions')
-        role_permissions = payload.get('role_permissions', {})
 
         return VoiceChannel(
             state=self.state,
@@ -4292,7 +4298,11 @@ class Parser:
             default_permissions=(
                 None if default_permissions is None else self.parse_permission_override_field(default_permissions)
             ),
-            role_permissions={k: self.parse_permission_override_field(v) for k, v in role_permissions.items()},
+            role_permissions={
+                k: self.parse_permission_override_field(v) for k, v in payload['role_permissions'].items()
+            }
+            if 'role_permissions' in payload
+            else {},
             nsfw=payload.get('nsfw', False),
         )
 
