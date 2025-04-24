@@ -42,6 +42,7 @@ from .cache import (
     MembersThroughServerGetterCacheContext,
     ChannelThroughServerGetterCacheContext,
     ChannelsThroughServerGetterCacheContext,
+    MemberThroughServerMeCacheContext,
     MemberOrUserThroughServerOwnerCacheContext,
     MemberThroughServerOwnerCacheContext,
     UserThroughServerOwnerCacheContext,
@@ -63,6 +64,7 @@ from .cache import (
     UserThroughMemberOnlineCacheContext,
     UserThroughMemberTagCacheContext,
     ServerThroughMemberRolesCacheContext,
+    ServerThroughMemberServerPermissionsCacheContext,
     ServerThroughMemberTopRoleCacheContext,
     _MEMBERS_THROUGH_ROLE_MEMBERS,
     _SERVER_THROUGH_ROLE_SERVER,
@@ -72,6 +74,7 @@ from .cache import (
     _MEMBERS_THROUGH_SERVER_GETTER,
     _CHANNEL_THROUGH_SERVER_GETTER,
     _CHANNELS_THROUGH_SERVER_GETTER,
+    _MEMBER_THROUGH_SERVER_ME,
     _MEMBER_OR_USER_THROUGH_SERVER_OWNER,
     _MEMBER_THROUGH_SERVER_OWNER,
     _USER_THROUGH_SERVER_OWNER,
@@ -93,6 +96,7 @@ from .cache import (
     _USER_THROUGH_MEMBER_ONLINE,
     _USER_THROUGH_MEMBER_TAG,
     _SERVER_THROUGH_MEMBER_ROLES,
+    _SERVER_THROUGH_MEMBER_SERVER_PERMISSIONS,
     _SERVER_THROUGH_MEMBER_TOP_ROLE,
 )
 from .cdn import StatelessAsset, Asset, ResolvableResource
@@ -1056,7 +1060,7 @@ class BaseServer(Base):
         Fires :class:`.EmojiCreateEvent` for all server members.
 
         .. note::
-            This can only be used by non-bot accounts.
+            Prior to API v0.8.4, this could only be used by non-bot accounts.
 
         Parameters
         ----------
@@ -1074,15 +1078,15 @@ class BaseServer(Base):
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+---------------------------------------------------------------+
-            | Value                | Reason                                                        |
-            +----------------------+---------------------------------------------------------------+
-            | ``FailedValidation`` | The payload was invalid.                                      |
-            +----------------------+---------------------------------------------------------------+
-            | ``IsBot``            | The current token belongs to bot account.                     |
-            +----------------------+---------------------------------------------------------------+
-            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance. |
-            +----------------------+---------------------------------------------------------------+
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | Value                | Reason                                                                                                                     |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                                                                                                   |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account. Only applicable to instances running API whose version is lower than ``v0.8.3``. |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance.                                                              |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -2738,6 +2742,28 @@ class Server(BaseServer):
             if t.id == channel_id:
                 return t
 
+    def get_me(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The own user for this server."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        state.my_id
+
+        ctx = (
+            MemberThroughServerMeCacheContext(
+                type=CacheContextType.member_through_server_me,
+                server=self,
+            )
+            if state.provide_cache_context('Server.me')
+            else _MEMBER_THROUGH_SERVER_ME
+        )
+
+        return cache.get_server_member(self.id, state.my_id, ctx)
+
     def get_owner(self) -> typing.Optional[typing.Union[Member, User]]:
         """Optional[Union[:class:`.Member`, :class:`.User`]]: The server's owner."""
 
@@ -2843,7 +2869,7 @@ class Server(BaseServer):
             id: str = channel_id  # type: ignore
             channel = cache.get_channel(id, ctx)
 
-            if channel:
+            if channel is not None:
                 if channel.__class__ not in (
                     TextChannel,
                     VoiceChannel,
@@ -2870,6 +2896,15 @@ class Server(BaseServer):
     def icon(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The server icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
+
+    @property
+    def me(self) -> Member:
+        """:class:`.Member`: The own user for this server."""
+
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='Server.me')
+        return me
 
     @property
     def owner(self) -> typing.Union[Member, User]:
@@ -3192,11 +3227,24 @@ class BaseMember(Connectable, Messageable):
         return cache.get_user(self._user, ctx)
 
     def __eq__(self, other: object, /) -> bool:
+        if self is other:
+            return True
+
         return (
-            self is other
-            or ((isinstance(other, BaseMember) and self.server_id == other.server_id) or isinstance(other, BaseUser))
-            and self.id == other.id
-        )
+            (isinstance(other, BaseMember) and self.server_id == other.server_id) or isinstance(other, BaseUser)
+        ) and self.id == other.id
+
+    def __ne__(self, other: object, /) -> bool:
+        if self is other:
+            return False
+
+        if isinstance(other, BaseMember):
+            return self.server_id != other.server_id and self.id != other.id
+
+        if isinstance(other, BaseUser):
+            return self.id != other.id
+
+        return True
 
     def __hash__(self) -> int:
         return hash((self.server_id, self.id))
@@ -3893,13 +3941,15 @@ class BaseMember(Connectable, Messageable):
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +---------------------------+-----------------------------------------------------------------------+
-            | Value                     | Reason                                                                |
-            +---------------------------+-----------------------------------------------------------------------+
-            | ``CannotTimeoutYourself`` | You tried to time out yourself.                                       |
-            +---------------------------+-----------------------------------------------------------------------+
-            | ``NotAVoiceChannel``      | The channel passed in ``voice`` parameter was not voice-like channel. |
-            +---------------------------+-----------------------------------------------------------------------+
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                                                            |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``CannotTimeoutYourself`` | You tried to time out yourself.                                                                                   |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``LivekitUnavailable``    | The voice server is unavailable. Only applicable to instances using Livekit.                                      |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``      | The channel passed in ``voice`` parameter was not voice-like channel. Only applicable to instances using Livekit. |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -4655,6 +4705,31 @@ class Member(BaseMember):
     def server_avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
+
+    @property
+    def server_permissions(self) -> Permissions:
+        """:class:`.Permissions`: The permissions for this member in the server."""
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            raise NoData(what=self.server_id, type='Member.server_permissions')
+
+        ctx = (
+            ServerThroughMemberServerPermissionsCacheContext(
+                type=CacheContextType.server_through_member_server_permissions,
+                member=self,
+            )
+            if state.provide_cache_context('Member.server_permissions')
+            else _SERVER_THROUGH_MEMBER_SERVER_PERMISSIONS
+        )
+
+        server = cache.get_server(self.server_id, ctx)
+        if server is None:
+            raise NoData(what=self.server_id, type='Member.server_permissions')
+
+        return server.permissions_for(self)
 
     @property
     def top_role(self) -> typing.Optional[Role]:

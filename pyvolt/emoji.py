@@ -248,6 +248,9 @@ class ServerEmoji(BaseEmoji):
         .. note::
             If deleting detached emoji, this will successfully return.
 
+        .. note::
+            Prior to API v0.8.4, this could only be used by non-bot accounts.
+
         Parameters
         ----------
         http_overrides: Optional[:class:`.HTTPOverrideOptions`]
@@ -258,11 +261,11 @@ class ServerEmoji(BaseEmoji):
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------+-------------------------------------------+
-            | Value     | Reason                                    |
-            +-----------+-------------------------------------------+
-            | ``IsBot`` | The current token belongs to bot account. |
-            +-----------+-------------------------------------------+
+            +-----------+----------------------------------------------------------------------------------------------------------------------------+
+            | Value     | Reason                                                                                                                     |
+            +-----------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. Only applicable to instances running API whose version is lower than ``v0.8.3``. |
+            +-----------+----------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 

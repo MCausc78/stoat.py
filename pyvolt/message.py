@@ -67,6 +67,10 @@ from .cache import (
     MemberOrUserThroughMessageAuthorCacheContext,
     MemberThroughMessageAuthorCacheContext,
     UserThroughMessageAuthorCacheContext,
+    MemberOrUsersThroughMessageMentionsCacheContext,
+    MembersThroughMessageMentionsCacheContext,
+    UsersThroughMessageMentionsCacheContext,
+    RoleThroughMessageRoleMentionsCacheContext,
     _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_USER,
     _USER_THROUGH_USER_ADDED_SYSTEM_EVENT_BY,
     _USER_THROUGH_USER_REMOVED_SYSTEM_EVENT_USER,
@@ -102,6 +106,10 @@ from .cache import (
     _MEMBER_OR_USER_THROUGH_MESSAGE_AUTHOR,
     _MEMBER_THROUGH_MESSAGE_AUTHOR,
     _USER_THROUGH_MESSAGE_AUTHOR,
+    _MEMBER_OR_USERS_THROUGH_MESSAGE_MENTIONS,
+    _MEMBERS_THROUGH_MESSAGE_MENTIONS,
+    _USERS_THROUGH_MESSAGE_MENTIONS,
+    _ROLE_THROUGH_MESSAGE_ROLE_MENTIONS,
 )
 from .channel import BaseServerChannel, TextableChannel, PartialMessageable
 from .cdn import AssetMetadata, StatelessAsset, Asset, ResolvableResource, resolve_resource
@@ -124,7 +132,7 @@ if typing.TYPE_CHECKING:
     from . import raw
     from .embed import StatelessEmbed, Embed
     from .http import HTTPOverrideOptions
-    from .server import Server
+    from .server import Role, Server
     from .state import State
 
 _new_message_flags = MessageFlags.__new__
@@ -139,20 +147,32 @@ class Reply:
         The ID of the message that being replied to.
     mention: :class:`bool`
         Whether to mention author of referenced message or not.
+    fail_if_not_exists: Optional[:class:`bool`]
+        Whether the HTTP request should fail with an error, if message does not exist. Defaults to ``True``.
     """
 
-    __slots__ = ('id', 'mention')
+    __slots__ = (
+        'id',
+        'mention',
+        'fail_if_not_exists',
+    )
 
-    def __init__(self, id: ULIDOr[BaseMessage], mention: bool = False) -> None:
-        self.id = resolve_id(id)
-        self.mention = mention
+    def __init__(
+        self, id: ULIDOr[BaseMessage], mention: bool = False, *, fail_if_not_exists: typing.Optional[bool] = None
+    ) -> None:
+        self.id: str = resolve_id(id)
+        self.mention: bool = mention
+        self.fail_if_not_exists: typing.Optional[bool] = fail_if_not_exists
 
     def to_dict(self) -> raw.ReplyIntent:
         """:class:`dict`: Convert reply to raw data."""
-        return {
+        payload: raw.ReplyIntent = {
             'id': self.id,
             'mention': self.mention,
         }
+        if self.fail_if_not_exists is not None:
+            payload['fail_if_not_exists'] = self.fail_if_not_exists
+        return payload
 
 
 class MessageInteractions:
@@ -161,7 +181,7 @@ class MessageInteractions:
     Attributes
     ----------
     reactions: List[:class:`str`]
-        The reactions which should always appear and be distinct.
+        The reactions which should always appear and be distinct. Must be either emoji ID, or an unicode emoji.
     restrict_reactions: :class:`bool`
         Whether reactions should be restricted to the given list.
 
@@ -292,7 +312,7 @@ class SendableEmbed:
 
 @define(slots=True)
 class MessageWebhook:
-    """Specifies information about the webhook bundled with Message."""
+    """Specifies information about the webhook bundled with :class:`~pyvolt.Message`."""
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The webhook's name. Can be between 1 to 32 characters."""
@@ -346,7 +366,7 @@ class BaseMessage(Base):
         Returns
         -------
         Tuple[Optional[:class:`.Server`], :class:`str`]
-            The server and server ID.
+            The server and server ID (may be empty).
         """
         state = self.state
         cache = state.cache
@@ -762,7 +782,7 @@ class BaseMessage(Base):
 
         Pins the message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
@@ -939,7 +959,7 @@ class BaseMessage(Base):
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.manage_roles` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 
@@ -1120,7 +1140,7 @@ class BaseMessage(Base):
 
         Unpins the message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
@@ -3797,6 +3817,156 @@ class Message(BaseMessage):
         ret = _new_message_flags(MessageFlags)
         ret.value = self.raw_flags
         return ret
+
+    @property
+    def mentions(self) -> list[typing.Union[Member, User]]:
+        """List[Union[:class:`.Member`, :class:`.User`]]: The message's user mentions."""
+
+        if not len(self.mention_ids):
+            return []
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return []
+
+        ctx = (
+            MemberOrUsersThroughMessageMentionsCacheContext(
+                type=CacheContextType.member_or_users_through_message_mentions,
+                message=self,
+            )
+            if state.provide_cache_context('Message.mentions')
+            else _MEMBER_OR_USERS_THROUGH_MESSAGE_MENTIONS
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is None or not isinstance(channel, BaseServerChannel):
+            mentions = []
+            for user_id in self.mention_ids:
+                user = cache.get_user(user_id, ctx)
+                if user is not None:
+                    mentions.append(user)
+            return mentions
+
+        server_id = channel.server_id
+        mentions = []
+
+        for user_id in self.mention_ids:
+            user = cache.get_server_member(server_id, user_id, ctx)
+            if user is None:
+                user = cache.get_user(user_id, ctx)
+            if user is not None:
+                mentions.append(user)
+
+        return mentions
+
+    @property
+    def mentions_as_members(self) -> list[Member]:
+        """List[:class:`.Member`]: The message's user mentions as members."""
+
+        if not len(self.mention_ids):
+            return []
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return []
+
+        ctx = (
+            MembersThroughMessageMentionsCacheContext(
+                type=CacheContextType.members_through_message_mentions,
+                message=self,
+            )
+            if state.provide_cache_context('Message.mentions_as_members')
+            else _MEMBERS_THROUGH_MESSAGE_MENTIONS
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is None or not isinstance(channel, BaseServerChannel):
+            return []
+
+        server_id = channel.server_id
+        mentions = []
+
+        for user_id in self.mention_ids:
+            user = cache.get_server_member(server_id, user_id, ctx)
+            if user is not None:
+                mentions.append(user)
+
+        return mentions
+
+    @property
+    def mentions_as_users(self) -> list[User]:
+        """List[:class:`.User`]: The message's user mentions."""
+
+        if not len(self.mention_ids):
+            return []
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return []
+
+        ctx = (
+            UsersThroughMessageMentionsCacheContext(
+                type=CacheContextType.users_through_message_mentions,
+                message=self,
+            )
+            if state.provide_cache_context('Message.mentions_as_users')
+            else _USERS_THROUGH_MESSAGE_MENTIONS
+        )
+
+        mentions = []
+
+        for user_id in self.mention_ids:
+            user = cache.get_user(user_id, ctx)
+            if user is not None:
+                mentions.append(user)
+
+        return mentions
+
+    @property
+    def role_mentions(self) -> list[Role]:
+        """List[:class:`.Role`]: The message's role mentions."""
+
+        if not len(self.role_mention_ids):
+            return []
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return []
+
+        ctx = (
+            RoleThroughMessageRoleMentionsCacheContext(
+                type=CacheContextType.role_through_message_role_mentions,
+                message=self,
+            )
+            if state.provide_cache_context('Message.role_mentions')
+            else _ROLE_THROUGH_MESSAGE_ROLE_MENTIONS
+        )
+
+        channel = cache.get_channel(self.channel_id, ctx)
+        if channel is None or not isinstance(channel, BaseServerChannel):
+            return []
+
+        server = cache.get_server(channel.server_id, ctx)
+        if server is None:
+            return []
+
+        role_mentions = []
+        for role_id in self.role_mention_ids:
+            try:
+                role = server.roles[role_id]
+            except KeyError:
+                pass
+            else:
+                role_mentions.append(role)
+        return role_mentions
 
     @property
     def system_content(self) -> str:

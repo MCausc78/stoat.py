@@ -40,7 +40,8 @@ from .cache import (
     ReadStateThroughGroupChannelReadStateCacheContext,
     UserThroughGroupChannelOwnerCacheContext,
     UserThroughGroupChannelRecipientsCacheContext,
-    ServerThroughServerChannelCacheContext,
+    MemberThroughServerChannelMeCacheContext,
+    ServerThroughServerChannelServerCacheContext,
     MessageThroughTextChannelLastMessageCacheContext,
     ReadStateThroughTextChannelReadStateCacheContext,
     ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext,
@@ -54,7 +55,8 @@ from .cache import (
     _USER_THROUGH_GROUP_CHANNEL_OWNER,
     _READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE,
     _USER_THROUGH_GROUP_CHANNEL_RECIPIENTS,
-    _SERVER_THROUGH_SERVER_CHANNEL,
+    _MEMBER_THROUGH_SERVER_CHANNEL_ME,
+    _SERVER_THROUGH_SERVER_CHANNEL_SERVER,
     _MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE,
     _READ_STATE_THROUGH_TEXT_CHANNEL_READ_STATE,
     _CHANNEL_VOICE_STATE_CONTAINER_THROUGH_TEXT_CHANNEL_VOICE_STATES,
@@ -96,7 +98,10 @@ _new_permissions = Permissions.__new__
 
 @define(slots=True)
 class BaseChannel(Base):
-    """Represents channel on Revolt."""
+    """Represents channel on Revolt.
+
+    This classes derives from :class:`.Base`.
+    """
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseChannel) and self.id == other.id
@@ -300,7 +305,10 @@ class BaseChannel(Base):
 
 @define(slots=True)
 class PartialChannel(BaseChannel):
-    """Represents a partial channel on Revolt."""
+    """Represents a partial channel on Revolt.
+
+    This classes derives from :class:`.BaseChannel`.
+    """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The new channel name, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
@@ -468,13 +476,20 @@ def calculate_server_channel_permissions(
 
 @define(slots=True)
 class SavedMessagesChannel(BaseChannel, Messageable):
-    """Represents a personal "Saved Notes" channel which allows users to save messages."""
+    """Represents a personal "Saved Notes" channel which allows users to save messages.
+
+    This classes derives from :class:`.BaseChannel` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The ID of the user this channel belongs to."""
 
     def get_channel_id(self) -> str:
         return self.id
+
+    def get_me(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The own user."""
+        return self.state.me
 
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
@@ -489,6 +504,14 @@ class SavedMessagesChannel(BaseChannel, Messageable):
         """
         # PartialChannel has no fields that are related to SavedMessages yet
         pass
+
+    @property
+    def me(self) -> User:
+        """:class:`.User`: The own user."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='GroupChannel.me')
+        return me
 
     @property
     def type(self) -> typing.Literal[ChannelType.saved_messages]:
@@ -524,7 +547,10 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
 @define(slots=True)
 class DMChannel(BaseChannel, Connectable, Messageable):
-    """Represents a private channel between two users."""
+    """Represents a private channel between two users.
+
+    This classes derives from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     active: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the DM channel is currently open on both sides."""
@@ -580,6 +606,10 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         )
 
         return cache.get_message(self.id, last_message_id, ctx)
+
+    def get_me(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The own user."""
+        return self.state.me
 
     @typing.overload
     def get_read_state(
@@ -695,6 +725,11 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         return (a, b)
 
     @property
+    def initiator_id(self) -> str:
+        """:class:`str`: The user's ID that started this PM."""
+        return self.recipient_ids[0]
+
+    @property
     def last_message(self) -> typing.Optional[Message]:
         """Optional[:class:`.Message`]: The last message sent in the channel."""
 
@@ -704,6 +739,14 @@ class DMChannel(BaseChannel, Connectable, Messageable):
                 return None
             raise NoData(what=self.last_message_id, type='DMChannel.last_message')
         return message
+
+    @property
+    def me(self) -> User:
+        """:class:`.User`: The own user."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='GroupChannel.me')
+        return me
 
     @property
     def read_state(self) -> ReadState:
@@ -719,11 +762,6 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         return recipient
 
     @property
-    def initiator_id(self) -> str:
-        """:class:`str`: The user's ID that started this PM."""
-        return self.recipient_ids[0]
-
-    @property
     def recipient_id(self) -> str:
         """:class:`str`: The recipient's ID."""
         me = self.state.me
@@ -735,6 +773,16 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         b = self.recipient_ids[1]
 
         return a if me.id != a else b
+
+    @property
+    def server(self) -> None:
+        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        return None
+
+    @property
+    def type(self) -> typing.Literal[ChannelType.private]:
+        """Literal[:attr:`.ChannelType.private`]: The channel's type."""
+        return ChannelType.private
 
     def locally_update(self, data: PartialChannel, /) -> None:
         """Locally updates channel with provided data.
@@ -751,11 +799,6 @@ class DMChannel(BaseChannel, Connectable, Messageable):
             self.active = data.active
         if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
-
-    @property
-    def type(self) -> typing.Literal[ChannelType.private]:
-        """Literal[:attr:`.ChannelType.private`]: The channel's type."""
-        return ChannelType.private
 
     def permissions_for(self, target: typing.Union[User, Member], /) -> Permissions:
         """Calculate permissions for given user.
@@ -807,7 +850,10 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
 @define(slots=True)
 class GroupChannel(BaseChannel, Connectable, Messageable):
-    """Represesnts Revolt group channel between 1 or more participants."""
+    """Represesnts a Revolt group channel between 1 or more participants.
+
+    This classes derives from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The group's name."""
@@ -865,6 +911,10 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         )
 
         return cache.get_message(self.id, last_message_id, ctx)
+
+    def get_me(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The own user."""
+        return self.state.me
 
     def get_owner(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: The user who owns this group."""
@@ -1014,6 +1064,22 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         return message
 
     @property
+    def me(self) -> User:
+        """:class:`.User`: The own user."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='GroupChannel.me')
+        return me
+
+    @property
+    def owner(self) -> User:
+        """:class:`.User`: The user who owns this group."""
+        owner = self.get_owner()
+        if owner is None:
+            raise NoData(what=self.owner_id, type='GroupChannel.owner')
+        return owner
+
+    @property
     def permissions(self) -> typing.Optional[Permissions]:
         """Optional[:class:`.Permissions`]: The permissions assigned to members of this group.
 
@@ -1025,14 +1091,6 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         ret = _new_permissions(Permissions)
         ret.value = self.raw_permissions
         return ret
-
-    @property
-    def owner(self) -> User:
-        """:class:`.User`: The user who owns this group."""
-        owner = self.get_owner()
-        if owner is None:
-            raise NoData(what=self.owner_id, type='GroupChannel.owner')
-        return owner
 
     @property
     def read_state(self) -> ReadState:
@@ -1076,6 +1134,11 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
             return recipients
         else:
             return self._recipients[1]  # type: ignore
+
+    @property
+    def server(self) -> None:
+        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        return None
 
     @property
     def type(self) -> typing.Literal[ChannelType.group]:
@@ -1572,10 +1635,30 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
 @define(slots=True)
 class UnknownPrivateChannel(BaseChannel):
-    """Represents a private channel that is not recognized by library yet."""
+    """Represents a private channel that is not recognized by library yet.
+
+    This classes derives from :class:`.BaseChannel`.
+    """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, Any]: The raw channel data."""
+
+    def get_me(self) -> typing.Optional[User]:
+        """Optional[:class:`.User`]: The own user."""
+        return self.state.me
+
+    @property
+    def me(self) -> User:
+        """:class:`.User`: The own user."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='GroupChannel.me')
+        return me
+
+    @property
+    def server(self) -> None:
+        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        return None
 
     @property
     def type(self) -> typing.Literal[ChannelType.unknown]:
@@ -1593,6 +1676,11 @@ PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, Unk
 
 @define(slots=True)
 class BaseServerChannel(BaseChannel):
+    """A base class for server channels.
+
+    This classes derives from :class:`.BaseChannel`.
+    """
+
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server ID that channel belongs to."""
 
@@ -1614,6 +1702,25 @@ class BaseServerChannel(BaseChannel):
     nsfw: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether this channel is marked as not safe for work."""
 
+    def get_me(self) -> typing.Optional[Member]:
+        """Optional[:class:`.Member`]: The own user for this server."""
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberThroughServerChannelMeCacheContext(
+                type=CacheContextType.member_through_server_channel_me,
+                channel=self,
+            )
+            if state.provide_cache_context('BaseServerChannel.me')
+            else _MEMBER_THROUGH_SERVER_CHANNEL_ME
+        )
+
+        return cache.get_server_member(self.server_id, state.my_id, ctx)
+
     def get_server(self) -> typing.Optional[Server]:
         """Optional[:class:`.Server`]: The server that channel belongs to."""
         state = self.state
@@ -1623,12 +1730,12 @@ class BaseServerChannel(BaseChannel):
             return None
 
         ctx = (
-            ServerThroughServerChannelCacheContext(
-                type=CacheContextType.server_through_server_channel,
+            ServerThroughServerChannelServerCacheContext(
+                type=CacheContextType.server_through_server_channel_server,
                 channel=self,
             )
             if state.provide_cache_context('BaseServerChannel.server')
-            else _SERVER_THROUGH_SERVER_CHANNEL
+            else _SERVER_THROUGH_SERVER_CHANNEL_SERVER
         )
 
         return cache.get_server(self.server_id, ctx)
@@ -1637,6 +1744,14 @@ class BaseServerChannel(BaseChannel):
     def icon(self) -> typing.Optional[Asset]:
         """Optional[:class:`.Asset`]: The custom channel icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
+
+    @property
+    def me(self) -> Member:
+        """Optional[:class:`.Member`]: The own user for this server."""
+        me = self.get_me()
+        if me is None:
+            raise NoData(what='', type='BaseServerChannel.me')
+        return me
 
     @property
     def server(self) -> Server:
@@ -2030,7 +2145,7 @@ class BaseServerChannel(BaseChannel):
         """
         server = self.get_server()
         if server is None:
-            raise NoData(self.server_id, 'server')
+            raise NoData(what=self.server_id, type='BaseServerChannel.permissions_for')
 
         if with_ownership and server.owner_id == target.id:
             return Permissions.all()
@@ -2084,7 +2199,10 @@ class ChannelVoiceMetadata:
 
 @define(slots=True)
 class TextChannel(BaseServerChannel, Connectable, Messageable):
-    """Represents a text channel that belongs to a server on Revolt."""
+    """Represents a text channel that belongs to a server on Revolt.
+
+    This classes derives from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     last_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The last message ID sent in the channel."""
@@ -2359,6 +2477,8 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 class VoiceChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a voice channel that belongs to a server on Revolt.
 
+    This classes derives from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+
     .. deprecated:: 0.7.0
         The voice channel type was deprecated in favour of :attr:`TextChannel.voice`.
     """
@@ -2428,7 +2548,10 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
 
 @define(slots=True)
 class UnknownServerChannel(BaseServerChannel):
-    """Represents a server channel that is not recognized by library yet."""
+    """Represents a server channel that is not recognized by library yet.
+
+    This classes derives from :class:`.BaseServerChannel`.
+    """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, Any]: The raw channel data."""

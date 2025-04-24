@@ -472,7 +472,7 @@ class HTTPOverrideOptions:
     token: UndefinedOr[Optional[:class:`str`]]
         The token to use when requesting the route.
     user_agent: UndefinedOr[:class:`str`]
-        The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+        The user agent to use for HTTP request. Defaults to :attr:`HTTPClient.user_agent`.
     """
 
     __slots__ = _HTTP_OVERRIDE_PARAMETER_KEYS
@@ -668,6 +668,7 @@ class HTTPClient:
             ret = self._adapter(self)
             if isawaitable(ret):
                 ret = await ret
+            await ret.startup()
             self._adapter = ret
             return ret
         return self._adapter
@@ -1105,7 +1106,9 @@ class HTTPClient:
 
             _L.debug('%s %s has received %s [too large response]', method, url, response.status)
 
-        response.close()
+        tmp = response.close()
+        if isawaitable(tmp):
+            await tmp
         return result
 
     async def cleanup(self) -> None:
@@ -2143,11 +2146,11 @@ class HTTPClient:
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------+----------------------------------+
-            | Value        | Reason                           |
-            +--------------+----------------------------------+
-            | ``NotFound`` | One of recipients was not found. |
-            +--------------+----------------------------------+
+            +--------------+-------------------------------------------------------------------------------+
+            | Value        | Reason                                                                        |
+            +--------------+-------------------------------------------------------------------------------+
+            | ``NotFound`` | One of recipients was not found, or the provided file for icon was not found. |
+            +--------------+-------------------------------------------------------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -2797,7 +2800,7 @@ class HTTPClient:
 
         Pins a message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
@@ -3231,7 +3234,7 @@ class HTTPClient:
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.manage_roles` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 
@@ -3385,7 +3388,7 @@ class HTTPClient:
 
         Unpins a message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
 
         Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
 
@@ -3755,7 +3758,7 @@ class HTTPClient:
         channel: ULIDOr[typing.Union[DMChannel, GroupChannel, TextChannel, VoiceChannel]],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
-        node: UndefinedOr[str] = UNDEFINED,
+        node: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> tuple[str, str]:
         """|coro|
 
@@ -3777,29 +3780,33 @@ class HTTPClient:
             will raise :class:`HTTPException` with ``CannotJoinCall`` type.
         http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
-        node: UndefinedOr[:class:`str`]
+        node: UndefinedOr[Optional[:class:`str`]]
             The node's name to use for starting a call.
+
+            Can be ``None`` to tell server choose the node automatically.
 
         Raises
         ------
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | Value                | Reason                                                                                                                            |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``AlreadyConnected`` | The current user was already connected to this voice channel.                                                                     |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``CannotJoinCall``   | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidOperation`` | The voice server is unavailable.                                                                                                  |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotConnected``     | The current user was already connected to other voice channel.                                                                    |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotAVoiceChannel`` | ???. Only applicable to instances using Livekit                                                                                   |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``VosoUnavailable``  | The voice server is unavailable.                                                                                                  |
-            +----------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                                            |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyConnected``   | The current user was already connected to this voice channel.                                                                     |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``CannotJoinCall``     | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``   | The voice server is unavailable.                                                                                                  |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``LivekitUnavailable`` | The voice server is unavailable. Only applicable to instances using Livekit.                                                      |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotConnected``       | The current user was already connected to other voice channel.                                                                    |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``   | ???. Only applicable to instances using Livekit                                                                                   |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``VosoUnavailable``    | The voice server is unavailable. Not applicable to instances using Livekit.                                                       |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -4028,7 +4035,7 @@ class HTTPClient:
         Fires :class:`.EmojiCreateEvent` for all server members.
 
         .. note::
-            This can only be used by non-bot accounts.
+            Prior to API v0.8.4, this could only be used by non-bot accounts.
 
         Parameters
         ----------
@@ -4048,15 +4055,15 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------+---------------------------------------------------------------+
-            | Value                | Reason                                                        |
-            +----------------------+---------------------------------------------------------------+
-            | ``FailedValidation`` | The payload was invalid.                                      |
-            +----------------------+---------------------------------------------------------------+
-            | ``IsBot``            | The current token belongs to bot account.                     |
-            +----------------------+---------------------------------------------------------------+
-            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance. |
-            +----------------------+---------------------------------------------------------------+
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | Value                | Reason                                                                                                                     |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                                                                                                   |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account. Only applicable to instances running API whose version is lower than ``v0.8.3``. |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmoji``     | The server has too many emojis than allowed on this instance.                                                              |
+            +----------------------+----------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -4130,6 +4137,9 @@ class HTTPClient:
         .. note::
             If deleting detached emoji, this will successfully return.
 
+        .. note::
+            Prior to API v0.8.4, this could only be used by non-bot accounts.
+
         Parameters
         ----------
         emoji: ULIDOr[:class:`.ServerEmoji`]
@@ -4142,11 +4152,11 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------+-------------------------------------------+
-            | Value     | Reason                                    |
-            +-----------+-------------------------------------------+
-            | ``IsBot`` | The current token belongs to bot account. |
-            +-----------+-------------------------------------------+
+            +-----------+----------------------------------------------------------------------------------------------------------------------------+
+            | Value     | Reason                                                                                                                     |
+            +-----------+----------------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot`` | The current token belongs to bot account. Only applicable to instances running API whose version is lower than ``v0.8.3``. |
+            +-----------+----------------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5380,13 +5390,15 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +---------------------------+-----------------------------------------------------------------------+
-            | Value                     | Reason                                                                |
-            +---------------------------+-----------------------------------------------------------------------+
-            | ``CannotTimeoutYourself`` | You tried to time out yourself.                                       |
-            +---------------------------+-----------------------------------------------------------------------+
-            | ``NotAVoiceChannel``      | The channel passed in ``voice`` parameter was not voice-like channel. |
-            +---------------------------+-----------------------------------------------------------------------+
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                                                            |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``CannotTimeoutYourself`` | You tried to time out yourself.                                                                                   |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``LivekitUnavailable``    | The voice server is unavailable. Only applicable to instances using Livekit.                                      |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``      | The channel passed in ``voice`` parameter was not voice-like channel. Only applicable to instances using Livekit. |
+            +---------------------------+-------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -8301,7 +8313,7 @@ class HTTPClient:
 
             Webhook must have :attr:`~Permissions.use_masquerade` to provide this.
 
-            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.manage_roles` is also required.
         interactions: Optional[:class:`.MessageInteractions`]
             The message interactions.
 

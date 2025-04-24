@@ -46,6 +46,7 @@ class WebSocketConnectionFailure(Exception):
 
     def __init__(self, *, status: int) -> None:
         self.status: int = status
+        super().__init__(f'WebSocket endpoint returned {status} status code')
 
 
 @typing.runtime_checkable

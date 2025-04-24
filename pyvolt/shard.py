@@ -405,28 +405,40 @@ class ShardImpl(Shard):
 
             edited_at = data.get('edited')
             if edited_at is not None and isinstance(edited_at, int):
-                data['edited'] = _fromtimestamp(edited_at, _UTC).isoformat()
+                data['edited'] = _fromtimestamp(edited_at / 1000, _UTC).isoformat()
+        elif payload['type'] == 'ReportCreate':
+            self._maybe_fix_report(payload)
         elif payload['type'] == 'ServerMemberUpdate':
             data = payload['data']
 
             timeout = data.get('timeout')
             if timeout is not None and isinstance(timeout, int):
-                data['timeout'] = _fromtimestamp(timeout, _UTC).isoformat()
+                data['timeout'] = _fromtimestamp(timeout / 1000, _UTC).isoformat()
 
     def _maybe_fix_member(self, payload: raw.Member, /) -> None:
         joined_at = payload['joined_at']
 
         if isinstance(joined_at, int):
-            payload['joined_at'] = _fromtimestamp(joined_at, _UTC).isoformat()
+            payload['joined_at'] = _fromtimestamp(joined_at / 1000, _UTC).isoformat()
 
         timeout = payload.get('timeout')
         if timeout is not None and isinstance(timeout, int):
-            payload['timeout'] = _fromtimestamp(timeout, _UTC).isoformat()
+            payload['timeout'] = _fromtimestamp(timeout / 1000, _UTC).isoformat()
 
     def _maybe_fix_message(self, payload: raw.Message, /) -> None:
         edited_at = payload.get('edited')
         if edited_at is not None and isinstance(edited_at, int):
-            payload['edited'] = _fromtimestamp(edited_at, _UTC).isoformat()
+            payload['edited'] = _fromtimestamp(edited_at / 1000, _UTC).isoformat()
+
+        member_data = payload.get('member')
+        if member_data is not None:
+            self._maybe_fix_member(member_data)
+
+    def _maybe_fix_report(self, payload: raw.Report, /) -> None:
+        closed_at = payload.get('closed_at')
+
+        if closed_at is not None and isinstance(closed_at, int):
+            payload['closed_at'] = _fromtimestamp(closed_at / 1000, _UTC).isoformat()  # type: ignore
 
     def is_closed(self) -> bool:
         return self._closed and not self._socket
@@ -473,6 +485,7 @@ class ShardImpl(Shard):
             ret = self._adapter(self)
             if isawaitable(ret):
                 ret = await ret
+            await ret.startup()
             self._adapter = ret
             return ret
         return self._adapter

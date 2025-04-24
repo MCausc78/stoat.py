@@ -26,9 +26,11 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
+from os import urandom
+from time import time
 import typing
 
-from .ulid import _ulid_timestamp
+from .ulid import _ulid_encode, _ulid_timestamp
 
 
 class _Sentinel(Enum):
@@ -54,11 +56,52 @@ T = typing.TypeVar('T')
 UndefinedOr = typing.Union['Undefined', T]
 
 
+def ulid_new(*, timestamp: typing.Optional[float] = None, randomness: typing.Optional[bytes] = None) -> str:
+    """:class:`str`: Generate an ULID.
+
+    Parameters
+    ----------
+    timestamp: Optional[:class:`float`]
+        The UNIX timestamp. Defaults to current time.
+    randomness: Optional[:class:`bytes`]
+        The randomness. Must be exactly 10 bytes. Defaults to :func:`~os.urandom`.
+    """
+
+    if timestamp is None:
+        timestamp = int(time() * 1000)
+
+    return _ulid_encode(int(timestamp).to_bytes(6, byteorder='big') + (randomness if randomness else urandom(10)))
+
+
 def ulid_timestamp(val: str, /) -> float:
+    """Returns timestamp for specified ULID.
+
+    Parameters
+    ----------
+    val: :class:`str`
+        The ID to get timestamp from.
+
+    Returns
+    -------
+    :class:`float`
+        The UNIX timestamp.
+    """
     return _ulid_timestamp(val.encode('ascii'))
 
 
 def ulid_time(val: str, /) -> datetime:
+    """Returns timestamp for specified ULID.
+
+    Parameters
+    ----------
+    val: :class:`str`
+        The ID to get timestamp from.
+
+    Returns
+    -------
+    :class:`~datetime.datetime`
+        The timestamp.
+    """
     return datetime.fromtimestamp(ulid_timestamp(val), timezone.utc)
 
 
@@ -84,6 +127,7 @@ __all__ = (
     'UNDEFINED',
     'T',
     'UndefinedOr',
+    'ulid_new',
     'ulid_timestamp',
     'ulid_time',
     'HasID',
