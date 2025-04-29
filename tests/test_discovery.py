@@ -1,4 +1,4 @@
-from aiohttp import ClientSession, web
+from aiohttp import web
 import json
 import pytest
 import pyvolt

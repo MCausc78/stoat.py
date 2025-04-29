@@ -172,190 +172,190 @@ Discover
 
     Specifies language.
 
-    .. attribute:: en
+    .. attribute:: english
 
         English (Traditional)
-    .. attribute:: en_US
+    .. attribute:: english_simplified
 
         English (Simplified)
-    .. attribute:: ar
+    .. attribute:: arabic
 
         عربي
-    .. attribute:: as
+    .. attribute:: assamese
 
         অসমীয়া
-    .. attribute:: az
+    .. attribute:: azerbaijani
 
         Azərbaycan dili
-    .. attribute:: be
+    .. attribute:: belarusian
 
         Беларуская
-    .. attribute:: bg
+    .. attribute:: bulgarian
 
         Български
-    .. attribute:: bn
+    .. attribute:: bengali
 
         বাংলা
-    .. attribute:: br
+    .. attribute:: breton
 
         Brezhoneg
-    .. attribute:: ca
+    .. attribute:: catalonian
 
         Català
-    .. attribute:: ceb
+    .. attribute:: cecebuanob
 
         Bisaya
-    .. attribute:: ckb
+    .. attribute:: central_kurdish
 
         کوردی
-    .. attribute:: cs
+    .. attribute:: czech
 
         Čeština
-    .. attribute:: da
+    .. attribute:: danish
 
         Dansk
-    .. attribute:: de
+    .. attribute:: german
 
         Deutsch
-    .. attribute:: el
+    .. attribute:: greek
 
         Ελληνικά
-    .. attribute:: es
+    .. attribute:: spanish
 
         Español
-    .. attribute:: es_419
+    .. attribute:: spanish_latin_america
 
         Español (América Latina)
-    .. attribute:: et
+    .. attribute:: estonian
 
         eesti
-    .. attribute:: fi
+    .. attribute:: finnish
 
         suomi
-    .. attribute:: fil
+    .. attribute:: filipino
 
         Filipino
-    .. attribute:: fr
+    .. attribute:: french
 
         Français
-    .. attribute:: ga
+    .. attribute:: irish
 
         Gaeilge
-    .. attribute:: hi
+    .. attribute:: hindi
 
         हिन्दी
-    .. attribute:: hr
+    .. attribute:: croatian
 
         Hrvatski
-    .. attribute:: hu
+    .. attribute:: hungarian
 
         Magyar
-    .. attribute:: hy
+    .. attribute:: armenian
 
         հայերեն
-    .. attribute:: id
+    .. attribute:: indonesian
 
         Bahasa Indonesia
-    .. attribute:: is
+    .. attribute:: icelandic
 
         Íslenska
-    .. attribute:: it
+    .. attribute:: italian
 
         Italiano
-    .. attribute:: ja
+    .. attribute:: japense
 
         日本語
-    .. attribute:: ko
+    .. attribute:: korean
 
         한국어
-    .. attribute:: lb
+    .. attribute:: luxembourgish
 
         Lëtzebuergesch
-    .. attribute:: lt
+    .. attribute:: lithuanian
 
         Lietuvių
-    .. attribute:: lv
+    .. attribute:: latvian
 
         Latviešu
-    .. attribute:: mk
+    .. attribute:: macedonian
 
         Македонски
-    .. attribute:: ms
+    .. attribute:: malay
 
         Bahasa Melayu
-    .. attribute:: nb_NO
+    .. attribute:: norwegian_bokmal
 
         Norsk bokmål
-    .. attribute:: nl
+    .. attribute:: dutch
 
         Nederlands
-    .. attribute:: fa
+    .. attribute:: persian
 
         فارسی
-    .. attribute:: pl
+    .. attribute:: polish
 
         Polski
-    .. attribute:: pt_BR
+    .. attribute:: portuguese_brazil
 
         Português (do Brasil)
-    .. attribute:: pt_PT
+    .. attribute:: portuguese_portugal
 
         Português (Portugal)
-    .. attribute:: ro
+    .. attribute:: romanian
 
         Română
-    .. attribute:: ru
+    .. attribute:: russian
 
         Русский
-    .. attribute:: sk
+    .. attribute:: slovak
 
         Slovensky
-    .. attribute:: sl
+    .. attribute:: slovenian
 
         Slovenščina
-    .. attribute:: sq
+    .. attribute:: albanian
 
         Shqip
-    .. attribute:: sr
+    .. attribute:: serbian
 
         Српски
-    .. attribute:: si
+    .. attribute:: sinhalese
 
         සිංහල
-    .. attribute:: sv
+    .. attribute:: swedish
 
         Svenska
-    .. attribute:: ta
+    .. attribute:: tamil
 
         தமிழ்
-    .. attribute:: th
+    .. attribute:: thai
 
         ไทย
-    .. attribute:: tr
+    .. attribute:: turkish
 
         Türkçe
-    .. attribute:: ur
+    .. attribute:: urdu
 
         اردو
-    .. attribute:: uk
+    .. attribute:: ukrainian
 
         Українська
-    .. attribute:: vec
+    .. attribute:: venetian
 
         Vèneto
-    .. attribute:: vi
+    .. attribute:: vietnamese
 
         Tiếng Việt
-    .. attribute:: zh_Hans
+    .. attribute:: chinese_simplified
 
         简体中文
-    .. attribute:: zh_Hant
+    .. attribute:: chinese_traditional
 
         繁體中文
     .. attribute:: tokipona
 
         Toki Pona
-    .. attribute:: eo
+    .. attribute:: esperanto
 
         Esperanto
     .. attribute:: owo
@@ -382,15 +382,15 @@ Discover
         
         .. note::
             This is joke language.
-    .. attribute:: enchantment_table
-
-        Enchantment Table
-        
-        .. note::
-            This is joke language.
     .. attribute:: piglatin
 
         Pig Latin
+        
+        .. note::
+            This is joke language.
+    .. attribute:: enchantment_table
+
+        Enchantment Table
         
         .. note::
             This is joke language.
