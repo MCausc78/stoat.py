@@ -82,6 +82,7 @@ class PartialChannel(typing.TypedDict):
     role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
     default_permissions: typing_extensions.NotRequired[OverrideField]
     last_message_id: typing_extensions.NotRequired[str]
+    voice: typing_extensions.NotRequired[VoiceInformation]
 
 
 FieldsChannel = typing.Literal['Description', 'Icon', 'DefaultPermissions']
@@ -94,6 +95,7 @@ class DataEditChannel(typing.TypedDict):
     icon: typing_extensions.NotRequired[str]
     nsfw: typing_extensions.NotRequired[bool]
     archived: typing_extensions.NotRequired[bool]
+    voice: typing_extensions.NotRequired[VoiceInformation]
     remove: typing_extensions.NotRequired[list[FieldsChannel]]
 
 
@@ -113,6 +115,7 @@ class DataCreateServerChannel(typing.TypedDict):
     name: str
     description: typing_extensions.NotRequired[typing.Optional[str]]
     nsfw: typing_extensions.NotRequired[bool]
+    voice: typing_extensions.NotRequired[VoiceInformation]
 
 
 class DataDefaultChannelPermissions(typing.TypedDict):

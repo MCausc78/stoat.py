@@ -268,7 +268,10 @@ class HTTPAdapter(ABC, typing.Generic[F]):
 
 
 class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
-    """Represents a HTTP adapter using :class:`aiohttp.ClientSession`."""
+    """Represents a HTTP adapter using :class:`aiohttp.ClientSession`.
+
+    This inherits from :class:`.HTTPAdapter`.
+    """
 
     __slots__ = ('_session',)
 

@@ -44,7 +44,10 @@ _new_bot_flags = BotFlags.__new__
 
 @define(slots=True)
 class BaseBot(Base):
-    """Represents a base bot on Revolt."""
+    """Represents a base bot on Revolt.
+
+    This inherits from :class:`.Base`.
+    """
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseBot) and self.id == other.id
@@ -180,7 +183,10 @@ class BaseBot(Base):
 
 @define(slots=True)
 class Bot(BaseBot):
-    """Represents a bot on Revolt."""
+    """Represents a bot on Revolt.
+
+    This inherits from :class:`.BaseBot`.
+    """
 
     owner_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who owns this bot."""
@@ -275,7 +281,10 @@ class Bot(BaseBot):
 
 @define(slots=True)
 class PublicBot(BaseBot):
-    """Represents public bot on Revolt."""
+    """Represents public bot on Revolt.
+
+    This inherits from :class:`.BaseBot`.
+    """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The bot's name."""

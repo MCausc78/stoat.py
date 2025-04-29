@@ -198,7 +198,10 @@ class StatelessAsset:
 
 @define(slots=True)
 class Asset(StatelessAsset):
-    """Represents an asset on Revolt."""
+    """Represents an asset on Revolt.
+
+    This inherits from :class:`.StatelessAsset`.
+    """
 
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
     tag: Tag = field(repr=True, kw_only=True)
@@ -267,6 +270,8 @@ def resolve_content(content: Content, /) -> typing.Union[bytes, io.IOBase]:
 
 class Upload(Resource):
     """Represents a file upload.
+
+    This inherits from :class:`.Resource`.
 
     Attributes
     ----------

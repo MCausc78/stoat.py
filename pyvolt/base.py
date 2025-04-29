@@ -37,6 +37,8 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True)
 class Base:
+    """A base class for Revolt entities."""
+
     state: State = field(repr=False, kw_only=True)
     """:class:`.State`: The state that controls this entity."""
 

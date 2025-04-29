@@ -63,7 +63,8 @@ class Messageable:
     - :class:`.GroupChannel`
     - :class:`.TextChannel`
     - :class:`.VoiceChannel`
-    - :class:`.User`
+    - :class:`.BaseMember`
+    - :class:`.BaseUser`
     - :class:`.PartialMessageable`
     - :class:`pyvolt.ext.commands.Context`
     """

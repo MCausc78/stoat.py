@@ -45,6 +45,8 @@ class PyvoltException(Exception):
 class HTTPException(PyvoltException):
     """Exception that's raised when a HTTP request operation fails.
 
+    This inherits from :class:`.PyvoltException`.
+
     Attributes
     ----------
     response: :class:`.HTTPResponse`
@@ -200,6 +202,8 @@ class NoEffect(PyvoltException):
     """HTTP exception that corresponds to HTTP 200 status code.
 
     This exists because Revolt API returns 200 with error body for some reason.
+
+    This inherits from :class:`.PyvoltException`.
     """
 
     __slots__ = ('data',)
@@ -213,43 +217,64 @@ class NoEffect(PyvoltException):
 
 
 class Unauthorized(HTTPException):
-    """HTTP exception that corresponds to HTTP 401 status code."""
+    """HTTP exception that corresponds to HTTP 401 status code.
+
+    This inherits from :class:`.HTTPException`.
+    """
 
     __slots__ = ()
 
 
 class Forbidden(HTTPException):
-    """HTTP exception that corresponds to HTTP 403 status code."""
+    """HTTP exception that corresponds to HTTP 403 status code.
+
+    This inherits from :class:`.HTTPException`.
+    """
 
     __slots__ = ()
 
 
 class NotFound(HTTPException):
-    """HTTP exception that corresponds to HTTP 404 status code."""
+    """HTTP exception that corresponds to HTTP 404 status code.
+
+    This inherits from :class:`.HTTPException`.
+    """
 
     __slots__ = ()
 
 
 class Conflict(HTTPException):
-    """HTTP exception that corresponds to HTTP 409 status code."""
+    """HTTP exception that corresponds to HTTP 409 status code.
+
+    This inherits from :class:`.HTTPException`.
+    """
 
     __slots__ = ()
 
 
 class Ratelimited(HTTPException):
-    """HTTP exception that corresponds to HTTP 429 status code."""
+    """HTTP exception that corresponds to HTTP 429 status code.
+
+    This inherits from :class:`.HTTPException`.
+    """
 
     __slots__ = ()
 
 
 class InternalServerError(HTTPException):
-    """HTTP exception that corresponds to HTTP 5xx status code."""
+    """HTTP exception that corresponds to HTTP 5xx status code.
+
+    This inherits from :class:`.HTTPException`.
+    """
 
     __slots__ = ()
 
 
 class BadGateway(HTTPException):
-    """HTTP exception that corresponds to HTTP 502 status code."""
+    """HTTP exception that corresponds to HTTP 502 status code.
+
+    This inherits from :class:`.HTTPException`.
+    """
 
     __slots__ = ()
 
@@ -257,6 +282,8 @@ class BadGateway(HTTPException):
 class ShardError(PyvoltException):
     """Exception that's raised when any shard-related
     error happens.
+
+    This inherits from :class:`.PyvoltException`.
     """
 
     __slots__ = ()
@@ -265,6 +292,8 @@ class ShardError(PyvoltException):
 class ShardClosedError(ShardError):
     """Exception that's raised when shard
     was already closed.
+
+    This inherits from :class:`.ShardError`.
     """
 
     __slots__ = ()
@@ -273,6 +302,8 @@ class ShardClosedError(ShardError):
 class AuthenticationError(ShardError):
     """Exception that's raised when WebSocket
     authentication fails.
+
+    This inherits from :class:`.ShardError`.
 
     Attributes
     ----------
@@ -291,6 +322,8 @@ class ConnectError(ShardError):
     """Exception that's raised when the library fails
     to connect to Revolt WebSocket.
 
+    This inherits from :class:`.ShardError`.
+
     Attributes
     ----------
     errors: List[:exc:`Exception`]
@@ -305,6 +338,20 @@ class ConnectError(ShardError):
 
 
 class DiscoverError(PyvoltException):
+    """Exception that's raised when a HTTP request operation fails.
+
+    This inherits from :class:`.PyvoltException`.
+
+    Attributes
+    ----------
+    response: :class:`.HTTPResponse`
+        The response of the failed HTTP request.
+    data: Union[Dict[:class:`str`, Any], Any]
+        The data of the error. Could be an empty string.
+    status: :class:`int`
+        The status code of the HTTP request.
+    """
+
     __slots__ = ('response', 'status', 'data')
 
     def __init__(
@@ -323,6 +370,8 @@ class DiscoverError(PyvoltException):
 class InvalidData(PyvoltException):
     """Exception that's raised when the library encounters unknown
     or invalid data from Revolt.
+
+    This inherits from :class:`.PyvoltException`.
     """
 
     __slots__ = ('reason',)
@@ -336,7 +385,7 @@ class NoData(PyvoltException):
     """Exception that's raised when the library did not found
     data requested from cache.
 
-    This is different from :exc:`.NotFound`.
+    This is different from :exc:`.NotFound`, and inherits from :class:`.PyvoltException`.
     """
 
     __slots__ = ('what', 'type')

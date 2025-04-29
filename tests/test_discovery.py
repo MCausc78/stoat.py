@@ -73,7 +73,7 @@ async def test_bots():
 
     state = pyvolt.State()
     state.setup(parser=pyvolt.Parser(state=state))
-    client = pyvolt.DiscoveryClient(base='http://127.0.0.1:5101/', session=ClientSession(), state=state)
+    client = pyvolt.DiscoveryClient(base_url='http://127.0.0.1:5103/', state=state)
 
     page = await client.bots()
     assert len(page.bots) == 21
@@ -136,7 +136,7 @@ async def test_servers():
 
     state = pyvolt.State()
     state.setup(parser=pyvolt.Parser(state=state))
-    client = pyvolt.DiscoveryClient(base='http://127.0.0.1:5102/', session=ClientSession(), state=state)
+    client = pyvolt.DiscoveryClient(base_url='http://127.0.0.1:5103/', state=state)
 
     page = await client.servers()
 
@@ -286,7 +286,7 @@ async def test_themes():
 
     state = pyvolt.State()
     state.setup(parser=pyvolt.Parser(state=state))
-    client = pyvolt.DiscoveryClient(base='http://127.0.0.1:5103/', session=ClientSession(), state=state)
+    client = pyvolt.DiscoveryClient(base_url='http://127.0.0.1:5103/', state=state)
 
     page = await client.themes()
     assert page.popular_tags == [

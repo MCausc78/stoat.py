@@ -49,10 +49,11 @@ from .authentication import (
 )
 from .channel import (
     BaseChannel,
-    TextChannel,
     SavedMessagesChannel,
     DMChannel,
     GroupChannel,
+    ChannelVoiceMetadata,
+    TextChannel,
     VoiceChannel,
     ServerChannel,
     Channel,
@@ -1812,6 +1813,7 @@ class HTTPClient:
         icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         nsfw: UndefinedOr[bool] = UNDEFINED,
         archived: UndefinedOr[bool] = UNDEFINED,
+        voice: UndefinedOr[ChannelVoiceMetadata] = UNDEFINED,
         default_permissions: UndefinedOr[None] = UNDEFINED,
     ) -> Channel:
         """|coro|
@@ -1842,6 +1844,8 @@ class HTTPClient:
             To mark the channel as NSFW or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
+        voice: UndefinedOr[:class:`.ChannelVoiceMetadata`]
+            The new voice-specific metadata for this channel.
         default_permissions: UndefinedOr[None]
             To remove default permissions or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
 
@@ -1922,7 +1926,8 @@ class HTTPClient:
             payload['archived'] = archived
         if default_permissions is not UNDEFINED:
             remove.append('DefaultPermissions')
-
+        if voice is not UNDEFINED:
+            payload['voice'] = voice.to_dict()
         if len(remove) > 0:
             payload['remove'] = remove
 
@@ -5065,6 +5070,7 @@ class HTTPClient:
         name: str,
         description: typing.Optional[str] = ...,
         nsfw: typing.Optional[bool] = ...,
+        voice: typing.Optional[ChannelVoiceMetadata] = ...,
     ) -> TextChannel: ...
 
     @typing.overload
@@ -5077,6 +5083,7 @@ class HTTPClient:
         name: str,
         description: typing.Optional[str] = ...,
         nsfw: typing.Optional[bool] = ...,
+        voice: typing.Optional[ChannelVoiceMetadata] = ...,
     ) -> TextChannel: ...
 
     @typing.overload
@@ -5089,6 +5096,7 @@ class HTTPClient:
         name: str,
         description: typing.Optional[str] = ...,
         nsfw: typing.Optional[bool] = ...,
+        voice: typing.Optional[ChannelVoiceMetadata] = ...,
     ) -> VoiceChannel: ...
 
     @typing.overload
@@ -5101,6 +5109,7 @@ class HTTPClient:
         name: str,
         description: typing.Optional[str] = ...,
         nsfw: typing.Optional[bool] = ...,
+        voice: typing.Optional[ChannelVoiceMetadata] = ...,
     ) -> typing.NoReturn: ...
 
     async def create_server_channel(
@@ -5112,6 +5121,7 @@ class HTTPClient:
         name: str,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
+        voice: typing.Optional[ChannelVoiceMetadata] = None,
     ) -> ServerChannel:
         """|coro|
 
@@ -5135,6 +5145,8 @@ class HTTPClient:
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             To mark channel as NSFW or not.
+        voice: Optional[:class:`.ChannelVoiceMetadata`]
+            The voice-specific metadata for this channel.
 
         Raises
         ------
@@ -5189,12 +5201,16 @@ class HTTPClient:
             raise TypeError('Cannot create non-text/voice channels')
 
         payload: raw.DataCreateServerChannel = {'name': name}
+
         if type is not None:
             payload['type'] = type.value
         if description is not None:
             payload['description'] = description
         if nsfw is not None:
             payload['nsfw'] = nsfw
+        if voice is not None:
+            payload['voice'] = voice.to_dict()
+
         resp: raw.ServerChannel = await self.request(
             routes.SERVERS_CHANNEL_CREATE.compile(server_id=resolve_id(server)),
             http_overrides=http_overrides,

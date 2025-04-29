@@ -882,6 +882,7 @@ class Parser:
         icon = data.get('icon')
         role_permissions = data.get('role_permissions')
         default_permissions = data.get('default_permissions')
+        voice = data.get('voice')
 
         return ChannelUpdateEvent(
             shard=shard,
@@ -906,6 +907,7 @@ class Parser:
                     else self.parse_permission_override_field(default_permissions)
                 ),
                 last_message_id=data.get('last_message_id', UNDEFINED),
+                voice=UNDEFINED if voice is None else self.parse_voice_information(voice),
             ),
             before=None,
             after=None,

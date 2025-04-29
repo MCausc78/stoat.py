@@ -55,7 +55,10 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True)
 class BaseEmoji(Base):
-    """Represents an emoji on Revolt."""
+    """Represents an emoji on Revolt.
+
+    This inherits from :class:`.Base`.
+    """
 
     creator_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who uploaded this emoji."""
@@ -101,7 +104,10 @@ class BaseEmoji(Base):
 
 @define(slots=True)
 class ServerEmoji(BaseEmoji):
-    """Represents an emoji in Revolt :class:`.Server`."""
+    """Represents an emoji in Revolt :class:`.Server`.
+
+    This inherits from :class:`.BaseEmoji`.
+    """
 
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID the emoji belongs to."""
@@ -321,7 +327,10 @@ class ServerEmoji(BaseEmoji):
 
 @define(slots=True)
 class DetachedEmoji(BaseEmoji):
-    """Represents a deleted emoji on Revolt."""
+    """Represents a deleted emoji on Revolt.
+
+    This inherits from :class:`.BaseEmoji`.
+    """
 
     def get_creator(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: The user who uploaded this emoji."""

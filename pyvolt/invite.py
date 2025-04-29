@@ -273,7 +273,10 @@ class BaseInvite:
 
 @define(slots=True)
 class ServerPublicInvite(BaseInvite):
-    """Represents a public invite to server channel."""
+    """Represents a public invite to server channel.
+
+    This inherits from :class:`.BaseInvite`.
+    """
 
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID this invite points to."""
@@ -533,7 +536,10 @@ class ServerPublicInvite(BaseInvite):
 
 @define(slots=True)
 class GroupPublicInvite(BaseInvite):
-    """Represents a public invite to group channel."""
+    """Represents a public invite to group channel.
+
+    This inherits from :class:`.BaseInvite`.
+    """
 
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The destination channel's ID."""
@@ -721,7 +727,10 @@ class GroupPublicInvite(BaseInvite):
 
 @define(slots=True)
 class UnknownPublicInvite(BaseInvite):
-    """Represents a public invite that is not recognized by library yet."""
+    """Represents a public invite that is not recognized by library yet.
+
+    This inherits from :class:`.BaseInvite`.
+    """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, Any]: The raw invite data."""
@@ -732,7 +741,10 @@ PublicInvite = typing.Union[ServerPublicInvite, GroupPublicInvite, UnknownPublic
 
 @define(slots=True)
 class PrivateBaseInvite(BaseInvite):
-    """Represents a private invite on Revolt."""
+    """Represents a private invite on Revolt.
+
+    This inherits from :class:`.BaseInvite`.
+    """
 
     creator_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who created this invite."""
@@ -740,7 +752,10 @@ class PrivateBaseInvite(BaseInvite):
 
 @define(slots=True)
 class GroupInvite(PrivateBaseInvite):
-    """Represents a group invite on Revolt."""
+    """Represents a group invite on Revolt.
+
+    This inherits from :class:`.PrivateBaseInvite`.
+    """
 
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The group channel's ID this invite points to."""
@@ -889,7 +904,10 @@ class GroupInvite(PrivateBaseInvite):
 
 @define(slots=True)
 class ServerInvite(PrivateBaseInvite):
-    """Represents a server invite on Revolt."""
+    """Represents a server invite on Revolt.
+
+    This inherits from :class:`.PrivateBaseInvite`.
+    """
 
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID this invite points to."""

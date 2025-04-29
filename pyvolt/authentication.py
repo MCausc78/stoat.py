@@ -93,7 +93,10 @@ class WebPushSubscription:
 
 @define(slots=True)
 class PartialSession(Base):
-    """Represents partial Revolt authentication session."""
+    """Represents a partial Revolt authentication session.
+
+    This inherits from :class:`.Base`.
+    """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The user-friendly client name."""
@@ -110,7 +113,6 @@ class PartialSession(Base):
 
         Parameters
         ----------
-
         friendly_name: UndefinedOr[:class:`str`]
             The new user-friendly client name.
 
@@ -208,7 +210,10 @@ class PartialSession(Base):
 
 @define(slots=True)
 class Session(PartialSession):
-    """The session information."""
+    """Represents a Revolt authentication session.
+
+    This inherits from :class:`.PartialSession`.
+    """
 
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The ID of associated user."""
@@ -404,6 +409,8 @@ class BaseMFAResponse:
 class ByPassword(BaseMFAResponse):
     """Represents MFA verification by password.
 
+    This inherits from :class:`.BaseMFAResponse`.
+
     Attributes
     ----------
     password: :class:`str`
@@ -425,6 +432,8 @@ class ByPassword(BaseMFAResponse):
 class ByRecoveryCode(BaseMFAResponse):
     """Represents MFA verification by recovery code.
 
+    This inherits from :class:`.BaseMFAResponse`.
+
     Attributes
     ----------
     code: :class:`str`
@@ -445,6 +454,8 @@ class ByRecoveryCode(BaseMFAResponse):
 
 class ByTOTP(BaseMFAResponse):
     """Represents MFA verification by TOTP code.
+
+    This inherits from :class:`.BaseMFAResponse`.
 
     Attributes
     ----------
