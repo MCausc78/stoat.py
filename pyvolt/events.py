@@ -25,6 +25,7 @@ DEALINGS IN THE SOFTWARE.
 from __future__ import annotations
 
 from copy import copy
+from gc import collect as gc
 from datetime import datetime
 import typing
 
@@ -260,6 +261,8 @@ class ReadyEvent(ShardEvent):
             cache.store_read_state(rs, ctx)
 
         cache.bulk_store_channel_voice_states({vs.channel_id: vs for vs in self.voice_states}, ctx)
+
+        gc()
 
         return True
 
@@ -518,6 +521,9 @@ class ChannelDeleteEvent(ShardEvent):
         elif isinstance(self.channel, DMChannel):
             cache.delete_private_channel_by_user(self.channel.recipient_id, self.cache_context)
         cache.delete_messages_of(self.channel_id, self.cache_context)
+
+        gc()
+
         return True
 
 
@@ -1540,6 +1546,8 @@ class ServerDeleteEvent(ShardEvent):
                 cache.delete_read_state(channel_id, self.cache_context)
                 cache.delete_channel_voice_state(channel_id, self.cache_context)
 
+        gc()
+
         return True
 
 
@@ -1712,6 +1720,8 @@ class ServerMemberRemoveEvent(ShardEvent):
                 for channel_id in server.internal_channels[1]:
                     assert isinstance(channel_id, str)
                     cache.delete_channel_voice_state(channel_id, self.cache_context)
+
+            gc()
 
         return True
 
