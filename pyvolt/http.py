@@ -6194,6 +6194,8 @@ class HTTPClient:
             The new role name. Must be between 1 and 32 characters long.
         icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
             The new role icon.
+
+            .. versionadded:: 1.2
         color: UndefinedOr[Optional[:class:`str`]]
             The new role color. Must be a valid CSS color.
         hoist: UndefinedOr[:class:`bool`]

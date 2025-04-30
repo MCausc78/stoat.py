@@ -405,6 +405,8 @@ class BaseRole(Base):
             The new role name. Must be between 1 and 32 characters long.
         icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
             The new role icon.
+
+            .. versionadded:: 1.2
         color: UndefinedOr[Optional[:class:`str`]]
             The new role color. Must be a valid CSS color.
         hoist: UndefinedOr[:class:`bool`]
@@ -555,7 +557,10 @@ class PartialRole(BaseRole):
     """UndefinedOr[:class:`str`]: The new role's name."""
 
     internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
-    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new role's icon, if any."""
+    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new role's icon, if any.
+    
+    .. versionadded:: 1.2
+    """
 
     permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`.PermissionOverride`]: The new role's permissions."""
@@ -593,7 +598,10 @@ class PartialRole(BaseRole):
 
     @property
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
-        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful role icon."""
+        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful role icon.
+
+        .. versionadded:: 1.2
+        """
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
 
@@ -608,7 +616,10 @@ class Role(BaseRole):
     """:class:`str`: The role's name."""
 
     internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The new server's icon, if any."""
+    """Optional[:class:`.StatelessAsset`]: The new server's icon, if any.
+    
+    .. versionadded:: 1.2
+    """
 
     permissions: PermissionOverride = field(repr=True, kw_only=True)
     """:class:`.PermissionOverride`: Permissions available to this role."""
@@ -640,6 +651,14 @@ class Role(BaseRole):
             self.hoist = data.hoist
         if data.rank is not UNDEFINED:
             self.rank = data.rank
+
+    @property
+    def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
+        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful role icon.
+
+        .. versionadded:: 1.2
+        """
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     def to_dict(self) -> raw.Role:
         """:class:`dict`: Convert role to raw data."""
