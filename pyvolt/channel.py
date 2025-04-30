@@ -219,6 +219,8 @@ class BaseChannel(Base):
             To mark the channel as archived or not.
         voice: UndefinedOr[:class:`.ChannelVoiceMetadata`]
             The new voice-specific metadata for this channel.
+
+            .. versionadded:: 1.2
         default_permissions: UndefinedOr[None]
             To remove default permissions or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
 
@@ -345,7 +347,10 @@ class PartialChannel(BaseChannel):
     """UndefinedOr[:class:`str`]: The last message ID sent in the channel."""
 
     voice: UndefinedOr[ChannelVoiceMetadata] = field(repr=True, kw_only=True, eq=True)
-    """UndefinedOr[:class:`.ChannelVoiceMetadata`]: The new voice-specific metadata for this channel."""
+    """UndefinedOr[:class:`.ChannelVoiceMetadata`]: The new voice-specific metadata for this channel.
+    
+    .. versionadded:: 1.2
+    """
 
     @property
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
@@ -2230,7 +2235,10 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
     """Optional[:class:`str`]: The last message ID sent in the channel."""
 
     voice: typing.Optional[ChannelVoiceMetadata] = field(repr=True, kw_only=True)
-    """Optional[:class:`.ChannelVoiceMetadata`]: The voice's metadata in the channel."""
+    """Optional[:class:`.ChannelVoiceMetadata`]: The voice's metadata in the channel.
+    
+    .. versionadded:: 1.2
+    """
 
     def get_channel_id(self) -> str:
         return self.id

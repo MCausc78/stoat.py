@@ -1846,6 +1846,8 @@ class HTTPClient:
             To mark the channel as archived or not.
         voice: UndefinedOr[:class:`.ChannelVoiceMetadata`]
             The new voice-specific metadata for this channel.
+
+            .. versionadded:: 1.2
         default_permissions: UndefinedOr[None]
             To remove default permissions or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
 
@@ -5147,6 +5149,8 @@ class HTTPClient:
             To mark channel as NSFW or not.
         voice: Optional[:class:`.ChannelVoiceMetadata`]
             The voice-specific metadata for this channel.
+
+            .. versionadded:: 1.2
 
         Raises
         ------

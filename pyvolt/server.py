@@ -989,6 +989,8 @@ class BaseServer(Base):
         voice: Optional[:class:`.ChannelVoiceMetadata`]
             The voice-specific metadata for this channel.
 
+            .. versionadded:: 1.2
+
         Raises
         ------
         :class:`HTTPException`
@@ -1168,6 +1170,8 @@ class BaseServer(Base):
         voice: Optional[:class:`.ChannelVoiceMetadata`]
             The voice-specific metadata for this channel.
 
+            .. versionadded:: 1.2
+
         Raises
         ------
         :class:`HTTPException`
@@ -1255,6 +1259,8 @@ class BaseServer(Base):
             To mark channel as NSFW or not.
         voice: Optional[:class:`.ChannelVoiceMetadata`]
             The voice-specific metadata for this channel.
+
+            .. versionadded:: 1.2
 
         Raises
         ------

@@ -141,7 +141,10 @@ class BaseEvent:
 
 @define(slots=True)
 class ShardEvent(BaseEvent):
-    """Base class for events arrived over WebSocket."""
+    """Base class for events arrived over WebSocket.
+
+    This inherits from :class:`.BaseEvent`.
+    """
 
     shard: Shard = field(repr=True, kw_only=True)
     """:class:`.Shard`: The shard the event arrived on."""
@@ -150,6 +153,8 @@ class ShardEvent(BaseEvent):
 @define(slots=True)
 class ReadyEvent(ShardEvent):
     """Dispatched when initial state is available.
+
+    This inherits from :class:`.ShardEvent`.
 
     .. warning::
         This event may be dispatched multiple times due to periodic reconnects.
@@ -261,14 +266,20 @@ class ReadyEvent(ShardEvent):
 
 @define(slots=True)
 class BaseChannelCreateEvent(ShardEvent):
-    """Base class for events when a channel is created."""
+    """Base class for events when a channel is created.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[str] = 'channel_create'
 
 
 @define(slots=True)
 class PrivateChannelCreateEvent(BaseChannelCreateEvent):
-    """Dispatched when the user created a DM, or started participating in group."""
+    """Dispatched when the user created a DM, or started participating in group.
+
+    This inherits from :class:`.BaseChannelCreateEvent`.
+    """
 
     event_name: typing.ClassVar[str] = 'private_channel_create'
 
@@ -324,7 +335,10 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
 
 @define(slots=True)
 class ServerChannelCreateEvent(BaseChannelCreateEvent):
-    """Dispatched when the channel is created in server or became open to the connected user."""
+    """Dispatched when the channel is created in server or became accessible to the connected user.
+
+    This inherits from :class:`.BaseChannelCreateEvent`.
+    """
 
     event_name: typing.ClassVar[str] = 'server_channel_create'
 
@@ -374,7 +388,10 @@ ChannelCreateEvent = typing.Union[PrivateChannelCreateEvent, ServerChannelCreate
 
 @define(slots=True)
 class ChannelUpdateEvent(ShardEvent):
-    """Dispatched when the channel is updated."""
+    """Dispatched when the channel is updated.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['channel_update']] = 'channel_update'
 
@@ -433,12 +450,15 @@ class ChannelUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class ChannelDeleteEvent(ShardEvent):
-    """Dispatched when the server channel or group is deleted or became hidden for the connected user."""
+    """Dispatched when the server channel or group is deleted or became inaccessible for the connected user.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['channel_delete']] = 'channel_delete'
 
     channel_id: str = field(repr=True, kw_only=True)
-    """:class:`str`: The channel's ID that got deleted or hidden."""
+    """:class:`str`: The channel's ID that got deleted or inaccessible."""
 
     channel: typing.Optional[Channel] = field(repr=True, kw_only=True)
     """Optional[:class:`.Channel`]: The deleted channel object, if available."""
@@ -503,7 +523,10 @@ class ChannelDeleteEvent(ShardEvent):
 
 @define(slots=True)
 class GroupRecipientAddEvent(ShardEvent):
-    """Dispatched when recipient is added to the group."""
+    """Dispatched when recipient is added to the group.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['recipient_add']] = 'recipient_add'
 
@@ -561,7 +584,10 @@ class GroupRecipientAddEvent(ShardEvent):
 
 @define(slots=True)
 class GroupRecipientRemoveEvent(ShardEvent):
-    """Dispatched when recipient is removed from the group."""
+    """Dispatched when recipient is removed from the group.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['recipient_remove']] = 'recipient_remove'
 
@@ -619,7 +645,10 @@ class GroupRecipientRemoveEvent(ShardEvent):
 
 @define(slots=True)
 class ChannelStartTypingEvent(ShardEvent):
-    """Dispatched when someone starts typing in a channel."""
+    """Dispatched when someone starts typing in a channel.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['channel_start_typing']] = 'channel_start_typing'
 
@@ -632,7 +661,10 @@ class ChannelStartTypingEvent(ShardEvent):
 
 @define(slots=True)
 class ChannelStopTypingEvent(ShardEvent):
-    """Dispatched when someone stopped typing in a channel."""
+    """Dispatched when someone stopped typing in a channel.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['channel_stop_typing']] = 'channel_stop_typing'
 
@@ -645,7 +677,10 @@ class ChannelStopTypingEvent(ShardEvent):
 
 @define(slots=True)
 class MessageStartEditingEvent(ShardEvent):
-    """Dispatched when someone starts editing a message."""
+    """Dispatched when someone starts editing a message.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_start_editing']] = 'message_start_editing'
 
@@ -661,7 +696,10 @@ class MessageStartEditingEvent(ShardEvent):
 
 @define(slots=True)
 class MessageStopEditingEvent(ShardEvent):
-    """Dispatched when someone stops editing a message."""
+    """Dispatched when someone stops editing a message.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_stop_editing']] = 'message_stop_editing'
 
@@ -677,7 +715,10 @@ class MessageStopEditingEvent(ShardEvent):
 
 @define(slots=True)
 class MessageAckEvent(ShardEvent):
-    """Dispatched when the connected user acknowledges the message in a channel (usually from remote device)."""
+    """Dispatched when the connected user acknowledges the message in a channel (usually from remote device).
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_ack']] = 'message_ack'
 
@@ -722,7 +763,10 @@ class MessageAckEvent(ShardEvent):
 
 @define(slots=True)
 class MessageCreateEvent(ShardEvent):
-    """Dispatched when someone sends message in a channel."""
+    """Dispatched when someone sends message in a channel.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_create']] = 'message_create'
 
@@ -796,7 +840,10 @@ class MessageCreateEvent(ShardEvent):
 
 @define(slots=True)
 class MessageUpdateEvent(ShardEvent):
-    """Dispatched when the message is updated."""
+    """Dispatched when the message is updated.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_update']] = 'message_update'
 
@@ -856,7 +903,10 @@ class MessageUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class MessageAppendEvent(ShardEvent):
-    """Dispatched when embeds are appended to the message."""
+    """Dispatched when embeds are appended to the message.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_append']] = 'message_append'
 
@@ -906,7 +956,10 @@ class MessageAppendEvent(ShardEvent):
 
 @define(slots=True)
 class MessageDeleteEvent(ShardEvent):
-    """Dispatched when the message is deleted in channel."""
+    """Dispatched when the message is deleted in channel.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_delete']] = 'message_delete'
 
@@ -957,7 +1010,10 @@ class MessageDeleteEvent(ShardEvent):
 
 @define(slots=True)
 class MessageReactEvent(ShardEvent):
-    """Dispatched when someone reacts to message."""
+    """Dispatched when someone reacts to message.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_react']] = 'message_react'
 
@@ -1016,7 +1072,10 @@ class MessageReactEvent(ShardEvent):
 
 @define(slots=True)
 class MessageUnreactEvent(ShardEvent):
-    """Dispatched when someone removes their reaction from message."""
+    """Dispatched when someone removes their reaction from message.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_unreact']] = 'message_unreact'
 
@@ -1075,7 +1134,10 @@ class MessageUnreactEvent(ShardEvent):
 
 @define(slots=True)
 class MessageClearReactionEvent(ShardEvent):
-    """Dispatched when reactions for specific emoji are removed from message."""
+    """Dispatched when reactions for specific emoji are removed from message.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_clear_reaction']] = 'message_clear_reaction'
 
@@ -1132,7 +1194,10 @@ class MessageClearReactionEvent(ShardEvent):
 
 @define(slots=True)
 class MessageDeleteBulkEvent(ShardEvent):
-    """Dispatched when multiple messages are deleted from channel."""
+    """Dispatched when multiple messages are deleted from channel.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['message_delete_bulk']] = 'message_delete_bulk'
 
@@ -1194,7 +1259,10 @@ class MessageDeleteBulkEvent(ShardEvent):
 
 @define(slots=True)
 class ServerCreateEvent(ShardEvent):
-    """Dispatched when the server is created, or client joined server."""
+    """Dispatched when the server is created, or client joined server.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['server_create']] = 'server_create'
 
@@ -1270,7 +1338,10 @@ class ServerCreateEvent(ShardEvent):
 
 @define(slots=True)
 class ServerEmojiCreateEvent(ShardEvent):
-    """Dispatched when emoji is created in server."""
+    """Dispatched when emoji is created in server.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['server_emoji_create']] = 'server_emoji_create'
 
@@ -1299,7 +1370,10 @@ class ServerEmojiCreateEvent(ShardEvent):
 
 @define(slots=True)
 class ServerEmojiDeleteEvent(ShardEvent):
-    """Dispatched when emoji is deleted from the server."""
+    """Dispatched when emoji is deleted from the server.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['server_emoji_delete']] = 'server_emoji_delete'
 
@@ -1352,7 +1426,10 @@ class ServerEmojiDeleteEvent(ShardEvent):
 
 @define(slots=True)
 class ServerUpdateEvent(ShardEvent):
-    """Dispatched when the server details are updated."""
+    """Dispatched when the server details are updated.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['server_update']] = 'server_update'
 
@@ -1409,7 +1486,10 @@ class ServerUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class ServerDeleteEvent(ShardEvent):
-    """Dispatched when the server is deleted."""
+    """Dispatched when the server is deleted.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['server_delete']] = 'server_delete'
 
@@ -1465,7 +1545,10 @@ class ServerDeleteEvent(ShardEvent):
 
 @define(slots=True)
 class ServerMemberJoinEvent(ShardEvent):
-    """Dispatched when the user got added to the server."""
+    """Dispatched when the user got added to the server.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['server_member_join']] = 'server_member_join'
 
@@ -1505,7 +1588,10 @@ class ServerMemberJoinEvent(ShardEvent):
 
 @define(slots=True)
 class ServerMemberUpdateEvent(ShardEvent):
-    """Dispatched when the member details are updated."""
+    """Dispatched when the member details are updated.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['server_member_update']] = 'server_member_update'
 
@@ -1562,7 +1648,10 @@ class ServerMemberUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class ServerMemberRemoveEvent(ShardEvent):
-    """Dispatched when the member (or client user) got removed from server."""
+    """Dispatched when the member (or client user) got removed from server.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['server_member_remove']] = 'server_member_remove'
 
@@ -1629,7 +1718,10 @@ class ServerMemberRemoveEvent(ShardEvent):
 
 @define(slots=True)
 class RawServerRoleUpdateEvent(ShardEvent):
-    """Dispatched when the role got created or updated in server."""
+    """Dispatched when the role got created or updated in server.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['raw_server_role_update']] = 'raw_server_role_update'
 
@@ -1696,7 +1788,10 @@ class RawServerRoleUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class ServerRoleDeleteEvent(ShardEvent):
-    """Dispatched when the role got deleted from server."""
+    """Dispatched when the role got deleted from server.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['server_role_delete']] = 'server_role_delete'
 
@@ -1773,8 +1868,10 @@ class ServerRoleDeleteEvent(ShardEvent):
 
 
 @define(slots=True)
-class ReportCreateEvent(ShardEvent):
+class ReportCreateEvent(BaseEvent):
     """Dispatched when the report was created.
+
+    This inherits from :class:`.BaseEvent`.
 
     .. warning::
         This event is not dispatched over WebSocket.
@@ -1782,13 +1879,19 @@ class ReportCreateEvent(ShardEvent):
 
     event_name: typing.ClassVar[typing.Literal['report_create']] = 'report_create'
 
+    shard: typing.Optional[Shard] = field(repr=True, kw_only=True)
+    """Optional[:class:`.Shard`]: The shard the event arrived on."""
+
     report: CreatedReport = field(repr=True, kw_only=True)
     """:class:`.CreatedReport`: The created report."""
 
 
 @define(slots=True)
 class UserUpdateEvent(ShardEvent):
-    """Dispatched when the user details are updated."""
+    """Dispatched when the user details are updated.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['user_update']] = 'user_update'
 
@@ -1845,7 +1948,10 @@ class UserUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class UserRelationshipUpdateEvent(ShardEvent):
-    """Dispatched when the relationship with user was updated."""
+    """Dispatched when the relationship with user was updated.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['user_relationship_update']] = 'user_relationship_update'
 
@@ -1920,7 +2026,10 @@ class UserRelationshipUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class UserSettingsUpdateEvent(ShardEvent):
-    """Dispatched when the user settings are changed, likely from remote device."""
+    """Dispatched when the user settings are changed, likely from remote device.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['user_settings_update']] = 'user_settings_update'
 
@@ -1959,6 +2068,8 @@ class UserPlatformWipeEvent(ShardEvent):
     - Server Memberships
 
     User flags are specified to explain why a wipe is occurring though not all reasons will necessarily ever appear.
+
+    This inherits from :class:`.ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['user_platform_wipe']] = 'user_platform_wipe'
@@ -2030,7 +2141,10 @@ class UserPlatformWipeEvent(ShardEvent):
 
 @define(slots=True)
 class WebhookCreateEvent(ShardEvent):
-    """Dispatched when the webhook is created in a channel."""
+    """Dispatched when the webhook is created in a channel.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['webhook_create']] = 'webhook_create'
 
@@ -2040,7 +2154,10 @@ class WebhookCreateEvent(ShardEvent):
 
 @define(slots=True)
 class WebhookUpdateEvent(ShardEvent):
-    """Dispatched when the webhook details are updated."""
+    """Dispatched when the webhook details are updated.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['webhook_update']] = 'webhook_update'
 
@@ -2050,7 +2167,10 @@ class WebhookUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class WebhookDeleteEvent(ShardEvent):
-    """Dispatched when the webhook is deleted."""
+    """Dispatched when the webhook is deleted.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['webhook_delete']] = 'webhook_delete'
 
@@ -2063,14 +2183,20 @@ class WebhookDeleteEvent(ShardEvent):
 
 @define(slots=True)
 class AuthifierEvent(ShardEvent):
-    """Dispatched when Authifier-related event happens."""
+    """Dispatched when Authifier-related event happens.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[str] = 'authifier'
 
 
 @define(slots=True)
 class SessionCreateEvent(AuthifierEvent):
-    """Dispatched when new session is created."""
+    """Dispatched when new session is created.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[str] = 'session_create'
 
@@ -2080,7 +2206,10 @@ class SessionCreateEvent(AuthifierEvent):
 
 @define(slots=True)
 class SessionDeleteEvent(AuthifierEvent):
-    """Dispatched when session is deleted."""
+    """Dispatched when session is deleted.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[str] = 'session_delete'
 
@@ -2093,7 +2222,10 @@ class SessionDeleteEvent(AuthifierEvent):
 
 @define(slots=True)
 class SessionDeleteAllEvent(AuthifierEvent):
-    """Dispatched when all sessions are deleted (and optionally except one)."""
+    """Dispatched when all sessions are deleted (and optionally except one).
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[str] = 'session_delete_all'
 
@@ -2106,14 +2238,20 @@ class SessionDeleteAllEvent(AuthifierEvent):
 
 @define(slots=True)
 class LogoutEvent(ShardEvent):
-    """Dispatched when the connected user got logged out."""
+    """Dispatched when the connected user got logged out.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['logout']] = 'logout'
 
 
 @define(slots=True)
 class VoiceChannelJoinEvent(ShardEvent):
-    """Dispatched when an user joins a voice channel."""
+    """Dispatched when an user joins a voice channel.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['voice_channel_join']] = 'voice_channel_join'
 
@@ -2155,7 +2293,10 @@ class VoiceChannelJoinEvent(ShardEvent):
 
 @define(slots=True)
 class VoiceChannelLeaveEvent(ShardEvent):
-    """Dispatched when an user left voice channel."""
+    """Dispatched when an user left voice channel.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['voice_channel_leave']] = 'voice_channel_leave'
 
@@ -2215,7 +2356,10 @@ class VoiceChannelLeaveEvent(ShardEvent):
 
 @define(slots=True)
 class VoiceChannelMoveEvent(ShardEvent):
-    """Dispatched when an user is moved from voice channel to another voice channel."""
+    """Dispatched when an user is moved from voice channel to another voice channel.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['voice_channel_move']] = 'voice_channel_move'
 
@@ -2292,7 +2436,10 @@ class VoiceChannelMoveEvent(ShardEvent):
 
 @define(slots=True)
 class UserVoiceStateUpdateEvent(ShardEvent):
-    """Dispatched when an user's voice state is updated."""
+    """Dispatched when an user's voice state is updated.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['user_voice_state_update']] = 'user_voice_state_update'
 
@@ -2363,7 +2510,10 @@ class UserVoiceStateUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class UserMoveVoiceChannelEvent(ShardEvent):
-    """Dispatched when the current user was moved from voice channel and needs to reconnect to another node."""
+    """Dispatched when the current user was moved from voice channel and needs to reconnect to another node.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[typing.Literal['user_move_voice_channel']] = 'user_move_voice_channel'
 
@@ -2376,7 +2526,10 @@ class UserMoveVoiceChannelEvent(ShardEvent):
 
 @define(slots=True)
 class AuthenticatedEvent(ShardEvent):
-    """Dispatched when the WebSocket was successfully authenticated."""
+    """Dispatched when the WebSocket was successfully authenticated.
+
+    This inherits from :class:`.ShardEvent`.
+    """
 
     event_name: typing.ClassVar[str] = 'authenticated'
 
@@ -2384,6 +2537,8 @@ class AuthenticatedEvent(ShardEvent):
 @define(slots=True)
 class BeforeConnectEvent(ShardEvent):
     """Dispatched before connection to Revolt WebSocket is made.
+
+    This inherits from :class:`.ShardEvent`.
 
     .. warning::
 
@@ -2398,6 +2553,8 @@ class BeforeConnectEvent(ShardEvent):
 @define(slots=True)
 class AfterConnectEvent(ShardEvent):
     """Dispatched after connection to Revolt WebSocket is made.
+
+    This inherits from :class:`.ShardEvent`.
 
     .. warning::
 
