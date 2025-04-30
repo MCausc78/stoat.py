@@ -100,7 +100,7 @@ _new_permissions = Permissions.__new__
 class BaseChannel(Base):
     """Represents channel on Revolt.
 
-    This classes derives from :class:`.Base`.
+    This inherits from :class:`.Base`.
     """
 
     def __eq__(self, other: object, /) -> bool:
@@ -188,6 +188,7 @@ class BaseChannel(Base):
         icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         nsfw: UndefinedOr[bool] = UNDEFINED,
         archived: UndefinedOr[bool] = UNDEFINED,
+        voice: UndefinedOr[ChannelVoiceMetadata] = UNDEFINED,
         default_permissions: UndefinedOr[None] = UNDEFINED,
     ) -> Channel:
         """|coro|
@@ -216,6 +217,10 @@ class BaseChannel(Base):
             To mark the channel as NSFW or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
         archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
+        voice: UndefinedOr[:class:`.ChannelVoiceMetadata`]
+            The new voice-specific metadata for this channel.
+
+            .. versionadded:: 1.2
         default_permissions: UndefinedOr[None]
             To remove default permissions or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
 
@@ -282,6 +287,7 @@ class BaseChannel(Base):
             icon=icon,
             nsfw=nsfw,
             archived=archived,
+            voice=voice,
             default_permissions=default_permissions,
         )
 
@@ -307,7 +313,7 @@ class BaseChannel(Base):
 class PartialChannel(BaseChannel):
     """Represents a partial channel on Revolt.
 
-    This classes derives from :class:`.BaseChannel`.
+    This inherits from :class:`.BaseChannel`.
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
@@ -339,6 +345,12 @@ class PartialChannel(BaseChannel):
 
     last_message_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The last message ID sent in the channel."""
+
+    voice: UndefinedOr[ChannelVoiceMetadata] = field(repr=True, kw_only=True, eq=True)
+    """UndefinedOr[:class:`.ChannelVoiceMetadata`]: The new voice-specific metadata for this channel.
+    
+    .. versionadded:: 1.2
+    """
 
     @property
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
@@ -478,7 +490,7 @@ def calculate_server_channel_permissions(
 class SavedMessagesChannel(BaseChannel, Messageable):
     """Represents a personal "Saved Notes" channel which allows users to save messages.
 
-    This classes derives from :class:`.BaseChannel` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`.BaseChannel` and :class:`~pyvolt.abc.Messageable`.
     """
 
     user_id: str = field(repr=True, kw_only=True)
@@ -549,7 +561,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 class DMChannel(BaseChannel, Connectable, Messageable):
     """Represents a private channel between two users.
 
-    This classes derives from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
     """
 
     active: bool = field(repr=True, kw_only=True)
@@ -852,7 +864,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 class GroupChannel(BaseChannel, Connectable, Messageable):
     """Represesnts a Revolt group channel between 1 or more participants.
 
-    This classes derives from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
     """
 
     name: str = field(repr=True, kw_only=True)
@@ -1637,7 +1649,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 class UnknownPrivateChannel(BaseChannel):
     """Represents a private channel that is not recognized by library yet.
 
-    This classes derives from :class:`.BaseChannel`.
+    This inherits from :class:`.BaseChannel`.
     """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
@@ -1678,7 +1690,7 @@ PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, Unk
 class BaseServerChannel(BaseChannel):
     """A base class for server channels.
 
-    This classes derives from :class:`.BaseChannel`.
+    This inherits from :class:`.BaseChannel`.
     """
 
     server_id: str = field(repr=True, kw_only=True)
@@ -2180,15 +2192,30 @@ class BaseServerChannel(BaseChannel):
         return result
 
 
-@define(slots=True)
 class ChannelVoiceMetadata:
-    """Represents some voice-specific metadata for text channel."""
+    """Represents some voice-specific metadata for text channel.
 
-    max_users: int = field(repr=True, kw_only=True)
-    """:class:`int`: The maximium amount of users allowed in the voice channel at once.
-    
-    Zero means an infinite amount of users can connect to voice channel.
+    Attributes
+    ----------
+    max_users: :class:`int`
+        The maximium amount of users allowed in the voice channel at once.
+
+        Zero means an infinite amount of users can connect to voice channel.
+
+    Parameters
+    ----------
+    max_users: :class:`int`
+        The maximium amount of users allowed in the voice channel at once.
+
+        Zero means an infinite amount of users can connect to voice channel.
+
+        Must be greater than 1.
     """
+
+    __slots__ = ('max_users',)
+
+    def __init__(self, max_users: int = 0) -> None:
+        self.max_users: int = max_users
 
     def to_dict(self) -> raw.VoiceInformation:
         """:class:`dict`: Convert channel voice state container to raw data."""
@@ -2201,14 +2228,17 @@ class ChannelVoiceMetadata:
 class TextChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a text channel that belongs to a server on Revolt.
 
-    This classes derives from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
     """
 
     last_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The last message ID sent in the channel."""
 
     voice: typing.Optional[ChannelVoiceMetadata] = field(repr=True, kw_only=True)
-    """Optional[:class:`.ChannelVoiceMetadata`]: The voice's metadata in the channel."""
+    """Optional[:class:`.ChannelVoiceMetadata`]: The voice's metadata in the channel.
+    
+    .. versionadded:: 1.2
+    """
 
     def get_channel_id(self) -> str:
         return self.id
@@ -2318,6 +2348,8 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         BaseServerChannel.locally_update(self, data)
         if data.last_message_id is not UNDEFINED:
             self.last_message_id = data.last_message_id
+        if data.voice is not UNDEFINED:
+            self.voice = data.voice
 
     @property
     def type(self) -> typing.Literal[ChannelType.text]:
@@ -2477,7 +2509,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 class VoiceChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a voice channel that belongs to a server on Revolt.
 
-    This classes derives from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
 
     .. deprecated:: 0.7.0
         The voice channel type was deprecated in favour of :attr:`TextChannel.voice`.
@@ -2485,6 +2517,21 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
 
     def get_channel_id(self) -> str:
         return self.id
+
+    def locally_update(self, data: PartialChannel, /) -> None:
+        """Locally updates channel with provided data.
+
+        .. warning::
+            This is called by library internally to keep cache up to date.
+
+        Parameters
+        ----------
+        data: :class:`.PartialChannel`
+            The data to update channel with.
+        """
+        BaseServerChannel.locally_update(self, data)
+        if data.voice is not UNDEFINED:
+            self.voice = data.voice
 
     @property
     def type(self) -> typing.Literal[ChannelType.voice]:
@@ -2550,7 +2597,7 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
 class UnknownServerChannel(BaseServerChannel):
     """Represents a server channel that is not recognized by library yet.
 
-    This classes derives from :class:`.BaseServerChannel`.
+    This inherits from :class:`.BaseServerChannel`.
     """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)

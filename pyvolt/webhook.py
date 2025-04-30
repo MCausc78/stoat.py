@@ -69,7 +69,10 @@ _new_permissions = Permissions.__new__
 
 @define(slots=True)
 class BaseWebhook(Base):
-    """Represents a webhook on Revolt."""
+    """Represents a webhook on Revolt.
+
+    This inherits from :class:`.BaseWebhook`.
+    """
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, BaseWebhook) and self.id == other.id
@@ -446,6 +449,8 @@ class PartialWebhook(BaseWebhook):
     """Represents a partial webhook on Revolt.
 
     Unmodified fields will have :data:`.UNDEFINED` as their value.
+
+    This inherits from :class:`.BaseWebhook`.
     """
 
     name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
@@ -474,7 +479,10 @@ class PartialWebhook(BaseWebhook):
 
 @define(slots=True)
 class Webhook(BaseWebhook):
-    """Represents a webhook on Revolt."""
+    """Represents a webhook on Revolt.
+
+    This inherits from :class:`.BaseWebhook`.
+    """
 
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The webhook's name."""

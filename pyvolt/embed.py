@@ -60,7 +60,10 @@ class BaseEmbedSpecial:
 
 @define(slots=True)
 class NoneEmbedSpecial(BaseEmbedSpecial):
-    """No remote content."""
+    """No remote content.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     def to_dict(self) -> raw.NoneSpecial:
         """:class:`dict`: Convert embed special to raw data."""
@@ -74,7 +77,10 @@ _NONE_EMBED_SPECIAL = NoneEmbedSpecial()
 
 @define(slots=True)
 class GIFEmbedSpecial(BaseEmbedSpecial):
-    """A content hint that embed contains a GIF. Metadata should be used to find video or image to play."""
+    """A content hint that embed contains a GIF. Metadata should be used to find video or image to play.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     def to_dict(self) -> raw.GIFSpecial:
         """:class:`dict`: Convert embed special to raw data."""
@@ -88,7 +94,10 @@ _GIF_EMBED_SPECIAL = GIFEmbedSpecial()
 
 @define(slots=True)
 class YouTubeEmbedSpecial(BaseEmbedSpecial):
-    """Represents information about Youtube video."""
+    """Represents information about Youtube video.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The video ID."""
@@ -109,7 +118,10 @@ class YouTubeEmbedSpecial(BaseEmbedSpecial):
 
 @define(slots=True)
 class LightspeedEmbedSpecial(BaseEmbedSpecial):
-    """Represents information about Lightspeed.tv stream."""
+    """Represents information about Lightspeed.tv stream.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     content_type: LightspeedContentType = field(repr=True, kw_only=True, eq=True)
     """:class:`.LightspeedContentType`: The Lightspeed.tv content type."""
@@ -128,7 +140,10 @@ class LightspeedEmbedSpecial(BaseEmbedSpecial):
 
 @define(slots=True)
 class TwitchEmbedSpecial(BaseEmbedSpecial):
-    """Represents information about Twitch stream or clip."""
+    """Represents information about Twitch stream or clip.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     content_type: TwitchContentType = field(repr=True, kw_only=True, eq=True)
     """:class:`.TwitchContentType`: The Twitch content type."""
@@ -147,7 +162,10 @@ class TwitchEmbedSpecial(BaseEmbedSpecial):
 
 @define(slots=True)
 class SpotifyEmbedSpecial(BaseEmbedSpecial):
-    """Represents information about Spotify track."""
+    """Represents information about Spotify track.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     content_type: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Spotify content type."""
@@ -166,7 +184,10 @@ class SpotifyEmbedSpecial(BaseEmbedSpecial):
 
 @define(slots=True)
 class SoundcloudEmbedSpecial(BaseEmbedSpecial):
-    """Represents information about Soundcloud track."""
+    """Represents information about Soundcloud track.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     def to_dict(self) -> raw.SoundcloudSpecial:
         """:class:`dict`: Convert embed special to raw data."""
@@ -180,7 +201,10 @@ _SOUNDCLOUD_EMBED_SPECIAL = SoundcloudEmbedSpecial()
 
 @define(slots=True)
 class BandcampEmbedSpecial(BaseEmbedSpecial):
-    """Represents information about Bandcamp track."""
+    """Represents information about Bandcamp track.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     content_type: BandcampContentType = field(repr=True, kw_only=True, eq=True)
     """:class:`.BandcampContentType`: The Bandcamp content type."""
@@ -199,7 +223,10 @@ class BandcampEmbedSpecial(BaseEmbedSpecial):
 
 @define(slots=True)
 class AppleMusicEmbedSpecial(BaseEmbedSpecial):
-    """Represents information about Apple Music track."""
+    """Represents information about Apple Music track.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     album_id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Apple Music album ID."""
@@ -220,7 +247,10 @@ class AppleMusicEmbedSpecial(BaseEmbedSpecial):
 
 @define(slots=True)
 class StreamableEmbedSpecial(BaseEmbedSpecial):
-    """Represents information about Streamable video."""
+    """Represents information about Streamable video.
+
+    This inherits from :class:`.BaseEmbedSpecial`.
+    """
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The video ID."""
@@ -235,7 +265,10 @@ class StreamableEmbedSpecial(BaseEmbedSpecial):
 
 @define(slots=True)
 class ImageEmbed(BaseEmbed):
-    """Represents an image in an embed."""
+    """Represents an image in an embed.
+
+    This inherits from :class:`.BaseEmbed`.
+    """
 
     url: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The URL to the original image."""
@@ -284,7 +317,10 @@ class ImageEmbed(BaseEmbed):
 
 @define(slots=True)
 class VideoEmbed(BaseEmbed):
-    """Represents a video in an embed."""
+    """Represents a video in an embed.
+
+    This inherits from :class:`.BaseEmbed`.
+    """
 
     url: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The URL to the original video."""
@@ -328,7 +364,10 @@ class VideoEmbed(BaseEmbed):
 
 @define(slots=True)
 class WebsiteEmbed(BaseEmbed):
-    """Represents website embed within Revolt message."""
+    """Represents website embed within Revolt message.
+
+    This inherits from :class:`.BaseEmbed`.
+    """
 
     url: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The direct URL to web page."""
@@ -424,7 +463,10 @@ class WebsiteEmbed(BaseEmbed):
 
 @define(slots=True)
 class StatelessTextEmbed(BaseEmbed):
-    """Represents stateless text embed within Revolt message."""
+    """Represents stateless text embed within Revolt message.
+
+    This inherits from :class:`.BaseEmbed`.
+    """
 
     icon_url: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The URL to site icon."""
@@ -505,7 +547,10 @@ class StatelessTextEmbed(BaseEmbed):
 
 @define(slots=True)
 class TextEmbed(StatelessTextEmbed):
-    """Represents a text embed within Revolt message."""
+    """Represents a text embed within Revolt message.
+
+    This is a stateful version of :class:`.StatelessTextEmbed`, and inherits from it.
+    """
 
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
 
@@ -516,7 +561,10 @@ class TextEmbed(StatelessTextEmbed):
 
 
 class NoneEmbed(BaseEmbed):
-    """Embed that holds nothing."""
+    """Embed that holds nothing.
+
+    This inherits from :class:`.BaseEmbed`.
+    """
 
     def attach_state(self, state: State, /) -> Embed:
         return self

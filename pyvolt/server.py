@@ -129,6 +129,7 @@ if typing.TYPE_CHECKING:
     from .channel import (
         SavedMessagesChannel,
         DMChannel,
+        ChannelVoiceMetadata,
         TextChannel,
         VoiceChannel,
         ServerChannel,
@@ -253,7 +254,10 @@ class SystemMessageChannels:
 
 @define(slots=True)
 class BaseRole(Base):
-    """Represents a base role in Revolt server."""
+    """Represents a base role in Revolt server.
+
+    This inherits from :class:`.Base`.
+    """
 
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID the role belongs to."""
@@ -543,6 +547,8 @@ class PartialRole(BaseRole):
     """Represents a partial role for the server.
 
     Unmodified fields will have :data:`.UNDEFINED` value.
+
+    This inherits from :class:`.BaseRole`.
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
@@ -593,7 +599,10 @@ class PartialRole(BaseRole):
 
 @define(slots=True)
 class Role(BaseRole):
-    """Represents a role in Revolt server."""
+    """Represents a role in Revolt server.
+
+    This inherits from :class:`.BaseRole`.
+    """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The role's name."""
@@ -656,7 +665,10 @@ class Role(BaseRole):
 
 @define(slots=True)
 class BaseServer(Base):
-    """Represents a server on Revolt."""
+    """Represents a server on Revolt.
+
+    This inherits from :class:`.Base`.
+    """
 
     def get_emoji(self, emoji_id: str, /) -> typing.Optional[ServerEmoji]:
         """Retrieves a server emoji from cache.
@@ -947,6 +959,7 @@ class BaseServer(Base):
         name: str,
         description: typing.Optional[str] = ...,
         nsfw: typing.Optional[bool] = ...,
+        voice: typing.Optional[ChannelVoiceMetadata] = ...,
     ) -> TextChannel: ...
 
     @typing.overload
@@ -958,6 +971,7 @@ class BaseServer(Base):
         name: str,
         description: typing.Optional[str] = ...,
         nsfw: typing.Optional[bool] = ...,
+        voice: typing.Optional[ChannelVoiceMetadata] = ...,
     ) -> VoiceChannel: ...
 
     async def create_channel(
@@ -968,6 +982,7 @@ class BaseServer(Base):
         name: str,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
+        voice: typing.Optional[ChannelVoiceMetadata] = None,
     ) -> ServerChannel:
         """|coro|
 
@@ -989,6 +1004,10 @@ class BaseServer(Base):
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             To mark channel as NSFW or not.
+        voice: Optional[:class:`.ChannelVoiceMetadata`]
+            The voice-specific metadata for this channel.
+
+            .. versionadded:: 1.2
 
         Raises
         ------
@@ -1040,7 +1059,13 @@ class BaseServer(Base):
         """
 
         return await self.state.http.create_server_channel(
-            self.id, http_overrides=http_overrides, type=type, name=name, description=description, nsfw=nsfw
+            self.id,
+            http_overrides=http_overrides,
+            type=type,
+            name=name,
+            description=description,
+            nsfw=nsfw,
+            voice=voice,
         )
 
     async def create_server_emoji(
@@ -1140,6 +1165,7 @@ class BaseServer(Base):
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
+        voice: typing.Optional[ChannelVoiceMetadata] = None,
     ) -> TextChannel:
         """|coro|
 
@@ -1159,6 +1185,10 @@ class BaseServer(Base):
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             To mark channel as NSFW or not.
+        voice: Optional[:class:`.ChannelVoiceMetadata`]
+            The voice-specific metadata for this channel.
+
+            .. versionadded:: 1.2
 
         Raises
         ------
@@ -1209,7 +1239,12 @@ class BaseServer(Base):
             The channel created in server.
         """
         channel = await self.create_channel(
-            http_overrides=http_overrides, type=ChannelType.text, name=name, description=description, nsfw=nsfw
+            http_overrides=http_overrides,
+            type=ChannelType.text,
+            name=name,
+            description=description,
+            nsfw=nsfw,
+            voice=voice,
         )
         return channel
 
@@ -1220,6 +1255,7 @@ class BaseServer(Base):
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
+        voice: typing.Optional[ChannelVoiceMetadata] = None,
     ) -> VoiceChannel:
         """|coro|
 
@@ -1239,6 +1275,10 @@ class BaseServer(Base):
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             To mark channel as NSFW or not.
+        voice: Optional[:class:`.ChannelVoiceMetadata`]
+            The voice-specific metadata for this channel.
+
+            .. versionadded:: 1.2
 
         Raises
         ------
@@ -1289,7 +1329,12 @@ class BaseServer(Base):
             The channel created in server.
         """
         channel = await self.create_channel(
-            type=ChannelType.voice, http_overrides=http_overrides, name=name, description=description, nsfw=nsfw
+            type=ChannelType.voice,
+            http_overrides=http_overrides,
+            name=name,
+            description=description,
+            nsfw=nsfw,
+            voice=voice,
         )
         return channel
 
@@ -2490,6 +2535,8 @@ class PartialServer(BaseServer):
     """Represents a partial server on Revolt.
 
     Unmodified fields will have ``UNDEFINED`` value.
+
+    This inherits from :class:`.BaseServer`.
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
@@ -2652,7 +2699,10 @@ def calculate_server_permissions(
 
 @define(slots=True)
 class Server(BaseServer):
-    """Represents a server on Revolt."""
+    """Represents a server on Revolt.
+
+    This inherits from :class:`.BaseServer`.
+    """
 
     owner_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who owns this server."""
@@ -3132,7 +3182,10 @@ class Ban:
 
 @define(slots=True)
 class BaseMember(Connectable, Messageable):
-    """Represents a Revolt base member to a :class:`Server`."""
+    """Represents a Revolt base member to a :class:`Server`.
+
+    This inherits from :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     state: State = field(repr=False, kw_only=True)
     """:class:`.State`: State that controls this member."""
@@ -4594,6 +4647,8 @@ class PartialMember(BaseMember):
     """Represents a partial Revolt member to a :class:`Server`.
 
     Unmodified fields will have :data:`.UNDEFINED` value.
+
+    This inherits from :class:`.BaseMember`.
     """
 
     nick: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
@@ -4622,7 +4677,10 @@ class PartialMember(BaseMember):
 
 @define(slots=True)
 class Member(BaseMember):
-    """Represents a Revolt member to a :class:`.Server`."""
+    """Represents a Revolt member to a :class:`.Server`.
+
+    This inherits from :class:`.BaseMember`.
+    """
 
     joined_at: datetime = field(repr=True, kw_only=True)
     """:class:`~datetime.datetime`: When the member joined the server."""
@@ -4783,7 +4841,7 @@ class Member(BaseMember):
 
 @define(slots=True)
 class MemberList:
-    """A member list of a server."""
+    """A list of members in a server."""
 
     members: list[Member] = field(repr=True, kw_only=True)
     """List[:class:`.Member`]: The members in server."""

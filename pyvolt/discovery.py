@@ -55,7 +55,10 @@ _new_server_flags = ServerFlags.__new__
 
 @define(slots=True)
 class DiscoverableServer(BaseServer):
-    """Represents a server on Revolt Discovery. The ID is an invite code."""
+    """Represents a server on Revolt Discovery. The ID is an invite code.
+
+    This inherits from :class:`.BaseServer`.
+    """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's name."""
@@ -117,7 +120,10 @@ class DiscoverableServersPage:
 
 @define(slots=True)
 class DiscoverableBot(BaseBot):
-    """Represents a bot on Revolt Discovery."""
+    """Represents a bot on Revolt Discovery.
+
+    This inherits from :class:`.BaseBot`.
+    """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The bot's name."""

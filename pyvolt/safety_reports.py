@@ -39,7 +39,10 @@ if typing.TYPE_CHECKING:
 
 @define(slots=True)
 class BaseReport(Base):
-    """Represents an user-generated platform moderation report on Revolt."""
+    """Represents an user-generated platform moderation report on Revolt.
+
+    This inherits from :class:`.Base`.
+    """
 
     author_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who created this report."""
@@ -62,7 +65,10 @@ class BaseReport(Base):
 
 @define(slots=True)
 class CreatedReport(BaseReport):
-    """Represents a created report on Revolt."""
+    """Represents a created report on Revolt.
+
+    This inherits from :class:`.BaseReport`.
+    """
 
     @property
     def status(self) -> typing.Literal[ReportStatus.created]:
@@ -72,7 +78,10 @@ class CreatedReport(BaseReport):
 
 @define(slots=True)
 class RejectedReport(BaseReport):
-    """Represents a rejected report on Revolt."""
+    """Represents a rejected report on Revolt.
+
+    This inherits from :class:`.BaseReport`.
+    """
 
     rejection_reason: str = field(repr=True, kw_only=True)
     """:class:`str`: The reason why this report was rejected."""
@@ -88,7 +97,10 @@ class RejectedReport(BaseReport):
 
 @define(slots=True)
 class ResolvedReport(BaseReport):
-    """Represents a resolved report on Revolt."""
+    """Represents a resolved report on Revolt.
+
+    This inherits from :class:`.BaseReport`.
+    """
 
     closed_at: typing.Optional[datetime] = field(repr=True, kw_only=True)
     """Optional[:class:`~datetime.datetime`]: When the report was closed."""
@@ -112,7 +124,10 @@ class BaseReportedContent:
 
 @define(slots=True)
 class MessageReportedContent(BaseReportedContent):
-    """Represents a message being reported."""
+    """Represents a message being reported.
+
+    This inherits from :class:`.BaseReportedContent`.
+    """
 
     reason: ContentReportReason = field(repr=True, kw_only=True)
     """:class:`.ContentReportReason`: The reason why message was reported."""
@@ -125,7 +140,10 @@ class MessageReportedContent(BaseReportedContent):
 
 @define(slots=True)
 class ServerReportedContent(BaseReportedContent):
-    """Represents a server being reported."""
+    """Represents a server being reported.
+
+    This inherits from :class:`.BaseReportedContent`.
+    """
 
     reason: ContentReportReason = field(repr=True, kw_only=True)
     """:class:`.ContentReportReason`: The reason why server was reported."""
@@ -138,7 +156,10 @@ class ServerReportedContent(BaseReportedContent):
 
 @define(slots=True)
 class UserReportedContent(BaseReportedContent):
-    """Represents an user being reported."""
+    """Represents an user being reported.
+
+    This inherits from :class:`.BaseReportedContent`.
+    """
 
     reason: UserReportReason = field(repr=True, kw_only=True)
     """:class:`.UserReportReason`: The reason why user was reported."""

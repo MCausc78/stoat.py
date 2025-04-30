@@ -330,7 +330,10 @@ class MessageWebhook:
 
 @define(slots=True)
 class BaseMessage(Base):
-    """Represents a message in channel on Revolt."""
+    """Represents a message in channel on Revolt.
+
+    This inherits from :class:`.Base`.
+    """
 
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID this message was sent in."""
@@ -1274,7 +1277,10 @@ class BaseMessage(Base):
 
 @define(slots=True)
 class PartialMessage(BaseMessage):
-    """Represents partial message in channel on Revolt."""
+    """Represents partial message in channel on Revolt.
+
+    This inherits from :class:`.BaseMessage`.
+    """
 
     content: UndefinedOr[str] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new message's content."""
@@ -1303,7 +1309,10 @@ class PartialMessage(BaseMessage):
 
 @define(slots=True)
 class MessageAppendData(BaseMessage):
-    """Appended data to message in channel on Revolt."""
+    """Appended data to message in channel on Revolt.
+
+    This inherits from :class:`.BaseMessage`.
+    """
 
     internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, kw_only=True)
     """UndefinedOr[List[:class:`.StatelessEmbed`]]: The stateless embeds that were appended."""
@@ -1326,6 +1335,11 @@ class BaseSystemEvent:
 
 @define(slots=True, eq=True)
 class TextSystemEvent(BaseSystemEvent):
+    """A simple text system message.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     content: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The event contents."""
 
@@ -1354,6 +1368,11 @@ class TextSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class StatelessUserAddedSystemEvent(BaseSystemEvent):
+    """An user was added to a group.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _user: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_user')
     _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
 
@@ -1452,6 +1471,11 @@ class StatelessUserAddedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
+    """An user was added to a group.
+
+    This is a stateful version of :class:`.StatelessUserAddedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -1508,6 +1532,11 @@ class UserAddedSystemEvent(StatelessUserAddedSystemEvent):
 
 @define(slots=True)
 class StatelessUserRemovedSystemEvent(BaseSystemEvent):
+    """An user was removed from a group.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _user: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_user')
     _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
 
@@ -1606,6 +1635,11 @@ class StatelessUserRemovedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
+    """An user was removed from a group.
+
+    This is a stateful version of :class:`.StatelessUserRemovedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -1662,6 +1696,11 @@ class UserRemovedSystemEvent(StatelessUserRemovedSystemEvent):
 
 @define(slots=True)
 class StatelessUserJoinedSystemEvent(BaseSystemEvent):
+    """An user joined a server.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _user: typing.Union[Member, User, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def __eq__(self, other: object, /) -> bool:
@@ -1760,6 +1799,11 @@ class StatelessUserJoinedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
+    """An user joined a server.
+
+    This is a stateful version of :class:`.StatelessUserJoinedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -1861,6 +1905,11 @@ class UserJoinedSystemEvent(StatelessUserJoinedSystemEvent):
 
 @define(slots=True)
 class StatelessUserLeftSystemEvent(BaseSystemEvent):
+    """An user left a group or server.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _user: typing.Union[Member, User, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def __eq__(self, other: object, /) -> bool:
@@ -1959,6 +2008,11 @@ class StatelessUserLeftSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
+    """An user left a group or server.
+
+    This is a stateful version of :class:`.StatelessUserLeftSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -2060,6 +2114,11 @@ class UserLeftSystemEvent(StatelessUserLeftSystemEvent):
 
 @define(slots=True)
 class StatelessUserKickedSystemEvent(BaseSystemEvent):
+    """A member was kicked from a server.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _user: typing.Union[Member, User, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def get_user(self) -> typing.Optional[typing.Union[Member, User]]:
@@ -2158,6 +2217,11 @@ class StatelessUserKickedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
+    """A member was kicked from a server.
+
+    This is a stateful version of :class:`.StatelessUserKickedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -2259,6 +2323,11 @@ class UserKickedSystemEvent(StatelessUserKickedSystemEvent):
 
 @define(slots=True)
 class StatelessUserBannedSystemEvent(BaseSystemEvent):
+    """An user was banned from a server.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _user: typing.Union[Member, User, str] = field(repr=False, kw_only=True, alias='internal_user')
 
     def get_user(self) -> typing.Optional[typing.Union[Member, User]]:
@@ -2357,6 +2426,11 @@ class StatelessUserBannedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
+    """An user was banned from a server.
+
+    This is a stateful version of :class:`.StatelessUserBannedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -2458,6 +2532,11 @@ class UserBannedSystemEvent(StatelessUserBannedSystemEvent):
 
 @define(slots=True)
 class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
+    """An user renamed group.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The new name of this group."""
 
@@ -2529,6 +2608,11 @@ class StatelessChannelRenamedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
+    """An user renamed group.
+
+    This is a stateful version of :class:`.StatelessChannelRenamedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -2560,6 +2644,11 @@ class ChannelRenamedSystemEvent(StatelessChannelRenamedSystemEvent):
 
 @define(slots=True)
 class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
+    """An user changed group's description.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     def get_by(self) -> typing.Optional[User]:
@@ -2625,6 +2714,11 @@ class StatelessChannelDescriptionChangedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSystemEvent):
+    """An user changed group's description.
+
+    This is a stateful version of :class:`.StatelessChannelDescriptionChangedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -2656,6 +2750,11 @@ class ChannelDescriptionChangedSystemEvent(StatelessChannelDescriptionChangedSys
 
 @define(slots=True)
 class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
+    """An user changed group's icon.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     def get_by(self) -> typing.Optional[User]:
@@ -2717,6 +2816,11 @@ class StatelessChannelIconChangedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
+    """An user changed group's icon.
+
+    This is a stateful version of :class:`.StatelessChannelIconChangedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -2748,6 +2852,11 @@ class ChannelIconChangedSystemEvent(StatelessChannelIconChangedSystemEvent):
 
 @define(slots=True)
 class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
+    """A group owner transferred ownership to someone else.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _from: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_from')
     _to: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_to')
 
@@ -2843,6 +2952,11 @@ class StatelessChannelOwnershipChangedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemEvent):
+    """A group owner transferred ownership to someone else.
+
+    This is a stateful version of :class:`.StatelessChannelOwnershipChangedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -2899,6 +3013,11 @@ class ChannelOwnershipChangedSystemEvent(StatelessChannelOwnershipChangedSystemE
 
 @define(slots=True)
 class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
+    """A message was pinned.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     pinned_message_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The ID of the message that was pinned."""
 
@@ -3007,6 +3126,11 @@ class StatelessMessagePinnedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
+    """A message was pinned.
+
+    This is a stateful version of :class:`.StatelessMessagePinnedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -3129,6 +3253,11 @@ class MessagePinnedSystemEvent(StatelessMessagePinnedSystemEvent):
 
 @define(slots=True)
 class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
+    """A message was unpinned.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     unpinned_message_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The ID of the message that was unpinned."""
 
@@ -3237,6 +3366,11 @@ class StatelessMessageUnpinnedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
+    """A message was unpinned.
+
+    This is a stateful version of :class:`.StatelessMessageUnpinnedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -3359,6 +3493,11 @@ class MessageUnpinnedSystemEvent(StatelessMessageUnpinnedSystemEvent):
 
 @define(slots=True)
 class StatelessCallStartedSystemEvent(BaseSystemEvent):
+    """A call was just started in the channel.
+
+    This inherits from :class:`.BaseSystemEvent`.
+    """
+
     _by: typing.Union[User, str] = field(repr=False, kw_only=True, alias='internal_by')
 
     def __eq__(self, other: object, /) -> bool:
@@ -3420,6 +3559,11 @@ class StatelessCallStartedSystemEvent(BaseSystemEvent):
 
 @define(slots=True)
 class CallStartedSystemEvent(StatelessCallStartedSystemEvent):
+    """A call was just started in the channel.
+
+    This is a stateful version of :class:`.StatelessCallStartedSystemEvent`, and inherits from it.
+    """
+
     message: Message = field(repr=False, kw_only=True, eq=False)
     """:class:`.Message`: The message that holds this system event."""
 
@@ -3485,7 +3629,10 @@ SystemEvent = typing.Union[
 
 @define(slots=True)
 class Message(BaseMessage):
-    """Represents a message in channel on Revolt."""
+    """Represents a message in channel on Revolt.
+
+    This inherits from :class:`.BaseMessage`.
+    """
 
     nonce: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The unique value generated by client sending this message."""

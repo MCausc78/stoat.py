@@ -162,7 +162,10 @@ class StatelessUserProfile:
 
 @define(slots=True)
 class UserProfile(StatelessUserProfile):
-    r"""Represents Revolt :class:`.User`\'s profile."""
+    r"""Represents Revolt :class:`.User`\'s profile.
+
+    This inherits from :class:`.StatelessUserProfile`.
+    """
 
     state: State = field(repr=False, kw_only=True)
     """:class:`.State`: The internal state used to attach state to other fields."""
@@ -285,7 +288,10 @@ class Mutuals:
 
 @define(slots=True)
 class BaseUser(Base, Connectable, Messageable):
-    """Represents an user on Revolt."""
+    """Represents an user on Revolt.
+
+    This inherits from :class:`.Base`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    """
 
     def get_channel_id(self) -> str:
         return self.dm_channel_id or ''
@@ -1233,7 +1239,10 @@ class BaseUser(Base, Connectable, Messageable):
 
 @define(slots=True)
 class PartialUser(BaseUser):
-    """Represents a partial user on Revolt."""
+    """Represents a partial user on Revolt.
+
+    This inherits from :class:`.BaseUser`.
+    """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new user's name."""
@@ -1293,7 +1302,10 @@ class PartialUser(BaseUser):
 
 @define(slots=True)
 class DisplayUser(BaseUser):
-    """Represents an user on Revolt that can be easily displayed in UI."""
+    """Represents an user on Revolt that can be easily displayed in UI.
+
+    This inherits from :class:`.BaseUser`.
+    """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The username of the user."""
@@ -1472,7 +1484,10 @@ def calculate_user_permissions(
 
 @define(slots=True)
 class User(DisplayUser):
-    """Represents an user on Revolt."""
+    """Represents an user on Revolt.
+
+    This inherits from :class:`.DisplayUser`.
+    """
 
     display_name: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The user's display name."""
@@ -1675,7 +1690,10 @@ class User(DisplayUser):
 
 @define(slots=True)
 class OwnUser(User):
-    """Represents a current user on Revolt."""
+    """Represents a current user on Revolt.
+
+    This inherits from :class:`.User`.
+    """
 
     relations: dict[str, Relationship] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, :class:`.Relationship`]: The dictionary of relationships with other users."""
