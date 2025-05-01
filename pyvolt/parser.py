@@ -1782,7 +1782,7 @@ class Parser:
 
         return Member(
             state=self.state,
-            _user=user or users.get(user_id, user_id),
+            internal_user=user or users.get(user_id, user_id),
             server_id=id['server'],
             joined_at=_parse_dt(payload['joined_at']),
             nick=payload.get('nickname'),
@@ -3439,7 +3439,7 @@ class Parser:
             member=Member(
                 state=self.state,
                 server_id=payload['id'],
-                _user=payload['user'],
+                internal_user=payload['user'],
                 joined_at=joined_at,
                 nick=None,
                 internal_server_avatar=None,
@@ -3505,7 +3505,7 @@ class Parser:
             member=PartialMember(
                 state=self.state,
                 server_id=id['server'],
-                _user=id['user'],
+                internal_user=id['user'],
                 nick=None if 'Nickname' in clear else data.get('nickname', UNDEFINED),
                 internal_server_avatar=None
                 if 'Avatar' in clear

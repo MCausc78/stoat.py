@@ -990,6 +990,14 @@ class HTTPClient:
                 if response.status == 502:
                     if retries >= self.max_retries:
                         data = await utils._json_or_text(response)
+
+                        try:
+                            tmp = response.close()
+                            if isawaitable(tmp):
+                                await tmp
+                        except Exception:
+                            pass
+
                         raise BadGateway(response, data)
                     continue
 
@@ -1024,7 +1032,16 @@ class HTTPClient:
                     data['type'] = 'RocketError'
                     data['err'] = f'{code} {reason}: {description}'
 
-                raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, data)
+                exc = _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, data)
+
+                try:
+                    tmp = response.close()
+                    if isawaitable(tmp):
+                        await tmp
+                except Exception:
+                    pass
+
+                raise exc
             return response
 
     async def request(
@@ -3289,7 +3306,7 @@ class HTTPClient:
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                            |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
+            | ``TooManyReplies``     | You were replying to more messages than was allowed on this instance.                                              |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
@@ -8361,7 +8378,7 @@ class HTTPClient:
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                            |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
+            | ``TooManyReplies``     | You were replying to more messages than was allowed on this instance.                                              |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:

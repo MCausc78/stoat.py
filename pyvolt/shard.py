@@ -341,7 +341,6 @@ class ShardImpl(Shard):
         'reconnect_on_timeout',
         'request_user_settings',
         'retries',
-        'state',
         'user_agent',
         'recv',
         'send',
@@ -360,8 +359,6 @@ class ShardImpl(Shard):
         reconnect_on_timeout: bool = True,
         request_user_settings: typing.Optional[list[str]] = None,
         retries: typing.Optional[int] = None,
-        # session: typing.Union[utils.MaybeAwaitableFunc[[Shard], aiohttp.ClientSession], aiohttp.ClientSession],
-        state: State,
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if format is ShardFormat.msgpack and not _HAS_MSGPACK:
@@ -388,7 +385,6 @@ class ShardImpl(Shard):
         self.reconnect_on_timeout: bool = reconnect_on_timeout
         self.request_user_settings = request_user_settings
         self.retries: int = retries or 150
-        self.state: State = state
         self.user_agent: str = user_agent or DEFAULT_SHARD_USER_AGENT
 
         self.recv = self._recv_json if format is ShardFormat.json else self._recv_msgpack

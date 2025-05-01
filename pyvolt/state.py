@@ -82,7 +82,6 @@ class State:
         self.provide_cache_context_in: list[ProvideCacheContextIn] = provide_cache_context_in or []
         self._cdn_client: typing.Optional[CDNClient] = None
         self._http: typing.Optional[HTTPClient] = None
-        self.parser: Parser = Parser(state=self)
         self._shard: typing.Optional[Shard] = shard
         self._me: typing.Optional[OwnUser] = None
         self._saved_notes: typing.Optional[SavedMessagesChannel] = None
@@ -103,6 +102,7 @@ class State:
             online=True,
         )
         self.voice_url: str = ''
+        self.parser: Parser = Parser(state=self)
 
     def setup(
         self,

@@ -732,7 +732,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         )
 
         a = cache.get_user(self.recipient_ids[0], ctx)
-        b = cache.get_user(self.recipient_ids[0], ctx)
+        b = cache.get_user(self.recipient_ids[1], ctx)
 
         return (a, b)
 

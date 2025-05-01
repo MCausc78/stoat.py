@@ -18,7 +18,7 @@ def get_branch() -> str:
 
     return match.group(1).decode()
 
-def get_latest_commit():
+def get_latest_commit() -> str:
     proc = subprocess.run([
         'git',
         'log',
@@ -30,7 +30,7 @@ def get_latest_commit():
     return proc.stdout.decode().strip()
 
 
-def main():
+def main() -> None:
     commit = get_latest_commit()
 
     RE_TODO = re.compile(r"TODO: (.*)")

@@ -61,7 +61,7 @@ class HTTPException(PyvoltException):
         The duration in seconds to wait until ratelimit expires.
     error: Optional[:class:`str`]
         The validation error details.
-        Only applicable when :attr:`~.type` is ``'FaliedValidation'``.
+        Only applicable when :attr:`~.type` is ``'FailedValidation'``.
     max: Optional[:class:`int`]
         The maximum count of entities.
         Only applicable when :attr:`~.type` one of following values:
@@ -79,6 +79,7 @@ class HTTPException(PyvoltException):
     permission: Optional[:class:`str`]
         The permission required to perform request.
         Only applicable when :attr:`~.type` one of following values:
+
         - ``'MissingPermission'``
         - ``'MissingUserPermission'``
     operation: Optional[:class:`str`]

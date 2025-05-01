@@ -2318,7 +2318,9 @@ class BaseServer(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.report_server(self.id, reason, additional_context=additional_context)
+        return await self.state.http.report_server(
+            self.id, reason, http_overrides=http_overrides, additional_context=additional_context
+        )
 
     async def set_role_permissions(
         self,
@@ -3175,7 +3177,8 @@ class BaseMember(Connectable, Messageable):
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID the member in."""
 
-    _user: typing.Union[User, str] = field(repr=True, kw_only=True, alias='_user')
+    internal_user: typing.Union[User, str] = field(repr=True, kw_only=True)
+    """Union[:class:`.User`, :class:`str`]: The ID of the user, or full user instance."""
 
     def get_bot_owner(self) -> tuple[typing.Optional[User], str]:
         """Returns the user who created this bot user.
@@ -3186,8 +3189,8 @@ class BaseMember(Connectable, Messageable):
             The bot owner and their ID (may be empty if user is not a bot).
         """
 
-        if isinstance(self._user, User):
-            return self._user.get_bot_owner()
+        if isinstance(self.internal_user, User):
+            return self.internal_user.get_bot_owner()
 
         state = self.state
         cache = state.cache
@@ -3204,7 +3207,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_BOT_OWNER
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return (None, '')
@@ -3241,8 +3244,8 @@ class BaseMember(Connectable, Messageable):
 
     def get_user(self) -> typing.Optional[User]:
         """Optional[:class:`.User`]: The user."""
-        if isinstance(self._user, User):
-            return self._user
+        if isinstance(self.internal_user, User):
+            return self.internal_user
 
         state = self.state
         cache = state.cache
@@ -3259,7 +3262,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_USER
         )
 
-        return cache.get_user(self._user, ctx)
+        return cache.get_user(self.internal_user, ctx)
 
     def __eq__(self, other: object, /) -> bool:
         if self is other:
@@ -3315,9 +3318,9 @@ class BaseMember(Connectable, Messageable):
     @property
     def id(self) -> str:
         """:class:`str`: The ID of the member user."""
-        if isinstance(self._user, User):
-            return self._user.id
-        return self._user
+        if isinstance(self.internal_user, User):
+            return self.internal_user.id
+        return self.internal_user
 
     @property
     def default_avatar_url(self) -> str:
@@ -3388,8 +3391,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def name(self) -> str:
         """:class:`str`: The member's username."""
-        if isinstance(self._user, User):
-            return self._user.name
+        if isinstance(self.internal_user, User):
+            return self.internal_user.name
 
         state = self.state
         cache = state.cache
@@ -3406,7 +3409,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_NAME
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return ''
@@ -3416,8 +3419,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def discriminator(self) -> str:
         """:class:`str`: The member user's discriminator."""
-        if isinstance(self._user, User):
-            return self._user.discriminator
+        if isinstance(self.internal_user, User):
+            return self.internal_user.discriminator
 
         state = self.state
         cache = state.cache
@@ -3434,7 +3437,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_DISCRIMINATOR
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return ''
@@ -3444,8 +3447,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def display_name(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: The member user's display name."""
-        if isinstance(self._user, User):
-            return self._user.display_name
+        if isinstance(self.internal_user, User):
+            return self.internal_user.display_name
 
         state = self.state
         cache = state.cache
@@ -3462,7 +3465,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_DISPLAY_NAME
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return None
@@ -3472,8 +3475,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def internal_avatar(self) -> typing.Optional[StatelessAsset]:
         """Optional[:class:`.StatelessAsset`]: The stateless avatar of the member user."""
-        if isinstance(self._user, User):
-            return self._user.internal_avatar
+        if isinstance(self.internal_user, User):
+            return self.internal_user.internal_avatar
 
         state = self.state
         cache = state.cache
@@ -3490,7 +3493,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_INTERNAL_AVATAR
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return None
@@ -3505,8 +3508,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def raw_badges(self) -> int:
         """:class:`int`: The member user's badges raw value."""
-        if isinstance(self._user, User):
-            return self._user.raw_badges
+        if isinstance(self.internal_user, User):
+            return self.internal_user.raw_badges
 
         state = self.state
         cache = state.cache
@@ -3523,7 +3526,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_RAW_BADGES
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return 0
@@ -3540,8 +3543,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def status(self) -> typing.Optional[UserStatus]:
         """Optional[:class:`.UserStatus`]: The current member user's status."""
-        if isinstance(self._user, User):
-            return self._user.status
+        if isinstance(self.internal_user, User):
+            return self.internal_user.status
 
         state = self.state
         cache = state.cache
@@ -3558,7 +3561,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_STATUS
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return None
@@ -3568,8 +3571,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def raw_flags(self) -> int:
         """:class:`int`: The member user's flags raw value."""
-        if isinstance(self._user, User):
-            return self._user.raw_flags
+        if isinstance(self.internal_user, User):
+            return self.internal_user.raw_flags
 
         state = self.state
         cache = state.cache
@@ -3586,7 +3589,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_RAW_FLAGS
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return 0
@@ -3603,8 +3606,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def privileged(self) -> bool:
         """:class:`bool`: Whether the member user is privileged."""
-        if isinstance(self._user, User):
-            return self._user.privileged
+        if isinstance(self.internal_user, User):
+            return self.internal_user.privileged
 
         state = self.state
         cache = state.cache
@@ -3621,7 +3624,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_PRIVILEGED
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return False
@@ -3631,8 +3634,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def bot(self) -> typing.Optional[BotUserMetadata]:
         """Optional[:class:`.BotUserMetadata`]: The information about the bot."""
-        if isinstance(self._user, User):
-            return self._user.bot
+        if isinstance(self.internal_user, User):
+            return self.internal_user.bot
 
         state = self.state
         cache = state.cache
@@ -3649,7 +3652,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_BOT
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return None
@@ -3659,8 +3662,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def relationship(self) -> RelationshipStatus:
         """:class:`RelationshipStatus`: The current user's relationship with this member user."""
-        if isinstance(self._user, User):
-            return self._user.relationship
+        if isinstance(self.internal_user, User):
+            return self.internal_user.relationship
 
         state = self.state
         cache = state.cache
@@ -3677,7 +3680,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_RELATIONSHIP
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return RelationshipStatus.none
@@ -3687,8 +3690,8 @@ class BaseMember(Connectable, Messageable):
     @property
     def online(self) -> bool:
         """:class:`bool`: Whether the member user is currently online."""
-        if isinstance(self._user, User):
-            return self._user.online
+        if isinstance(self.internal_user, User):
+            return self.internal_user.online
 
         state = self.state
         cache = state.cache
@@ -3705,7 +3708,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_ONLINE
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return False
@@ -3719,8 +3722,8 @@ class BaseMember(Connectable, Messageable):
         Assuming that :attr:`Member.name` is ``'kotlin.Unit'`` and :attr:`Mmeber.discriminator` is ``'3510'``,
         example output would be ``'kotlin.Unit#3510'``.
         """
-        if isinstance(self._user, User):
-            return self._user.tag
+        if isinstance(self.internal_user, User):
+            return self.internal_user.tag
 
         state = self.state
         cache = state.cache
@@ -3737,7 +3740,7 @@ class BaseMember(Connectable, Messageable):
             else _USER_THROUGH_MEMBER_TAG
         )
 
-        user = cache.get_user(self._user, ctx)
+        user = cache.get_user(self.internal_user, ctx)
 
         if user is None:
             return ''

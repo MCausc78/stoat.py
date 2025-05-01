@@ -795,10 +795,10 @@ class MessageCreateEvent(ShardEvent):
             else caching._MESSAGE_CREATE_EVENT
         )
 
-        author = self.message._author
+        author = self.message.internal_author
         if isinstance(author, Member):
-            if isinstance(author._user, User):
-                cache.store_user(author._user, ctx)
+            if isinstance(author.internal_user, User):
+                cache.store_user(author.internal_user, ctx)
             cache.store_server_member(author, ctx)
         elif isinstance(author, User):
             cache.store_user(author, ctx)
@@ -1322,7 +1322,7 @@ class ServerCreateEvent(ShardEvent):
                 Member(
                     state=state,
                     server_id=self.server.id,
-                    _user=state.me.id,
+                    internal_user=state.me.id,
                     joined_at=self.joined_at,
                     nick=None,
                     internal_server_avatar=None,

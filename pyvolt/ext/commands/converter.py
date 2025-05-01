@@ -64,6 +64,8 @@ from .errors import (
 )
 
 if typing.TYPE_CHECKING:
+    from types import UnionType
+
     from ._types import BotT
     from .context import Context
     from .parameters import Parameter
@@ -742,7 +744,7 @@ class CategoryConverter(IDConverter[pyvolt.Category]):
             raise CategoryNotFound(argument=argument)
 
         categories = server.categories
-        if categories is None:
+        if not categories:
             raise CategoryNotFound(argument=argument)
 
         for category in categories:
@@ -1003,7 +1005,7 @@ def is_generic_type(tp: typing.Any, /, *, _GenericAlias: type = _GenericAlias) -
     return isinstance(tp, type) and issubclass(tp, typing.Generic) or isinstance(tp, _GenericAlias)
 
 
-CONVERTER_MAPPING: dict[typing.Any, typing.Any] = {
+CONVERTER_MAPPING: dict[typing.Union[type, UnionType], type[Converter]] = {
     pyvolt.Base: BaseConverter,
     pyvolt.Member: MemberConverter,
     pyvolt.User: UserConverter,

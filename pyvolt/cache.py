@@ -3409,13 +3409,13 @@ class MapCache(Cache):
         from .server import Member
         from .user import User
 
-        author = message._author
+        author = message.internal_author
         if isinstance(author, Member):
             self.store_server_member(author, ctx)
-            message._author = author.id
+            message.internal_author = author.id
         elif isinstance(author, User):
             self.store_user(author, ctx)
-            message._author = author.id
+            message.internal_author = author.id
 
         d = self._messages.get(message.channel_id)
         if d is None:
@@ -3569,9 +3569,9 @@ class MapCache(Cache):
     def store_server_member(self, member: Member, ctx: BaseCacheContext, /) -> None:
         from .user import User
 
-        if isinstance(member._user, User):
-            self.store_user(member._user, ctx)
-            member._user = member._user.id
+        if isinstance(member.internal_user, User):
+            self.store_user(member.internal_user, ctx)
+            member.internal_user = member.internal_user.id
         d = self._server_members.get(member.server_id)
         if d is None:
             if self._server_members_max_size == 0:

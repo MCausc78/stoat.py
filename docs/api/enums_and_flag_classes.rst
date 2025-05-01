@@ -202,7 +202,7 @@ Discover
     .. attribute:: catalonian
 
         Català
-    .. attribute:: cecebuanob
+    .. attribute:: cebuano
 
         Bisaya
     .. attribute:: central_kurdish

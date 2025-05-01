@@ -614,7 +614,7 @@ class Messageable:
             +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
             | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                                          |
             +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                                             |
+            | ``TooManyReplies``     | You were replying to more messages than was allowed on this instance.                                                            |
             +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
         :class:`~pyvolt.Unauthorized`
             Possible values for :attr:`~pyvolt.HTTPException.type`:
