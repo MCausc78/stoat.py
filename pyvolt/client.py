@@ -1258,6 +1258,7 @@ class Client:
                         base_url=websocket_base,
                         handler=ClientEventHandler(self),
                         request_user_settings=request_user_settings,
+                        state=state,
                     )
                 )
             )
