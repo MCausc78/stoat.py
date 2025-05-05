@@ -2717,11 +2717,11 @@ class Client:
         Parameters
         ----------
         name: :class:`str`
-            The server name.
+            The server name. Must be between 1 and 32 characters long.
         http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
-            The server description.
+            The server description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             Whether this server is age-restricted.
 
