@@ -968,7 +968,12 @@ class HTTPClient:
                 )
             except OSError as exc:
                 # TODO: Handle 10053?
-                if exc.errno in (54, 10054):  # Connection reset by peer
+                if exc.errno in (
+                    54,  # BSD / Apple
+                    104,  # Linux
+                    10054,  # Windows
+                ):
+                    # Connection reset by peer
                     await asyncio.sleep(1.5)
                     continue
                 raise
