@@ -12,7 +12,7 @@ def sort_private_channel(channel: typing.Union[pyvolt.DMChannel, pyvolt.GroupCha
 
 
 @client.on(pyvolt.ReadyEvent)
-async def on_ready(event: pyvolt.ReadyEvent):
+async def on_ready(event: pyvolt.ReadyEvent) -> None:
     event.process()
     event.cancel()
 

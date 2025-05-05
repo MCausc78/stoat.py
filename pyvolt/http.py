@@ -3993,14 +3993,6 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +---------------------------+--------------------------------------------------------------------------------------+
-            | Value                     | Reason                                                                               |
-            +---------------------------+--------------------------------------------------------------------------------------+
-            | ``InvalidOperation``      | The channel was not type of :attr:`~ChannelType.group` or :attr:`~ChannelType.text`. |
-            +---------------------------+--------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 

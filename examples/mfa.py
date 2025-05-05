@@ -12,7 +12,7 @@ password = 'password'
 
 
 @bot.on(pyvolt.MessageCreateEvent)
-async def on_message(event: pyvolt.MessageCreateEvent):
+async def on_message(event: pyvolt.MessageCreateEvent) -> None:
     message = event.message
 
     if message.author.relationship is not pyvolt.RelationshipStatus.user:

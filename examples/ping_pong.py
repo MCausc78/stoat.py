@@ -15,7 +15,7 @@ async def on_ready(_, /) -> None:
 
 
 @client.on(pyvolt.MessageCreateEvent)
-async def on_message(event: pyvolt.MessageCreateEvent):
+async def on_message(event: pyvolt.MessageCreateEvent) -> None:
     message = event.message
 
     # Don't respond to ourselves/others
