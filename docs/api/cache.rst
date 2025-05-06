@@ -1118,16 +1118,6 @@ GroupPublicInviteCacheContext
     :members:
     :inherited-members:
 
-GroupPublicInviteCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: GroupPublicInviteCacheContext
-
-.. autoclass:: GroupPublicInviteCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
 GroupInviteCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1765,7 +1755,7 @@ MemberOrUsersThroughMessageMentionsCacheContext
 
 .. autoclass:: MemberOrUsersThroughMessageMentionsCacheContext
     :show-inheritance:
-    :memberes:
+    :members:
     :inherited-members:
 
 MembersThroughMessageMentionsCacheContext
@@ -1775,7 +1765,7 @@ MembersThroughMessageMentionsCacheContext
 
 .. autoclass:: MembersThroughMessageMentionsCacheContext
     :show-inheritance:
-    :memberes:
+    :members:
     :inherited-members:
 
 UsersThroughMessageMentionsCacheContext
@@ -1785,7 +1775,7 @@ UsersThroughMessageMentionsCacheContext
 
 .. autoclass:: UsersThroughMessageMentionsCacheContext
     :show-inheritance:
-    :memberes:
+    :members:
     :inherited-members:
 
 RoleThroughMessageRoleMentionsCacheContext
@@ -1795,7 +1785,7 @@ RoleThroughMessageRoleMentionsCacheContext
 
 .. autoclass:: RoleThroughMessageRoleMentionsCacheContext
     :show-inheritance:
-    :memberes:
+    :members:
     :inherited-members:
 
 ReadStateThroughTextChannelReadStateCacheContext

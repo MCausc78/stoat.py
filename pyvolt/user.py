@@ -235,7 +235,7 @@ class UserProfileEdit:
         Parameters
         ----------
         state: :class:`.State`
-            The state. Required to resolve :attr:`~.media` attribute into file ID.
+            The state. Required to resolve :attr:`~UserProfileEdit.media` attribute into file ID.
 
         Returns
         -------

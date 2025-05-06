@@ -459,7 +459,7 @@ class HTTPOverrideOptions:
     base_url: :class:`str`
         The base API url to use when sending a HTTP request.
     bot: UndefinedOr[:class:`bool`]
-        Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+        Whether the authentication token belongs to bot account. Defaults to :attr:`~HTTPOverrideOptions.bot`.
     cookie: UndefinedOr[:class:`str`]
         The cookies to use when performing a request.
     headers: MultiMapping[:class:`str`]
@@ -4189,11 +4189,11 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------------------+-----------------------------------------------------------+
-            | Value                            | Reason                                                    |
-            +----------------------------------+-----------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to delete an emoji. |
-            +----------------------------------+-----------------------------------------------------------+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete an emoji. |
+            +-----------------------+------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
