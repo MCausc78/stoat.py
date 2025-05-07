@@ -1676,7 +1676,7 @@ class BaseServer(Base):
 
             .. deprecated:: 1.2
 
-                Due to categories rework in API v0.8.5, this parameter will be ignored on older API versions,
+                Due to categories rework in API v0.8.5, this parameter will be ignored on newer API versions,
                 and was deprecated in favor of these dedicated methods:
 
                 - :meth:`create_category`

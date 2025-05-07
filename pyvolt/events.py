@@ -777,7 +777,7 @@ class MessageCreateEvent(ShardEvent):
     event_name: typing.ClassVar[typing.Literal['message_create']] = 'message_create'
 
     message: Message = field(repr=True, kw_only=True)
-    """:class:`Message`: The message sent."""
+    """:class:`Message`: The message that was sent."""
 
     def process(self) -> bool:
         state = self.shard.state
