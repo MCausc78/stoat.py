@@ -47,11 +47,11 @@ class State:
 
     Attributes
     ----------
-    provide_cache_context_in: List[:class:`.ProvideCacheContextIn`]
+    provide_cache_context_in: List[:class:`ProvideCacheContextIn`]
         The methods/properties that do provide cache context.
-    parser: :class:`.Parser`
+    parser: :class:`Parser`
         The parser.
-    system: :class:`.User`
+    system: :class:`User`
         The Revolt#0000 sentinel user.
     voice_url: :class:`str`
         The URL to voice server.
@@ -127,30 +127,30 @@ class State:
 
     @property
     def cache(self) -> typing.Optional[Cache]:
-        """Optional[:class:`.Cache`]: The cache attacted to this state."""
+        """Optional[:class:`Cache`]: The cache attacted to this state."""
         return self._cache
 
     @property
     def cdn_client(self) -> CDNClient:
-        """:class:`.CDNClient`: The CDN client attached to this state."""
+        """:class:`CDNClient`: The CDN client attached to this state."""
         assert self._cdn_client, 'State has no CDN client attached'
         return self._cdn_client
 
     @property
     def http(self) -> HTTPClient:
-        """:class:`.HTTPClient`: The HTTP client attached to this state."""
+        """:class:`HTTPClient`: The HTTP client attached to this state."""
         assert self._http, 'State has no HTTP client attached'
         return self._http
 
     @property
     def shard(self) -> Shard:
-        """:class:`.Shard`: The shard attached to this state."""
+        """:class:`Shard`: The shard attached to this state."""
         assert self._shard, 'State has no shard attached'
         return self._shard
 
     @property
     def me(self) -> typing.Optional[OwnUser]:
-        """Optional[:class:`.OwnUser`]: The currently logged in user."""
+        """Optional[:class:`OwnUser`]: The currently logged in user."""
         # assert self._me, "State has no current user attached"
         return self._me
 
@@ -164,12 +164,12 @@ class State:
 
     @property
     def saved_notes(self) -> typing.Optional[SavedMessagesChannel]:
-        """Optional[:class:`.SavedMessagesChannel`]: The Saved Notes channel."""
+        """Optional[:class:`SavedMessagesChannel`]: The Saved Notes channel."""
         return self._saved_notes
 
     @property
     def settings(self) -> UserSettings:
-        """:class:`.UserSettings`: The current user settings."""
+        """:class:`UserSettings`: The current user settings."""
         if self._settings is None:
             self._settings = UserSettings(
                 data={},
@@ -180,15 +180,15 @@ class State:
         return self._settings
 
     def get_channel(self, channel_id: str, /) -> PartialMessageable:
-        """:class:`.PartialMessageable`: Returns the partial messageable for provided ID."""
+        """:class:`PartialMessageable`: Returns the partial messageable for provided ID."""
         return PartialMessageable(state=self, id=channel_id)
 
     def get_server(self, server_id: str, /) -> BaseServer:
-        """:class:`.BaseServer`: Returns the base server for provided ID."""
+        """:class:`BaseServer`: Returns the base server for provided ID."""
         return BaseServer(state=self, id=server_id)
 
     def get_user(self, user_id: str, /) -> BaseUser:
-        """:class:`.BaseUser`: Returns the base user for provided ID."""
+        """:class:`BaseUser`: Returns the base user for provided ID."""
         return BaseUser(state=self, id=user_id)
 
     def provide_cache_context(self, place: ProvideCacheContextIn, /) -> bool:

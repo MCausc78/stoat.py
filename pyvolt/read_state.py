@@ -72,7 +72,7 @@ class ReadState:
     """List[:class:`str`]: The message's IDs that mention the user."""
 
     def get_channel(self) -> typing.Optional[Channel]:
-        """Optional[:class:`.Channel`]: The channel the read state belongs to."""
+        """Optional[:class:`Channel`]: The channel the read state belongs to."""
         state = self.state
         cache = state.cache
 
@@ -103,7 +103,7 @@ class ReadState:
 
     @property
     def channel(self) -> Channel:
-        """:class:`.Channel`: The channel the read state belongs to."""
+        """:class:`Channel`: The channel the read state belongs to."""
         channel = self.get_channel()
         if channel is None:
             raise NoData(what=self.channel_id, type='ReadState.channel')
@@ -121,16 +121,16 @@ class ReadState:
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
-        Fires :class:`.MessageAckEvent` for the current user.
+        Fires :class:`MessageAckEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        last_acked_id: UndefinedOr[Optional[ULIDOr[:class:`.BaseMessage`]]]
+        last_acked_id: UndefinedOr[Optional[ULIDOr[:class:`BaseMessage`]]]
             The new last acknowledged entity's ID.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -170,7 +170,7 @@ class ReadState:
 
         Returns
         -------
-        :class:`.ReadState`
+        :class:`ReadState`
             The newly updated read state.
         """
 

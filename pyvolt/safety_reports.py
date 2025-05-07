@@ -41,14 +41,14 @@ if typing.TYPE_CHECKING:
 class BaseReport(Base):
     """Represents an user-generated platform moderation report on Revolt.
 
-    This inherits from :class:`.Base`.
+    This inherits from :class:`Base`.
     """
 
     author_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who created this report."""
 
     content: ReportedContent = field(repr=True, kw_only=True)
-    """:class:`.ReportedContent`: The reported content."""
+    """:class:`ReportedContent`: The reported content."""
 
     additional_context: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The additional context included in report."""
@@ -67,7 +67,7 @@ class BaseReport(Base):
 class CreatedReport(BaseReport):
     """Represents a created report on Revolt.
 
-    This inherits from :class:`.BaseReport`.
+    This inherits from :class:`BaseReport`.
     """
 
     @property
@@ -80,7 +80,7 @@ class CreatedReport(BaseReport):
 class RejectedReport(BaseReport):
     """Represents a rejected report on Revolt.
 
-    This inherits from :class:`.BaseReport`.
+    This inherits from :class:`BaseReport`.
     """
 
     rejection_reason: str = field(repr=True, kw_only=True)
@@ -99,7 +99,7 @@ class RejectedReport(BaseReport):
 class ResolvedReport(BaseReport):
     """Represents a resolved report on Revolt.
 
-    This inherits from :class:`.BaseReport`.
+    This inherits from :class:`BaseReport`.
     """
 
     closed_at: typing.Optional[datetime] = field(repr=True, kw_only=True)
@@ -126,11 +126,11 @@ class BaseReportedContent:
 class MessageReportedContent(BaseReportedContent):
     """Represents a message being reported.
 
-    This inherits from :class:`.BaseReportedContent`.
+    This inherits from :class:`BaseReportedContent`.
     """
 
     reason: ContentReportReason = field(repr=True, kw_only=True)
-    """:class:`.ContentReportReason`: The reason why message was reported."""
+    """:class:`ContentReportReason`: The reason why message was reported."""
 
     @property
     def type(self) -> typing.Literal[ReportedContentType.message]:
@@ -142,11 +142,11 @@ class MessageReportedContent(BaseReportedContent):
 class ServerReportedContent(BaseReportedContent):
     """Represents a server being reported.
 
-    This inherits from :class:`.BaseReportedContent`.
+    This inherits from :class:`BaseReportedContent`.
     """
 
     reason: ContentReportReason = field(repr=True, kw_only=True)
-    """:class:`.ContentReportReason`: The reason why server was reported."""
+    """:class:`ContentReportReason`: The reason why server was reported."""
 
     @property
     def type(self) -> typing.Literal[ReportedContentType.server]:
@@ -158,11 +158,11 @@ class ServerReportedContent(BaseReportedContent):
 class UserReportedContent(BaseReportedContent):
     """Represents an user being reported.
 
-    This inherits from :class:`.BaseReportedContent`.
+    This inherits from :class:`BaseReportedContent`.
     """
 
     reason: UserReportReason = field(repr=True, kw_only=True)
-    """:class:`.UserReportReason`: The reason why user was reported."""
+    """:class:`UserReportReason`: The reason why user was reported."""
 
     message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The message's ID with report context."""

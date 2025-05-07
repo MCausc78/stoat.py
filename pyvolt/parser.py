@@ -264,7 +264,7 @@ class Parser:
 
     Attributes
     ----------
-    state: :class:`.State`
+    state: :class:`State`
         The state the parser is attached to.
     """
 
@@ -3269,6 +3269,15 @@ class Parser:
 
         system_messages = payload.get('system_messages')
 
+        if 'categories' in payload:
+            categories_payload = payload['categories']
+            if isinstance(categories_payload, dict):
+                categories = {k: self.parse_category(v) for k, v in categories_payload.items()}
+            else:
+                categories = list(map(self.parse_category, categories_payload))
+        else:
+            categories = None
+
         roles = {}
         if 'roles' in payload:
             for id, role_data in payload['roles'].items():
@@ -3285,7 +3294,7 @@ class Parser:
             name=payload['name'],
             description=payload.get('description'),
             internal_channels=channels,
-            categories=list(map(self.parse_category, payload.get('categories', ()))),
+            internal_categories=categories,
             system_messages=None if system_messages is None else self.parse_system_message_channels(system_messages),
             roles=roles,
             raw_default_permissions=payload['default_permissions'],
@@ -3656,10 +3665,20 @@ class Parser:
         clear = payload['clear']
 
         description = data.get('description')
-        categories = data.get('categories')
         system_messages = data.get('system_messages')
         icon = data.get('icon')
         banner = data.get('banner')
+
+        if 'categories' in payload:
+            categories_payload = payload['categories']
+            if isinstance(categories_payload, dict):
+                categories = {k: self.parse_category(v) for k, v in categories_payload.items()}
+            else:
+                categories = list(map(self.parse_category, categories_payload))
+        elif 'Categories' in clear:
+            categories = None
+        else:
+            categories = UNDEFINED
 
         return ServerUpdateEvent(
             shard=shard,
@@ -3670,11 +3689,7 @@ class Parser:
                 name=data.get('name', UNDEFINED),
                 description=None if 'Description' in clear else (UNDEFINED if description is None else description),
                 channel_ids=data.get('channels', UNDEFINED),
-                categories=(
-                    []
-                    if 'Categories' in clear
-                    else (UNDEFINED if categories is None else list(map(self.parse_category, categories)))
-                ),
+                internal_categories=categories,
                 system_messages=(
                     None
                     if 'SystemMessages' in clear

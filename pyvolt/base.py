@@ -40,7 +40,7 @@ class Base:
     """A base class for Revolt entities."""
 
     state: State = field(repr=False, kw_only=True)
-    """:class:`.State`: The state that controls this entity."""
+    """:class:`State`: The state that controls this entity."""
 
     id: str = field(repr=True, kw_only=True)
     """:class:`str`: The ID of the entity."""

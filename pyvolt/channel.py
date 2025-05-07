@@ -100,7 +100,7 @@ _new_permissions = Permissions.__new__
 class BaseChannel(Base):
     """Represents channel on Revolt.
 
-    This inherits from :class:`.Base`.
+    This inherits from :class:`Base`.
     """
 
     def __eq__(self, other: object, /) -> bool:
@@ -127,15 +127,15 @@ class BaseChannel(Base):
 
         You must have :attr:`~Permissions.view_channel` to do this. If target channel is server channel, :attr:`~Permissions.manage_channels` is also required.
 
-        For DMs, fires :class:`.ChannelUpdateEvent` for the current user and DM recipient.
-        For groups, if the current user is group owner, fires :class:`.PrivateChannelDeleteEvent` for all group recipients (including group owner),
-        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user,
-        and :class:`.GroupRecipientRemoveEvent` is fired for rest of group recipients.
-        For server channels, :class:`.ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`.ServerUpdateEvent` for all server members.
+        For DMs, fires :class:`ChannelUpdateEvent` for the current user and DM recipient.
+        For groups, if the current user is group owner, fires :class:`PrivateChannelDeleteEvent` for all group recipients (including group owner),
+        otherwise :class:`PrivateChannelDeleteEvent` is fired for the current user,
+        and :class:`GroupRecipientRemoveEvent` is fired for rest of group recipients.
+        For server channels, :class:`ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
@@ -197,32 +197,32 @@ class BaseChannel(Base):
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
-        Fires :class:`.ChannelUpdateEvent` for all users who still can see target channel,
-        optionally :class:`.ServerChannelCreateEvent` for all users who now can see target server channel, and
-        optionally :class:`.ChannelDeleteEvent` for users who no longer can see target server channel.
+        Fires :class:`ChannelUpdateEvent` for all users who still can see target channel,
+        optionally :class:`ServerChannelCreateEvent` for all users who now can see target server channel, and
+        optionally :class:`ChannelDeleteEvent` for users who no longer can see target server channel.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
-            The new channel name. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+            The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
-            The new channel description. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
-        owner: UndefinedOr[ULIDOr[:class:`.BaseUser`]]
-            The new channel owner. Only applicable when target channel is :class:`.GroupChannel`.
-        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
-            The new channel icon. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+            The new channel description. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        owner: UndefinedOr[ULIDOr[:class:`BaseUser`]]
+            The new channel owner. Only applicable when target channel is :class:`GroupChannel`.
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
+            The new channel icon. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         nsfw: UndefinedOr[:class:`bool`]
-            To mark the channel as NSFW or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+            To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
-        voice: UndefinedOr[:class:`.ChannelVoiceMetadata`]
+        voice: UndefinedOr[:class:`ChannelVoiceMetadata`]
             The new voice-specific metadata for this channel.
 
             .. versionadded:: 1.2
         default_permissions: UndefinedOr[None]
-            To remove default permissions or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+            To remove default permissions or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
 
         Raises
         ------
@@ -275,7 +275,7 @@ class BaseChannel(Base):
 
         Returns
         -------
-        :class:`.Channel`
+        :class:`Channel`
             The newly updated channel.
         """
         return await self.state.http.edit_channel(
@@ -298,12 +298,12 @@ class BaseChannel(Base):
 
         Parameters
         ----------
-        target: Union[:class:`.User`, :class:`.Member`]
+        target: Union[:class:`User`, :class:`Member`]
             The member or user to calculate permissions for.
 
         Returns
         -------
-        :class:`.Permissions`
+        :class:`Permissions`
             The calculated permissions.
         """
         return Permissions.none()
@@ -313,7 +313,7 @@ class BaseChannel(Base):
 class PartialChannel(BaseChannel):
     """Represents a partial channel on Revolt.
 
-    This inherits from :class:`.BaseChannel`.
+    This inherits from :class:`BaseChannel`.
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
@@ -326,7 +326,7 @@ class PartialChannel(BaseChannel):
     """UndefinedOr[Optional[:class:`str`]]: The new channel's description, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True, eq=True)
-    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new channel's stateless icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
+    """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new channel's stateless icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
     nsfw: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`bool`]: Whether the channel have been marked as NSFW, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
@@ -338,30 +338,30 @@ class PartialChannel(BaseChannel):
     """UndefinedOr[:class:`int`]: The new channel's permissions raw value, if applicable. Only for :class:`GroupChannel`'s."""
 
     role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
-    """UndefinedOr[Dict[:class:`str`, :class:`.PermissionOverride`]]: The new channel's permission overrides for roles, if applicable. Only for :class:`BaseServerChannel`'s."""
+    """UndefinedOr[Dict[:class:`str`, :class:`PermissionOverride`]]: The new channel's permission overrides for roles, if applicable. Only for :class:`BaseServerChannel`'s."""
 
     default_permissions: UndefinedOr[typing.Optional[PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
-    """UndefinedOr[Optional[:class:`.PermissionOverride`]]: The new channel's permission overrides for everyone, if applicable. Only for :class:`BaseServerChannel`'s."""
+    """UndefinedOr[Optional[:class:`PermissionOverride`]]: The new channel's permission overrides for everyone, if applicable. Only for :class:`BaseServerChannel`'s."""
 
     last_message_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The last message ID sent in the channel."""
 
     voice: UndefinedOr[ChannelVoiceMetadata] = field(repr=True, kw_only=True, eq=True)
-    """UndefinedOr[:class:`.ChannelVoiceMetadata`]: The new voice-specific metadata for this channel.
+    """UndefinedOr[:class:`ChannelVoiceMetadata`]: The new voice-specific metadata for this channel.
     
     .. versionadded:: 1.2
     """
 
     @property
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
-        r"""UndefinedOr[Optional[:class:`.Asset`]]: The new channel's icon, if applicable. Only for :class:`.GroupChannel` and :class:`.BaseServerChannel`\'s."""
+        r"""UndefinedOr[Optional[:class:`Asset`]]: The new channel's icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`\'s."""
         if self.internal_icon in (None, UNDEFINED):
             return self.internal_icon  # pyright: ignore[reportReturnType]
         return self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def permissions(self) -> UndefinedOr[Permissions]:
-        r"""UndefinedOr[:class:`.Permissions`]: The new channel's permissions, if applicable. Only for :class:`.GroupChannel`\'s."""
+        r"""UndefinedOr[:class:`Permissions`]: The new channel's permissions, if applicable. Only for :class:`GroupChannel`\'s."""
         if self.raw_permissions is UNDEFINED:
             return self.raw_permissions
         ret = _new_permissions(Permissions)
@@ -370,7 +370,7 @@ class PartialChannel(BaseChannel):
 
 
 def calculate_saved_messages_channel_permissions(perspective_id: str, user_id: str, /) -> Permissions:
-    """Calculates the permissions in :class:`.SavedMessagesChannel` scope.
+    """Calculates the permissions in :class:`SavedMessagesChannel` scope.
 
     Parameters
     ----------
@@ -381,7 +381,7 @@ def calculate_saved_messages_channel_permissions(perspective_id: str, user_id: s
 
     Returns
     -------
-    :class:`.Permissions`
+    :class:`Permissions`
         The calculated permissions.
     """
     if perspective_id == user_id:
@@ -393,16 +393,16 @@ def calculate_dm_channel_permissions(
     permissions: UserPermissions,
     /,
 ) -> Permissions:
-    """Calculates the permissions in :class:`.DMChannel` scope.
+    """Calculates the permissions in :class:`DMChannel` scope.
 
     Parameters
     ----------
-    permissions: :class:`.UserPermissions`
+    permissions: :class:`UserPermissions`
         The user permissions.
 
     Returns
     -------
-    :class:`.Permissions`
+    :class:`Permissions`
         The calculated permissions.
     """
     if permissions.send_messages:
@@ -418,7 +418,7 @@ def calculate_group_channel_permissions(
     group_permissions: typing.Optional[Permissions],
     group_recipients: list[str],
 ) -> Permissions:
-    """Calculates the permissions in :class:`.GroupChannel` scope.
+    """Calculates the permissions in :class:`GroupChannel` scope.
 
     Parameters
     ----------
@@ -426,14 +426,14 @@ def calculate_group_channel_permissions(
         The ID of perspective user.
     group_owner_id: :class:`str`
         The ID of group owner (:attr:`.GroupChannel.owner_id`).
-    group_permissions: Optional[:class:`.Permissions`]
+    group_permissions: Optional[:class:`Permissions`]
         The default group permissions (:attr:`.GroupChannel.permissions`).
     group_recipients: List[:class:`str`]
         The IDs of group recipients (:attr:`.GroupChannel.recipient_ids`).
 
     Returns
     -------
-    :class:`.Permissions`
+    :class:`Permissions`
         The calculated permissions.
     """
     if perspective_id == group_owner_id:
@@ -452,23 +452,23 @@ def calculate_server_channel_permissions(
     default_permissions: typing.Optional[PermissionOverride],
     role_permissions: dict[str, PermissionOverride],
 ) -> Permissions:
-    """Calculates the permissions in :class:`.BaseServerChannel` scope.
+    """Calculates the permissions in :class:`BaseServerChannel` scope.
 
     Parameters
     ----------
     initial_permissions: :class:`str`
         The initial permissions to use. Should be ``server.permissions_for(member)`` for members
         and :attr:`Server.default_permissions` for users.
-    roles: List[:class:`.Role`]
-        The member's roles. Should be empty list if calculating for :class:`.User`.
+    roles: List[:class:`Role`]
+        The member's roles. Should be empty list if calculating for :class:`User`.
     default_permissions: :class:`str`
         The default channel permissions (:attr:`.BaseServerChannel.default_permissions`).
-    role_permissions: Dict[:class:`str`, :class:`.Permissions`]
+    role_permissions: Dict[:class:`str`, :class:`Permissions`]
         The permissions overrides for roles in the channel (:attr:`.BaseServerChannel.role_permissions`).
 
     Returns
     -------
-    :class:`.Permissions`
+    :class:`Permissions`
         The calculated permissions.
     """
     result = initial_permissions.value
@@ -490,7 +490,7 @@ def calculate_server_channel_permissions(
 class SavedMessagesChannel(BaseChannel, Messageable):
     """Represents a personal "Saved Notes" channel which allows users to save messages.
 
-    This inherits from :class:`.BaseChannel` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`BaseChannel` and :class:`~pyvolt.abc.Messageable`.
     """
 
     user_id: str = field(repr=True, kw_only=True)
@@ -500,7 +500,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
         return self.id
 
     def get_me(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The own user."""
+        """Optional[:class:`User`]: The own user."""
         return self.state.me
 
     def locally_update(self, data: PartialChannel, /) -> None:
@@ -511,7 +511,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
         Parameters
         ----------
-        data: :class:`.PartialChannel`
+        data: :class:`PartialChannel`
             The data to update channel with.
         """
         # PartialChannel has no fields that are related to SavedMessages yet
@@ -519,7 +519,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
     @property
     def me(self) -> User:
-        """:class:`.User`: The own user."""
+        """:class:`User`: The own user."""
         me = self.get_me()
         if me is None:
             raise NoData(what='', type='GroupChannel.me')
@@ -535,7 +535,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 
         Parameters
         ----------
-        target: Union[:class:`.User`, :class:`.Member`]
+        target: Union[:class:`User`, :class:`Member`]
             The user to calculate permissions for.
 
         Returns
@@ -561,7 +561,7 @@ class SavedMessagesChannel(BaseChannel, Messageable):
 class DMChannel(BaseChannel, Connectable, Messageable):
     """Represents a private channel between two users.
 
-    This inherits from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
     """
 
     active: bool = field(repr=True, kw_only=True)
@@ -577,7 +577,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         return self.id
 
     def get_initiator(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user that initiated this PM."""
+        """Optional[:class:`User`]: The user that initiated this PM."""
         state = self.state
         cache = state.cache
 
@@ -596,7 +596,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         return cache.get_user(self.initiator_id, ctx)
 
     def get_last_message(self) -> typing.Optional[Message]:
-        """Optional[:class:`.Message`]: The last message sent in the channel."""
+        """Optional[:class:`Message`]: The last message sent in the channel."""
         state = self.state
         cache = state.cache
 
@@ -620,7 +620,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         return cache.get_message(self.id, last_message_id, ctx)
 
     def get_me(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The own user."""
+        """Optional[:class:`User`]: The own user."""
         return self.state.me
 
     @typing.overload
@@ -645,7 +645,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         default_acked_message_id: typing.Optional[str] = None,
         create_if_not_exists: bool = True,
     ) -> typing.Optional[ReadState]:
-        """Optional[:class:`.ReadState`]: Returns the channel's read state.
+        """Optional[:class:`ReadState`]: Returns the channel's read state.
 
         Parameters
         ----------
@@ -691,7 +691,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         return read_state
 
     def get_recipient(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The recipient."""
+        """Optional[:class:`User`]: The recipient."""
         state = self.state
         cache = state.cache
 
@@ -715,7 +715,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         typing.Optional[User],
         typing.Optional[User],
     ]:
-        """Tuple[Optional[:class:`.User`], Optional[:class:`.User`]]: The recipient."""
+        """Tuple[Optional[:class:`User`], Optional[:class:`User`]]: The recipient."""
         state = self.state
         cache = state.cache
 
@@ -743,7 +743,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def last_message(self) -> typing.Optional[Message]:
-        """Optional[:class:`.Message`]: The last message sent in the channel."""
+        """Optional[:class:`Message`]: The last message sent in the channel."""
 
         message = self.get_last_message()
         if message is None:
@@ -754,7 +754,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def me(self) -> User:
-        """:class:`.User`: The own user."""
+        """:class:`User`: The own user."""
         me = self.get_me()
         if me is None:
             raise NoData(what='', type='GroupChannel.me')
@@ -762,12 +762,12 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def read_state(self) -> ReadState:
-        """:class:`.ReadState`: Returns the channel's read state."""
+        """:class:`ReadState`: Returns the channel's read state."""
         return self.get_read_state()
 
     @property
     def recipient(self) -> User:
-        """:class:`.User`: The recipient."""
+        """:class:`User`: The recipient."""
         recipient = self.get_recipient()
         if recipient is None:
             raise NoData(what=self.recipient_id, type='DMChannel.recipient')
@@ -788,7 +788,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def server(self) -> None:
-        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        """Optional[:class:`Server`]: The server that channel belongs to."""
         return None
 
     @property
@@ -804,7 +804,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
         Parameters
         ----------
-        data: :class:`.PartialChannel`
+        data: :class:`PartialChannel`
             The data to update channel with.
         """
         if data.active is not UNDEFINED:
@@ -817,12 +817,12 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
         Parameters
         ----------
-        target: Union[:class:`.User`, :class:`.Member`]
+        target: Union[:class:`User`, :class:`Member`]
             The member or user to calculate permissions for.
 
         Returns
         -------
-        :class:`.Permissions`
+        :class:`Permissions`
             The calculated permissions.
         """
         me = self.state.me
@@ -864,7 +864,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 class GroupChannel(BaseChannel, Connectable, Messageable):
     """Represesnts a Revolt group channel between 1 or more participants.
 
-    This inherits from :class:`.BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`BaseChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
     """
 
     name: str = field(repr=True, kw_only=True)
@@ -882,7 +882,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
     ] = field(repr=True, kw_only=True, alias='internal_recipients')
 
     internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless group icon."""
+    """Optional[:class:`StatelessAsset`]: The stateless group icon."""
 
     last_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The last message ID sent in the channel."""
@@ -901,7 +901,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         return self.id
 
     def get_last_message(self) -> typing.Optional[Message]:
-        """Optional[:class:`.Message`]: The last message sent in the channel."""
+        """Optional[:class:`Message`]: The last message sent in the channel."""
         state = self.state
         cache = state.cache
 
@@ -925,11 +925,11 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         return cache.get_message(self.id, last_message_id, ctx)
 
     def get_me(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The own user."""
+        """Optional[:class:`User`]: The own user."""
         return self.state.me
 
     def get_owner(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who owns this group."""
+        """Optional[:class:`User`]: The user who owns this group."""
         state = self.state
         cache = state.cache
 
@@ -969,7 +969,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         default_acked_message_id: typing.Optional[str] = None,
         create_if_not_exists: bool = True,
     ) -> typing.Optional[ReadState]:
-        """Optional[:class:`.ReadState`]: Returns the channel's read state.
+        """Optional[:class:`ReadState`]: Returns the channel's read state.
 
         Parameters
         ----------
@@ -1022,7 +1022,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         Parameters
         ----------
-        data: :class:`.PartialChannel`
+        data: :class:`PartialChannel`
             The data to update channel with.
         """
         if data.name is not UNDEFINED:
@@ -1061,12 +1061,12 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def icon(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The group icon."""
+        """Optional[:class:`Asset`]: The group icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def last_message(self) -> typing.Optional[Message]:
-        """Optional[:class:`.Message`]: The last message sent in the channel."""
+        """Optional[:class:`Message`]: The last message sent in the channel."""
 
         message = self.get_last_message()
         if message is None:
@@ -1077,7 +1077,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def me(self) -> User:
-        """:class:`.User`: The own user."""
+        """:class:`User`: The own user."""
         me = self.get_me()
         if me is None:
             raise NoData(what='', type='GroupChannel.me')
@@ -1085,7 +1085,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def owner(self) -> User:
-        """:class:`.User`: The user who owns this group."""
+        """:class:`User`: The user who owns this group."""
         owner = self.get_owner()
         if owner is None:
             raise NoData(what=self.owner_id, type='GroupChannel.owner')
@@ -1093,7 +1093,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def permissions(self) -> typing.Optional[Permissions]:
-        """Optional[:class:`.Permissions`]: The permissions assigned to members of this group.
+        """Optional[:class:`Permissions`]: The permissions assigned to members of this group.
 
         .. note::
             This attribute does not apply to the owner of the group.
@@ -1106,7 +1106,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def read_state(self) -> ReadState:
-        """:class:`.ReadState`: Returns the channel's read state."""
+        """:class:`ReadState`: Returns the channel's read state."""
         return self.get_read_state()
 
     @property
@@ -1119,7 +1119,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def recipients(self) -> list[User]:
-        """List[:class:`.User`]: The users participating in channel."""
+        """List[:class:`User`]: The users participating in channel."""
         if self._recipients[0]:
             state = self.state
             cache = state.cache
@@ -1149,7 +1149,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def server(self) -> None:
-        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        """Optional[:class:`Server`]: The server that channel belongs to."""
         return None
 
     @property
@@ -1169,16 +1169,16 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.create_invites` to do this.
 
-        Fires :class:`.PrivateChannelCreateEvent` for added recipient, and :class:`.GroupRecipientAddEvent` for rest of group recipients.
+        Fires :class:`PrivateChannelCreateEvent` for added recipient, and :class:`GroupRecipientAddEvent` for rest of group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to add.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1250,16 +1250,16 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.create_invites` to do this.
 
-        Fires :class:`.PrivateChannelCreateEvent` for bot, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent` for all group recipients.
+        Fires :class:`PrivateChannelCreateEvent` for bot, :class:`GroupRecipientAddEvent` and :class:`MessageCreateEvent` for all group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        bot: ULIDOr[Union[:class:`.BaseBot`, :class:`.BaseUser`]]
+        bot: ULIDOr[Union[:class:`BaseBot`, :class:`BaseUser`]]
             The bot.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1333,7 +1333,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1383,7 +1383,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.Invite`
+        :class:`Invite`
             The invite that was created.
         """
 
@@ -1402,15 +1402,15 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
 
-        Fires :class:`.WebhookCreateEvent` for all users who can see target channel.
+        Fires :class:`WebhookCreateEvent` for all users who can see target channel.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
-        avatar: Optional[:class:`.ResolvableResource`]
+        avatar: Optional[:class:`ResolvableResource`]
             The webhook avatar.
 
         Raises
@@ -1458,7 +1458,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.Webhook`
+        :class:`Webhook`
             The created webhook.
         """
         return await self.state.http.create_webhook(self.id, http_overrides=http_overrides, name=name, avatar=avatar)
@@ -1474,7 +1474,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1522,7 +1522,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         Returns
         -------
-        List[:class:`.User`]
+        List[:class:`User`]
             The group recipients.
         """
         return await self.state.http.get_group_recipients(self.id, http_overrides=http_overrides)
@@ -1536,13 +1536,13 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
-        Fires :class:`.PrivateChannelDeleteEvent` for all group recipients (including group owner) if the current user is group owner,
-        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user,
-        and :class:`.GroupRecipientRemoveEvent` is fired for rest of group recipients.
+        Fires :class:`PrivateChannelDeleteEvent` for all group recipients (including group owner) if the current user is group owner,
+        otherwise :class:`PrivateChannelDeleteEvent` is fired for the current user,
+        and :class:`GroupRecipientRemoveEvent` is fired for rest of group recipients.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
@@ -1594,13 +1594,13 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        Fires :class:`.ChannelUpdateEvent` for all group recipients.
+        Fires :class:`ChannelUpdateEvent` for all group recipients.
 
         Parameters
         ----------
-        permissions: :class:`.Permissions`
+        permissions: :class:`Permissions`
             The new permissions.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1642,7 +1642,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.GroupChannel`
+        :class:`GroupChannel`
             The updated group with new permissions.
         """
 
@@ -1657,12 +1657,12 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         Parameters
         ----------
-        target: Union[:class:`.User`, :class:`.Member`]
+        target: Union[:class:`User`, :class:`Member`]
             The member or user to calculate permissions for.
 
         Returns
         -------
-        :class:`.Permissions`
+        :class:`Permissions`
             The calculated permissions.
         """
         me = self.state.me
@@ -1713,19 +1713,19 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 class UnknownPrivateChannel(BaseChannel):
     """Represents a private channel that is not recognized by library yet.
 
-    This inherits from :class:`.BaseChannel`.
+    This inherits from :class:`BaseChannel`.
     """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, Any]: The raw channel data."""
 
     def get_me(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The own user."""
+        """Optional[:class:`User`]: The own user."""
         return self.state.me
 
     @property
     def me(self) -> User:
-        """:class:`.User`: The own user."""
+        """:class:`User`: The own user."""
         me = self.get_me()
         if me is None:
             raise NoData(what='', type='GroupChannel.me')
@@ -1733,7 +1733,7 @@ class UnknownPrivateChannel(BaseChannel):
 
     @property
     def server(self) -> None:
-        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        """Optional[:class:`Server`]: The server that channel belongs to."""
         return None
 
     @property
@@ -1754,7 +1754,7 @@ PrivateChannel = typing.Union[SavedMessagesChannel, DMChannel, GroupChannel, Unk
 class BaseServerChannel(BaseChannel):
     """A base class for server channels.
 
-    This inherits from :class:`.BaseChannel`.
+    This inherits from :class:`BaseChannel`.
     """
 
     server_id: str = field(repr=True, kw_only=True)
@@ -1767,19 +1767,19 @@ class BaseServerChannel(BaseChannel):
     """Optional[:class:`str`]: The channel description."""
 
     internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless custom channel icon."""
+    """Optional[:class:`StatelessAsset`]: The stateless custom channel icon."""
 
     default_permissions: typing.Optional[PermissionOverride] = field(repr=True, kw_only=True)
-    """Optional[:class:`.PermissionOverride`]: Default permissions assigned to users in this channel."""
+    """Optional[:class:`PermissionOverride`]: Default permissions assigned to users in this channel."""
 
     role_permissions: dict[str, PermissionOverride] = field(repr=True, kw_only=True)
-    """Dict[:class:`str`, :class:`.PermissionOverride`]: The permissions assigned based on role to this channel."""
+    """Dict[:class:`str`, :class:`PermissionOverride`]: The permissions assigned based on role to this channel."""
 
     nsfw: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether this channel is marked as not safe for work."""
 
     def get_me(self) -> typing.Optional[Member]:
-        """Optional[:class:`.Member`]: The own user for this server."""
+        """Optional[:class:`Member`]: The own user for this server."""
         state = self.state
         cache = state.cache
 
@@ -1798,7 +1798,7 @@ class BaseServerChannel(BaseChannel):
         return cache.get_server_member(self.server_id, state.my_id, ctx)
 
     def get_server(self) -> typing.Optional[Server]:
-        """Optional[:class:`.Server`]: The server that channel belongs to."""
+        """Optional[:class:`Server`]: The server that channel belongs to."""
         state = self.state
         cache = state.cache
 
@@ -1818,12 +1818,12 @@ class BaseServerChannel(BaseChannel):
 
     @property
     def icon(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The custom channel icon."""
+        """Optional[:class:`Asset`]: The custom channel icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def me(self) -> Member:
-        """Optional[:class:`.Member`]: The own user for this server."""
+        """Optional[:class:`Member`]: The own user for this server."""
         me = self.get_me()
         if me is None:
             raise NoData(what='', type='BaseServerChannel.me')
@@ -1831,7 +1831,7 @@ class BaseServerChannel(BaseChannel):
 
     @property
     def server(self) -> Server:
-        """:class:`.Server`: The server that channel belongs to."""
+        """:class:`Server`: The server that channel belongs to."""
         server = self.get_server()
         if server is None:
             raise NoData(what=self.server_id, type='BaseServerChannel.server')
@@ -1847,7 +1847,7 @@ class BaseServerChannel(BaseChannel):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1897,7 +1897,7 @@ class BaseServerChannel(BaseChannel):
 
         Returns
         -------
-        :class:`.Invite`
+        :class:`Invite`
             The invite that was created.
         """
 
@@ -1910,11 +1910,11 @@ class BaseServerChannel(BaseChannel):
 
         You must have :attr:`~Permissions.view_channel` and :attr:`~Permissions.manage_channels` to do this.
 
-        For server channels, :class:`.ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`.ServerUpdateEvent` for all server members.
+        For server channels, :class:`ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1964,7 +1964,7 @@ class BaseServerChannel(BaseChannel):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2004,7 +2004,7 @@ class BaseServerChannel(BaseChannel):
 
         Returns
         -------
-        List[:class:`.Webhook`]
+        List[:class:`Webhook`]
             The webhooks for this channel.
         """
         return await self.state.http.get_channel_webhooks(self.id, http_overrides=http_overrides)
@@ -2023,19 +2023,19 @@ class BaseServerChannel(BaseChannel):
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel,
-        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
-        and :class:`.ChannelDeleteEvent` for users who no longer can see target channel.
+        Fires :class:`ChannelUpdateEvent` for all users who still see target channel,
+        :class:`ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`ChannelDeleteEvent` for users who no longer can see target channel.
 
         Parameters
         ----------
-        role: ULIDOr[:class:`.BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        allow: :class:`.Permissions`
+        allow: :class:`Permissions`
             The permissions to allow for role in channel.
-        deny: :class:`.Permissions`
+        deny: :class:`Permissions`
             The permissions to deny for role in channel.
 
         Raises
@@ -2079,7 +2079,7 @@ class BaseServerChannel(BaseChannel):
 
         Returns
         -------
-        :class:`.ServerChannel`
+        :class:`ServerChannel`
             The updated server channel with new permissions.
         """
         result = await self.state.http.set_channel_permissions_for_role(
@@ -2096,15 +2096,15 @@ class BaseServerChannel(BaseChannel):
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel,
-        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
-        and :class:`.ChannelDeleteEvent` is fired for users who no longer can see target channel.
+        Fires :class:`ChannelUpdateEvent` for all users who still see target channel,
+        :class:`ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`ChannelDeleteEvent` is fired for users who no longer can see target channel.
 
         Parameters
         ----------
-        permissions: :class:`.PermissionOverride`
+        permissions: :class:`PermissionOverride`
             The new permissions.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2146,7 +2146,7 @@ class BaseServerChannel(BaseChannel):
 
         Returns
         -------
-        :class:`.ServerChannel`
+        :class:`ServerChannel`
             The updated server channel with new permissions.
         """
 
@@ -2163,7 +2163,7 @@ class BaseServerChannel(BaseChannel):
 
         Parameters
         ----------
-        data: :class:`.PartialChannel`
+        data: :class:`PartialChannel`
             The data to update channel with.
         """
         if data.name is not UNDEFINED:
@@ -2192,7 +2192,7 @@ class BaseServerChannel(BaseChannel):
 
         Parameters
         ----------
-        target: Union[:class:`.User`, :class:`.Member`]
+        target: Union[:class:`User`, :class:`Member`]
             The member or user to calculate permissions for.
         safe: :class:`bool`
             Whether to raise exception or not if role is missing in cache.
@@ -2208,7 +2208,7 @@ class BaseServerChannel(BaseChannel):
 
         Returns
         -------
-        :class:`.Permissions`
+        :class:`Permissions`
             The calculated permissions.
         """
         server = self.get_server()
@@ -2245,6 +2245,8 @@ class BaseServerChannel(BaseChannel):
         )
         if include_timeout and target.timed_out_until is not None:
             result &= ALLOW_PERMISSIONS_IN_TIMEOUT
+        if not result.view_channel:
+            return Permissions.none()
         return result
 
 
@@ -2284,14 +2286,14 @@ class ChannelVoiceMetadata:
 class TextChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a text channel that belongs to a server on Revolt.
 
-    This inherits from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
     """
 
     last_message_id: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The last message ID sent in the channel."""
 
     voice: typing.Optional[ChannelVoiceMetadata] = field(repr=True, kw_only=True)
-    """Optional[:class:`.ChannelVoiceMetadata`]: The voice's metadata in the channel.
+    """Optional[:class:`ChannelVoiceMetadata`]: The voice's metadata in the channel.
     
     .. versionadded:: 1.2
     """
@@ -2300,7 +2302,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         return self.id
 
     def get_last_message(self) -> typing.Optional[Message]:
-        """Optional[:class:`.Message`]: The last message sent in the channel."""
+        """Optional[:class:`Message`]: The last message sent in the channel."""
         state = self.state
         cache = state.cache
 
@@ -2345,7 +2347,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         default_acked_message_id: typing.Optional[str] = None,
         create_if_not_exists: bool = True,
     ) -> typing.Optional[ReadState]:
-        """Optional[:class:`.ReadState`]: Returns the channel's read state.
+        """Optional[:class:`ReadState`]: Returns the channel's read state.
 
         Parameters
         ----------
@@ -2398,7 +2400,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 
         Parameters
         ----------
-        data: :class:`.PartialChannel`
+        data: :class:`PartialChannel`
             The data to update channel with.
         """
         BaseServerChannel.locally_update(self, data)
@@ -2414,7 +2416,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 
     @property
     def last_message(self) -> typing.Optional[Message]:
-        """Optional[:class:`.Message`]: The last message sent in the channel."""
+        """Optional[:class:`Message`]: The last message sent in the channel."""
 
         message = self.get_last_message()
         if message is None:
@@ -2425,12 +2427,12 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 
     @property
     def read_state(self) -> ReadState:
-        """:class:`.ReadState`: Returns the channel's read state."""
+        """:class:`ReadState`: Returns the channel's read state."""
         return self.get_read_state()
 
     @property
     def voice_states(self) -> ChannelVoiceStateContainer:
-        """:class:`.ChannelVoiceStateContainer`: Returns all voice states in the channel."""
+        """:class:`ChannelVoiceStateContainer`: Returns all voice states in the channel."""
 
         state = self.state
         cache = state.cache
@@ -2474,15 +2476,15 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
 
-        Fires :class:`.WebhookCreateEvent` for all users who can see target channel.
+        Fires :class:`WebhookCreateEvent` for all users who can see target channel.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
-        avatar: Optional[:class:`.ResolvableResource`]
+        avatar: Optional[:class:`ResolvableResource`]
             The webhook avatar.
 
         Raises
@@ -2530,7 +2532,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.Webhook`
+        :class:`Webhook`
             The created webhook.
         """
         return await self.state.http.create_webhook(self.id, http_overrides=http_overrides, name=name, avatar=avatar)
@@ -2565,7 +2567,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
 class VoiceChannel(BaseServerChannel, Connectable, Messageable):
     """Represents a voice channel that belongs to a server on Revolt.
 
-    This inherits from :class:`.BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`BaseServerChannel`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
 
     .. deprecated:: 0.7.0
         The voice channel type was deprecated in favour of :attr:`TextChannel.voice`.
@@ -2582,7 +2584,7 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
 
         Parameters
         ----------
-        data: :class:`.PartialChannel`
+        data: :class:`PartialChannel`
             The data to update channel with.
         """
         BaseServerChannel.locally_update(self, data)
@@ -2596,7 +2598,7 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
 
     @property
     def voice_states(self) -> ChannelVoiceStateContainer:
-        """:class:`.ChannelVoiceStateContainer`: Returns all voice states in the channel."""
+        """:class:`ChannelVoiceStateContainer`: Returns all voice states in the channel."""
 
         state = self.state
         cache = state.cache
@@ -2653,7 +2655,7 @@ class VoiceChannel(BaseServerChannel, Connectable, Messageable):
 class UnknownServerChannel(BaseServerChannel):
     """Represents a server channel that is not recognized by library yet.
 
-    This inherits from :class:`.BaseServerChannel`.
+    This inherits from :class:`BaseServerChannel`.
     """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
@@ -2691,7 +2693,7 @@ class ChannelVoiceStateContainer:
     """:class:`str`: The channel's ID."""
 
     participants: dict[str, UserVoiceState] = field(repr=True, kw_only=True)
-    """Dict[:class:`str`, :class:`.UserVoiceState`]: The channel's participants."""
+    """Dict[:class:`str`, :class:`UserVoiceState`]: The channel's participants."""
 
     node: str = field(repr=True, kw_only=True)
     """:class:`str`: The node name."""
@@ -2701,7 +2703,7 @@ class ChannelVoiceStateContainer:
 
         Parameters
         ----------
-        state: :class:`.UserVoiceState`
+        state: :class:`UserVoiceState`
             The state to add.
         """
         self.participants[state.user_id] = state
@@ -2716,7 +2718,7 @@ class ChannelVoiceStateContainer:
 
         Returns
         -------
-        Optional[:class:`.UserVoiceState`]
+        Optional[:class:`UserVoiceState`]
             The removed user's voice state.
         """
         return self.participants.pop(user_id, None)
@@ -2727,7 +2729,7 @@ class PartialMessageable(Messageable):
     """Represents a partial messageable to aid with working messageable channels when only a channel ID is present."""
 
     state: State = field(repr=False, kw_only=True)
-    """:class:`.State`: The state."""
+    """:class:`State`: The state."""
 
     id: str = field(repr=True, kw_only=True)
     """:class:`str`: The channel's ID."""
@@ -2742,12 +2744,12 @@ class PartialMessageable(Messageable):
 
         Parameters
         ----------
-        target: Union[:class:`.User`, :class:`.Member`]
+        target: Union[:class:`User`, :class:`Member`]
             The member or user to calculate permissions for.
 
         Returns
         -------
-        :class:`.Permissions`
+        :class:`Permissions`
             The calculated permissions.
         """
         return Permissions.none()

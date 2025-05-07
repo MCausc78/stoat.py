@@ -201,7 +201,7 @@ class HTTPAdapter(ABC, typing.Generic[F]):
 
         Returns
         -------
-        :class:`.HTTPResponse`
+        :class:`HTTPResponse`
             The response.
         """
         ...
@@ -237,7 +237,7 @@ class HTTPAdapter(ABC, typing.Generic[F]):
 
         Returns
         -------
-        :class:`.HTTPWebSocket`
+        :class:`HTTPWebSocket`
             The response.
         """
         ...
@@ -270,14 +270,10 @@ class HTTPAdapter(ABC, typing.Generic[F]):
 class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
     """Represents a HTTP adapter using :class:`aiohttp.ClientSession`.
 
-    This inherits from :class:`.HTTPAdapter`.
+    This inherits from :class:`HTTPAdapter`.
     """
 
     __slots__ = ('_session',)
-
-    _session: typing.Optional[
-        typing.Union[aiohttp.ClientSession, MaybeAwaitableFunc[[AIOHTTPAdapter], aiohttp.ClientSession]]
-    ]
 
     def __init__(
         self,
@@ -342,7 +338,7 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
 
         Returns
         -------
-        :class:`.AIOHTTPResponseWrapper`
+        :class:`AIOHTTPResponseWrapper`
             The response.
         """
         session = await self.get_session()
@@ -385,7 +381,7 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
 
         Returns
         -------
-        :class:`.HTTPWebSocket`
+        :class:`HTTPWebSocket`
             The response.
         """
         session = await self.get_session()

@@ -144,64 +144,64 @@ class BaseEvent:
 class ShardEvent(BaseEvent):
     """Base class for events arrived over WebSocket.
 
-    This inherits from :class:`.BaseEvent`.
+    This inherits from :class:`BaseEvent`.
     """
 
     shard: Shard = field(repr=True, kw_only=True)
-    """:class:`.Shard`: The shard the event arrived on."""
+    """:class:`Shard`: The shard the event arrived on."""
 
 
 @define(slots=True)
 class ReadyEvent(ShardEvent):
     """Dispatched when initial state is available.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
 
     .. warning::
         This event may be dispatched multiple times due to periodic reconnects.
 
-        Consider subclassing :class:`.Client` and overriding :meth:`~Client.setup_hook` if you wish to prepare before starting up.
+        Consider subclassing :class:`Client` and overriding :meth:`~Client.setup_hook` if you wish to prepare before starting up.
     """
 
     event_name: typing.ClassVar[typing.Literal['ready']] = 'ready'
 
     users: list[User] = field(repr=True, kw_only=True)
-    """List[:class:`.User`]: The users that the client can see (from DMs, groups, and relationships).
+    """List[:class:`User`]: The users that the client can see (from DMs, groups, and relationships).
     
     This attribute contains connected user, usually at end of list, but sometimes not at end.
     """
 
     servers: list[Server] = field(repr=True, kw_only=True)
-    """List[:class:`.Server`]: The servers the connected user is in."""
+    """List[:class:`Server`]: The servers the connected user is in."""
 
     channels: list[Channel] = field(repr=True, kw_only=True)
-    """List[:class:`.Channel`]: The DM channels, server channels and groups the connected user participates in."""
+    """List[:class:`Channel`]: The DM channels, server channels and groups the connected user participates in."""
 
     members: list[Member] = field(repr=True, kw_only=True)
-    """List[:class:`.Member`]: The own members for servers."""
+    """List[:class:`Member`]: The own members for servers."""
 
     emojis: list[ServerEmoji] = field(repr=True, kw_only=True)
-    """List[:class:`.ServerEmoji`]: The emojis from servers the user participating in."""
+    """List[:class:`ServerEmoji`]: The emojis from servers the user participating in."""
 
     me: OwnUser = field(repr=True, kw_only=True)
-    """:class:`.OwnUser`: The connected user."""
+    """:class:`OwnUser`: The connected user."""
 
     user_settings: UserSettings = field(repr=True, kw_only=True)
-    """:class:`.UserSettings`: The settings for connected user.
+    """:class:`UserSettings`: The settings for connected user.
     
     .. note::
         This attribute is unavailable on bot accounts.
     """
 
     read_states: list[ReadState] = field(repr=True, kw_only=True)
-    """List[:class:`.ReadState`]: The read states for channels ever seen by user. This is not always populated, and unavailable for bots.
+    """List[:class:`ReadState`]: The read states for channels ever seen by user. This is not always populated, and unavailable for bots.
 
     .. note::
         This attribute is unavailable on bot accounts.
     """
 
     voice_states: list[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
-    """List[:class:`.ChannelVoiceStateContainer`]: The voice states of the text/voice channels."""
+    """List[:class:`ChannelVoiceStateContainer`]: The voice states of the text/voice channels."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ReadyEventCacheContext] = field(
         default=Factory(
@@ -221,7 +221,7 @@ class ReadyEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ReadyEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ReadyEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         # People expect bot.me to be available upon `ReadyEvent` dispatching
@@ -271,7 +271,7 @@ class ReadyEvent(ShardEvent):
 class BaseChannelCreateEvent(ShardEvent):
     """Base class for events when a channel is created.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[str] = 'channel_create'
@@ -281,13 +281,13 @@ class BaseChannelCreateEvent(ShardEvent):
 class PrivateChannelCreateEvent(BaseChannelCreateEvent):
     """Dispatched when the user created a DM, or started participating in group.
 
-    This inherits from :class:`.BaseChannelCreateEvent`.
+    This inherits from :class:`BaseChannelCreateEvent`.
     """
 
     event_name: typing.ClassVar[str] = 'private_channel_create'
 
     channel: PrivateChannel = field(repr=True, kw_only=True)
-    """:class:`.PrivateChannel`: The joined DM or group channel."""
+    """:class:`PrivateChannel`: The joined DM or group channel."""
 
     def process(self) -> bool:
         state = self.shard.state
@@ -340,13 +340,13 @@ class PrivateChannelCreateEvent(BaseChannelCreateEvent):
 class ServerChannelCreateEvent(BaseChannelCreateEvent):
     """Dispatched when the channel is created in server or became accessible to the connected user.
 
-    This inherits from :class:`.BaseChannelCreateEvent`.
+    This inherits from :class:`BaseChannelCreateEvent`.
     """
 
     event_name: typing.ClassVar[str] = 'server_channel_create'
 
     channel: ServerChannel = field(repr=True, kw_only=True)
-    """:class:`.ServerChannel`: The created server channel."""
+    """:class:`ServerChannel`: The created server channel."""
 
     def process(self) -> bool:
         state = self.shard.state
@@ -393,19 +393,19 @@ ChannelCreateEvent = typing.Union[PrivateChannelCreateEvent, ServerChannelCreate
 class ChannelUpdateEvent(ShardEvent):
     """Dispatched when the channel is updated.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['channel_update']] = 'channel_update'
 
     channel: PartialChannel = field(repr=True, kw_only=True)
-    """:class:`.PartialChannel`: The fields that were updated."""
+    """:class:`PartialChannel`: The fields that were updated."""
 
     before: typing.Optional[Channel] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Channel`]: The channel as it was before being updated, if available."""
+    """Optional[:class:`Channel`]: The channel as it was before being updated, if available."""
 
     after: typing.Optional[Channel] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Channel`]: The channel as it was updated, if available."""
+    """Optional[:class:`Channel`]: The channel as it was updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ChannelUpdateEventCacheContext] = field(
         default=Factory(
@@ -425,7 +425,7 @@ class ChannelUpdateEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContextType`, :class:`.ChannelUpdateEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContextType`, :class:`ChannelUpdateEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -455,7 +455,7 @@ class ChannelUpdateEvent(ShardEvent):
 class ChannelDeleteEvent(ShardEvent):
     """Dispatched when the server channel or group is deleted or became inaccessible for the connected user.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['channel_delete']] = 'channel_delete'
@@ -464,7 +464,7 @@ class ChannelDeleteEvent(ShardEvent):
     """:class:`str`: The channel's ID that got deleted or inaccessible."""
 
     channel: typing.Optional[Channel] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Channel`]: The deleted channel object, if available."""
+    """Optional[:class:`Channel`]: The deleted channel object, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ChannelDeleteEventCacheContext] = field(
         default=Factory(
@@ -484,7 +484,7 @@ class ChannelDeleteEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ChannelDeleteEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ChannelDeleteEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -531,7 +531,7 @@ class ChannelDeleteEvent(ShardEvent):
 class GroupRecipientAddEvent(ShardEvent):
     """Dispatched when recipient is added to the group.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['recipient_add']] = 'recipient_add'
@@ -543,7 +543,7 @@ class GroupRecipientAddEvent(ShardEvent):
     """:class:`str`: The user's ID who was added to the group."""
 
     group: typing.Optional[GroupChannel] = field(repr=True, kw_only=True)
-    """Optional[:class:`.GroupChannel`]: The group in cache (in previous state as it had no recipient), if available."""
+    """Optional[:class:`GroupChannel`]: The group in cache (in previous state as it had no recipient), if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.GroupRecipientAddEventCacheContext] = field(
         default=Factory(
@@ -563,7 +563,7 @@ class GroupRecipientAddEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.GroupRecipientAddEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`GroupRecipientAddEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -592,7 +592,7 @@ class GroupRecipientAddEvent(ShardEvent):
 class GroupRecipientRemoveEvent(ShardEvent):
     """Dispatched when recipient is removed from the group.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['recipient_remove']] = 'recipient_remove'
@@ -604,7 +604,7 @@ class GroupRecipientRemoveEvent(ShardEvent):
     """:class:`str`: The user's ID who was removed from the group."""
 
     group: typing.Optional[GroupChannel] = field(repr=True, kw_only=True)
-    """Optional[:class:`.GroupChannel`]: The group in cache (in previous state as it had recipient), if available."""
+    """Optional[:class:`GroupChannel`]: The group in cache (in previous state as it had recipient), if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.GroupRecipientRemoveEventCacheContext] = field(
         default=Factory(
@@ -624,7 +624,7 @@ class GroupRecipientRemoveEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.GroupRecipientRemoveEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`GroupRecipientRemoveEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -653,7 +653,7 @@ class GroupRecipientRemoveEvent(ShardEvent):
 class ChannelStartTypingEvent(ShardEvent):
     """Dispatched when someone starts typing in a channel.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['channel_start_typing']] = 'channel_start_typing'
@@ -669,7 +669,7 @@ class ChannelStartTypingEvent(ShardEvent):
 class ChannelStopTypingEvent(ShardEvent):
     """Dispatched when someone stopped typing in a channel.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['channel_stop_typing']] = 'channel_stop_typing'
@@ -685,7 +685,7 @@ class ChannelStopTypingEvent(ShardEvent):
 class MessageStartEditingEvent(ShardEvent):
     """Dispatched when someone starts editing a message.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_start_editing']] = 'message_start_editing'
@@ -704,7 +704,7 @@ class MessageStartEditingEvent(ShardEvent):
 class MessageStopEditingEvent(ShardEvent):
     """Dispatched when someone stops editing a message.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_stop_editing']] = 'message_stop_editing'
@@ -723,7 +723,7 @@ class MessageStopEditingEvent(ShardEvent):
 class MessageAckEvent(ShardEvent):
     """Dispatched when the connected user acknowledges the message in a channel (usually from remote device).
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_ack']] = 'message_ack'
@@ -771,13 +771,13 @@ class MessageAckEvent(ShardEvent):
 class MessageCreateEvent(ShardEvent):
     """Dispatched when someone sends message in a channel.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_create']] = 'message_create'
 
     message: Message = field(repr=True, kw_only=True)
-    """:class:`.Message`: The message sent."""
+    """:class:`Message`: The message sent."""
 
     def process(self) -> bool:
         state = self.shard.state
@@ -848,19 +848,19 @@ class MessageCreateEvent(ShardEvent):
 class MessageUpdateEvent(ShardEvent):
     """Dispatched when the message is updated.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_update']] = 'message_update'
 
     message: PartialMessage = field(repr=True, kw_only=True)
-    """:class:`.PartialMessage`: The fields that were updated."""
+    """:class:`PartialMessage`: The fields that were updated."""
 
     before: typing.Optional[Message] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
+    """Optional[:class:`Message`]: The message as it was before being updated, if available."""
 
     after: typing.Optional[Message] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Message`]: The message as it was updated, if available."""
+    """Optional[:class:`Message`]: The message as it was updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageUpdateEventCacheContext] = field(
         default=Factory(
@@ -880,7 +880,7 @@ class MessageUpdateEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageUpdateEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`MessageUpdateEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -911,16 +911,16 @@ class MessageUpdateEvent(ShardEvent):
 class MessageAppendEvent(ShardEvent):
     """Dispatched when embeds are appended to the message.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_append']] = 'message_append'
 
     data: MessageAppendData = field(repr=True, kw_only=True)
-    """:class:`.MessageAppendData`: The data that got appended to message."""
+    """:class:`MessageAppendData`: The data that got appended to message."""
 
     message: typing.Optional[Message] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
+    """Optional[:class:`Message`]: The message as it was before being updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageAppendEventCacheContext] = field(
         default=Factory(
@@ -940,7 +940,7 @@ class MessageAppendEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageAppendEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`MessageAppendEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -964,7 +964,7 @@ class MessageAppendEvent(ShardEvent):
 class MessageDeleteEvent(ShardEvent):
     """Dispatched when the message is deleted in channel.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_delete']] = 'message_delete'
@@ -976,7 +976,7 @@ class MessageDeleteEvent(ShardEvent):
     """:class:`str`: The deleted message's ID."""
 
     message: typing.Optional[Message] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Message`]: The deleted message object, if available."""
+    """Optional[:class:`Message`]: The deleted message object, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageDeleteEventCacheContext] = field(
         default=Factory(
@@ -996,7 +996,7 @@ class MessageDeleteEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageDeleteEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`MessageDeleteEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1018,7 +1018,7 @@ class MessageDeleteEvent(ShardEvent):
 class MessageReactEvent(ShardEvent):
     """Dispatched when someone reacts to message.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_react']] = 'message_react'
@@ -1036,7 +1036,7 @@ class MessageReactEvent(ShardEvent):
     """:class:`str`: The emoji that was reacted with. May be either ULID or Unicode emoji."""
 
     message: typing.Optional[Message] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
+    """Optional[:class:`Message`]: The message as it was before being updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageReactEventCacheContext] = field(
         default=Factory(
@@ -1056,7 +1056,7 @@ class MessageReactEvent(ShardEvent):
         # init=False,
         # eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageReactEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`MessageReactEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1080,7 +1080,7 @@ class MessageReactEvent(ShardEvent):
 class MessageUnreactEvent(ShardEvent):
     """Dispatched when someone removes their reaction from message.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_unreact']] = 'message_unreact'
@@ -1098,7 +1098,7 @@ class MessageUnreactEvent(ShardEvent):
     """:class:`str`: The emoji that was reacted with before. May be either ULID or Unicode emoji."""
 
     message: typing.Optional[Message] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
+    """Optional[:class:`Message`]: The message as it was before being updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageUnreactEventCacheContext] = field(
         default=Factory(
@@ -1118,7 +1118,7 @@ class MessageUnreactEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageUnreactEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`MessageUnreactEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1142,7 +1142,7 @@ class MessageUnreactEvent(ShardEvent):
 class MessageClearReactionEvent(ShardEvent):
     """Dispatched when reactions for specific emoji are removed from message.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_clear_reaction']] = 'message_clear_reaction'
@@ -1157,7 +1157,7 @@ class MessageClearReactionEvent(ShardEvent):
     """:class:`str`: The emoji whose reactions were removed. May be either ULID or Unicode emoji."""
 
     message: typing.Optional[Message] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Message`]: The message as it was before being updated, if available."""
+    """Optional[:class:`Message`]: The message as it was before being updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.MessageClearReactionEventCacheContext] = field(
         default=Factory(
@@ -1177,7 +1177,7 @@ class MessageClearReactionEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageClearReactionEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`MessageClearReactionEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1202,7 +1202,7 @@ class MessageClearReactionEvent(ShardEvent):
 class MessageDeleteBulkEvent(ShardEvent):
     """Dispatched when multiple messages are deleted from channel.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['message_delete_bulk']] = 'message_delete_bulk'
@@ -1214,7 +1214,7 @@ class MessageDeleteBulkEvent(ShardEvent):
     """List[:class:`str`]: The list of message's IDs that got deleted."""
 
     messages: list[Message] = field(repr=True, kw_only=True)
-    """List[:class:`.Message`]: The list of deleted messages, potentially retrieved from cache.
+    """List[:class:`Message`]: The list of deleted messages, potentially retrieved from cache.
     
     Unlike :attr:`.message_ids`, some messages are
     not guaranteed to be here.
@@ -1238,7 +1238,7 @@ class MessageDeleteBulkEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.MessageDeleteBulkEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`MessageDeleteBulkEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1267,7 +1267,7 @@ class MessageDeleteBulkEvent(ShardEvent):
 class ServerCreateEvent(ShardEvent):
     """Dispatched when the server is created, or client joined server.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['server_create']] = 'server_create'
@@ -1276,13 +1276,13 @@ class ServerCreateEvent(ShardEvent):
     """:class:`~datetime.datetime`: When the client got added to server, generated locally, and used internally."""
 
     server: Server = field(repr=True, kw_only=True)
-    """:class:`.Server`: The server that client was added to."""
+    """:class:`Server`: The server that client was added to."""
 
     emojis: list[ServerEmoji] = field(repr=True, kw_only=True)
-    """List[:class:`.ServerEmoji`]: The server emojis."""
+    """List[:class:`ServerEmoji`]: The server emojis."""
 
     voice_states: list[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
-    """List[:class:`.ChannelVoiceStateContainer`]: The voice states of the text/voice channels in the server."""
+    """List[:class:`ChannelVoiceStateContainer`]: The voice states of the text/voice channels in the server."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerCreateEventCacheContext] = field(
         default=Factory(
@@ -1302,7 +1302,7 @@ class ServerCreateEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerCreateEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ServerCreateEventCacheContext`]: The cache context used."""
 
     def process(self) -> bool:
         state = self.shard.state
@@ -1346,13 +1346,13 @@ class ServerCreateEvent(ShardEvent):
 class ServerEmojiCreateEvent(ShardEvent):
     """Dispatched when emoji is created in server.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['server_emoji_create']] = 'server_emoji_create'
 
     emoji: ServerEmoji = field(repr=True, kw_only=True)
-    """:class:`.ServerEmoji`: The created emoji."""
+    """:class:`ServerEmoji`: The created emoji."""
 
     def process(self) -> bool:
         state = self.shard.state
@@ -1378,7 +1378,7 @@ class ServerEmojiCreateEvent(ShardEvent):
 class ServerEmojiDeleteEvent(ShardEvent):
     """Dispatched when emoji is deleted from the server.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['server_emoji_delete']] = 'server_emoji_delete'
@@ -1390,7 +1390,7 @@ class ServerEmojiDeleteEvent(ShardEvent):
     """:class:`str`: The deleted emoji's ID."""
 
     emoji: typing.Optional[ServerEmoji] = field(repr=True, kw_only=True)
-    """Optional[:class:`.ServerEmoji`]: The deleted emoji object, if available."""
+    """Optional[:class:`ServerEmoji`]: The deleted emoji object, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerEmojiDeleteEventCacheContext] = field(
         default=Factory(
@@ -1410,7 +1410,7 @@ class ServerEmojiDeleteEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerEmojiDeleteEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ServerEmojiDeleteEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1434,19 +1434,19 @@ class ServerEmojiDeleteEvent(ShardEvent):
 class ServerUpdateEvent(ShardEvent):
     """Dispatched when the server details are updated.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['server_update']] = 'server_update'
 
     server: PartialServer = field(repr=True, kw_only=True)
-    """:class:`.PartialServer`: The fields that were updated."""
+    """:class:`PartialServer`: The fields that were updated."""
 
     before: typing.Optional[Server] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Server`]: The server as it was before being updated, if available."""
+    """Optional[:class:`Server`]: The server as it was before being updated, if available."""
 
     after: typing.Optional[Server] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Server`]: The server as it was updated, if available."""
+    """Optional[:class:`Server`]: The server as it was updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerUpdateEventCacheContext] = field(
         default=Factory(
@@ -1466,7 +1466,7 @@ class ServerUpdateEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerUpdateEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ServerUpdateEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1494,7 +1494,7 @@ class ServerUpdateEvent(ShardEvent):
 class ServerDeleteEvent(ShardEvent):
     """Dispatched when the server is deleted.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['server_delete']] = 'server_delete'
@@ -1503,7 +1503,7 @@ class ServerDeleteEvent(ShardEvent):
     """:class:`str`: The deleted server's ID."""
 
     server: typing.Optional[Server] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Server`]: The deleted server object, if available."""
+    """Optional[:class:`Server`]: The deleted server object, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerDeleteEventCacheContext] = field(
         default=Factory(
@@ -1523,7 +1523,7 @@ class ServerDeleteEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerDeleteEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ServerDeleteEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1555,13 +1555,13 @@ class ServerDeleteEvent(ShardEvent):
 class ServerMemberJoinEvent(ShardEvent):
     """Dispatched when the user got added to the server.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['server_member_join']] = 'server_member_join'
 
     member: Member = field(repr=True, kw_only=True)
-    """:class:`.Member`: The joined member."""
+    """:class:`Member`: The joined member."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerMemberJoinEventCacheContext] = field(
         default=Factory(
@@ -1581,7 +1581,7 @@ class ServerMemberJoinEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerMemberJoinEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ServerMemberJoinEventCacheContext`]: The cache context used."""
 
     def process(self) -> bool:
         state = self.shard.state
@@ -1598,19 +1598,19 @@ class ServerMemberJoinEvent(ShardEvent):
 class ServerMemberUpdateEvent(ShardEvent):
     """Dispatched when the member details are updated.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['server_member_update']] = 'server_member_update'
 
     member: PartialMember = field(repr=True, kw_only=True)
-    """:class:`.PartialMember`: The fields that were updated."""
+    """:class:`PartialMember`: The fields that were updated."""
 
     before: typing.Optional[Member] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Member`]: The member as it was before being updated, if available."""
+    """Optional[:class:`Member`]: The member as it was before being updated, if available."""
 
     after: typing.Optional[Member] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Member`]: The member as it was updated, if available."""
+    """Optional[:class:`Member`]: The member as it was updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerMemberUpdateEventCacheContext] = field(
         default=Factory(
@@ -1630,7 +1630,7 @@ class ServerMemberUpdateEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerMemberUpdateEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ServerMemberUpdateEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1658,7 +1658,7 @@ class ServerMemberUpdateEvent(ShardEvent):
 class ServerMemberRemoveEvent(ShardEvent):
     """Dispatched when the member (or client user) got removed from server.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['server_member_remove']] = 'server_member_remove'
@@ -1670,10 +1670,10 @@ class ServerMemberRemoveEvent(ShardEvent):
     """:class:`str`: The removed user's ID."""
 
     member: typing.Optional[Member] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Member`]: The removed member object, if available."""
+    """Optional[:class:`Member`]: The removed member object, if available."""
 
     reason: MemberRemovalIntention = field(repr=True, kw_only=True)
-    """:class:`.MemberRemovalIntention`: The reason why member was removed."""
+    """:class:`MemberRemovalIntention`: The reason why member was removed."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerMemberRemoveEventCacheContext] = field(
         default=Factory(
@@ -1693,7 +1693,7 @@ class ServerMemberRemoveEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerMemberRemoveEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ServerMemberRemoveEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1730,22 +1730,22 @@ class ServerMemberRemoveEvent(ShardEvent):
 class RawServerRoleUpdateEvent(ShardEvent):
     """Dispatched when the role got created or updated in server.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['raw_server_role_update']] = 'raw_server_role_update'
 
     role: PartialRole = field(repr=True, kw_only=True)
-    """:class:`.PartialRole`: The fields that got updated."""
+    """:class:`PartialRole`: The fields that got updated."""
 
     old_role: typing.Optional[Role] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Role`]: The role as it was before being updated, if available."""
+    """Optional[:class:`Role`]: The role as it was before being updated, if available."""
 
     new_role: typing.Optional[Role] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Role`]: The role as it was created or updated, if available."""
+    """Optional[:class:`Role`]: The role as it was created or updated, if available."""
 
     server: typing.Optional[Server] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Server`]: The server the role got created or updated in."""
+    """Optional[:class:`Server`]: The server the role got created or updated in."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.RawServerRoleUpdateEventCacheContext] = field(
         default=Factory(
@@ -1765,7 +1765,7 @@ class RawServerRoleUpdateEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.RawServerRoleUpdateEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`RawServerRoleUpdateEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         self.new_role = self.role.into_full()
@@ -1800,7 +1800,7 @@ class RawServerRoleUpdateEvent(ShardEvent):
 class ServerRoleDeleteEvent(ShardEvent):
     """Dispatched when the role got deleted from server.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['server_role_delete']] = 'server_role_delete'
@@ -1812,10 +1812,10 @@ class ServerRoleDeleteEvent(ShardEvent):
     """:class:`str`: The deleted role's ID."""
 
     server: typing.Optional[Server] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Server`]: The server the role was deleted from, if available."""
+    """Optional[:class:`Server`]: The server the role was deleted from, if available."""
 
     role: typing.Optional[Role] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Role`]: The deleted role object, if available."""
+    """Optional[:class:`Role`]: The deleted role object, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerRoleDeleteEventCacheContext] = field(
         default=Factory(
@@ -1835,7 +1835,7 @@ class ServerRoleDeleteEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.ServerRoleDeleteEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`ServerRoleDeleteEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1881,7 +1881,7 @@ class ServerRoleDeleteEvent(ShardEvent):
 class ReportCreateEvent(BaseEvent):
     """Dispatched when the report was created.
 
-    This inherits from :class:`.BaseEvent`.
+    This inherits from :class:`BaseEvent`.
 
     .. warning::
         This event is not dispatched over WebSocket.
@@ -1890,29 +1890,29 @@ class ReportCreateEvent(BaseEvent):
     event_name: typing.ClassVar[typing.Literal['report_create']] = 'report_create'
 
     shard: typing.Optional[Shard] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Shard`]: The shard the event arrived on."""
+    """Optional[:class:`Shard`]: The shard the event arrived on."""
 
     report: CreatedReport = field(repr=True, kw_only=True)
-    """:class:`.CreatedReport`: The created report."""
+    """:class:`CreatedReport`: The created report."""
 
 
 @define(slots=True)
 class UserUpdateEvent(ShardEvent):
     """Dispatched when the user details are updated.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['user_update']] = 'user_update'
 
     user: PartialUser = field(repr=True, kw_only=True)
-    """:class:`.PartialUser`: The fields that were updated."""
+    """:class:`PartialUser`: The fields that were updated."""
 
     before: typing.Optional[User] = field(repr=True, kw_only=True)
-    """:class:`.User`: The user as it was before being updated, if available."""
+    """:class:`User`: The user as it was before being updated, if available."""
 
     after: typing.Optional[User] = field(repr=True, kw_only=True)
-    """:class:`.User`: The user as it was updated, if available."""
+    """:class:`User`: The user as it was updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.UserUpdateEventCacheContext] = field(
         default=Factory(
@@ -1932,7 +1932,7 @@ class UserUpdateEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.UserUpdateEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`UserUpdateEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -1960,7 +1960,7 @@ class UserUpdateEvent(ShardEvent):
 class UserRelationshipUpdateEvent(ShardEvent):
     """Dispatched when the relationship with user was updated.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['user_relationship_update']] = 'user_relationship_update'
@@ -1969,13 +1969,13 @@ class UserRelationshipUpdateEvent(ShardEvent):
     """:class:`str`: The current user ID."""
 
     old_user: typing.Optional[User] = field(repr=True, kw_only=True)
-    """Optional[:class:`.User`]: The user as it was before being updated, if available."""
+    """Optional[:class:`User`]: The user as it was before being updated, if available."""
 
     new_user: User = field(repr=True, kw_only=True)
-    """:class:`.User`: The user as it was updated."""
+    """:class:`User`: The user as it was updated."""
 
     before: typing.Optional[RelationshipStatus] = field(repr=True, kw_only=True)
-    """Optional[:class:`.RelationshipStatus`]: The old relationship found in cache."""
+    """Optional[:class:`RelationshipStatus`]: The old relationship found in cache."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.UserRelationshipUpdateEventCacheContext] = field(
         default=Factory(
@@ -1995,11 +1995,11 @@ class UserRelationshipUpdateEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.UserRelationshipUpdateEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`UserRelationshipUpdateEventCacheContext`]: The cache context used."""
 
     @property
     def after(self) -> RelationshipStatus:
-        """:class:`.RelationshipStatus`: The new relationship with the user."""
+        """:class:`RelationshipStatus`: The new relationship with the user."""
         return self.new_user.relationship
 
     def before_dispatch(self) -> None:
@@ -2038,7 +2038,7 @@ class UserRelationshipUpdateEvent(ShardEvent):
 class UserSettingsUpdateEvent(ShardEvent):
     """Dispatched when the user settings are changed, likely from remote device.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['user_settings_update']] = 'user_settings_update'
@@ -2047,17 +2047,17 @@ class UserSettingsUpdateEvent(ShardEvent):
     """The current user ID."""
 
     partial: UserSettings = field(repr=True, kw_only=True)
-    """:class:`.UserSettings`: The fields that were updated."""
+    """:class:`UserSettings`: The fields that were updated."""
 
     before: UserSettings = field(repr=True, kw_only=True)
-    """:class:`.UserSettings`: The settings as they were before being updated.
+    """:class:`UserSettings`: The settings as they were before being updated.
     
     .. note::
         This is populated properly only if user settings are available.
     """
 
     after: UserSettings = field(repr=True, kw_only=True)
-    """:class:`.UserSettings`: The settings as they were updated."""
+    """:class:`UserSettings`: The settings as they were updated."""
 
     def process(self) -> bool:
         settings = self.shard.state.settings
@@ -2079,7 +2079,7 @@ class UserPlatformWipeEvent(ShardEvent):
 
     User flags are specified to explain why a wipe is occurring though not all reasons will necessarily ever appear.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['user_platform_wipe']] = 'user_platform_wipe'
@@ -2091,10 +2091,10 @@ class UserPlatformWipeEvent(ShardEvent):
     """:class:`int`: The user's flags raw value, explaining reason of the wipe."""
 
     before: typing.Optional[User] = field(repr=True, kw_only=True)
-    """Optional[:class:`.User`]: The user as it would exist before, if available."""
+    """Optional[:class:`User`]: The user as it would exist before, if available."""
 
     after: typing.Optional[User] = field(repr=True, kw_only=True)
-    """Optional[:class:`.User`]: The wiped user, if available."""
+    """Optional[:class:`User`]: The wiped user, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.UserPlatformWipeEventCacheContext] = field(
         default=Factory(
@@ -2114,11 +2114,11 @@ class UserPlatformWipeEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.UserPlatformWipeEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`UserPlatformWipeEventCacheContext`]: The cache context used."""
 
     @property
     def flags(self) -> UserFlags:
-        """:class:`.UserFlags`: The user's flags, explaining reason of the wipe."""
+        """:class:`UserFlags`: The user's flags, explaining reason of the wipe."""
         ret = _new_user_flags(UserFlags)
         ret.value = self.raw_flags
         return ret
@@ -2153,33 +2153,33 @@ class UserPlatformWipeEvent(ShardEvent):
 class WebhookCreateEvent(ShardEvent):
     """Dispatched when the webhook is created in a channel.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['webhook_create']] = 'webhook_create'
 
     webhook: Webhook = field(repr=True, kw_only=True)
-    """:class:`.Webhook`: The created webhook."""
+    """:class:`Webhook`: The created webhook."""
 
 
 @define(slots=True)
 class WebhookUpdateEvent(ShardEvent):
     """Dispatched when the webhook details are updated.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['webhook_update']] = 'webhook_update'
 
     webhook: PartialWebhook = field(repr=True, kw_only=True)
-    """:class:`.PartialWebhook`: The fields that were updated."""
+    """:class:`PartialWebhook`: The fields that were updated."""
 
 
 @define(slots=True)
 class WebhookDeleteEvent(ShardEvent):
     """Dispatched when the webhook is deleted.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['webhook_delete']] = 'webhook_delete'
@@ -2188,14 +2188,14 @@ class WebhookDeleteEvent(ShardEvent):
     """:class:`str`: The deleted webhook's ID."""
 
     webhook: typing.Optional[Webhook] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Webhook`]: The deleted webhook object, if available."""
+    """Optional[:class:`Webhook`]: The deleted webhook object, if available."""
 
 
 @define(slots=True)
 class AuthifierEvent(ShardEvent):
     """Dispatched when Authifier-related event happens.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[str] = 'authifier'
@@ -2205,20 +2205,20 @@ class AuthifierEvent(ShardEvent):
 class SessionCreateEvent(AuthifierEvent):
     """Dispatched when new session is created.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[str] = 'session_create'
 
     session: Session = field(repr=True, kw_only=True)
-    """:class:`.Session`: The created session."""
+    """:class:`Session`: The created session."""
 
 
 @define(slots=True)
 class SessionDeleteEvent(AuthifierEvent):
     """Dispatched when session is deleted.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[str] = 'session_delete'
@@ -2234,7 +2234,7 @@ class SessionDeleteEvent(AuthifierEvent):
 class SessionDeleteAllEvent(AuthifierEvent):
     """Dispatched when all sessions are deleted (and optionally except one).
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[str] = 'session_delete_all'
@@ -2250,7 +2250,7 @@ class SessionDeleteAllEvent(AuthifierEvent):
 class LogoutEvent(ShardEvent):
     """Dispatched when the connected user got logged out.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['logout']] = 'logout'
@@ -2260,7 +2260,7 @@ class LogoutEvent(ShardEvent):
 class VoiceChannelJoinEvent(ShardEvent):
     """Dispatched when an user joins a voice channel.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['voice_channel_join']] = 'voice_channel_join'
@@ -2269,7 +2269,7 @@ class VoiceChannelJoinEvent(ShardEvent):
     """:class:`str`: The channel's ID the user joined to."""
 
     state: UserVoiceState = field(repr=True, kw_only=True)
-    """:class:`.UserVoiceState`: The user's voice state."""
+    """:class:`UserVoiceState`: The user's voice state."""
 
     def process(self) -> bool:
         state = self.shard.state
@@ -2305,7 +2305,7 @@ class VoiceChannelJoinEvent(ShardEvent):
 class VoiceChannelLeaveEvent(ShardEvent):
     """Dispatched when an user left voice channel.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['voice_channel_leave']] = 'voice_channel_leave'
@@ -2317,10 +2317,10 @@ class VoiceChannelLeaveEvent(ShardEvent):
     """:class:`str`: The user's ID that left the voice channel."""
 
     container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
-    """Optional[:class:`.ChannelVoiceStateContainer`]: The channel's voice state container."""
+    """Optional[:class:`ChannelVoiceStateContainer`]: The channel's voice state container."""
 
     state: typing.Optional[UserVoiceState] = field(repr=True, kw_only=True)
-    """Optional[:class:`.UserVoiceState`]: The user's voice state."""
+    """Optional[:class:`UserVoiceState`]: The user's voice state."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.VoiceChannelLeaveEventCacheContext] = field(
         default=Factory(
@@ -2340,7 +2340,7 @@ class VoiceChannelLeaveEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.VoiceChannelLeaveEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`VoiceChannelLeaveEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -2368,7 +2368,7 @@ class VoiceChannelLeaveEvent(ShardEvent):
 class VoiceChannelMoveEvent(ShardEvent):
     """Dispatched when an user is moved from voice channel to another voice channel.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['voice_channel_move']] = 'voice_channel_move'
@@ -2383,13 +2383,13 @@ class VoiceChannelMoveEvent(ShardEvent):
     """:class:`str`: The channel's ID the user is in now."""
 
     old_container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
-    """Optional[:class:`.ChannelVoiceStateContainer`]: The voice state container for the previous voice channel the user was in."""
+    """Optional[:class:`ChannelVoiceStateContainer`]: The voice state container for the previous voice channel the user was in."""
 
     new_container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
-    """Optional[:class:`.ChannelVoiceStateContainer`]: The voice state container for the voice channel the user is in."""
+    """Optional[:class:`ChannelVoiceStateContainer`]: The voice state container for the voice channel the user is in."""
 
     state: UserVoiceState = field(repr=True, kw_only=True)
-    """:class:`.UserVoiceState`: The user's voice state."""
+    """:class:`UserVoiceState`: The user's voice state."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.VoiceChannelMoveEventCacheContext] = field(
         default=Factory(
@@ -2409,7 +2409,7 @@ class VoiceChannelMoveEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.VoiceChannelMoveEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`VoiceChannelMoveEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -2448,7 +2448,7 @@ class VoiceChannelMoveEvent(ShardEvent):
 class UserVoiceStateUpdateEvent(ShardEvent):
     """Dispatched when an user's voice state is updated.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['user_voice_state_update']] = 'user_voice_state_update'
@@ -2457,16 +2457,16 @@ class UserVoiceStateUpdateEvent(ShardEvent):
     """:class:`str`: The channel's ID the user's voice state is in."""
 
     container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
-    """Optional[:class:`.ChannelVoiceStateContainer`]: The channel's voice state container."""
+    """Optional[:class:`ChannelVoiceStateContainer`]: The channel's voice state container."""
 
     state: PartialUserVoiceState = field(repr=True, kw_only=True)
-    """:class:`.PartialUserVoiceState`: The fields that were updated."""
+    """:class:`PartialUserVoiceState`: The fields that were updated."""
 
     before: typing.Optional[UserVoiceState] = field(repr=True, kw_only=True)
-    """Optional[:class:`.UserVoiceState`]: The user's voice state as it was before being updated, if available."""
+    """Optional[:class:`UserVoiceState`]: The user's voice state as it was before being updated, if available."""
 
     after: typing.Optional[UserVoiceState] = field(repr=True, kw_only=True)
-    """Optional[:class:`.UserVoiceState`]: The user's voice state as it was updated, if available."""
+    """Optional[:class:`UserVoiceState`]: The user's voice state as it was updated, if available."""
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.UserVoiceStateUpdateEventCacheContext] = field(
         default=Factory(
@@ -2486,7 +2486,7 @@ class UserVoiceStateUpdateEvent(ShardEvent):
         init=False,
         eq=False,
     )
-    """Union[:class:`.UndefinedCacheContext`, :class:`.UserVoiceStateUpdateEventCacheContext`]: The cache context used."""
+    """Union[:class:`UndefinedCacheContext`, :class:`UserVoiceStateUpdateEventCacheContext`]: The cache context used."""
 
     def before_dispatch(self) -> None:
         cache = self.shard.state.cache
@@ -2522,7 +2522,7 @@ class UserVoiceStateUpdateEvent(ShardEvent):
 class UserMoveVoiceChannelEvent(ShardEvent):
     """Dispatched when the current user was moved from voice channel and needs to reconnect to another node.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[typing.Literal['user_move_voice_channel']] = 'user_move_voice_channel'
@@ -2538,7 +2538,7 @@ class UserMoveVoiceChannelEvent(ShardEvent):
 class AuthenticatedEvent(ShardEvent):
     """Dispatched when the WebSocket was successfully authenticated.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
     """
 
     event_name: typing.ClassVar[str] = 'authenticated'
@@ -2548,13 +2548,13 @@ class AuthenticatedEvent(ShardEvent):
 class BeforeConnectEvent(ShardEvent):
     """Dispatched before connection to Revolt WebSocket is made.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
 
     .. warning::
 
-        Similarly to :class:`.ReadyEvent`, this event may be dispatched multiple times.
+        Similarly to :class:`ReadyEvent`, this event may be dispatched multiple times.
 
-        Consider subclassing :class:`.Client` and overriding :meth:`~Client.setup_hook` if you wish to prepare before starting up.
+        Consider subclassing :class:`Client` and overriding :meth:`~Client.setup_hook` if you wish to prepare before starting up.
     """
 
     event_name: typing.ClassVar[str] = 'before_connect'
@@ -2564,19 +2564,19 @@ class BeforeConnectEvent(ShardEvent):
 class AfterConnectEvent(ShardEvent):
     """Dispatched after connection to Revolt WebSocket is made.
 
-    This inherits from :class:`.ShardEvent`.
+    This inherits from :class:`ShardEvent`.
 
     .. warning::
 
-        Similarly to :class:`.ReadyEvent`, this event may be dispatched multiple times.
+        Similarly to :class:`ReadyEvent`, this event may be dispatched multiple times.
 
-        Consider subclassing :class:`.Client` and overriding :meth:`~Client.setup_hook` if you wish to prepare before starting up.
+        Consider subclassing :class:`Client` and overriding :meth:`~Client.setup_hook` if you wish to prepare before starting up.
     """
 
     event_name: typing.ClassVar[str] = 'after_connect'
 
     socket: HTTPWebSocket = field(repr=True, kw_only=True)
-    """:class:`.HTTPWebSocket`: The connected WebSocket."""
+    """:class:`HTTPWebSocket`: The connected WebSocket."""
 
 
 __all__ = (

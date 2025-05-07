@@ -188,6 +188,15 @@ SAFETY_REPORT_CONTENT: typing.Final[Route] = Route(POST, '/safety/report')
 SERVERS_BAN_CREATE: typing.Final[Route] = Route(PUT, '/servers/{server_id}/bans/{user_id}')
 SERVERS_BAN_LIST: typing.Final[Route] = Route(GET, '/servers/{server_id}/bans')
 SERVERS_BAN_REMOVE: typing.Final[Route] = Route(DELETE, '/servers/{server_id}/bans/{user_id}')
+SERVERS_CATEGORY_CREATE: typing.Final[Route] = Route(POST, '/servers/{server_id}/categories')
+SERVERS_CATEGORY_DELETE: typing.Final[Route] = Route(DELETE, '/servers/{server_id}/categories/{category_id}')
+SERVERS_CATEGORY_EDIT: typing.Final[Route] = Route(PATCH, '/servers/{server_id}/categories/{category_id}')
+SERVERS_CATEGORY_PERMISSIONS_SET: typing.Final[Route] = Route(
+    PUT, '/servers/{server_id}/categories/{category_id}/permissions/{role_id}'
+)
+SERVERS_CATEGORY_PERMISSIONS_SET_DEFAULT: typing.Final[Route] = Route(
+    PUT, '/servers/{server_id}/categories/{category_id}/permissions/default'
+)
 SERVERS_CHANNEL_CREATE: typing.Final[Route] = Route(POST, '/servers/{server_id}/channels')
 SERVERS_EMOJI_LIST: typing.Final[Route] = Route(GET, '/servers/{server_id}/emojis')
 SERVERS_INVITES_FETCH: typing.Final[Route] = Route(GET, '/servers/{server_id}/invites')
@@ -331,6 +340,11 @@ __all__ = (
     'SERVERS_BAN_CREATE',
     'SERVERS_BAN_LIST',
     'SERVERS_BAN_REMOVE',
+    'SERVERS_CATEGORY_CREATE',
+    'SERVERS_CATEGORY_DELETE',
+    'SERVERS_CATEGORY_EDIT',
+    'SERVERS_CATEGORY_PERMISSIONS_SET',
+    'SERVERS_CATEGORY_PERMISSIONS_SET_DEFAULT',
     'SERVERS_CHANNEL_CREATE',
     'SERVERS_EMOJI_LIST',
     'SERVERS_INVITES_FETCH',

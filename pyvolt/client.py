@@ -157,18 +157,18 @@ class ClientEventHandler(EventHandler):
 
     Attributes
     ----------
-    client: :class:`.Client`
+    client: :class:`Client`
         The client the event handler is for.
-    state: :class:`.State`
+    state: :class:`State`
         The client's state.
-    dispatch: Callable[[:class:`.BaseEvent`], :class:``asyncio.Task`]
+    dispatch: Callable[[:class:`BaseEvent`], :class:``asyncio.Task`]
         Alias for :meth:`.Client.dispatch`.
     handlers: Dict[:class:`str`, Callable[..., MaybeAwaitable[None]]]
         The handlers.
 
     Parameters
     ----------
-    client: :class:`.Client`
+    client: :class:`Client`
         The client.
     """
 
@@ -238,7 +238,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -251,7 +251,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -263,7 +263,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -275,7 +275,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -291,7 +291,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -304,7 +304,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -317,7 +317,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -330,7 +330,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -343,7 +343,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -356,7 +356,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -369,7 +369,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -382,7 +382,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -395,7 +395,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -409,7 +409,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -422,7 +422,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -435,7 +435,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -449,7 +449,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -462,7 +462,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -475,7 +475,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -488,7 +488,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -501,7 +501,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -514,7 +514,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -527,7 +527,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -540,7 +540,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -553,7 +553,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -566,7 +566,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -579,7 +579,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -592,7 +592,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -605,7 +605,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -618,7 +618,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -631,7 +631,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -644,7 +644,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -657,7 +657,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -670,7 +670,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -683,7 +683,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -696,7 +696,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -709,7 +709,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -722,7 +722,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -735,7 +735,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -748,7 +748,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -761,7 +761,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -774,7 +774,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -787,7 +787,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -800,7 +800,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -813,7 +813,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -826,7 +826,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -847,7 +847,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
@@ -893,7 +893,7 @@ EventT = typing.TypeVar('EventT', bound='BaseEvent')
 
 
 def _parents_of(type: type[BaseEvent], /) -> tuple[type[BaseEvent], ...]:
-    """Tuple[Type[:class:`.BaseEvent`], ...]: Returns parents of BaseEvent, including BaseEvent itself."""
+    """Tuple[Type[:class:`BaseEvent`], ...]: Returns parents of BaseEvent, including BaseEvent itself."""
     if type is BaseEvent:
         return (BaseEvent,)
     tmp: typing.Any = type.__mro__[:-1]
@@ -1423,7 +1423,7 @@ class Client:
 
         Parameters
         ----------
-        event: :class:`.BaseEvent`
+        event: :class:`BaseEvent`
             The event to dispatch.
 
         Returns
@@ -2116,7 +2116,7 @@ class Client:
         ----------
         channel: ULIDOr[:class:`~pyvolt.BaseChannel`]
             The channel to fetch.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2197,7 +2197,7 @@ class Client:
         ----------
         emoji: ULIDOr[:class:`~pyvolt.BaseEmoji`]
             The emoji to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2314,7 +2314,7 @@ class Client:
         ----------
         server: ULIDOr[:class:`~pyvolt.BaseServer`]
             The server to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         populate_channels: Optional[:class:`bool`]
             Whether to populate :attr:`~pyvolt.Server.channels`.
@@ -2398,7 +2398,7 @@ class Client:
         ----------
         user_id: :class:`str`
             The user ID.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Returns
@@ -2619,7 +2619,7 @@ class Client:
 
         Creates a new group.
 
-        Fires :class:`.PrivateChannelCreateEvent` for the current user and all specified recipients.
+        Fires :class:`PrivateChannelCreateEvent` for the current user and all specified recipients.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2628,7 +2628,7 @@ class Client:
         ----------
         name: :class:`str`
             The group name. Must be between 1 and 32 characters long.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
             The group description. Can be only up to 1024 characters.
@@ -2710,7 +2710,7 @@ class Client:
 
         Create a new server.
 
-        Fires :class:`.ServerCreateEvent` for the current user.
+        Fires :class:`ServerCreateEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2719,7 +2719,7 @@ class Client:
         ----------
         name: :class:`str`
             The server name. Must be between 1 and 32 characters long.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
             The server description. Can be only up to 1024 characters.

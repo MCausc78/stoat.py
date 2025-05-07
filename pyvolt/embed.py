@@ -43,11 +43,11 @@ class BaseEmbed(ABC):
 
     @abstractmethod
     def attach_state(self, state: State, /) -> Embed:
-        """:class:`.Embed`: Attach a state to embed.
+        """:class:`Embed`: Attach a state to embed.
 
         Parameters
         ----------
-        state: :class:`.State`
+        state: :class:`State`
             The state to attach.
         """
         ...
@@ -62,7 +62,7 @@ class BaseEmbedSpecial:
 class NoneEmbedSpecial(BaseEmbedSpecial):
     """No remote content.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     def to_dict(self) -> raw.NoneSpecial:
@@ -79,7 +79,7 @@ _NONE_EMBED_SPECIAL = NoneEmbedSpecial()
 class GIFEmbedSpecial(BaseEmbedSpecial):
     """A content hint that embed contains a GIF. Metadata should be used to find video or image to play.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     def to_dict(self) -> raw.GIFSpecial:
@@ -96,7 +96,7 @@ _GIF_EMBED_SPECIAL = GIFEmbedSpecial()
 class YouTubeEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Youtube video.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     id: str = field(repr=True, kw_only=True, eq=True)
@@ -120,11 +120,11 @@ class YouTubeEmbedSpecial(BaseEmbedSpecial):
 class LightspeedEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Lightspeed.tv stream.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     content_type: LightspeedContentType = field(repr=True, kw_only=True, eq=True)
-    """:class:`.LightspeedContentType`: The Lightspeed.tv content type."""
+    """:class:`LightspeedContentType`: The Lightspeed.tv content type."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Lightspeed.tv stream ID."""
@@ -142,11 +142,11 @@ class LightspeedEmbedSpecial(BaseEmbedSpecial):
 class TwitchEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Twitch stream or clip.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     content_type: TwitchContentType = field(repr=True, kw_only=True, eq=True)
-    """:class:`.TwitchContentType`: The Twitch content type."""
+    """:class:`TwitchContentType`: The Twitch content type."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Twitch content ID."""
@@ -164,7 +164,7 @@ class TwitchEmbedSpecial(BaseEmbedSpecial):
 class SpotifyEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Spotify track.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     content_type: str = field(repr=True, kw_only=True, eq=True)
@@ -186,7 +186,7 @@ class SpotifyEmbedSpecial(BaseEmbedSpecial):
 class SoundcloudEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Soundcloud track.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     def to_dict(self) -> raw.SoundcloudSpecial:
@@ -203,11 +203,11 @@ _SOUNDCLOUD_EMBED_SPECIAL = SoundcloudEmbedSpecial()
 class BandcampEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Bandcamp track.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     content_type: BandcampContentType = field(repr=True, kw_only=True, eq=True)
-    """:class:`.BandcampContentType`: The Bandcamp content type."""
+    """:class:`BandcampContentType`: The Bandcamp content type."""
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The Bandcamp content ID."""
@@ -225,7 +225,7 @@ class BandcampEmbedSpecial(BaseEmbedSpecial):
 class AppleMusicEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Apple Music track.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     album_id: str = field(repr=True, kw_only=True, eq=True)
@@ -249,7 +249,7 @@ class AppleMusicEmbedSpecial(BaseEmbedSpecial):
 class StreamableEmbedSpecial(BaseEmbedSpecial):
     """Represents information about Streamable video.
 
-    This inherits from :class:`.BaseEmbedSpecial`.
+    This inherits from :class:`BaseEmbedSpecial`.
     """
 
     id: str = field(repr=True, kw_only=True, eq=True)
@@ -267,7 +267,7 @@ class StreamableEmbedSpecial(BaseEmbedSpecial):
 class ImageEmbed(BaseEmbed):
     """Represents an image in an embed.
 
-    This inherits from :class:`.BaseEmbed`.
+    This inherits from :class:`BaseEmbed`.
     """
 
     url: str = field(repr=True, kw_only=True, eq=True)
@@ -280,7 +280,7 @@ class ImageEmbed(BaseEmbed):
     """:class:`int`: The height of the image."""
 
     size: ImageSize = field(repr=True, kw_only=True, eq=True)
-    """:class:`.ImageSize`: The positioning and size of the image."""
+    """:class:`ImageSize`: The positioning and size of the image."""
 
     def attach_state(self, state: State, /) -> Embed:
         return self
@@ -319,7 +319,7 @@ class ImageEmbed(BaseEmbed):
 class VideoEmbed(BaseEmbed):
     """Represents a video in an embed.
 
-    This inherits from :class:`.BaseEmbed`.
+    This inherits from :class:`BaseEmbed`.
     """
 
     url: str = field(repr=True, kw_only=True, eq=True)
@@ -366,7 +366,7 @@ class VideoEmbed(BaseEmbed):
 class WebsiteEmbed(BaseEmbed):
     """Represents website embed within Revolt message.
 
-    This inherits from :class:`.BaseEmbed`.
+    This inherits from :class:`BaseEmbed`.
     """
 
     url: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
@@ -376,7 +376,7 @@ class WebsiteEmbed(BaseEmbed):
     """Optional[:class:`str`]: The original direct URL."""
 
     special: typing.Optional[EmbedSpecial] = field(repr=True, kw_only=True, eq=True)
-    """Optional[:class:`.EmbedSpecial`]: The remote content."""
+    """Optional[:class:`EmbedSpecial`]: The remote content."""
 
     title: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The title of website."""
@@ -385,10 +385,10 @@ class WebsiteEmbed(BaseEmbed):
     """Optional[:class:`str`]: The description of website."""
 
     image: typing.Optional[ImageEmbed] = field(repr=True, kw_only=True, eq=True)
-    """Optional[:class:`.ImageEmbed`]: The embedded image."""
+    """Optional[:class:`ImageEmbed`]: The embedded image."""
 
     video: typing.Optional[VideoEmbed] = field(repr=True, kw_only=True, eq=True)
-    """Optional[:class:`.VideoEmbed`]: The embedded video."""
+    """Optional[:class:`VideoEmbed`]: The embedded video."""
 
     site_name: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The site name."""
@@ -465,7 +465,7 @@ class WebsiteEmbed(BaseEmbed):
 class StatelessTextEmbed(BaseEmbed):
     """Represents stateless text embed within Revolt message.
 
-    This inherits from :class:`.BaseEmbed`.
+    This inherits from :class:`BaseEmbed`.
     """
 
     icon_url: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
@@ -481,7 +481,7 @@ class StatelessTextEmbed(BaseEmbed):
     """Optional[:class:`str`]: The embed's description."""
 
     internal_media: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True, eq=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless embed media."""
+    """Optional[:class:`StatelessAsset`]: The stateless embed media."""
 
     color: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The embed's CSS color."""
@@ -549,21 +549,21 @@ class StatelessTextEmbed(BaseEmbed):
 class TextEmbed(StatelessTextEmbed):
     """Represents a text embed within Revolt message.
 
-    This is a stateful version of :class:`.StatelessTextEmbed`, and inherits from it.
+    This is a stateful version of :class:`StatelessTextEmbed`, and inherits from it.
     """
 
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
 
     @property
     def media(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The embed media."""
+        """Optional[:class:`Asset`]: The embed media."""
         return self.internal_media.attach_state(self.state, 'attachments') if self.internal_media else None
 
 
 class NoneEmbed(BaseEmbed):
     """Embed that holds nothing.
 
-    This inherits from :class:`.BaseEmbed`.
+    This inherits from :class:`BaseEmbed`.
     """
 
     def attach_state(self, state: State, /) -> Embed:

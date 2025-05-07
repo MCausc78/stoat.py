@@ -73,7 +73,7 @@ class BaseInvite:
     """Represents an invite on Revolt."""
 
     state: State = field(repr=False, kw_only=True)
-    """:class:`.State`: State that controls this invite."""
+    """:class:`State`: State that controls this invite."""
 
     code: str = field(repr=True, kw_only=True)
     """:class:`str`: The invite's code."""
@@ -91,8 +91,8 @@ class BaseInvite:
 
         Accepts an invite.
 
-        Fires either :class:`.PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for the current user,
-        and fires either :class:`.GroupRecipientAddEvent` or :class:`.ServerMemberJoinEvent`, and :class:`.MessageCreateEvent`,
+        Fires either :class:`PrivateChannelCreateEvent` or :class:`ServerCreateEvent` for the current user,
+        and fires either :class:`GroupRecipientAddEvent` or :class:`ServerMemberJoinEvent`, and :class:`MessageCreateEvent`,
         both for all group recipients/server members.
 
         .. note::
@@ -100,7 +100,7 @@ class BaseInvite:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -162,7 +162,7 @@ class BaseInvite:
 
         Returns
         -------
-        Union[:class:`.Server`, :class:`.GroupChannel`]
+        Union[:class:`Server`, :class:`GroupChannel`]
             The joined server or group.
         """
 
@@ -179,7 +179,7 @@ class BaseInvite:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -230,7 +230,7 @@ class BaseInvite:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -275,7 +275,7 @@ class BaseInvite:
 class ServerPublicInvite(BaseInvite):
     """Represents a public invite to server channel.
 
-    This inherits from :class:`.BaseInvite`.
+    This inherits from :class:`BaseInvite`.
     """
 
     server_id: str = field(repr=True, kw_only=True)
@@ -285,10 +285,10 @@ class ServerPublicInvite(BaseInvite):
     """:class:`str`: The server's name."""
 
     internal_server_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The server's stateless icon."""
+    """Optional[:class:`StatelessAsset`]: The server's stateless icon."""
 
     internal_server_banner: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The server's stateless banner.."""
+    """Optional[:class:`StatelessAsset`]: The server's stateless banner.."""
 
     raw_server_flags: int = field(repr=True, kw_only=True)
     """:class:`int`: The server's flags raw value."""
@@ -306,13 +306,13 @@ class ServerPublicInvite(BaseInvite):
     """:class:`str`: The user's name who created this invite."""
 
     internal_user_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The user's stateless avatar who created this invite."""
+    """Optional[:class:`StatelessAsset`]: The user's stateless avatar who created this invite."""
 
     member_count: int = field(repr=True, kw_only=True)
     """:class:`int`: The count of members in target server."""
 
     def get_server(self) -> typing.Optional[Server]:
-        """Optional[:class:`.Server`]: The server this invite points to."""
+        """Optional[:class:`Server`]: The server this invite points to."""
 
         state = self.state
         cache = state.cache
@@ -332,7 +332,7 @@ class ServerPublicInvite(BaseInvite):
         return cache.get_server(self.server_id, ctx)
 
     def get_channel(self) -> typing.Optional[ServerChannel]:
-        """Optional[:class:`.ServerChannel`]: The destination channel."""
+        """Optional[:class:`ServerChannel`]: The destination channel."""
 
         state = self.state
         cache = state.cache
@@ -355,7 +355,7 @@ class ServerPublicInvite(BaseInvite):
         return channel
 
     def get_user(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The (guessed) user who created this invite.
+        """Optional[:class:`User`]: The (guessed) user who created this invite.
 
         This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
         """
@@ -394,7 +394,7 @@ class ServerPublicInvite(BaseInvite):
 
     @property
     def server(self) -> Server:
-        """:class:`.Server`: The server this invite points to."""
+        """:class:`Server`: The server this invite points to."""
 
         server = self.get_server()
         if server is None:
@@ -406,24 +406,24 @@ class ServerPublicInvite(BaseInvite):
 
     @property
     def server_flags(self) -> ServerFlags:
-        """:class:`.ServerFlags`: The server's flags."""
+        """:class:`ServerFlags`: The server's flags."""
         ret = _new_server_flags(ServerFlags)
         ret.value = self.raw_server_flags
         return ret
 
     @property
     def server_icon(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The icon of the server."""
+        """Optional[:class:`Asset`]: The icon of the server."""
         return self.internal_server_icon and self.internal_server_icon.attach_state(self.state, 'icons')
 
     @property
     def server_banner(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The banner of the server."""
+        """Optional[:class:`Asset`]: The banner of the server."""
         return self.internal_server_banner and self.internal_server_banner.attach_state(self.state, 'banners')
 
     @property
     def channel(self) -> ServerChannel:
-        """:class:`.ServerChannel`: The destination channel."""
+        """:class:`ServerChannel`: The destination channel."""
 
         channel = self.get_channel()
         if channel is None:
@@ -435,7 +435,7 @@ class ServerPublicInvite(BaseInvite):
 
     @property
     def user(self) -> User:
-        """:class:`.User`: The (guessed) user who created this invite.
+        """:class:`User`: The (guessed) user who created this invite.
 
         This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
         """
@@ -450,7 +450,7 @@ class ServerPublicInvite(BaseInvite):
 
     @property
     def user_avatar(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
+        """Optional[:class:`Asset`]: The user's avatar who created this invite."""
         return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
     async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Server:
@@ -458,7 +458,7 @@ class ServerPublicInvite(BaseInvite):
 
         Accepts an invite.
 
-        Fires :class:`.ServerCreateEvent` for the current user, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent`,
+        Fires :class:`ServerCreateEvent` for the current user, :class:`ServerMemberJoinEvent` and :class:`MessageCreateEvent`,
         both for all server members.
 
         .. note::
@@ -466,7 +466,7 @@ class ServerPublicInvite(BaseInvite):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -524,7 +524,7 @@ class ServerPublicInvite(BaseInvite):
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The joined server.
         """
         from .server import Server
@@ -538,7 +538,7 @@ class ServerPublicInvite(BaseInvite):
 class GroupPublicInvite(BaseInvite):
     """Represents a public invite to group channel.
 
-    This inherits from :class:`.BaseInvite`.
+    This inherits from :class:`BaseInvite`.
     """
 
     channel_id: str = field(repr=True, kw_only=True)
@@ -554,10 +554,10 @@ class GroupPublicInvite(BaseInvite):
     """:class:`str`: The user's name who created this invite."""
 
     internal_user_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The user's stateless avatar who created this invite."""
+    """Optional[:class:`StatelessAsset`]: The user's stateless avatar who created this invite."""
 
     def get_channel(self) -> typing.Optional[GroupChannel]:
-        """Optional[:class:`.GroupChannel`]: The destination channel."""
+        """Optional[:class:`GroupChannel`]: The destination channel."""
 
         state = self.state
         cache = state.cache
@@ -580,7 +580,7 @@ class GroupPublicInvite(BaseInvite):
         return channel
 
     def get_user(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The (guessed) user who created this invite.
+        """Optional[:class:`User`]: The (guessed) user who created this invite.
 
         This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
         """
@@ -619,7 +619,7 @@ class GroupPublicInvite(BaseInvite):
 
     @property
     def channel(self) -> GroupChannel:
-        """:class:`.GroupChannel`: The destination channel."""
+        """:class:`GroupChannel`: The destination channel."""
 
         channel = self.get_channel()
         if channel is None:
@@ -631,7 +631,7 @@ class GroupPublicInvite(BaseInvite):
 
     @property
     def user(self) -> User:
-        """:class:`.User`: The (guessed) user who created this invite.
+        """:class:`User`: The (guessed) user who created this invite.
 
         This always will return accurate user if user has avatar, but might incorrectly find user if avatar is missing.
         """
@@ -646,7 +646,7 @@ class GroupPublicInvite(BaseInvite):
 
     @property
     def user_avatar(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The user's avatar who created this invite."""
+        """Optional[:class:`Asset`]: The user's avatar who created this invite."""
         return self.internal_user_avatar and self.internal_user_avatar.attach_state(self.state, 'avatars')
 
     async def accept(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> GroupChannel:
@@ -654,7 +654,7 @@ class GroupPublicInvite(BaseInvite):
 
         Accepts an invite.
 
-        Fires :class:`.PrivateChannelCreateEvent` for the current user, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent`,
+        Fires :class:`PrivateChannelCreateEvent` for the current user, :class:`GroupRecipientAddEvent` and :class:`MessageCreateEvent`,
         both for all group recipients.
 
         .. note::
@@ -662,7 +662,7 @@ class GroupPublicInvite(BaseInvite):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -718,7 +718,7 @@ class GroupPublicInvite(BaseInvite):
 
         Returns
         -------
-        :class:`.GroupChannel`
+        :class:`GroupChannel`
             The joined group.
         """
         group = await super().accept(http_overrides=http_overrides)
@@ -729,7 +729,7 @@ class GroupPublicInvite(BaseInvite):
 class UnknownPublicInvite(BaseInvite):
     """Represents a public invite that is not recognized by library yet.
 
-    This inherits from :class:`.BaseInvite`.
+    This inherits from :class:`BaseInvite`.
     """
 
     payload: dict[str, typing.Any] = field(repr=True, kw_only=True)
@@ -743,7 +743,7 @@ PublicInvite = typing.Union[ServerPublicInvite, GroupPublicInvite, UnknownPublic
 class PrivateBaseInvite(BaseInvite):
     """Represents a private invite on Revolt.
 
-    This inherits from :class:`.BaseInvite`.
+    This inherits from :class:`BaseInvite`.
     """
 
     creator_id: str = field(repr=True, kw_only=True)
@@ -754,14 +754,14 @@ class PrivateBaseInvite(BaseInvite):
 class GroupInvite(PrivateBaseInvite):
     """Represents a group invite on Revolt.
 
-    This inherits from :class:`.PrivateBaseInvite`.
+    This inherits from :class:`PrivateBaseInvite`.
     """
 
     channel_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The group channel's ID this invite points to."""
 
     def get_channel(self) -> typing.Optional[GroupChannel]:
-        """Optional[:class:`.GroupChannel`]: The group channel this invite points to."""
+        """Optional[:class:`GroupChannel`]: The group channel this invite points to."""
 
         state = self.state
         cache = state.cache
@@ -784,7 +784,7 @@ class GroupInvite(PrivateBaseInvite):
         return channel
 
     def get_creator(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who created this invite."""
+        """Optional[:class:`User`]: The user who created this invite."""
         state = self.state
         cache = state.cache
 
@@ -804,7 +804,7 @@ class GroupInvite(PrivateBaseInvite):
 
     @property
     def channel(self) -> GroupChannel:
-        """:class:`.GroupChannel`: The group channel this invite points to."""
+        """:class:`GroupChannel`: The group channel this invite points to."""
 
         channel = self.get_channel()
         if channel is None:
@@ -816,7 +816,7 @@ class GroupInvite(PrivateBaseInvite):
 
     @property
     def creator(self) -> User:
-        """:class:`.User`: The user who created this invite."""
+        """:class:`User`: The user who created this invite."""
 
         creator = self.get_creator()
         if creator is None:
@@ -831,7 +831,7 @@ class GroupInvite(PrivateBaseInvite):
 
         Accepts an invite.
 
-        Fires :class:`.PrivateChannelCreateEvent` for the current user, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent`,
+        Fires :class:`PrivateChannelCreateEvent` for the current user, :class:`GroupRecipientAddEvent` and :class:`MessageCreateEvent`,
         both for all group recipients.
 
         .. note::
@@ -839,7 +839,7 @@ class GroupInvite(PrivateBaseInvite):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -895,7 +895,7 @@ class GroupInvite(PrivateBaseInvite):
 
         Returns
         -------
-        :class:`.GroupChannel`
+        :class:`GroupChannel`
             The joined group.
         """
         group = await super().accept(http_overrides=http_overrides)
@@ -906,7 +906,7 @@ class GroupInvite(PrivateBaseInvite):
 class ServerInvite(PrivateBaseInvite):
     """Represents a server invite on Revolt.
 
-    This inherits from :class:`.PrivateBaseInvite`.
+    This inherits from :class:`PrivateBaseInvite`.
     """
 
     server_id: str = field(repr=True, kw_only=True)
@@ -916,7 +916,7 @@ class ServerInvite(PrivateBaseInvite):
     """:class:`str`: The server channel's ID this invite points to."""
 
     def get_server(self) -> typing.Optional[Server]:
-        """Optional[:class:`.Server`]: The server this invite points to."""
+        """Optional[:class:`Server`]: The server this invite points to."""
 
         state = self.state
         cache = state.cache
@@ -936,7 +936,7 @@ class ServerInvite(PrivateBaseInvite):
         return cache.get_server(self.server_id, ctx)
 
     def get_channel(self) -> typing.Optional[ServerChannel]:
-        """Optional[:class:`.ServerChannel`]: The server channel this invite points to."""
+        """Optional[:class:`ServerChannel`]: The server channel this invite points to."""
 
         state = self.state
         cache = state.cache
@@ -959,7 +959,7 @@ class ServerInvite(PrivateBaseInvite):
         return channel
 
     def get_creator(self) -> typing.Optional[typing.Union[Member, User]]:
-        """Optional[Union[:class:`.Member`, :class:`.User`]]: The user who created this invite."""
+        """Optional[Union[:class:`Member`, :class:`User`]]: The user who created this invite."""
         state = self.state
         cache = state.cache
 
@@ -981,7 +981,7 @@ class ServerInvite(PrivateBaseInvite):
         return member
 
     def get_creator_as_member(self) -> typing.Optional[Member]:
-        """Optional[:class:`.Member`]: The user who created this invite."""
+        """Optional[:class:`Member`]: The user who created this invite."""
         state = self.state
         cache = state.cache
 
@@ -1000,7 +1000,7 @@ class ServerInvite(PrivateBaseInvite):
         return cache.get_server_member(self.server_id, self.creator_id, ctx)
 
     def get_creator_as_user(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who created this invite."""
+        """Optional[:class:`User`]: The user who created this invite."""
         state = self.state
         cache = state.cache
 
@@ -1020,7 +1020,7 @@ class ServerInvite(PrivateBaseInvite):
 
     @property
     def server(self) -> Server:
-        """:class:`.Server`: The server this invite points to."""
+        """:class:`Server`: The server this invite points to."""
 
         server = self.get_server()
         if server is None:
@@ -1032,7 +1032,7 @@ class ServerInvite(PrivateBaseInvite):
 
     @property
     def channel(self) -> ServerChannel:
-        """:class:`.ServerChannel`: The server channel this invite points to."""
+        """:class:`ServerChannel`: The server channel this invite points to."""
 
         channel = self.get_channel()
         if channel is None:
@@ -1044,7 +1044,7 @@ class ServerInvite(PrivateBaseInvite):
 
     @property
     def creator(self) -> typing.Union[Member, User]:
-        """Union[:class:`.Member`, :class:`.User`]: The user who created this invite."""
+        """Union[:class:`Member`, :class:`User`]: The user who created this invite."""
 
         creator = self.get_creator()
         if creator is None:
@@ -1056,7 +1056,7 @@ class ServerInvite(PrivateBaseInvite):
 
     @property
     def creator_as_member(self) -> Member:
-        """:class:`.Member`: The user who created this invite."""
+        """:class:`Member`: The user who created this invite."""
 
         creator = self.get_creator_as_member()
         if creator is None:
@@ -1068,7 +1068,7 @@ class ServerInvite(PrivateBaseInvite):
 
     @property
     def creator_as_user(self) -> User:
-        """:class:`.User`: The user who created this invite."""
+        """:class:`User`: The user who created this invite."""
 
         creator = self.get_creator_as_user()
         if creator is None:
@@ -1083,7 +1083,7 @@ class ServerInvite(PrivateBaseInvite):
 
         Accepts an invite.
 
-        Fires :class:`.ServerCreateEvent` for the current user, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent`,
+        Fires :class:`ServerCreateEvent` for the current user, :class:`ServerMemberJoinEvent` and :class:`MessageCreateEvent`,
         both for all server members.
 
         .. note::
@@ -1091,7 +1091,7 @@ class ServerInvite(PrivateBaseInvite):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1149,7 +1149,7 @@ class ServerInvite(PrivateBaseInvite):
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The joined server.
         """
         from .server import Server

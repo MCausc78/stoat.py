@@ -55,7 +55,7 @@ class AssetMetadata:
     """Represents metadata associated with an asset."""
 
     type: AssetMetadataType = field(repr=True, kw_only=True, eq=True)
-    """:class:`.AssetMetadataType`: The metadata's type."""
+    """:class:`AssetMetadataType`: The metadata's type."""
 
     width: typing.Optional[int] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`int`]: The image/video's width, if applicable."""
@@ -105,7 +105,7 @@ class StatelessAsset:
     """:class:`str`: The asset's original filename."""
 
     metadata: AssetMetadata = field(repr=True, kw_only=True)
-    """:class:`.AssetMetadata`: Parsed metadata of this file."""
+    """:class:`AssetMetadata`: Parsed metadata of this file."""
 
     content_type: str = field(repr=True, kw_only=True)
     """:class:`str` The asset's content type."""
@@ -138,13 +138,13 @@ class StatelessAsset:
         return self is other or isinstance(other, StatelessAsset) and self.id == other.id
 
     def attach_state(self, state: State, tag: Tag, /) -> Asset:
-        """:class:`.Asset`: Attach a state to asset.
+        """:class:`Asset`: Attach a state to asset.
 
         Parameters
         ----------
-        state: :class:`.State`
+        state: :class:`State`
             The state to attach.
-        tag: :class:`.Tag`
+        tag: :class:`Tag`
             The asset's tag.
         """
         return Asset(
@@ -169,7 +169,7 @@ class StatelessAsset:
 
         Parameters
         ----------
-        tag: :class:`.Tag`
+        tag: :class:`Tag`
             The asset tag.
         """
 
@@ -200,7 +200,7 @@ class StatelessAsset:
 class Asset(StatelessAsset):
     """Represents an asset on Revolt.
 
-    This inherits from :class:`.StatelessAsset`.
+    This inherits from :class:`StatelessAsset`.
     """
 
     state: State = field(repr=False, hash=False, kw_only=True, eq=False)
@@ -235,9 +235,9 @@ class Resource(ABC):
 
         Parameters
         ----------
-        cdn_client: :class:`.CDNClient`
+        cdn_client: :class:`CDNClient`
             The CDN client to use.
-        tag: :class:`.Tag`
+        tag: :class:`Tag`
             The tag to upload resource to.
         """
         ...
@@ -271,7 +271,7 @@ def resolve_content(content: Content, /) -> typing.Union[bytes, io.IOBase]:
 class Upload(Resource):
     """Represents a file upload.
 
-    This inherits from :class:`.Resource`.
+    This inherits from :class:`Resource`.
 
     Attributes
     ----------
@@ -307,7 +307,7 @@ class Upload(Resource):
 
         Returns
         -------
-        :class:`.Upload`
+        :class:`Upload`
             The constructed upload.
         """
         return cls(content, tag='attachments', filename=filename)
@@ -325,7 +325,7 @@ class Upload(Resource):
 
         Returns
         -------
-        :class:`.Upload`
+        :class:`Upload`
             The constructed upload.
         """
         return cls(content, tag='avatars', filename=filename)
@@ -343,7 +343,7 @@ class Upload(Resource):
 
         Returns
         -------
-        :class:`.Upload`
+        :class:`Upload`
             The constructed upload.
         """
         return cls(content, tag='backgrounds', filename=filename)
@@ -361,7 +361,7 @@ class Upload(Resource):
 
         Returns
         -------
-        :class:`.Upload`
+        :class:`Upload`
             The constructed upload.
         """
         return cls(content, tag='banners', filename=filename)
@@ -379,7 +379,7 @@ class Upload(Resource):
 
         Returns
         -------
-        :class:`.Upload`
+        :class:`Upload`
             The constructed upload.
         """
         return cls(content, tag='emojis', filename=filename)
@@ -397,7 +397,7 @@ class Upload(Resource):
 
         Returns
         -------
-        :class:`.Upload`
+        :class:`Upload`
             The constructed upload.
         """
         return cls(content, tag='icons', filename=filename)
@@ -418,7 +418,7 @@ async def resolve_resource(state: State, resolvable: ResolvableResource, /, *, t
 
     Parameters
     ----------
-    state: :class:`.State`
+    state: :class:`State`
         The state.
     resolvable: :class:`ResolvableResource`
         The object that should be resolved.
@@ -447,7 +447,7 @@ class CDNClient:
 
     Attributes
     ----------
-    state: :class:`.State`
+    state: :class:`State`
         The state.
     user_agent: :class:`str`
         The HTTP user agent used when making requests.

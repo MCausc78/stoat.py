@@ -57,7 +57,7 @@ if typing.TYPE_CHECKING:
 class BaseEmoji(Base):
     """Represents an emoji on Revolt.
 
-    This inherits from :class:`.Base`.
+    This inherits from :class:`Base`.
     """
 
     creator_id: str = field(repr=True, kw_only=True)
@@ -80,7 +80,7 @@ class BaseEmoji(Base):
 
     @property
     def image(self) -> Asset:
-        """:class:`.Asset`: The emoji asset."""
+        """:class:`Asset`: The emoji asset."""
         return Asset(
             id=self.id,
             filename='',
@@ -104,16 +104,16 @@ class BaseEmoji(Base):
 
 @define(slots=True)
 class ServerEmoji(BaseEmoji):
-    """Represents an emoji in Revolt :class:`.Server`.
+    """Represents an emoji in Revolt :class:`Server`.
 
-    This inherits from :class:`.BaseEmoji`.
+    This inherits from :class:`BaseEmoji`.
     """
 
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID the emoji belongs to."""
 
     def get_creator(self) -> typing.Optional[typing.Union[Member, User]]:
-        """Optional[Union[:class:`.Member`, :class:`.User`]]: The user who uploaded this emoji."""
+        """Optional[Union[:class:`Member`, :class:`User`]]: The user who uploaded this emoji."""
 
         state = self.state
         cache = state.cache
@@ -138,7 +138,7 @@ class ServerEmoji(BaseEmoji):
         return member
 
     def get_creator_as_member(self) -> typing.Optional[Member]:
-        """Optional[:class:`.Member`]: The user who uploaded this emoji."""
+        """Optional[:class:`Member`]: The user who uploaded this emoji."""
 
         state = self.state
         cache = state.cache
@@ -158,7 +158,7 @@ class ServerEmoji(BaseEmoji):
         return cache.get_server_member(self.server_id, self.creator_id, ctx)
 
     def get_creator_as_user(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who uploaded this emoji."""
+        """Optional[:class:`User`]: The user who uploaded this emoji."""
 
         state = self.state
         cache = state.cache
@@ -178,7 +178,7 @@ class ServerEmoji(BaseEmoji):
         return cache.get_user(self.creator_id, ctx)
 
     def get_server(self) -> typing.Optional[Server]:
-        """Optional[:class:`.Server`]: The server the emoji belongs to."""
+        """Optional[:class:`Server`]: The server the emoji belongs to."""
 
         state = self.state
         cache = state.cache
@@ -199,7 +199,7 @@ class ServerEmoji(BaseEmoji):
 
     @property
     def creator(self) -> typing.Union[Member, User]:
-        """Union[:class:`.Member`, :class:`.User`]: The user who uploaded this emoji."""
+        """Union[:class:`Member`, :class:`User`]: The user who uploaded this emoji."""
         creator = self.get_creator()
         if creator is None:
             raise NoData(
@@ -210,7 +210,7 @@ class ServerEmoji(BaseEmoji):
 
     @property
     def creator_as_member(self) -> Member:
-        """:class:`.Member`: The user who uploaded this emoji."""
+        """:class:`Member`: The user who uploaded this emoji."""
         creator = self.get_creator_as_member()
         if creator is None:
             raise NoData(
@@ -221,7 +221,7 @@ class ServerEmoji(BaseEmoji):
 
     @property
     def creator_as_user(self) -> User:
-        """:class:`.User`: The user who uploaded this emoji."""
+        """:class:`User`: The user who uploaded this emoji."""
         creator = self.get_creator_as_user()
         if creator is None:
             raise NoData(
@@ -232,7 +232,7 @@ class ServerEmoji(BaseEmoji):
 
     @property
     def server(self) -> Server:
-        """:class:`.Server`: The server the emoji belongs to."""
+        """:class:`Server`: The server the emoji belongs to."""
         server = self.get_server()
         if server is None:
             raise NoData(
@@ -249,7 +249,7 @@ class ServerEmoji(BaseEmoji):
         You must have :attr:`~Permissions.manage_customization` to do this if you do not own
         the emoji, unless it was detached (already deleted).
 
-        May fire :class:`.EmojiDeleteEvent` for all server members.
+        May fire :class:`EmojiDeleteEvent` for all server members.
 
         .. note::
             If deleting detached emoji, this will successfully return.
@@ -259,7 +259,7 @@ class ServerEmoji(BaseEmoji):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -329,11 +329,11 @@ class ServerEmoji(BaseEmoji):
 class DetachedEmoji(BaseEmoji):
     """Represents a deleted emoji on Revolt.
 
-    This inherits from :class:`.BaseEmoji`.
+    This inherits from :class:`BaseEmoji`.
     """
 
     def get_creator(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who uploaded this emoji."""
+        """Optional[:class:`User`]: The user who uploaded this emoji."""
 
         state = self.state
         cache = state.cache
@@ -354,7 +354,7 @@ class DetachedEmoji(BaseEmoji):
 
     @property
     def creator(self) -> User:
-        """:class:`.User`: The user who uploaded this emoji."""
+        """:class:`User`: The user who uploaded this emoji."""
         creator = self.get_creator()
         if creator is None:
             raise NoData(
@@ -389,7 +389,7 @@ def resolve_emoji(resolvable: ResolvableEmoji, /) -> str:
 
     Parameters
     ----------
-    resolvable: :class:`.ResolvableEmoji`
+    resolvable: :class:`ResolvableEmoji`
         The object to resolve ID from.
 
     Returns

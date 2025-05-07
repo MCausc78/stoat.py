@@ -71,7 +71,7 @@ _new_permissions = Permissions.__new__
 class BaseWebhook(Base):
     """Represents a webhook on Revolt.
 
-    This inherits from :class:`.BaseWebhook`.
+    This inherits from :class:`BaseWebhook`.
     """
 
     def __eq__(self, other: object, /) -> bool:
@@ -87,11 +87,11 @@ class BaseWebhook(Base):
 
         Deletes the webhook.
 
-        Fires :class:`.WebhookDeleteEvent` for all users who can see webhook channel.
+        Fires :class:`WebhookDeleteEvent` for all users who can see webhook channel.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         by_token: :class:`bool`
             Whether to use webhook token, if possible.
@@ -147,11 +147,11 @@ class BaseWebhook(Base):
 
         Edits the webhook.
 
-        Fires :class:`.WebhookUpdateEvent` for all users who can see webhook channel.
+        Fires :class:`WebhookUpdateEvent` for all users who can see webhook channel.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         by_token: :class:`bool`
             Whether to use webhook token, if possible.
@@ -159,9 +159,9 @@ class BaseWebhook(Base):
             You must have :attr:`~Permissions.manage_webhooks` to provide ``False``.
         name: UndefinedOr[:class:`str`]
             The new webhook name. Must be between 1 and 32 chars long.
-        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new webhook avatar.
-        permissions: UndefinedOr[:class:`.Permissions`]
+        permissions: UndefinedOr[:class:`Permissions`]
             The new webhook permissions.
 
         Raises
@@ -203,7 +203,7 @@ class BaseWebhook(Base):
 
         Returns
         -------
-        :class:`.Webhook`
+        :class:`Webhook`
             The newly updated webhook.
         """
 
@@ -248,37 +248,37 @@ class BaseWebhook(Base):
 
         If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
 
-        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
+        Fires :class:`MessageCreateEvent` and optionally :class:`MessageAppendEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
-        webhook: ULIDOr[:class:`.BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The webhook to execute.
         token: :class:`str`
             The webhook token.
         content: Optional[:class:`str`]
             The message content.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
-        attachments: Optional[List[:class:`.ResolvableResource`]]
+        attachments: Optional[List[:class:`ResolvableResource`]]
             The attachments to send the message with.
 
             Webhook must have :attr:`~Permissions.upload_files` to provide this.
-        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
             The message replies.
-        embeds: Optional[List[:class:`.SendableEmbed`]]
+        embeds: Optional[List[:class:`SendableEmbed`]]
             The embeds to send the message with.
 
             Webhook must have :attr:`~Permissions.send_embeds` to provide this.
-        masquerade: Optional[:class:`.MessageMasquerade`]
+        masquerade: Optional[:class:`MessageMasquerade`]
             The masquerade for the message.
 
             Webhook must have :attr:`~Permissions.use_masquerade` to provide this.
 
             If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.manage_roles` is also required.
-        interactions: Optional[:class:`.MessageInteractions`]
+        interactions: Optional[:class:`MessageInteractions`]
             The message interactions.
 
             If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
@@ -352,7 +352,7 @@ class BaseWebhook(Base):
 
         Returns
         -------
-        :class:`.Message`
+        :class:`Message`
             The message that was sent.
         """
 
@@ -394,7 +394,7 @@ class BaseWebhook(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
@@ -438,7 +438,7 @@ class BaseWebhook(Base):
 
         Returns
         -------
-        :class:`.Webhook`
+        :class:`Webhook`
             The retrieved webhook.
         """
         return await self.state.http.get_webhook(self.id, http_overrides=http_overrides, token=token or self._token())
@@ -450,26 +450,26 @@ class PartialWebhook(BaseWebhook):
 
     Unmodified fields will have :data:`.UNDEFINED` as their value.
 
-    This inherits from :class:`.BaseWebhook`.
+    This inherits from :class:`BaseWebhook`.
     """
 
     name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The new webhook's name."""
 
     internal_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new webhook's stateless avatar."""
+    """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new webhook's stateless avatar."""
 
     raw_permissions: UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`int`]: The new webhook's permissions raw value."""
 
     @property
     def avatar(self) -> UndefinedOr[typing.Optional[Asset]]:
-        """UndefinedOr[Optional[:class:`.Asset`]]: The new avatar of the webhook."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The new avatar of the webhook."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def permissions(self) -> UndefinedOr[Permissions]:
-        """UndefinedOr[:class:`.Permissions`]: The new webhook's permissions."""
+        """UndefinedOr[:class:`Permissions`]: The new webhook's permissions."""
         if self.raw_permissions is UNDEFINED:
             return self.raw_permissions
         ret = _new_permissions(Permissions)
@@ -481,14 +481,14 @@ class PartialWebhook(BaseWebhook):
 class Webhook(BaseWebhook):
     """Represents a webhook on Revolt.
 
-    This inherits from :class:`.BaseWebhook`.
+    This inherits from :class:`BaseWebhook`.
     """
 
     name: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The webhook's name."""
 
     internal_avatar: typing.Optional[StatelessAsset] = field(repr=True, hash=True, kw_only=True, eq=True)
-    """Optional[:class:`.StatelessAsset`]: The webhook's stateless avatar."""
+    """Optional[:class:`StatelessAsset`]: The webhook's stateless avatar."""
 
     creator_id: str = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`str`: The user's ID who created this webhook.
@@ -509,7 +509,7 @@ class Webhook(BaseWebhook):
     """Optional[:class:`str`]: The webhook's private token."""
 
     def get_creator(self) -> typing.Optional[typing.Union[Member, User]]:
-        """Optional[Union[:class:`.Member`, :class:`.User`]]: The user who created this webhook."""
+        """Optional[Union[:class:`Member`, :class:`User`]]: The user who created this webhook."""
         state = self.state
         cache = state.cache
 
@@ -540,7 +540,7 @@ class Webhook(BaseWebhook):
         return ret
 
     def get_creator_as_member(self) -> typing.Optional[Member]:
-        """Optional[:class:`.Member`]: The user who created this webhook."""
+        """Optional[:class:`Member`]: The user who created this webhook."""
         state = self.state
         cache = state.cache
 
@@ -567,7 +567,7 @@ class Webhook(BaseWebhook):
         return None
 
     def get_creator_as_user(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who created this webhook."""
+        """Optional[:class:`User`]: The user who created this webhook."""
         state = self.state
         cache = state.cache
 
@@ -590,7 +590,7 @@ class Webhook(BaseWebhook):
         return cache.get_user(creator_id, ctx)
 
     def get_channel(self) -> typing.Optional[typing.Union[GroupChannel, TextChannel]]:
-        """Optional[Union[:class:`.GroupChannel`, :class:`.TextChannel`]]: The channel the webhook belongs to."""
+        """Optional[Union[:class:`GroupChannel`, :class:`TextChannel`]]: The channel the webhook belongs to."""
         state = self.state
         cache = state.cache
 
@@ -623,7 +623,7 @@ class Webhook(BaseWebhook):
 
         Parameters
         ----------
-        data: :class:`.PartialWebhook`
+        data: :class:`PartialWebhook`
             The data to update webhook with.
         """
         if data.name is not UNDEFINED:
@@ -635,12 +635,12 @@ class Webhook(BaseWebhook):
 
     @property
     def avatar(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The webhook's avatar."""
+        """Optional[:class:`Asset`]: The webhook's avatar."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def creator(self) -> typing.Union[Member, User]:
-        """Union[:class:`.Member`, :class:`.User`]: The user who created this webhook."""
+        """Union[:class:`Member`, :class:`User`]: The user who created this webhook."""
         creator = self.get_creator()
         if creator is None:
             raise NoData(what=self.creator_id, type='Webhook.creator')
@@ -648,7 +648,7 @@ class Webhook(BaseWebhook):
 
     @property
     def creator_as_member(self) -> Member:
-        """:class:`.Member`: The user who created this webhook."""
+        """:class:`Member`: The user who created this webhook."""
         creator = self.get_creator_as_member()
         if creator is None:
             raise NoData(what=self.creator_id, type='Webhook.creator_as_member')
@@ -656,7 +656,7 @@ class Webhook(BaseWebhook):
 
     @property
     def creator_as_user(self) -> User:
-        """:class:`.User`: The user who created this webhook."""
+        """:class:`User`: The user who created this webhook."""
         creator = self.get_creator_as_user()
         if creator is None:
             raise NoData(what=self.creator_id, type='Webhook.creator_as_user')
@@ -664,7 +664,7 @@ class Webhook(BaseWebhook):
 
     @property
     def channel(self) -> typing.Union[GroupChannel, TextChannel]:
-        """Union[:class:`.GroupChannel`, :class:`.TextChannel`]: The channel the webhook belongs to."""
+        """Union[:class:`GroupChannel`, :class:`TextChannel`]: The channel the webhook belongs to."""
         channel = self.get_channel()
         if channel is None:
             raise NoData(what=self.channel_id, type='Webhook.channel')
@@ -672,7 +672,7 @@ class Webhook(BaseWebhook):
 
     @property
     def permissions(self) -> Permissions:
-        """:class:`.Permissions`: The webhook's permissions."""
+        """:class:`Permissions`: The webhook's permissions."""
         ret = _new_permissions(Permissions)
         ret.value = self.raw_permissions
         return ret
