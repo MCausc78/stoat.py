@@ -40,6 +40,7 @@ from .cache import (
     ReadStateThroughGroupChannelReadStateCacheContext,
     UserThroughGroupChannelOwnerCacheContext,
     UserThroughGroupChannelRecipientsCacheContext,
+    ServerThroughServerChannelCategoryCacheContext,
     MemberThroughServerChannelMeCacheContext,
     ServerThroughServerChannelServerCacheContext,
     MessageThroughTextChannelLastMessageCacheContext,
@@ -55,6 +56,7 @@ from .cache import (
     _USER_THROUGH_GROUP_CHANNEL_OWNER,
     _READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE,
     _USER_THROUGH_GROUP_CHANNEL_RECIPIENTS,
+    _SERVER_THROUGH_SERVER_CHANNEL_CATEGORY,
     _MEMBER_THROUGH_SERVER_CHANNEL_ME,
     _SERVER_THROUGH_SERVER_CHANNEL_SERVER,
     _MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE,
@@ -88,7 +90,7 @@ if typing.TYPE_CHECKING:
     from .invite import Invite
     from .message import BaseMessage, Message
     from .permissions import PermissionOverride
-    from .server import BaseRole, Role, Server, Member
+    from .server import Category, BaseRole, Role, Server, Member
     from .state import State
     from .user import BaseUser, User, UserVoiceState
     from .webhook import Webhook
@@ -345,6 +347,12 @@ class PartialChannel(BaseChannel):
 
     last_message_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The last message ID sent in the channel."""
+
+    category_id: UndefinedOr[str] = field(repr=True, kw_only=True)
+    """UndefinedOr[:class:`str`]: The new category ID the channel is in.
+    
+    .. versionadded:: 1.2
+    """
 
     voice: UndefinedOr[ChannelVoiceMetadata] = field(repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`ChannelVoiceMetadata`]: The new voice-specific metadata for this channel.
@@ -1775,8 +1783,43 @@ class BaseServerChannel(BaseChannel):
     role_permissions: dict[str, PermissionOverride] = field(repr=True, kw_only=True)
     """Dict[:class:`str`, :class:`PermissionOverride`]: The permissions assigned based on role to this channel."""
 
+    category_id: typing.Optional[str] = field(repr=True, kw_only=True)
+    """Optional[:class:`str`]: The category ID the channel is in.
+    
+    .. versionadded:: 1.2
+    """
+
     nsfw: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether this channel is marked as not safe for work."""
+
+    def get_category(self) -> typing.Optional[Category]:
+        """Optional[:class:`Category`]: The category the channel is in.
+
+        .. versionadded:: 1.2
+        """
+        if self.category_id is None:
+            return None
+
+        state = self.state
+        cache = state.cache
+
+        if cache is None:
+            return None
+
+        ctx = (
+            ServerThroughServerChannelCategoryCacheContext(
+                type=CacheContextType.server_through_server_channel_category,
+                channel=self,
+            )
+            if state.provide_cache_context('BaseServerChannel.category')
+            else _SERVER_THROUGH_SERVER_CHANNEL_CATEGORY
+        )
+
+        server = cache.get_server(self.server_id, ctx)
+        if server is None:
+            return None
+
+        return server.get_category(self.category_id)
 
     def get_me(self) -> typing.Optional[Member]:
         """Optional[:class:`Member`]: The own user for this server."""
@@ -1815,6 +1858,14 @@ class BaseServerChannel(BaseChannel):
         )
 
         return cache.get_server(self.server_id, ctx)
+
+    @property
+    def category(self) -> typing.Optional[Category]:
+        """Optional[:class:`Category`]: The category the channel is in."""
+        category = self.get_category()
+        if category is None and self.category_id is not None:
+            raise NoData(what=self.category_id, type='BaseServerChannel.category')
+        return category
 
     @property
     def icon(self) -> typing.Optional[Asset]:
@@ -2178,6 +2229,8 @@ class BaseServerChannel(BaseChannel):
             self.role_permissions = data.role_permissions
         if data.default_permissions is not UNDEFINED:
             self.default_permissions = data.default_permissions
+        if data.category_id is not UNDEFINED:
+            self.category_id = data.category_id
 
     def permissions_for(
         self,
@@ -2213,7 +2266,7 @@ class BaseServerChannel(BaseChannel):
         """
         server = self.get_server()
         if server is None:
-            raise NoData(what=self.server_id, type='BaseServerChannel.permissions_for')
+            raise NoData(what=self.server_id, type='BaseServerChannel.server')
 
         if with_ownership and server.owner_id == target.id:
             return Permissions.all()
@@ -2229,12 +2282,17 @@ class BaseServerChannel(BaseChannel):
                 server.default_permissions, [], default_permissions=self.default_permissions, role_permissions={}
             )
 
+        category = self.get_category()
+        if safe and category is None and self.category_id is not None:
+            raise NoData(what=self.category_id, type='BaseServerChannel.category')
+
         initial_permissions = calculate_server_permissions(
             [],
             None,
             default_permissions=server.default_permissions,
             can_publish=True,
             can_receive=True,
+            category=category,
         )
         roles = sort_member_roles(target.role_ids, safe=safe, server_roles=server.roles)
         result = calculate_server_channel_permissions(

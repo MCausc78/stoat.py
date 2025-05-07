@@ -218,6 +218,9 @@ CacheContextType
     .. attribute:: user_through_group_channel_recipients
 
         The context comes from :attr:`GroupChannel.recipients`.
+    .. attribute:: server_through_server_channel_category
+
+        The context comes from :attr:`BaseServerChannel.category`.
     .. attribute:: member_through_server_channel_me
 
         The context comes from :attr:`BaseServerChannel.me`.
@@ -1364,6 +1367,16 @@ UserThroughGroupChannelRecipientsCacheContext
 .. attributetable:: UserThroughGroupChannelRecipientsCacheContext
 
 .. autoclass:: UserThroughGroupChannelRecipientsCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughServerChannelCategoryCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughServerChannelCategoryCacheContext
+
+.. autoclass:: ServerThroughServerChannelCategoryCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

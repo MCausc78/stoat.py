@@ -907,6 +907,7 @@ class Parser:
                     else self.parse_permission_override_field(default_permissions)
                 ),
                 last_message_id=data.get('last_message_id', UNDEFINED),
+                category_id=data.get('parent', UNDEFINED),
                 voice=UNDEFINED if voice is None else self.parse_voice_information(voice),
             ),
             before=None,
@@ -3842,6 +3843,7 @@ class Parser:
             if 'role_permissions' in payload
             else {},
             nsfw=payload.get('nsfw', False),
+            category_id=payload.get('parent'),
             voice=None if voice is None else self.parse_voice_information(voice),
         )
 
@@ -4320,6 +4322,7 @@ class Parser:
             }
             if 'role_permissions' in payload
             else {},
+            category_id=payload.get('parent'),
             nsfw=payload.get('nsfw', False),
         )
 

@@ -160,8 +160,12 @@ class Category:
         The channel's IDs inside this category.
     default_permissions: Optional[:class:`PermissionOverride`]
         The default permissions in this category.
+
+        .. versionadded:: 1.2
     role_permissions: Optional[Dict[:class:`str`, :class:`PermissionOverride`]]
         The role permissions in this category.
+
+        .. versionadded:: 1.2
 
     Attributes
     ----------
@@ -171,8 +175,12 @@ class Category:
         The category's title.
     default_permissions: Optional[:class:`PermissionOverride`]
         The default permissions in this category.
+
+        .. versionadded:: 1.2
     role_permissions: Dict[:class:`str`, :class:`PermissionOverride`]
         The role permissions in this category.
+
+        .. versionadded:: 1.2
     channels: List[:class:`str`]
         The channel's IDs inside this category.
     """

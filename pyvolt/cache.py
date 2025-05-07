@@ -188,6 +188,7 @@ class CacheContextType(Enum):
     user_through_group_channel_owner = 'GroupChannel.owner: User'
     read_state_through_group_channel_read_state = 'GroupChannel.read_state: ReadState'
     user_through_group_channel_recipients = 'GroupChannel.recipients: List[User]'
+    server_through_server_channel_category = 'BaseServerChannel.category: Optional[Category]'
     member_through_server_channel_me = 'BaseServerChannel.me: Member'
     server_through_server_channel_server = 'BaseServerChannel.server: Server'
     message_through_text_channel_last_message = 'TextChannel.last_message: Optional[Message]'
@@ -1061,6 +1062,11 @@ class UserThroughGroupChannelRecipientsCacheContext(GroupChannelCacheContext):
 
 
 @define(slots=True)
+class ServerThroughServerChannelCategoryCacheContext(BaseServerChannelCacheContext):
+    """Represents a cache context that involves an :class:`BaseServerChannel`, wishing to retrieve category the channel is in."""
+
+
+@define(slots=True)
 class MemberThroughServerChannelMeCacheContext(BaseServerChannelCacheContext):
     """Represents a cache context that involves an :class:`BaseServerChannel`, wishing to retrieve own member for the server the channel belongs to."""
 
@@ -1742,6 +1748,9 @@ _READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE: typing.Final[UndefinedCacheContext
 _USER_THROUGH_GROUP_CHANNEL_RECIPIENTS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_group_channel_recipients,
 )
+_SERVER_THROUGH_SERVER_CHANNEL_CATEGORY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_server_channel_category,
+)
 _MEMBER_THROUGH_SERVER_CHANNEL_ME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_through_server_channel_me,
 )
@@ -2155,6 +2164,7 @@ ProvideCacheContextIn = typing.Literal[
     'GroupChannel.owner',
     'GroupChannel.read_state',
     'GroupChannel.recipients',
+    'BaseServerChannel.category',
     'BaseServerChannel.me',
     'BaseServerChannel.server',
     'TextChannel.read_state',
@@ -3732,6 +3742,7 @@ __all__ = (
     'ReadStateThroughGroupChannelReadStateCacheContext',
     'UserThroughGroupChannelOwnerCacheContext',
     'UserThroughGroupChannelRecipientsCacheContext',
+    'ServerThroughServerChannelCategoryCacheContext',
     'MemberThroughServerChannelMeCacheContext',
     'ServerThroughServerChannelServerCacheContext',
     'MessageThroughTextChannelLastMessageCacheContext',
@@ -3894,6 +3905,7 @@ __all__ = (
     '_USER_THROUGH_GROUP_CHANNEL_OWNER',
     '_READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE',
     '_USER_THROUGH_GROUP_CHANNEL_RECIPIENTS',
+    '_SERVER_THROUGH_SERVER_CHANNEL_CATEGORY',
     '_MEMBER_THROUGH_SERVER_CHANNEL_ME',
     '_SERVER_THROUGH_SERVER_CHANNEL_SERVER',
     '_MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE',
