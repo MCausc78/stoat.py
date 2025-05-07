@@ -2271,20 +2271,29 @@ class BaseServerChannel(BaseChannel):
         if with_ownership and server.owner_id == target.id:
             return Permissions.all()
 
+        category = self.get_category()
+        if safe and category is None and self.category_id is not None:
+            raise NoData(what=self.category_id, type='BaseServerChannel.category')
+
         from .server import sort_member_roles, calculate_server_permissions
         from .user import User
 
         if isinstance(target, User):
             initial_permissions = server.default_permissions
+            if category is not None:
+                override = category.default_permissions
+                if override is not None:
+                    initial_permissions |= override.allow
+                    initial_permissions &= ~override.deny
 
             # No point in providing roles since user doesn't have roles.
-            return calculate_server_channel_permissions(
-                server.default_permissions, [], default_permissions=self.default_permissions, role_permissions={}
-            )
 
-        category = self.get_category()
-        if safe and category is None and self.category_id is not None:
-            raise NoData(what=self.category_id, type='BaseServerChannel.category')
+            return calculate_server_channel_permissions(
+                initial_permissions,
+                [],
+                default_permissions=self.default_permissions,
+                role_permissions={},
+            )
 
         initial_permissions = calculate_server_permissions(
             [],
