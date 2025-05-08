@@ -592,7 +592,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Edits the user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to target user.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to target user.
 
         Parameters
         ----------
@@ -1713,7 +1713,7 @@ class OwnUser(User):
 
         Edits the current user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
 
         Parameters
         ----------

@@ -1245,7 +1245,7 @@ class HTTPClient:
 
         Deletes a bot.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1301,7 +1301,7 @@ class HTTPClient:
 
         Edits the bot.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
 
         Parameters
         ----------
@@ -7148,7 +7148,7 @@ class HTTPClient:
 
         Change your username.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -7274,7 +7274,7 @@ class HTTPClient:
 
         Edits the current user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
 
         Parameters
         ----------
@@ -7361,7 +7361,7 @@ class HTTPClient:
 
         Edits an user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to target user.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to target user.
 
         Parameters
         ----------
