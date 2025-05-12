@@ -653,7 +653,7 @@ def get(iterable: Iterable[T], compiled: bool = False, /, **kwargs: typing.Any) 
 
     Raises
     ------
-    AttributeError
+    :class:`AttributeError`
         If at least single item in iterable did not contain specified keyword argument as attribute.
 
     Returns
