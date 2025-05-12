@@ -513,6 +513,8 @@ async def afind(predicate: Callable[[T], bool], iterable: AsyncIterable[T]) -> t
     """|coro|
 
     Similar to :func:`find`, except for async iterables.
+
+    .. versionadded:: 1.2
     """
 
     async for item in iterable:
@@ -557,6 +559,8 @@ async def aget(iterable: AsyncIterable[T], compiled: bool = False, /, **kwargs: 
     """|coro|
 
     Similar to :func:`get`, except for async iterables.
+
+    .. versionadded:: 1.2
     """
 
     if not kwargs:
