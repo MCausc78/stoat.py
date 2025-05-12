@@ -57,7 +57,7 @@ class BaseBot(Base):
 
         Deletes the bot.
 
-        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -111,7 +111,7 @@ class BaseBot(Base):
 
         Edits the bot.
 
-        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
+        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
 
         Parameters
         ----------
