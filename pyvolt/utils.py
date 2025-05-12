@@ -35,6 +35,7 @@ from functools import partial
 import inspect
 import json
 import logging
+from operator import attrgetter
 import os
 import re
 import sys
@@ -49,7 +50,7 @@ else:
     HAS_ORJSON = True
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, Iterable, Sequence
+    from collections.abc import AsyncIterable, Awaitable, Callable, Iterable, Sequence
 
     from .adapter import HTTPResponse
 
@@ -498,6 +499,211 @@ class _MissingSentinel:
 
 MISSING: typing.Any = _MissingSentinel()
 
+_get_functions = {}
+
+
+async def afind(predicate: Callable[[T], bool], iterable: AsyncIterable[T]) -> typing.Optional[T]:
+    # I wish I could type this function in way, so:
+    # ```py
+    # # Pretend that function just wraps normal iterables to asynchronous ones
+    # xs: AsyncIterable[typing.Union[int, str, float]] = asynchronize_iterable([1, '2', 3.14])
+    # x = await afind(lambda i: isinstance(i, int), xs)
+    # typing.reveal_type(x)  # gives int
+    # ```
+    """|coro|
+
+    Similar to :func:`find`, except for async iterables.
+    """
+
+    async for item in iterable:
+        if predicate(item):
+            return item
+
+    return None
+
+
+def find(predicate: Callable[[T], bool], iterable: Iterable[T]) -> typing.Optional[T]:
+    # I wish I could type this function in way, so:
+    # ```py
+    # xs: list[typing.Union[int, str, float]] = [1, '2', 3.14]
+    # x = find(lambda i: isinstance(i, int), xs)
+    # typing.reveal_type(x)  # gives int
+    # ```
+    """Return a first item that matches the provided predicate.
+
+    .. versionadded:: 1.2
+
+    Parameters
+    ----------
+    predicate: Callable[[T], :class:`bool`]
+        The predicate to check items with.
+    iterable: Iterable[T]
+        The iterable to search in.
+
+    Returns
+    -------
+    Optional[T]
+        First item that matched provided predicate, or ``None`` if none of items didn't match.
+    """
+
+    for item in iterable:
+        if predicate(item):
+            return item
+
+    return None
+
+
+async def aget(iterable: AsyncIterable[T], compiled: bool = False, /, **kwargs: typing.Any) -> typing.Optional[T]:
+    """|coro|
+
+    Similar to :func:`get`, except for async iterables.
+    """
+
+    if not kwargs:
+        # Fast path
+        async for item in iterable:
+            return item
+
+        return None
+
+    if compiled:
+        key = tuple(sorted(kwargs))
+
+        try:
+            predicate = _get_functions[key]
+        except KeyError:
+            # Generate a predicate and cache it
+            predicate = eval(
+                'lambda item, /, {}: {}'.format(
+                    ', '.join(key),
+                    ' and '.join(f"item.{a.replace('__', '.')} == {a}" for a in key),
+                )
+            )
+            _get_functions[key] = predicate
+
+        async for item in iterable:
+            if predicate(item, **kwargs):
+                return item
+
+        return None
+
+    if len(kwargs) == 1:
+        k, v = list(kwargs.items())[0]
+
+        async for item in iterable:
+            if getattr(item, k) == v:
+                return item
+
+        return None
+
+    converted = [(attrgetter(k.replace('__', '.')), v) for k, v in kwargs.items()]
+
+    async for item in iterable:
+        if all(predicate(item) for predicate, v in converted):
+            return item
+
+    return None
+
+
+def get(iterable: Iterable[T], compiled: bool = False, /, **kwargs: typing.Any) -> typing.Optional[T]:
+    """Return a first item whose attributes match provided keyword arguments.
+
+    When multiple keyword arguments are provided, they are checked using AND logic,
+    not OR.
+
+    .. versionadded:: 1.2
+
+    Examples
+    --------
+
+    Find a text channel named "General" in server and send message in it: ::
+
+        from pyvolt.utils import get
+
+        channel = get(server.channels, name='General')
+        await channel.send('Hello, general chat.')
+
+    Same as above, but only in servers named "Test": ::
+
+        from pyvolt import ChannelType
+        from pyvolt.utils import get
+
+        channel = get(
+            client.channels.values(),
+            type=ChannelType.text,
+            name='General',
+            server__name='Test',
+        )
+        await channel.send('Hello, general chat.')
+
+    Parameters
+    ----------
+    iterable: Iterable[T]
+        The iterable to search in.
+    compiled: :class:`bool`
+        Whether to compile pattern.
+
+        On first pass, this might be slow. However, next passes will be faster.
+    \\*\\*kwargs
+        The keyword arguments.
+
+    Raises
+    ------
+    AttributeError
+        If at least single item in iterable did not contain specified keyword argument as attribute.
+
+    Returns
+    -------
+    Optional[T]
+        First item that matched provided keyword arguments, or ``None`` if none of items didn't match.
+    """
+
+    if not kwargs:
+        # Fast path
+        for item in iterable:
+            return item
+
+        return None
+
+    if compiled:
+        key = tuple(sorted(kwargs))
+
+        try:
+            predicate = _get_functions[key]
+        except KeyError:
+            # Generate a predicate and cache it
+            predicate = eval(
+                'lambda item, /, {}: {}'.format(
+                    ', '.join(key),
+                    ' and '.join(f"item.{a.replace('__', '.')} == {a}" for a in key),
+                )
+            )
+            _get_functions[key] = predicate
+
+        for item in iterable:
+            if predicate(item, **kwargs):
+                return item
+
+        return None
+
+    if len(kwargs) == 1:
+        k, v = list(kwargs.items())[0]
+
+        for item in iterable:
+            if getattr(item, k) == v:
+                return item
+
+        return None
+
+    converted = [(attrgetter(k.replace('__', '.')), v) for k, v in kwargs.items()]
+
+    for item in iterable:
+        if all(predicate(item) for predicate, v in converted):
+            return item
+
+    return None
+
+
 __all__ = (
     'to_json',
     'from_json',
@@ -532,4 +738,8 @@ __all__ = (
     'human_join',
     '_MissingSentinel',
     'MISSING',
+    'afind',
+    'find',
+    'aget',
+    'get',
 )

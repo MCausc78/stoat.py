@@ -192,6 +192,14 @@ Utility Functions
 
 .. autofunction:: sort_member_roles
 
+.. autofunction:: afind
+
+.. autofunction:: find
+
+.. autofunction:: aget
+
+.. autofunction:: get
+
 Abstract Base Classes
 ---------------------
 
