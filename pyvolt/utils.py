@@ -578,9 +578,9 @@ async def aget(iterable: AsyncIterable[T], compiled: bool = False, /, **kwargs: 
         except KeyError:
             # Generate a predicate and cache it
             predicate = eval(
-                'lambda item, /, {}: {}'.format(
+                'lambda _pyvolt_utils_get_item, /, {}: {}'.format(
                     ', '.join(key),
-                    ' and '.join(f"item.{a.replace('__', '.')} == {a}" for a in key),
+                    ' and '.join(f"_pyvolt_utils_get_item.{a.replace('__', '.')} == {a}" for a in key),
                 )
             )
             _get_functions[key] = predicate
@@ -677,9 +677,9 @@ def get(iterable: Iterable[T], compiled: bool = False, /, **kwargs: typing.Any) 
         except KeyError:
             # Generate a predicate and cache it
             predicate = eval(
-                'lambda item, /, {}: {}'.format(
+                'lambda _pyvolt_utils_get_item, /, {}: {}'.format(
                     ', '.join(key),
-                    ' and '.join(f"item.{a.replace('__', '.')} == {a}" for a in key),
+                    ' and '.join(f"_pyvolt_utils_get_item.{a.replace('__', '.')} == {a}" for a in key),
                 )
             )
             _get_functions[key] = predicate

@@ -3268,11 +3268,34 @@ class BaseMember(Connectable, Messageable):
         if self is other:
             return True
 
+        return isinstance(other, (BaseMember, BaseUser)) and self.id == other.id
+
+    def eq(self, other: object, /) -> bool:
+        """:class:`bool`: Checks whether two members are equal.
+
+        .. versionadded:: 1.2
+        """
+        if self is other:
+            return True
+
         return (
             (isinstance(other, BaseMember) and self.server_id == other.server_id) or isinstance(other, BaseUser)
         ) and self.id == other.id
 
     def __ne__(self, other: object, /) -> bool:
+        if self is other:
+            return False
+
+        if isinstance(other, (BaseMember, BaseUser)):
+            return self.id != other.id
+
+        return True
+
+    def ne(self, other: object, /) -> bool:
+        """:class:`bool`: Checks whether two members are not equal.
+
+        .. versionadded:: 1.2
+        """
         if self is other:
             return False
 
