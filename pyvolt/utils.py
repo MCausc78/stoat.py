@@ -645,9 +645,9 @@ def get(iterable: Iterable[T], compiled: bool = False, /, **kwargs: typing.Any) 
     iterable: Iterable[T]
         The iterable to search in.
     compiled: :class:`bool`
-        Whether to compile pattern.
+        Whether to create a predicate for searching on fly.
 
-        On first pass, this might be slow. However, next passes will be faster.
+        This generally can improve performance, but on first pass, this might be slow. However, next passes will be faster.
     \\*\\*kwargs
         The keyword arguments.
 
