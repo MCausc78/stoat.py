@@ -1563,7 +1563,7 @@ class Client:
 
         Ping Pong: ::
 
-            @client.listen()
+            @client.on()
             async def on_message_create(event: pyvolt.MessageCreateEvent):
                 message = event.message
                 if message.content == '!ping':

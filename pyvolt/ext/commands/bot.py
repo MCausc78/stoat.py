@@ -124,8 +124,6 @@ class Bot(Client, GroupMixin[None]):
         The command's prefix.
     description: Optional[:class:`str`]
         The bot's description.
-    owner_id: Optional[:class:`str`]
-        The bot owner's ID.
     owner_ids: Set[:class:`str`]
         The bot owner's IDs.
     self_bot: :class:`bool`
@@ -189,8 +187,15 @@ class Bot(Client, GroupMixin[None]):
             command_prefix
         )
         self.description: str = cleandoc(description) if description else ''
-        self.owner_id: typing.Optional[str] = options.get('owner_id')
-        self.owner_ids: set[str] = options.pop('owner_ids', set())
+
+        self.owner_ids: set[str]
+        if 'owner_ids' in options:
+            self.owner_ids = options.pop('owner_ids')
+            if 'owner_id' in options:
+                self.owner_ids.add(options.pop('owner_id'))
+        elif 'owner_id' in options:
+            self.owner_ids = {options.pop('owner_id')}
+
         self.skip_check: utils.MaybeAwaitableFunc[[Context[Self]], bool] = skip_check
         self.strip_after_prefix: bool = strip_after_prefix
 

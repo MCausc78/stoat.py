@@ -154,6 +154,10 @@ class State:
         # assert self._me, "State has no current user attached"
         return self._me
 
+    @me.setter
+    def me(self, value: OwnUser, /) -> None:
+        self._me = value
+
     @property
     def my_id(self) -> str:
         """:class:`str`: Returns the currently logged in user's ID, or empty string if unavailable."""
