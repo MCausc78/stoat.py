@@ -571,7 +571,7 @@ async def aget(iterable: AsyncIterable[T], compiled: bool = False, /, **kwargs: 
         return None
 
     if compiled:
-        key = tuple(sorted(kwargs))
+        key = tuple(kwargs)
 
         try:
             predicate = _get_functions[key]
@@ -670,7 +670,7 @@ def get(iterable: Iterable[T], compiled: bool = False, /, **kwargs: typing.Any) 
         return None
 
     if compiled:
-        key = tuple(sorted(kwargs))
+        key = tuple(kwargs)
 
         try:
             predicate = _get_functions[key]
