@@ -120,6 +120,8 @@ class Bot(Client, GroupMixin[None]):
 
     Parameters
     ----------
+    case_insensitive: :class:`bool`
+        Whether the commands should be case insensitive. Defaults to ``False``.
     command_prefix: Union[MaybeAwaitableFunc[[:class:`.Context`], List[:class:`str`]], List[:class:`str`], :class:`str`]
         The command's prefix.
     description: Optional[:class:`str`]
@@ -199,7 +201,14 @@ class Bot(Client, GroupMixin[None]):
         self.skip_check: utils.MaybeAwaitableFunc[[Context[Self]], bool] = skip_check
         self.strip_after_prefix: bool = strip_after_prefix
 
-        super().__init__(**options)
+        try:
+            case_insensitive = options.pop('case_insensitive')
+        except KeyError:
+            GroupMixin.__init__(self)
+        else:
+            GroupMixin.__init__(self, case_insensitive=case_insensitive)
+
+        Client.__init__(self, **options)
 
     @utils.copy_doc(Client.close)
     async def close(self, *, http: bool = True, cleanup_websocket: bool = True) -> None:
@@ -258,7 +267,7 @@ class Bot(Client, GroupMixin[None]):
         :exc:`.CommandError`.
 
         Example
-        ---------
+        -------
 
         .. code-block:: python3
 
@@ -348,7 +357,7 @@ class Bot(Client, GroupMixin[None]):
 
             @bot.check_once
             def whitelist(ctx):
-                return ctx.message.author.id in my_whitelist
+                return ctx.message.author_id in my_whitelist
 
         """
         self.add_check(func, call_once=True)
@@ -454,12 +463,12 @@ class Bot(Client, GroupMixin[None]):
             propagated to the caller.
 
         Parameters
-        -----------
+        ----------
         gear: :class:`.Gear`
             The gear to register to the bot.
 
         Raises
-        -------
+        ------
         :class:`TypeError`
             The gear does not inherit from :class:`.Gear`.
         :class:`.CommandError`
