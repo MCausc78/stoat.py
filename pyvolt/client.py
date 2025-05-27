@@ -989,7 +989,12 @@ class TemporarySubscription(typing.Generic[EventT]):
                 can = await can
 
             if can:
-                self.future.set_result(arg)
+                try:
+                    self.future.set_result(arg)
+                except asyncio.InvalidStateError:
+                    # Sometimes self.future is already done and we somehow get here. That might
+                    # be just a race condition, but I am not sure yet. For now, ignore the error and return True.
+                    pass
             return can
         except Exception as exc:
             try:
