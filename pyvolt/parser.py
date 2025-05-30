@@ -162,6 +162,7 @@ from .instance import (
     InstanceFeaturesConfig,
     InstanceBuild,
     Instance,
+    PolicyChange,
 )
 from .invite import (
     ServerPublicInvite,
@@ -2903,6 +2904,27 @@ class Parser:
         ret.raw_deny = payload['d']
         return ret
 
+    def parse_policy_change(self, payload: raw.PolicyChange, /) -> PolicyChange:
+        """Parses a policy change object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The policy change payload to parse.
+
+        Returns
+        -------
+        :class:`PolicyChange`
+            The parsed policy change object.
+        """
+
+        return PolicyChange(
+            created_at=_parse_dt(payload['created_time']),
+            effective_at=_parse_dt(payload['effective_time']),
+            description=payload['description'],
+            url=payload['url'],
+        )
+
     def parse_public_bot(self, payload: raw.PublicBot, /) -> PublicBot:
         """Parses a public bot object.
 
@@ -2976,6 +2998,7 @@ class Parser:
             user_settings = self.parse_user_settings({}, False)
         read_states = list(map(self.parse_channel_unread, payload.get('channel_unreads', ())))
         voice_states = list(map(self.parse_channel_voice_state, payload.get('voice_states', ())))
+        policy_changes = list(map(self.parse_policy_change, payload.get('policy_changes', ())))
 
         return ReadyEvent(
             shard=shard,
@@ -2988,6 +3011,7 @@ class Parser:
             user_settings=user_settings,
             read_states=read_states,
             voice_states=voice_states,
+            policy_changes=policy_changes,
         )
 
     def parse_rejected_report(self, payload: raw.RejectedReport, /) -> RejectedReport:

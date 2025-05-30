@@ -24,6 +24,7 @@ from .channels import (
 )
 from .emojis import ServerEmoji
 from .messages import Message, PartialMessage, AppendMessage, FieldsMessage
+from .policy_changes import PolicyChange
 from .safety_reports import CreatedReport
 from .server_members import (
     Member,
@@ -67,6 +68,7 @@ class ClientReadyEvent(typing.TypedDict):
     # me: User
     user_settings: typing_extensions.NotRequired[UserSettings]
     channel_unreads: typing_extensions.NotRequired[list[ChannelUnread]]
+    policy_changes: list[PolicyChange]
 
 
 Ping = typing.Union[list[int], int]

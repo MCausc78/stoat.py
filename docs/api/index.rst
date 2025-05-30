@@ -328,6 +328,14 @@ Instance
 .. autoclass:: Instance
     :members:
 
+PolicyChange
+~~~~~~~~~~~~
+
+.. attributetable:: PolicyChange
+
+.. autoclass:: PolicyChange
+    :members:
+
 .. _revolt-api-exceptions:
 
 Exceptions

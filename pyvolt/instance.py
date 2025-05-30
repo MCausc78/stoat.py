@@ -193,6 +193,26 @@ class Instance:
     """:class:`.InstanceBuild`: The information of build of this instance."""
 
 
+@define(slots=True)
+class PolicyChange:
+    """Represents a platform policy change.
+
+    To acknowledge the policy changes, call :meth:`HTTPClient.acknowledge_policy_changes`.
+    """
+
+    created_at: datetime = field(repr=True, kw_only=True)
+    """:class:`~datetime.datetime`: When the policy change was created."""
+
+    effective_at: datetime = field(repr=True, kw_only=True)
+    """:class:`~datetime.datetime`: When the policy change will take effect."""
+
+    description: str = field(repr=True, kw_only=True)
+    """:class:`str`: The message shown to users."""
+
+    url: str = field(repr=True, kw_only=True)
+    """:class:`str`: The URL with details about policy changes."""
+
+
 __all__ = (
     'InstanceCaptchaFeature',
     'InstanceGenericFeature',
@@ -203,4 +223,5 @@ __all__ = (
     'InstanceFeaturesConfig',
     'InstanceBuild',
     'Instance',
+    'PolicyChange',
 )

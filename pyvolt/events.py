@@ -72,6 +72,7 @@ if typing.TYPE_CHECKING:
     from .authentication import Session
     from .client import Client
     from .flags import UserFlags
+    from .instance import PolicyChange
     from .message import PartialMessage, MessageAppendData, Message
     from .safety_reports import CreatedReport
     from .settings import UserSettings
@@ -202,6 +203,15 @@ class ReadyEvent(ShardEvent):
 
     voice_states: list[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
     """List[:class:`.ChannelVoiceStateContainer`]: The voice states of the text/voice channels."""
+
+    policy_changes: list[PolicyChange] = field(repr=True, kw_only=True)
+    """List[:class:`PolicyChange`]: The pending policy changes that the user didn't acknowledge yet.
+
+    .. versionadded:: 1.2
+
+    .. note::
+        This attribute is unavailable on bot accounts.
+    """
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ReadyEventCacheContext] = field(
         default=Factory(

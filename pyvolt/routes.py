@@ -177,6 +177,9 @@ INVITES_INVITE_JOIN: typing.Final[Route] = Route(POST, '/invites/{invite_code}')
 ONBOARD_COMPLETE: typing.Final[Route] = Route(POST, '/onboard/complete')
 ONBOARD_HELLO: typing.Final[Route] = Route(GET, '/onboard/hello')
 
+# Policy control
+POLICY_ACKNOWLEDGE_POLICY_CHANGES: typing.Final[Route] = Route(POST, '/policy/acknowledge')
+
 # Web Push subscription control
 PUSH_SUBSCRIBE: typing.Final[Route] = Route(POST, '/push/subscribe')
 PUSH_UNSUBSCRIBE: typing.Final[Route] = Route(POST, '/push/unsubscribe')
@@ -325,6 +328,7 @@ __all__ = (
     'INVITES_INVITE_JOIN',
     'ONBOARD_COMPLETE',
     'ONBOARD_HELLO',
+    'POLICY_ACKNOWLEDGE_POLICY_CHANGES',
     'PUSH_SUBSCRIBE',
     'PUSH_UNSUBSCRIBE',
     'SAFETY_REPORT_CONTENT',

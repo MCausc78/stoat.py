@@ -4551,6 +4551,49 @@ class HTTPClient:
         d: raw.DataHello = await self.request(routes.ONBOARD_HELLO.compile(), http_overrides=http_overrides)
         return d['onboarding']
 
+    # Policy control
+    async def acknowledge_policy_changes(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
+        """|coro|
+
+        Acknowledges pending policy changes.
+
+        .. note::
+            This is not supposed to be used by bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+
+        await self.request(
+            routes.POLICY_ACKNOWLEDGE_POLICY_CHANGES.compile(),
+            http_overrides=http_overrides,
+        )
+
     # Web Push control
     async def push_subscribe(
         self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, endpoint: str, p256dh: str, auth: str
