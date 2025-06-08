@@ -925,7 +925,9 @@ class BaseServer(Base):
         """
         return await self.state.http.ban(self.id, user, http_overrides=http_overrides, reason=reason)
 
-    async def bulk_edit_role_ranks(self, ranks: list[ULIDOr[BaseRole]]) -> Server:
+    async def bulk_edit_role_ranks(
+        self, ranks: list[ULIDOr[BaseRole]], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> Server:
         """|coro|
 
         Edits ranks of all roles in bulk.
@@ -955,10 +957,12 @@ class BaseServer(Base):
             - Owner has rank=0
 
             Must contain all roles.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         -------
-        :class:`HTTPExcetion`
+        :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
             +----------------------+---------------------------------------------------------------+
@@ -1006,7 +1010,7 @@ class BaseServer(Base):
         :class:`Server`
             The server with updated role ranks.
         """
-        return await self.state.http.bulk_edit_role_ranks(self.id, ranks)
+        return await self.state.http.bulk_edit_role_ranks(self.id, ranks, http_overrides=http_overrides)
 
     @typing.overload
     async def create_channel(
