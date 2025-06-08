@@ -161,3 +161,7 @@ class DataSetServerRolePermission(typing.TypedDict):
 
 class OptionsServerDelete(typing.TypedDict):
     leave_silently: typing_extensions.NotRequired[Bool]
+
+
+class DataEditRoleRanks(typing.TypedDict):
+    ranks: list[str]

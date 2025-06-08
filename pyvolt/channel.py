@@ -1677,21 +1677,11 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         if not me:
             raise TypeError('Missing own user')
 
-        from .server import Member
-        from .user import calculate_user_permissions
-
-        if isinstance(target, Member):
-            target = target.user
-
-        return calculate_dm_channel_permissions(
-            calculate_user_permissions(
-                target.id,
-                target.relationship,
-                target.bot,
-                perspective_id=me.id,
-                perspective_bot=me.bot,
-                perspective_privileged=me.privileged,
-            )
+        return calculate_group_channel_permissions(
+            target.id,
+            group_owner_id=self.owner_id,
+            group_permissions=self.permissions,
+            group_recipients=self.recipient_ids,
         )
 
     def to_dict(self) -> raw.GroupChannel:

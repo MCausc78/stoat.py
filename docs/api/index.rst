@@ -192,6 +192,14 @@ Utility Functions
 
 .. autofunction:: sort_member_roles
 
+.. autofunction:: afind
+
+.. autofunction:: find
+
+.. autofunction:: aget
+
+.. autofunction:: get
+
 Abstract Base Classes
 ---------------------
 
@@ -318,6 +326,14 @@ Instance
 .. attributetable:: Instance
 
 .. autoclass:: Instance
+    :members:
+
+PolicyChange
+~~~~~~~~~~~~
+
+.. attributetable:: PolicyChange
+
+.. autoclass:: PolicyChange
     :members:
 
 .. _revolt-api-exceptions:

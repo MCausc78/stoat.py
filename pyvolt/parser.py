@@ -132,6 +132,7 @@ from .events import (
     ServerMemberRemoveEvent,
     RawServerRoleUpdateEvent,
     ServerRoleDeleteEvent,
+    ServerRoleRanksUpdateEvent,
     ReportCreateEvent,
     UserUpdateEvent,
     UserRelationshipUpdateEvent,
@@ -162,6 +163,7 @@ from .instance import (
     InstanceFeaturesConfig,
     InstanceBuild,
     Instance,
+    PolicyChange,
 )
 from .invite import (
     ServerPublicInvite,
@@ -2904,6 +2906,27 @@ class Parser:
         ret.raw_deny = payload['d']
         return ret
 
+    def parse_policy_change(self, payload: raw.PolicyChange, /) -> PolicyChange:
+        """Parses a policy change object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The policy change payload to parse.
+
+        Returns
+        -------
+        :class:`PolicyChange`
+            The parsed policy change object.
+        """
+
+        return PolicyChange(
+            created_at=_parse_dt(payload['created_time']),
+            effective_at=_parse_dt(payload['effective_time']),
+            description=payload['description'],
+            url=payload['url'],
+        )
+
     def parse_public_bot(self, payload: raw.PublicBot, /) -> PublicBot:
         """Parses a public bot object.
 
@@ -2977,6 +3000,7 @@ class Parser:
             user_settings = self.parse_user_settings({}, False)
         read_states = list(map(self.parse_channel_unread, payload.get('channel_unreads', ())))
         voice_states = list(map(self.parse_channel_voice_state, payload.get('voice_states', ())))
+        policy_changes = list(map(self.parse_policy_change, payload.get('policy_changes', ())))
 
         return ReadyEvent(
             shard=shard,
@@ -2989,6 +3013,7 @@ class Parser:
             user_settings=user_settings,
             read_states=read_states,
             voice_states=voice_states,
+            policy_changes=policy_changes,
         )
 
     def parse_rejected_report(self, payload: raw.RejectedReport, /) -> RejectedReport:
@@ -3606,6 +3631,30 @@ class Parser:
             role_id=payload['role_id'],
             server=None,
             role=None,
+        )
+
+    def parse_server_role_ranks_update_event(
+        self, shard: Shard, payload: raw.ClientServerRoleRanksUpdateEvent, /
+    ) -> ServerRoleRanksUpdateEvent:
+        """Parses a ServerRoleRanksUpdate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerRoleRanksUpdateEvent`
+            The parsed server role ranks update event object.
+        """
+        return ServerRoleRanksUpdateEvent(
+            shard=shard,
+            server_id=payload['id'],
+            role_ids=payload['ranks'],
+            server=None,
         )
 
     def parse_server_role_update_event(

@@ -91,9 +91,9 @@ class BaseInvite:
 
         Accepts an invite.
 
-        Fires either :class:`PrivateChannelCreateEvent` or :class:`ServerCreateEvent` for the current user,
-        and fires either :class:`GroupRecipientAddEvent` or :class:`ServerMemberJoinEvent`, and :class:`MessageCreateEvent`,
-        both for all group recipients/server members.
+        Fires either :class:`PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for the current user,
+        and fires either :class:`GroupRecipientAddEvent` or :class:`ServerMemberJoinEvent`,
+        and :class:`MessageCreateEvent` (optional in server context), both for all group recipients/server members.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -458,7 +458,7 @@ class ServerPublicInvite(BaseInvite):
 
         Accepts an invite.
 
-        Fires :class:`ServerCreateEvent` for the current user, :class:`ServerMemberJoinEvent` and :class:`MessageCreateEvent`,
+        Fires :class:`ServerCreateEvent` for the current user, :class:`ServerMemberJoinEvent` and optionally :class:`MessageCreateEvent`,
         both for all server members.
 
         .. note::
@@ -1083,7 +1083,7 @@ class ServerInvite(PrivateBaseInvite):
 
         Accepts an invite.
 
-        Fires :class:`ServerCreateEvent` for the current user, :class:`ServerMemberJoinEvent` and :class:`MessageCreateEvent`,
+        Fires :class:`ServerCreateEvent` for the current user, :class:`ServerMemberJoinEvent` and optionally :class:`MessageCreateEvent`,
         both for all server members.
 
         .. note::

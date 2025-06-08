@@ -122,6 +122,7 @@ if typing.TYPE_CHECKING:
         ServerMemberRemoveEvent,
         ServerMemberUpdateEvent,
         ServerRoleDeleteEvent,
+        ServerRoleRanksUpdateEvent,
         ServerUpdateEvent,
         SessionCreateEvent,
         SessionDeleteAllEvent,
@@ -494,6 +495,19 @@ class ClientEventHandler(EventHandler):
             The event payload.
         """
         event = self.state.parser.parse_server_role_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_server_role_ranks_update(self, shard: Shard, payload: raw.ClientServerRoleRanksUpdateEvent, /) -> None:
+        """Handle ``ServerRoleRanksUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_server_role_ranks_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_user_update(self, shard: Shard, payload: raw.ClientUserUpdateEvent, /) -> None:
@@ -989,7 +1003,12 @@ class TemporarySubscription(typing.Generic[EventT]):
                 can = await can
 
             if can:
-                self.future.set_result(arg)
+                try:
+                    self.future.set_result(arg)
+                except asyncio.InvalidStateError:
+                    # Sometimes self.future is already done and we somehow get here. That might
+                    # be just a race condition, but I am not sure yet. For now, ignore the error and return True.
+                    pass
             return can
         except Exception as exc:
             try:
@@ -1563,7 +1582,7 @@ class Client:
 
         Ping Pong: ::
 
-            @client.listen()
+            @client.on()
             async def on_message_create(event: pyvolt.MessageCreateEvent):
                 message = event.message
                 if message.content == '!ping':
@@ -2587,6 +2606,7 @@ class Client:
         def on_server_member_remove(self, arg: ServerMemberRemoveEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_server_member_update(self, arg: ServerMemberUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_server_role_delete(self, arg: ServerRoleDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_role_ranks_update(self, arg: ServerRoleRanksUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_server_update(self, arg: ServerUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_session_create(self, arg: SessionCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_session_delete_all(self, arg: SessionDeleteAllEvent, /) -> utils.MaybeAwaitable[None]: ...

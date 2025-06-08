@@ -321,6 +321,15 @@ ServerRoleDeleteEvent
     :members:
     :inherited-members:
 
+ServerRoleRanksUpdateEvent
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerRoleRanksUpdateEvent
+
+.. autoclass:: ServerRoleRanksUpdateEvent
+    :members:
+    :inherited-members:
+
 ReportCreateEvent
 ~~~~~~~~~~~~~~~~~
 

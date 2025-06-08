@@ -141,13 +141,10 @@ class HTTPException(PyvoltException):
         self.data: typing.Union[dict[str, typing.Any], str] = data
         self.status: int = response.status
 
-        errors = []
-
         if isinstance(data, str):
-            self.type: str = 'NonJSON'
+            self.type: str = ''
             self.retry_after: typing.Optional[float] = None
             self.error: typing.Optional[str] = data
-            errors.append(data)
             self.max: typing.Optional[int] = None
             self.permission: typing.Optional[str] = None
             self.operation: typing.Optional[str] = None
@@ -159,44 +156,16 @@ class HTTPException(PyvoltException):
             self.type = data.get('type', 'Unknown')
 
             self.retry_after = data.get('retry_after', 0)
-            if self.retry_after is not None:
-                errors.append(f'retry_after={self.retry_after}')
-
             self.error = data.get('error')
-            if self.error is not None:
-                errors.append(f'error={self.error}')
-
             self.max = data.get('max')
-            if self.max is not None:
-                errors.append(f'max={self.max}')
-
             self.permission = data.get('permission')
-            if self.permission is not None:
-                errors.append(f'permission={self.permission}')
-
             self.operation = data.get('operation')
-            if self.operation is not None:
-                errors.append(f'operation={self.operation}')
-
             self.collection = data.get('collection')
-            if self.collection is not None:
-                errors.append(f'collection={self.collection}')
-
             self.location = data.get('location')
-            if self.location is not None:
-                errors.append(f'location={self.location}')
-
             self.with_ = data.get('with')
-            if self.with_ is not None:
-                errors.append(f'with={self.with_}')
-
             self.feature = data.get('feature')
-            if self.feature is not None:
-                errors.append(f'feature={self.feature}')
 
-        super().__init__(
-            f'{self.type} (raw={data})' if len(errors) == 0 else f"{self.type}: {' '.join(errors)} (raw={data})\n"
-        )
+        super().__init__(f'{self.type} (raw={data})')
 
 
 class NoEffect(PyvoltException):

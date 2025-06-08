@@ -177,6 +177,9 @@ INVITES_INVITE_JOIN: typing.Final[Route] = Route(POST, '/invites/{invite_code}')
 ONBOARD_COMPLETE: typing.Final[Route] = Route(POST, '/onboard/complete')
 ONBOARD_HELLO: typing.Final[Route] = Route(GET, '/onboard/hello')
 
+# Policy control
+POLICY_ACKNOWLEDGE_POLICY_CHANGES: typing.Final[Route] = Route(POST, '/policy/acknowledge')
+
 # Web Push subscription control
 PUSH_SUBSCRIBE: typing.Final[Route] = Route(POST, '/push/subscribe')
 PUSH_UNSUBSCRIBE: typing.Final[Route] = Route(POST, '/push/unsubscribe')
@@ -210,6 +213,7 @@ SERVERS_PERMISSIONS_SET_DEFAULT: typing.Final[Route] = Route(PUT, '/servers/{ser
 SERVERS_ROLES_CREATE: typing.Final[Route] = Route(POST, '/servers/{server_id}/roles')
 SERVERS_ROLES_DELETE: typing.Final[Route] = Route(DELETE, '/servers/{server_id}/roles/{role_id}')
 SERVERS_ROLES_EDIT: typing.Final[Route] = Route(PATCH, '/servers/{server_id}/roles/{role_id}')
+SERVERS_ROLES_EDIT_POSITIONS: typing.Final[Route] = Route(PATCH, '/servers/{server_id}/roles/ranks')
 SERVERS_ROLES_FETCH: typing.Final[Route] = Route(GET, '/servers/{server_id}/roles/{role_id}')
 SERVERS_SERVER_ACK: typing.Final[Route] = Route(PUT, '/servers/{server_id}/ack')
 SERVERS_SERVER_CREATE: typing.Final[Route] = Route(POST, '/servers/create', ratelimit_key_template='servers/create')
@@ -334,6 +338,7 @@ __all__ = (
     'INVITES_INVITE_JOIN',
     'ONBOARD_COMPLETE',
     'ONBOARD_HELLO',
+    'POLICY_ACKNOWLEDGE_POLICY_CHANGES',
     'PUSH_SUBSCRIBE',
     'PUSH_UNSUBSCRIBE',
     'SAFETY_REPORT_CONTENT',
@@ -358,6 +363,7 @@ __all__ = (
     'SERVERS_ROLES_CREATE',
     'SERVERS_ROLES_DELETE',
     'SERVERS_ROLES_EDIT',
+    'SERVERS_ROLES_EDIT_POSITIONS',
     'SERVERS_ROLES_FETCH',
     'SERVERS_SERVER_ACK',
     'SERVERS_SERVER_CREATE',
