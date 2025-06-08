@@ -502,7 +502,7 @@ class ClientEventHandler(EventHandler):
 
         Parameters
         ----------
-        shard: :class:`.Shard`
+        shard: :class:`Shard`
             The shard the event arrived on.
         payload: Dict[:class:`str`, Any]
             The event payload.
