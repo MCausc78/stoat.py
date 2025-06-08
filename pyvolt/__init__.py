@@ -51,7 +51,6 @@ from .settings import *
 from .shard import *
 from .state import *
 from .user import *
-from .utils import *
 from .webhook import *
 
 import typing

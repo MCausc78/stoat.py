@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import pyvolt
 
 
@@ -8,15 +10,15 @@ client = pyvolt.Client(token='token', bot=not self_bot)
 
 
 @client.on(pyvolt.ReadyEvent)
-async def on_ready(_) -> None:
+async def on_ready(_, /) -> None:
     print('Logged on as', client.me)
 
 
 @client.on(pyvolt.MessageCreateEvent)
-async def on_message(event: pyvolt.MessageCreateEvent):
+async def on_message(event: pyvolt.MessageCreateEvent) -> None:
     message = event.message
 
-    # don't respond to ourselves/others
+    # Don't respond to ourselves/others
     if (message.author.relationship is pyvolt.RelationshipStatus.user) ^ self_bot:
         return
 

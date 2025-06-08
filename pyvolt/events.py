@@ -72,6 +72,7 @@ if typing.TYPE_CHECKING:
     from .authentication import Session
     from .client import Client
     from .flags import UserFlags
+    from .instance import PolicyChange
     from .message import PartialMessage, MessageAppendData, Message
     from .safety_reports import CreatedReport
     from .settings import UserSettings
@@ -202,6 +203,15 @@ class ReadyEvent(ShardEvent):
 
     voice_states: list[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
     """List[:class:`.ChannelVoiceStateContainer`]: The voice states of the text/voice channels."""
+
+    policy_changes: list[PolicyChange] = field(repr=True, kw_only=True)
+    """List[:class:`PolicyChange`]: The pending policy changes that the user didn't acknowledge yet.
+
+    .. versionadded:: 1.2
+
+    .. note::
+        This attribute is unavailable on bot accounts.
+    """
 
     cache_context: typing.Union[caching.UndefinedCacheContext, caching.ReadyEventCacheContext] = field(
         default=Factory(
@@ -795,10 +805,10 @@ class MessageCreateEvent(ShardEvent):
             else caching._MESSAGE_CREATE_EVENT
         )
 
-        author = self.message._author
+        author = self.message.internal_author
         if isinstance(author, Member):
-            if isinstance(author._user, User):
-                cache.store_user(author._user, ctx)
+            if isinstance(author.internal_user, User):
+                cache.store_user(author.internal_user, ctx)
             cache.store_server_member(author, ctx)
         elif isinstance(author, User):
             cache.store_user(author, ctx)
@@ -1322,7 +1332,7 @@ class ServerCreateEvent(ShardEvent):
                 Member(
                     state=state,
                     server_id=self.server.id,
-                    _user=state.me.id,
+                    internal_user=state.me.id,
                     joined_at=self.joined_at,
                     nick=None,
                     internal_server_avatar=None,
@@ -1873,6 +1883,74 @@ class ServerRoleDeleteEvent(ShardEvent):
 
             if removed:
                 cache.overwrite_server_members(self.server_id, dict(members), self.cache_context)
+
+        return True
+
+
+@define(slots=True)
+class ServerRoleRanksUpdateEvent(ShardEvent):
+    """Dispatched when the role got deleted from server.
+
+    This inherits from :class:`ShardEvent`.
+    """
+
+    event_name: typing.ClassVar[typing.Literal['server_role_ranks_update']] = 'server_role_ranks_update'
+
+    server_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The server's ID role ranks were updated in."""
+
+    role_ids: list[str] = field(repr=True, kw_only=True)
+    """List[:class:`str`]: The role's IDs.
+    
+    See ``ranks`` parameter on :meth:`HTTPClient.bulk_edit_role_ranks` for details.
+    """
+
+    server: typing.Optional[Server] = field(repr=True, kw_only=True)
+    """Optional[:class:`Server`]: The server role ranks were updated in, if available."""
+
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.ServerRoleRanksUpdateEventCacheContext] = field(
+        default=Factory(
+            lambda self: _cast(
+                'typing.Any',
+                caching.ServerRoleRanksUpdateEventCacheContext(
+                    type=caching.CacheContextType.server_role_ranks_update_event,
+                    event=self,
+                )
+                if self.shard.state.provide_cache_context('ServerRoleRanksUpdateEvent')
+                else caching._SERVER_ROLE_RANKS_UPDATE_EVENT,
+            ),
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`UndefinedCacheContext`, :class:`ServerRoleRanksUpdateEventCacheContext`]: The cache context used."""
+
+    def before_dispatch(self) -> None:
+        cache = self.shard.state.cache
+        if cache is None:
+            return
+
+        self.server = cache.get_server(self.server_id, self.cache_context)
+
+    def process(self) -> bool:
+        cache = self.shard.state.cache
+
+        if cache is None:
+            return False
+
+        if self.server is not None:
+            roles = self.server.roles
+
+            for rank, role_id in enumerate(self.role_ids):
+                try:
+                    roles[role_id].rank = rank
+                except KeyError:
+                    pass
+
+            cache.store_server(self.server, self.cache_context)
 
         return True
 
@@ -2613,6 +2691,7 @@ __all__ = (
     'ServerMemberUpdateEvent',
     'ServerMemberRemoveEvent',
     'RawServerRoleUpdateEvent',
+    'ServerRoleRanksUpdateEvent',
     'ServerRoleDeleteEvent',
     'ReportCreateEvent',
     'UserUpdateEvent',

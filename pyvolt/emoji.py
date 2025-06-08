@@ -283,11 +283,11 @@ class ServerEmoji(BaseEmoji):
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------------------+------------------------------------------------------------+
-            | Value                            | Reason                                                     |
-            +----------------------------------+------------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to delete an emoji. |
-            +----------------------------------+------------------------------------------------------------+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete an emoji. |
+            +-----------------------+------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 

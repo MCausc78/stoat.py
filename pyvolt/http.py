@@ -459,7 +459,7 @@ class HTTPOverrideOptions:
     base_url: :class:`str`
         The base API url to use when sending a HTTP request.
     bot: UndefinedOr[:class:`bool`]
-        Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+        Whether the authentication token belongs to bot account. Defaults to :attr:`~HTTPOverrideOptions.bot`.
     cookie: UndefinedOr[:class:`str`]
         The cookies to use when performing a request.
     headers: MultiMapping[:class:`str`]
@@ -968,7 +968,12 @@ class HTTPClient:
                 )
             except OSError as exc:
                 # TODO: Handle 10053?
-                if exc.errno in (54, 10054):  # Connection reset by peer
+                if exc.errno in (
+                    54,  # BSD / Apple
+                    104,  # Linux
+                    10054,  # Windows
+                ):
+                    # Connection reset by peer
                     await asyncio.sleep(1.5)
                     continue
                 raise
@@ -990,6 +995,14 @@ class HTTPClient:
                 if response.status == 502:
                     if retries >= self.max_retries:
                         data = await utils._json_or_text(response)
+
+                        try:
+                            tmp = response.close()
+                            if isawaitable(tmp):
+                                await tmp
+                        except Exception:
+                            pass
+
                         raise BadGateway(response, data)
                     continue
 
@@ -1024,7 +1037,16 @@ class HTTPClient:
                     data['type'] = 'RocketError'
                     data['err'] = f'{code} {reason}: {description}'
 
-                raise _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, data)
+                exc = _STATUS_TO_ERRORS.get(response.status, HTTPException)(response, data)
+
+                try:
+                    tmp = response.close()
+                    if isawaitable(tmp):
+                        await tmp
+                except Exception:
+                    pass
+
+                raise exc
             return response
 
     async def request(
@@ -1223,7 +1245,7 @@ class HTTPClient:
 
         Deletes a bot.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1279,7 +1301,7 @@ class HTTPClient:
 
         Edits the bot.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
 
         Parameters
         ----------
@@ -3289,7 +3311,7 @@ class HTTPClient:
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                            |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
+            | ``TooManyReplies``     | You were replying to more messages than was allowed on this instance.                                              |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
@@ -3971,14 +3993,6 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +---------------------------+--------------------------------------------------------------------------------------+
-            | Value                     | Reason                                                                               |
-            +---------------------------+--------------------------------------------------------------------------------------+
-            | ``InvalidOperation``      | The channel was not type of :attr:`~ChannelType.group` or :attr:`~ChannelType.text`. |
-            +---------------------------+--------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -4175,11 +4189,11 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +----------------------------------+-----------------------------------------------------------+
-            | Value                            | Reason                                                    |
-            +----------------------------------+-----------------------------------------------------------+
-            | ``MissingPermission``            | You do not have the proper permissions to delete an emoji. |
-            +----------------------------------+-----------------------------------------------------------+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete an emoji. |
+            +-----------------------+------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -4338,9 +4352,9 @@ class HTTPClient:
 
         Accepts an invite.
 
-        Fires either :class:`.PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for the current user,
-        and fires either :class:`.GroupRecipientAddEvent` or :class:`.ServerMemberJoinEvent`, and :class:`.MessageCreateEvent`,
-        both for all group recipients/server members.
+        Fires either :class:`PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for the current user,
+        and fires either :class:`GroupRecipientAddEvent` or :class:`ServerMemberJoinEvent`,
+        and :class:`MessageCreateEvent` (optional in server context), both for all group recipients/server members.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -4536,6 +4550,49 @@ class HTTPClient:
         """
         d: raw.DataHello = await self.request(routes.ONBOARD_HELLO.compile(), http_overrides=http_overrides)
         return d['onboarding']
+
+    # Policy control
+    async def acknowledge_policy_changes(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
+        """|coro|
+
+        Acknowledges pending policy changes.
+
+        .. note::
+            This is not supposed to be used by bot accounts.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+
+        await self.request(
+            routes.POLICY_ACKNOWLEDGE_POLICY_CHANGES.compile(),
+            http_overrides=http_overrides,
+        )
 
     # Web Push control
     async def push_subscribe(
@@ -5998,14 +6055,14 @@ class HTTPClient:
             The newly updated server.
         """
         payload: raw.DataPermissionsValue = {'permissions': permissions.value}
-        d: raw.Server = await self.request(
+        data: raw.Server = await self.request(
             routes.SERVERS_PERMISSIONS_SET_DEFAULT.compile(server_id=resolve_id(server)),
             http_overrides=http_overrides,
             json=payload,
         )
         return self.state.parser.parse_server(
-            d,
-            (True, d['channels']),
+            data,
+            (True, data['channels']),
         )
 
     async def create_role(
@@ -6089,12 +6146,12 @@ class HTTPClient:
         """
         server_id = resolve_id(server)
         payload: raw.DataCreateRole = {'name': name, 'rank': rank}
-        d: raw.NewRoleResponse = await self.request(
+        data: raw.NewRoleResponse = await self.request(
             routes.SERVERS_ROLES_CREATE.compile(server_id=server_id),
             http_overrides=http_overrides,
             json=payload,
         )
-        return self.state.parser.parse_role(d['role'], d['id'], server_id)
+        return self.state.parser.parse_role(data['role'], data['id'], server_id)
 
     async def delete_role(
         self,
@@ -6203,6 +6260,10 @@ class HTTPClient:
         rank: UndefinedOr[:class:`int`]
             The new ranking position. The smaller value is, the more role takes priority.
 
+            .. deprecated:: 1.2
+
+                Use :meth:`~HTTPClient.bulk_edit_role_ranks` instead.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -6282,6 +6343,110 @@ class HTTPClient:
             resp,
             role_id,
             server_id,
+        )
+
+    async def bulk_edit_role_ranks(
+        self,
+        server: ULIDOr[BaseServer],
+        ranks: list[ULIDOr[BaseRole]],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> Server:
+        """|coro|
+
+        Edits ranks of all roles in bulk.
+
+        You must have :attr:`~Permissions.manage_roles` to do this.
+
+        Fires :class:`ServerRoleRanksUpdateEvent` for all server members.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        ranks: List[ULIDOr[:class:`BaseRole`]]
+            A list of roles that should be reordered, where their position in list represents their new rank.
+
+            For example, we have following roles:
+
+            - Owner
+            - Administrator
+            - Moderator
+            - Member
+
+            Passing ``[member_role_id, moderator_role_id, administrator_role_id, owner_role_id]``
+            would result in following hierachy:
+
+            - Member has rank=3
+            - Moderator has rank=2
+            - Administrator has rank=1
+            - Owner has rank=0
+
+            Must contain all roles.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        -------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------+
+            | Value                |                                                               |
+            +----------------------+---------------------------------------------------------------+
+            | ``InvalidOperation`` | One of server roles was not specified in ``ranks`` parameter. |
+            +----------------------+---------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                              |
+            +-----------------------+-------------------------------------------------------------------------------------+
+            | ``NotElevated``       | Rank of your top role is higher than rank of roles you were trying to edit rank of. |
+            +-----------------------+-------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit role ranks.                          |
+            +-----------------------+-------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/role was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Server`
+            The server with updated role ranks.
+        """
+
+        payload: raw.DataEditRoleRanks = {'ranks': list(map(resolve_id, ranks))}
+        data: raw.Server = await self.request(
+            routes.SERVERS_ROLES_EDIT_POSITIONS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+
+        return self.state.parser.parse_server(
+            data,
+            (True, data['channels']),
         )
 
     async def get_role(
@@ -6417,11 +6582,11 @@ class HTTPClient:
         Parameters
         ----------
         name: :class:`str`
-            The server name.
+            The server name. Must be between 1 and 32 characters long.
         http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
-            The server description.
+            The server description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             Whether this server is age-restricted.
 
@@ -7144,7 +7309,7 @@ class HTTPClient:
 
         Change your username.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -7270,7 +7435,7 @@ class HTTPClient:
 
         Edits the current user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to you.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
 
         Parameters
         ----------
@@ -7357,7 +7522,7 @@ class HTTPClient:
 
         Edits an user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to target user.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to target user.
 
         Parameters
         ----------
@@ -8371,7 +8536,7 @@ class HTTPClient:
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                            |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
+            | ``TooManyReplies``     | You were replying to more messages than was allowed on this instance.                                              |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:

@@ -360,7 +360,6 @@ class ShardImpl(Shard):
         reconnect_on_timeout: bool = True,
         request_user_settings: typing.Optional[list[str]] = None,
         retries: typing.Optional[int] = None,
-        # session: typing.Union[utils.MaybeAwaitableFunc[[Shard], aiohttp.ClientSession], aiohttp.ClientSession],
         state: State,
         user_agent: typing.Optional[str] = None,
     ) -> None:

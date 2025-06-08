@@ -47,11 +47,15 @@ UnknownPublicInvite
 PublicInvite
 ~~~~~~~~~~~~
 
-.. attributetable:: PublicInvite
+.. class:: PublicInvite
+    
+    An union of all public invites.
 
-.. autoclass:: PublicInvite
-    :members:
-    :inherited-members:
+    The following classes are included in this union:
+
+    - :class:`.ServerPublicInvite`
+    - :class:`.GroupPublicInvite`
+    - :class:`.UnknownPublicInvite`
 
 PrivateBaseInvite
 ~~~~~~~~~~~~~~~~~

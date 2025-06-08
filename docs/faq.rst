@@ -42,7 +42,7 @@ General questions regarding library usage belong here.
 Why my :attr:`pyvolt.Server.members` is empty/does not match reality?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You either disabled member cache, or did not setup chunking. See `this page <ext/chunking/index.rst>` for how to do this.
+You either disabled member cache, or did not setup chunking. See `this page <ext/chunking/index>` for how to do this.
 
 Why :attr:`pyvolt.Client.servers` is empty when I access it through :class:`~pyvolt.ReadyEvent`?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

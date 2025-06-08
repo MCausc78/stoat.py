@@ -52,136 +52,139 @@ CacheContextType
         The context is not provided.
     .. attribute:: ready_event
 
-        The context relates to :class:`.ReadyEvent` event.
+        The context relates to :class:`ReadyEvent` event.
     .. attribute:: private_channel_create_event
 
-        The context relates to :class:`.PrivateChannelCreateEvent` event.
+        The context relates to :class:`PrivateChannelCreateEvent` event.
     .. attribute:: server_channel_create_event
 
-        The context relates to :class:`.ServerChannelCreateEvent` event.
+        The context relates to :class:`ServerChannelCreateEvent` event.
     .. attribute:: channel_update_event
 
-        The context relates to :class:`.ChannelUpdateEvent` event.
+        The context relates to :class:`ChannelUpdateEvent` event.
     .. attribute:: channel_delete_event
 
-        The context relates to :class:`.ChannelDeleteEvent` event.
+        The context relates to :class:`ChannelDeleteEvent` event.
     .. attribute:: group_recipient_add_event
 
-        The context relates to :class:`.GroupRecipientAddEvent` event.
+        The context relates to :class:`GroupRecipientAddEvent` event.
     .. attribute:: group_recipient_remove_event
 
-        The context relates to :class:`.GroupRecipientRemoveEvent` event.
+        The context relates to :class:`GroupRecipientRemoveEvent` event.
     .. attribute:: channel_start_typing_event
 
-        The context relates to :class:`.ChannelStartTypingEvent` event.
+        The context relates to :class:`ChannelStartTypingEvent` event.
     .. attribute:: channel_stop_typing_event
 
-        The context relates to :class:`.ChannelStopTypingEvent` event.
+        The context relates to :class:`ChannelStopTypingEvent` event.
     .. attribute:: message_ack_event
 
-        The context relates to :class:`.MessageAckEvent` event.
+        The context relates to :class:`MessageAckEvent` event.
     .. attribute:: message_create_event
 
-        The context relates to :class:`.MessageCreateEvent` event.
+        The context relates to :class:`MessageCreateEvent` event.
     .. attribute:: message_update_event
 
-        The context relates to :class:`.MessageUpdateEvent` event.
+        The context relates to :class:`MessageUpdateEvent` event.
     .. attribute:: message_append_event
 
-        The context relates to :class:`.MessageAppendEvent` event.
+        The context relates to :class:`MessageAppendEvent` event.
     .. attribute:: message_delete_event
 
-        The context relates to :class:`.MessageDeleteEvent` event.
+        The context relates to :class:`MessageDeleteEvent` event.
     .. attribute:: message_react_event
 
-        The context relates to :class:`.MessageReactEvent` event.
+        The context relates to :class:`MessageReactEvent` event.
     .. attribute:: message_unreact_event
 
-        The context relates to :class:`.MessageUnreactEvent` event.
+        The context relates to :class:`MessageUnreactEvent` event.
     .. attribute:: message_clear_reaction_event
 
-        The context relates to :class:`.MessageClearReactionEvent` event.
+        The context relates to :class:`MessageClearReactionEvent` event.
     .. attribute:: message_delete_bulk_event
 
-        The context relates to :class:`.MessageDeleteBulkEvent` event.
+        The context relates to :class:`MessageDeleteBulkEvent` event.
     .. attribute:: server_create_event
 
-        The context relates to :class:`.ServerCreateEvent` event.
+        The context relates to :class:`ServerCreateEvent` event.
     .. attribute:: server_emoji_create_event
 
-        The context relates to :class:`.ServerEmojiCreateEvent` event.
+        The context relates to :class:`ServerEmojiCreateEvent` event.
     .. attribute:: server_emoji_delete_event
 
-        The context relates to :class:`.ServerEmojiDeleteEvent` event.
+        The context relates to :class:`ServerEmojiDeleteEvent` event.
     .. attribute:: server_update_event
 
-        The context relates to :class:`.ServerUpdateEvent` event.
+        The context relates to :class:`ServerUpdateEvent` event.
     .. attribute:: server_delete_event
 
-        The context relates to :class:`.ServerDeleteEvent` event.
+        The context relates to :class:`ServerDeleteEvent` event.
     .. attribute:: server_member_join_event
 
-        The context relates to :class:`.ServerMemberJoinEvent` event.
+        The context relates to :class:`ServerMemberJoinEvent` event.
     .. attribute:: server_member_update_event
 
-        The context relates to :class:`.ServerMemberUpdateEvent` event.
+        The context relates to :class:`ServerMemberUpdateEvent` event.
     .. attribute:: server_member_remove_event
 
-        The context relates to :class:`.ServerMemberRemoveEvent` event.
+        The context relates to :class:`ServerMemberRemoveEvent` event.
     .. attribute:: raw_server_role_update_event
 
-        The context relates to :class:`.RawServerRoleUpdateEvent` event.
+        The context relates to :class:`RawServerRoleUpdateEvent` event.
     .. attribute:: server_role_delete_event
 
-        The context relates to :class:`.ServerRoleDeleteEvent` event.
+        The context relates to :class:`ServerRoleDeleteEvent` event.
+    .. attribute:: server_role_ranks_update_event
+        
+        The context relates to :class:`ServerRoleRanksUpdateEvent`
     .. attribute:: report_create_event
 
-        The context relates to :class:`.ReportCreateEvent` event.
+        The context relates to :class:`ReportCreateEvent` event.
     .. attribute:: user_update_event
 
-        The context relates to :class:`.UserUpdateEvent` event.
+        The context relates to :class:`UserUpdateEvent` event.
     .. attribute:: user_platform_wipe_event
 
-        The context relates to :class:`.UserPlatformWipeEvent` event.
+        The context relates to :class:`UserPlatformWipeEvent` event.
     .. attribute:: user_relationship_update_event
 
-        The context relates to :class:`.UserRelationshipUpdateEvent` event.
+        The context relates to :class:`UserRelationshipUpdateEvent` event.
     .. attribute:: user_settings_update_event
 
-        The context relates to :class:`.UserSettingsUpdateEvent` event.
+        The context relates to :class:`UserSettingsUpdateEvent` event.
     .. attribute:: webhook_create_event
 
-        The context relates to :class:`.WebhookCreateEvent` event.
+        The context relates to :class:`WebhookCreateEvent` event.
     .. attribute:: webhook_update_event
 
-        The context relates to :class:`.WebhookUpdateEvent` event.
+        The context relates to :class:`WebhookUpdateEvent` event.
     .. attribute:: webhook_delete_event
 
-        The context relates to :class:`.WebhookDeleteEvent` event.
+        The context relates to :class:`WebhookDeleteEvent` event.
     .. attribute:: session_create_event
 
-        The context relates to :class:`.SessionCreateEvent` event.
+        The context relates to :class:`SessionCreateEvent` event.
     .. attribute:: session_delete_event
 
-        The context relates to :class:`.SessionDeleteEvent` event.
+        The context relates to :class:`SessionDeleteEvent` event.
     .. attribute:: session_delete_all_event
 
-        The context relates to :class:`.SessionDeleteAllEvent` event.
+        The context relates to :class:`SessionDeleteAllEvent` event.
     .. attribute:: voice_channel_join_event
 
-        The context relates to :class:`.VoiceChannelJoinEvent` event.
+        The context relates to :class:`VoiceChannelJoinEvent` event.
     .. attribute:: voice_channel_leave_event
 
-        The context relates to :class:`.VoiceChannelLeaveEvent` event.
+        The context relates to :class:`VoiceChannelLeaveEvent` event.
     .. attribute:: voice_channel_move_event
 
-        The context relates to :class:`.VoiceChannelMoveEvent` event.
+        The context relates to :class:`VoiceChannelMoveEvent` event.
     .. attribute:: user_voice_state_update_event
 
-        The context relates to :class:`.UserVoiceStateUpdateEvent` event.
+        The context relates to :class:`UserVoiceStateUpdateEvent` event.
     .. attribute:: authenticated_event
 
-        The context relates to :class:`.AuthenticatedEvent` event.
+        The context relates to :class:`AuthenticatedEvent` event.
     .. attribute:: message_through_messageable_getter
 
         The context comes from :meth:`Messageable.get_message`.
@@ -1118,16 +1121,6 @@ GroupPublicInviteCacheContext
     :members:
     :inherited-members:
 
-GroupPublicInviteCacheContext
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. attributetable:: GroupPublicInviteCacheContext
-
-.. autoclass:: GroupPublicInviteCacheContext
-    :show-inheritance:
-    :members:
-    :inherited-members:
-
 GroupInviteCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1765,7 +1758,7 @@ MemberOrUsersThroughMessageMentionsCacheContext
 
 .. autoclass:: MemberOrUsersThroughMessageMentionsCacheContext
     :show-inheritance:
-    :memberes:
+    :members:
     :inherited-members:
 
 MembersThroughMessageMentionsCacheContext
@@ -1775,7 +1768,7 @@ MembersThroughMessageMentionsCacheContext
 
 .. autoclass:: MembersThroughMessageMentionsCacheContext
     :show-inheritance:
-    :memberes:
+    :members:
     :inherited-members:
 
 UsersThroughMessageMentionsCacheContext
@@ -1785,7 +1778,7 @@ UsersThroughMessageMentionsCacheContext
 
 .. autoclass:: UsersThroughMessageMentionsCacheContext
     :show-inheritance:
-    :memberes:
+    :members:
     :inherited-members:
 
 RoleThroughMessageRoleMentionsCacheContext
@@ -1795,7 +1788,7 @@ RoleThroughMessageRoleMentionsCacheContext
 
 .. autoclass:: RoleThroughMessageRoleMentionsCacheContext
     :show-inheritance:
-    :memberes:
+    :members:
     :inherited-members:
 
 ReadStateThroughTextChannelReadStateCacheContext

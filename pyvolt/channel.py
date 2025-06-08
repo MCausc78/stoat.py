@@ -732,7 +732,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
         )
 
         a = cache.get_user(self.recipient_ids[0], ctx)
-        b = cache.get_user(self.recipient_ids[0], ctx)
+        b = cache.get_user(self.recipient_ids[1], ctx)
 
         return (a, b)
 
@@ -1463,6 +1463,70 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         """
         return await self.state.http.create_webhook(self.id, http_overrides=http_overrides, name=name, avatar=avatar)
 
+    async def fetch_recipients(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> list[User]:
+        """|coro|
+
+        Retrieves all recipients who are part of this group.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------+
+            | Value                | Reason                           |
+            +----------------------+----------------------------------+
+            | ``InvalidOperation`` | The target channel is not group. |
+            +----------------------+----------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-----------------------------------------------------------+
+            | Value                 | Reason                                                    |
+            +-----------------------+-----------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to view the group. |
+            +-----------------------+-----------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------+-----------------------------------+
+            | Value          | Reason                            |
+            +----------------+-----------------------------------+
+            | ``NotFound``   | The target channel was not found. |
+            +----------------+-----------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`.User`]
+            The group recipients.
+        """
+        return await self.state.http.get_group_recipients(self.id, http_overrides=http_overrides)
+
     async def leave(
         self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, silent: typing.Optional[bool] = None
     ) -> None:
@@ -1605,21 +1669,11 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
         if not me:
             raise TypeError('Missing own user')
 
-        from .server import Member
-        from .user import calculate_user_permissions
-
-        if isinstance(target, Member):
-            target = target.user
-
-        return calculate_dm_channel_permissions(
-            calculate_user_permissions(
-                target.id,
-                target.relationship,
-                target.bot,
-                perspective_id=me.id,
-                perspective_bot=me.bot,
-                perspective_privileged=me.privileged,
-            )
+        return calculate_group_channel_permissions(
+            target.id,
+            group_owner_id=self.owner_id,
+            group_permissions=self.permissions,
+            group_recipients=self.recipient_ids,
         )
 
     def to_dict(self) -> raw.GroupChannel:
@@ -1905,14 +1959,6 @@ class BaseServerChannel(BaseChannel):
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +---------------------------+--------------------------------------------------------------------------------------+
-            | Value                     | Reason                                                                               |
-            +---------------------------+--------------------------------------------------------------------------------------+
-            | ``InvalidOperation``      | The channel was not type of :attr:`~ChannelType.group` or :attr:`~ChannelType.text`. |
-            +---------------------------+--------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 

@@ -313,7 +313,7 @@ class BaseWebhook(Base):
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
             | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                            |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyReplies``     | You was replying to more messages than was allowed on this instance.                                               |
+            | ``TooManyReplies``     | You were replying to more messages than was allowed on this instance.                                              |
             +------------------------+--------------------------------------------------------------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:

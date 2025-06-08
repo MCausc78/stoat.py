@@ -465,12 +465,6 @@ Exceptions
 .. autoexception:: pyvolt.ext.commands.CommandInvokeError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.CommandOnCooldown
-    :members:
-
-.. autoexception:: pyvolt.ext.commands.MaxConcurrencyReached
-    :members:
-
 .. autoexception:: pyvolt.ext.commands.TooManyArguments
     :members:
 

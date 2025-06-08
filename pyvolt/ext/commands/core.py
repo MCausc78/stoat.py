@@ -2149,8 +2149,10 @@ def is_owner() -> Check[typing.Any]:
         if me is None:
             return passed
 
-        if me.bot is None:
-            passed = me.id == ctx.author_id
+        if ctx.author_id in ctx.bot.owner_ids:
+            passed = True
+        elif me.bot is None:
+            passed = me.id == ctx.author_id or ctx.author_id in ctx.bot.owner_ids
         else:
             passed = me.bot.owner_id == ctx.author_id
 

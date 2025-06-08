@@ -122,6 +122,7 @@ if typing.TYPE_CHECKING:
         ServerMemberRemoveEvent,
         ServerMemberUpdateEvent,
         ServerRoleDeleteEvent,
+        ServerRoleRanksUpdateEvent,
         ServerUpdateEvent,
         SessionCreateEvent,
         SessionDeleteAllEvent,
@@ -153,16 +154,37 @@ def _session_factory(_) -> aiohttp.ClientSession:
 
 
 class ClientEventHandler(EventHandler):
-    """The default event handler for the client."""
+    """The default event handler for the client.
 
-    __slots__ = ('_client', '_state', 'dispatch', '_handlers')
+    Attributes
+    ----------
+    client: :class:`.Client`
+        The client the event handler is for.
+    state: :class:`.State`
+        The client's state.
+    dispatch: Callable[[:class:`.BaseEvent`], :class:``asyncio.Task`]
+        Alias for :meth:`.Client.dispatch`.
+    handlers: Dict[:class:`str`, Callable[..., MaybeAwaitable[None]]]
+        The handlers.
+
+    Parameters
+    ----------
+    client: :class:`.Client`
+        The client.
+    """
+
+    __slots__ = (
+        'client',
+        'state',
+        'dispatch',
+        'handlers',
+    )
 
     def __init__(self, client: Client) -> None:
-        self._client = client
-        self._state = client._state
-        self.dispatch = client.dispatch
-
-        self._handlers = {
+        self.client: Client = client
+        self.state: State = client.state
+        self.dispatch: Callable[[BaseEvent], asyncio.Task[None]] = client.dispatch
+        self.handlers: dict[str, Callable[..., utils.MaybeAwaitable[None]]] = {
             'Bulk': self.handle_bulk,
             'Authenticated': self.handle_authenticated,
             'Logout': self.handle_logout,
@@ -213,204 +235,640 @@ class ClientEventHandler(EventHandler):
         }
 
     async def handle_bulk(self, shard: Shard, payload: raw.ClientBulkEvent, /) -> None:
+        """Handle ``Bulk`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
         for v in payload['v']:
-            await self._handle(shard, v)
+            await self.handle(shard, v)
 
     def handle_authenticated(self, shard: Shard, payload: raw.ClientAuthenticatedEvent, /) -> None:
-        self.dispatch(self._state.parser.parse_authenticated_event(shard, payload))
+        """Handle ``Authenticated`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        self.dispatch(self.state.parser.parse_authenticated_event(shard, payload))
 
     def handle_logout(self, shard: Shard, payload: raw.ClientLogoutEvent, /) -> None:
-        self.dispatch(self._state.parser.parse_logout_event(shard, payload))
+        """Handle ``Logout`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        self.dispatch(self.state.parser.parse_logout_event(shard, payload))
 
     def handle_ready(self, shard: Shard, payload: raw.ClientReadyEvent, /) -> None:
-        event = self._state.parser.parse_ready_event(shard, payload)
+        """Handle ``Ready`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_ready_event(shard, payload)
         self.dispatch(event)
 
     def handle_pong(self, shard: Shard, payload: raw.ClientPongEvent, /) -> None:
         pass
 
     def handle_message(self, shard: Shard, payload: raw.ClientMessageEvent, /) -> None:
-        event = self._state.parser.parse_message_event(shard, payload)
+        """Handle ``Message`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_message_event(shard, payload)
         self.dispatch(event)
 
     def handle_message_update(self, shard: Shard, payload: raw.ClientMessageUpdateEvent, /) -> None:
-        event = self._state.parser.parse_message_update_event(shard, payload)
+        """Handle ``MessageUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_message_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_message_append(self, shard: Shard, payload: raw.ClientMessageAppendEvent, /) -> None:
-        event = self._state.parser.parse_message_append_event(shard, payload)
+        """Handle ``MessageAppend`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_message_append_event(shard, payload)
         self.dispatch(event)
 
     def handle_message_delete(self, shard: Shard, payload: raw.ClientMessageDeleteEvent, /) -> None:
-        event = self._state.parser.parse_message_delete_event(shard, payload)
+        """Handle ``MessageDelete`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_message_delete_event(shard, payload)
         self.dispatch(event)
 
     def handle_message_react(self, shard: Shard, payload: raw.ClientMessageReactEvent, /) -> None:
-        event = self._state.parser.parse_message_react_event(shard, payload)
+        """Handle ``MessageReact`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_message_react_event(shard, payload)
         self.dispatch(event)
 
     def handle_message_unreact(self, shard: Shard, payload: raw.ClientMessageUnreactEvent, /) -> None:
-        event = self._state.parser.parse_message_unreact_event(shard, payload)
+        """Handle ``MessageUnreact`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_message_unreact_event(shard, payload)
         self.dispatch(event)
 
     def handle_message_remove_reaction(self, shard: Shard, payload: raw.ClientMessageRemoveReactionEvent, /) -> None:
-        event = self._state.parser.parse_message_remove_reaction_event(shard, payload)
+        """Handle ``MessageRemoveReaction`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_message_remove_reaction_event(shard, payload)
         self.dispatch(event)
 
     def handle_bulk_message_delete(self, shard: Shard, payload: raw.ClientBulkMessageDeleteEvent, /) -> None:
-        event = self._state.parser.parse_bulk_message_delete_event(shard, payload)
+        """Handle ``BulkMessageDelete`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_bulk_message_delete_event(shard, payload)
         self.dispatch(event)
 
     def handle_server_create(self, shard: Shard, payload: raw.ClientServerCreateEvent, /) -> None:
+        """Handle ``ServerCreate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
         joined_at = utils.utcnow()
-        event = self._state.parser.parse_server_create_event(shard, payload, joined_at)
+        event = self.state.parser.parse_server_create_event(shard, payload, joined_at)
         self.dispatch(event)
 
     def handle_server_update(self, shard: Shard, payload: raw.ClientServerUpdateEvent, /) -> None:
-        event = self._state.parser.parse_server_update_event(shard, payload)
+        """Handle ``ServerUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_server_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_server_delete(self, shard: Shard, payload: raw.ClientServerDeleteEvent, /) -> None:
-        event = self._state.parser.parse_server_delete_event(shard, payload)
+        """Handle ``ServerDelete`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_server_delete_event(shard, payload)
         self.dispatch(event)
 
     def handle_server_member_join(self, shard: Shard, payload: raw.ClientServerMemberJoinEvent, /) -> None:
+        """Handle ``ServerMemberJoin`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
         joined_at = utils.utcnow()
-        event = self._state.parser.parse_server_member_join_event(shard, payload, joined_at)
+        event = self.state.parser.parse_server_member_join_event(shard, payload, joined_at)
         self.dispatch(event)
 
     def handle_server_member_update(self, shard: Shard, payload: raw.ClientServerMemberUpdateEvent, /) -> None:
-        event = self._state.parser.parse_server_member_update_event(shard, payload)
+        """Handle ``ServerMemberUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_server_member_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_server_member_leave(self, shard: Shard, payload: raw.ClientServerMemberLeaveEvent, /) -> None:
-        event = self._state.parser.parse_server_member_leave_event(shard, payload)
+        """Handle ``ServerMemberLeave`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_server_member_leave_event(shard, payload)
         self.dispatch(event)
 
     def handle_server_role_update(self, shard: Shard, payload: raw.ClientServerRoleUpdateEvent, /) -> None:
-        event = self._state.parser.parse_server_role_update_event(shard, payload)
+        """Handle ``ServerRoleUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_server_role_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_server_role_delete(self, shard: Shard, payload: raw.ClientServerRoleDeleteEvent, /) -> None:
-        event = self._state.parser.parse_server_role_delete_event(shard, payload)
+        """Handle ``ServerRoleDelete`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_server_role_delete_event(shard, payload)
+        self.dispatch(event)
+
+    def handle_server_role_ranks_update(self, shard: Shard, payload: raw.ClientServerRoleRanksUpdateEvent, /) -> None:
+        """Handle ``ServerRoleRanksUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_server_role_ranks_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_user_update(self, shard: Shard, payload: raw.ClientUserUpdateEvent, /) -> None:
-        event = self._state.parser.parse_user_update_event(shard, payload)
+        """Handle ``UserUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_user_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_user_relationship(self, shard: Shard, payload: raw.ClientUserRelationshipEvent, /) -> None:
-        event = self._state.parser.parse_user_relationship_event(shard, payload)
+        """Handle ``UserRelationship`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_user_relationship_event(shard, payload)
         self.dispatch(event)
 
     def handle_user_settings_update(self, shard: Shard, payload: raw.ClientUserSettingsUpdateEvent, /) -> None:
-        event = self._state.parser.parse_user_settings_update_event(shard, payload)
+        """Handle ``UserSettingsUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_user_settings_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_user_platform_wipe(self, shard: Shard, payload: raw.ClientUserPlatformWipeEvent, /) -> None:
-        event = self._state.parser.parse_user_platform_wipe_event(shard, payload)
+        """Handle ``UserPlatformWipe`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_user_platform_wipe_event(shard, payload)
         self.dispatch(event)
 
     def handle_emoji_create(self, shard: Shard, payload: raw.ClientEmojiCreateEvent, /) -> None:
-        event = self._state.parser.parse_emoji_create_event(shard, payload)
+        """Handle ``EmojiCreate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_emoji_create_event(shard, payload)
         self.dispatch(event)
 
     def handle_emoji_delete(self, shard: Shard, payload: raw.ClientEmojiDeleteEvent, /) -> None:
-        event = self._state.parser.parse_emoji_delete_event(shard, payload)
+        """Handle ``EmojiDelete`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_emoji_delete_event(shard, payload)
         self.dispatch(event)
 
     def handle_report_create(self, shard: Shard, payload: raw.ClientReportCreateEvent, /) -> None:
-        event = self._state.parser.parse_report_create_event(shard, payload)
+        """Handle ``ReportCreate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_report_create_event(shard, payload)
         self.dispatch(event)
 
     def handle_channel_create(self, shard: Shard, payload: raw.ClientChannelCreateEvent, /) -> None:
-        event = self._state.parser.parse_channel_create_event(shard, payload)
+        """Handle ``ChannelCreate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_channel_create_event(shard, payload)
         self.dispatch(event)
 
     def handle_channel_update(self, shard: Shard, payload: raw.ClientChannelUpdateEvent, /) -> None:
-        event = self._state.parser.parse_channel_update_event(shard, payload)
+        """Handle ``ChannelUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_channel_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_channel_delete(self, shard: Shard, payload: raw.ClientChannelDeleteEvent, /) -> None:
-        event = self._state.parser.parse_channel_delete_event(shard, payload)
+        """Handle ``ChannelDelete`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_channel_delete_event(shard, payload)
         self.dispatch(event)
 
     def handle_channel_group_join(self, shard: Shard, payload: raw.ClientChannelGroupJoinEvent, /) -> None:
-        event = self._state.parser.parse_channel_group_join_event(shard, payload)
+        """Handle ``ChannelGroupJoin`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_channel_group_join_event(shard, payload)
         self.dispatch(event)
 
     def handle_channel_group_leave(self, shard: Shard, payload: raw.ClientChannelGroupLeaveEvent, /) -> None:
-        event = self._state.parser.parse_channel_group_leave_event(shard, payload)
+        """Handle ``ChannelGroupLeave`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_channel_group_leave_event(shard, payload)
         self.dispatch(event)
 
     def handle_channel_start_typing(self, shard: Shard, payload: raw.ClientChannelStartTypingEvent, /) -> None:
-        event = self._state.parser.parse_channel_start_typing_event(shard, payload)
+        """Handle ``ChannelStartTyping`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_channel_start_typing_event(shard, payload)
         self.dispatch(event)
 
     def handle_channel_stop_typing(self, shard: Shard, payload: raw.ClientChannelStopTypingEvent, /) -> None:
-        event = self._state.parser.parse_channel_stop_typing_event(shard, payload)
+        """Handle ``ChannelStopTyping`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_channel_stop_typing_event(shard, payload)
         self.dispatch(event)
 
     def handle_message_start_editing(self, shard: Shard, payload: raw.ClientMessageStartEditingEvent, /) -> None:
-        event = self._state.parser.parse_message_start_edting(shard, payload)
+        """Handle ``MessageStartEditing`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_message_start_edting(shard, payload)
         self.dispatch(event)
 
     def handle_message_stop_editing(self, shard: Shard, payload: raw.ClientMessageStopEditingEvent, /) -> None:
-        event = self._state.parser.parse_message_stop_edting(shard, payload)
+        """Handle ``MessageStopEditing`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_message_stop_edting(shard, payload)
         self.dispatch(event)
 
     def handle_channel_ack(self, shard: Shard, payload: raw.ClientChannelAckEvent, /) -> None:
-        event = self._state.parser.parse_channel_ack_event(shard, payload)
+        """Handle ``ChannelAck`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_channel_ack_event(shard, payload)
         self.dispatch(event)
 
     def handle_webhook_create(self, shard: Shard, payload: raw.ClientWebhookCreateEvent, /) -> None:
-        event = self._state.parser.parse_webhook_create_event(shard, payload)
+        """Handle ``WebhookCreate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_webhook_create_event(shard, payload)
         self.dispatch(event)
 
     def handle_webhook_update(self, shard: Shard, payload: raw.ClientWebhookUpdateEvent, /) -> None:
-        event = self._state.parser.parse_webhook_update_event(shard, payload)
+        """Handle ``WebhookUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_webhook_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_webhook_delete(self, shard: Shard, payload: raw.ClientWebhookDeleteEvent, /) -> None:
-        event = self._state.parser.parse_webhook_delete_event(shard, payload)
+        """Handle ``WebhookDelete`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_webhook_delete_event(shard, payload)
         self.dispatch(event)
 
     def handle_auth(self, shard: Shard, payload: raw.ClientAuthEvent, /) -> None:
-        event = self._state.parser.parse_auth_event(shard, payload)
+        """Handle ``Auth`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_auth_event(shard, payload)
         self.dispatch(event)
 
     def handle_voice_channel_join(self, shard: Shard, payload: raw.ClientVoiceChannelJoinEvent, /) -> None:
-        event = self._state.parser.parse_voice_channel_join_event(shard, payload)
+        """Handle ``VoiceChannelJoin`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_voice_channel_join_event(shard, payload)
         self.dispatch(event)
 
     def handle_voice_channel_leave(self, shard: Shard, payload: raw.ClientVoiceChannelLeaveEvent, /) -> None:
-        event = self._state.parser.parse_voice_channel_leave_event(shard, payload)
+        """Handle ``VoiceChannelLeave`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_voice_channel_leave_event(shard, payload)
         self.dispatch(event)
 
     def handle_voice_channel_move(self, shard: Shard, payload: raw.ClientVoiceChannelMoveEvent, /) -> None:
-        event = self._state.parser.parse_voice_channel_move_event(shard, payload)
+        """Handle ``VoiceChannelMove`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_voice_channel_move_event(shard, payload)
         self.dispatch(event)
 
     def handle_user_voice_state_update(self, shard: Shard, payload: raw.ClientUserVoiceStateUpdateEvent, /) -> None:
-        event = self._state.parser.parse_user_voice_state_update_event(shard, payload)
+        """Handle ``UserVoiceStateUpdate`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_user_voice_state_update_event(shard, payload)
         self.dispatch(event)
 
     def handle_user_move_voice_channel(self, shard: Shard, payload: raw.ClientUserMoveVoiceChannelEvent, /) -> None:
-        event = self._state.parser.parse_user_move_voice_channel_event(shard, payload)
+        """Handle ``UserMoveVoiceChannel`` WebSocket event.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
+        event = self.state.parser.parse_user_move_voice_channel_event(shard, payload)
         self.dispatch(event)
 
     async def _handle_library_error(self, shard: Shard, payload: raw.ClientEvent, exc: Exception, name: str, /) -> None:
         try:
-            r = self._client.on_library_error(shard, payload, exc)
+            r = self.client.on_library_error(shard, payload, exc)
             if isawaitable(r):
                 await r
         except Exception:
             _L.exception('on_library_error (task: %s) raised an exception', name)
 
-    async def _handle(self, shard: Shard, payload: raw.ClientEvent, /) -> None:
+    async def handle(self, shard: Shard, payload: raw.ClientEvent, /) -> None:
+        """Handle a WebSocket event, depending on value of ``type`` in ``payload``.
+
+        Parameters
+        ----------
+        shard: :class:`.Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload.
+        """
         type = payload['type']
         try:
-            handler = self._handlers[type]
+            handler = self.handlers[type]
         except KeyError:
             _L.debug('Received unknown event: %s. Discarding.', type)
         else:
@@ -426,11 +884,11 @@ class ClientEventHandler(EventHandler):
 
                 _L.exception('%s handler raised an exception', type)
 
-                name = f'pyvolt-dispatch-{self._client._get_i()}'
+                name = f'pyvolt-dispatch-{self.client._get_i()}'
                 asyncio.create_task(self._handle_library_error(shard, payload, exc, name), name=name)
 
     def handle_raw(self, shard: Shard, payload: raw.ClientEvent, /) -> utils.MaybeAwaitable[None]:
-        return self._handle(shard, payload)
+        return self.handle(shard, payload)
 
     def before_connect(self, shard: Shard, /) -> utils.MaybeAwaitable[None]:
         from .events import BeforeConnectEvent
@@ -545,7 +1003,12 @@ class TemporarySubscription(typing.Generic[EventT]):
                 can = await can
 
             if can:
-                self.future.set_result(arg)
+                try:
+                    self.future.set_result(arg)
+                except asyncio.InvalidStateError:
+                    # Sometimes self.future is already done and we somehow get here. That might
+                    # be just a race condition, but I am not sure yet. For now, ignore the error and return True.
+                    pass
             return can
         except Exception as exc:
             try:
@@ -1119,7 +1582,7 @@ class Client:
 
         Ping Pong: ::
 
-            @client.listen()
+            @client.on()
             async def on_message_create(event: pyvolt.MessageCreateEvent):
                 message = event.message
                 if message.content == '!ping':
@@ -2143,6 +2606,7 @@ class Client:
         def on_server_member_remove(self, arg: ServerMemberRemoveEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_server_member_update(self, arg: ServerMemberUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_server_role_delete(self, arg: ServerRoleDeleteEvent, /) -> utils.MaybeAwaitable[None]: ...
+        def on_server_role_ranks_update(self, arg: ServerRoleRanksUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_server_update(self, arg: ServerUpdateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_session_create(self, arg: SessionCreateEvent, /) -> utils.MaybeAwaitable[None]: ...
         def on_session_delete_all(self, arg: SessionDeleteAllEvent, /) -> utils.MaybeAwaitable[None]: ...
@@ -2274,11 +2738,11 @@ class Client:
         Parameters
         ----------
         name: :class:`str`
-            The server name.
+            The server name. Must be between 1 and 32 characters long.
         http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
-            The server description.
+            The server description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             Whether this server is age-restricted.
 
