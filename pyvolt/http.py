@@ -6801,7 +6801,13 @@ class HTTPClient:
             server_id,
         )
 
-    async def bulk_edit_role_ranks(self, server: ULIDOr[BaseServer], ranks: list[ULIDOr[BaseRole]]) -> Server:
+    async def bulk_edit_role_ranks(
+        self,
+        server: ULIDOr[BaseServer],
+        ranks: list[ULIDOr[BaseRole]],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> Server:
         """|coro|
 
         Edits ranks of all roles in bulk.
@@ -6833,10 +6839,12 @@ class HTTPClient:
             - Owner has rank=0
 
             Must contain all roles.
+        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+            The HTTP request overrides.
 
         Raises
         -------
-        :class:`HTTPExcetion`
+        :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
             +----------------------+---------------------------------------------------------------+
@@ -6888,6 +6896,7 @@ class HTTPClient:
         payload: raw.DataEditRoleRanks = {'ranks': list(map(resolve_id, ranks))}
         data: raw.Server = await self.request(
             routes.SERVERS_ROLES_EDIT_POSITIONS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
             json=payload,
         )
 
