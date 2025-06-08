@@ -409,6 +409,10 @@ class BaseRole(Base):
         rank: UndefinedOr[:class:`int`]
             The new ranking position. The smaller value is, the more role takes priority.
 
+            .. deprecated:: 1.2
+
+                Use :meth:`~BaseServer.bulk_edit_role_ranks` instead.
+
         Raises
         ------
         :class:`Unauthorized`
@@ -920,6 +924,89 @@ class BaseServer(Base):
             The created ban.
         """
         return await self.state.http.ban(self.id, user, http_overrides=http_overrides, reason=reason)
+
+    async def bulk_edit_role_ranks(self, ranks: list[ULIDOr[BaseRole]]) -> Server:
+        """|coro|
+
+        Edits ranks of all roles in bulk.
+
+        You must have :attr:`~Permissions.manage_roles` to do this.
+
+        Fires :class:`ServerRoleRanksUpdateEvent` for all server members.
+
+        Parameters
+        ----------
+        ranks: List[ULIDOr[:class:`BaseRole`]]
+            A list of roles that should be reordered, where their position in list represents their new rank.
+
+            For example, we have following roles:
+
+            - Owner
+            - Administrator
+            - Moderator
+            - Member
+
+            Passing ``[member_role_id, moderator_role_id, administrator_role_id, owner_role_id]``
+            would result in following hierachy:
+
+            - Member has rank=3
+            - Moderator has rank=2
+            - Administrator has rank=1
+            - Owner has rank=0
+
+            Must contain all roles.
+
+        Raises
+        -------
+        :class:`HTTPExcetion`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------------------+
+            | Value                |                                                               |
+            +----------------------+---------------------------------------------------------------+
+            | ``InvalidOperation`` | One of server roles was not specified in ``ranks`` parameter. |
+            +----------------------+---------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                              |
+            +-----------------------+-------------------------------------------------------------------------------------+
+            | ``NotElevated``       | Rank of your top role is higher than rank of roles you were trying to edit rank of. |
+            +-----------------------+-------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit role ranks.                          |
+            +-----------------------+-------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The server/role was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Server`
+            The server with updated role ranks.
+        """
+        return await self.state.http.bulk_edit_role_ranks(self.id, ranks)
 
     @typing.overload
     async def create_channel(
@@ -1968,7 +2055,7 @@ class BaseServer(Base):
 
         Joins the server.
 
-        Fires :class:`.ServerCreateEvent` for the current user, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent`,
+        Fires :class:`ServerCreateEvent` for the current user, :class:`ServerMemberJoinEvent` and optionally :class:`MessageCreateEvent`,
         both for all server members.
 
         .. note::

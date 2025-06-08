@@ -78,6 +78,7 @@ if typing.TYPE_CHECKING:
         ServerMemberRemoveEvent,
         RawServerRoleUpdateEvent,
         ServerRoleDeleteEvent,
+        ServerRoleRanksUpdateEvent,
         ReportCreateEvent,
         UserUpdateEvent,
         UserRelationshipUpdateEvent,
@@ -158,6 +159,7 @@ class CacheContextType(Enum):
     server_member_remove_event = 'ServerMemberRemoveEvent'
     raw_server_role_update_event = 'RawServerRoleUpdateEvent'
     server_role_delete_event = 'ServerRoleDeleteEvent'
+    server_role_ranks_update_event = 'ServerRoleRanksUpdateEvent'
     report_create_event = 'ReportCreateEvent'
     user_update_event = 'UserUpdateEvent'
     user_platform_wipe_event = 'UserPlatformWipeEvent'
@@ -554,6 +556,14 @@ class ServerRoleDeleteEventCacheContext(EventCacheContext):
 
     event: ServerRoleDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`.ServerRoleDeleteEvent`: The event involved."""
+
+
+@define(slots=True)
+class ServerRoleRanksUpdateEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`.ServerRoleRanksUpdateEvent`."""
+
+    event: ServerRoleRanksUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`.ServerRoleRanksUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
@@ -1653,6 +1663,9 @@ _RAW_SERVER_ROLE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCa
 )
 _SERVER_ROLE_DELETE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.server_role_delete_event,
+)
+_SERVER_ROLE_RANKS_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_role_ranks_update_event,
 )
 _REPORT_CREATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.report_create_event,
@@ -3680,6 +3693,7 @@ __all__ = (
     'ServerMemberRemoveEventCacheContext',
     'RawServerRoleUpdateEventCacheContext',
     'ServerRoleDeleteEventCacheContext',
+    'ServerRoleRanksUpdateEventCacheContext',
     'ReportCreateEventCacheContext',
     'UserUpdateEventCacheContext',
     'UserRelationshipUpdateEventCacheContext',
@@ -3864,6 +3878,7 @@ __all__ = (
     '_SERVER_MEMBER_REMOVE_EVENT',
     '_RAW_SERVER_ROLE_UPDATE_EVENT',
     '_SERVER_ROLE_DELETE_EVENT',
+    '_SERVER_ROLE_RANKS_UPDATE_EVENT',
     '_REPORT_CREATE_EVENT',
     '_USER_UPDATE_EVENT',
     '_USER_RELATIONSHIP_UPDATE_EVENT',

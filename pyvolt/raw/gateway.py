@@ -188,6 +188,12 @@ class ClientServerRoleDeleteEvent(typing.TypedDict):
     role_id: str
 
 
+class ClientServerRoleRanksUpdateEvent(typing.TypedDict):
+    type: typing.Literal['ServerRoleRanksUpdate']
+    id: str
+    ranks: list[str]
+
+
 class ClientUserUpdateEvent(typing.TypedDict):
     type: typing.Literal['UserUpdate']
     id: str
@@ -409,6 +415,7 @@ ClientEvent = typing.Union[
     ClientServerMemberLeaveEvent,
     ClientServerRoleUpdateEvent,
     ClientServerRoleDeleteEvent,
+    ClientServerRoleRanksUpdateEvent,
     ClientUserUpdateEvent,
     ClientUserRelationshipEvent,
     ClientUserSettingsUpdateEvent,

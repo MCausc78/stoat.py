@@ -132,6 +132,7 @@ from .events import (
     ServerMemberRemoveEvent,
     RawServerRoleUpdateEvent,
     ServerRoleDeleteEvent,
+    ServerRoleRanksUpdateEvent,
     ReportCreateEvent,
     UserUpdateEvent,
     UserRelationshipUpdateEvent,
@@ -3620,6 +3621,30 @@ class Parser:
             role_id=payload['role_id'],
             server=None,
             role=None,
+        )
+
+    def parse_server_role_ranks_update_event(
+        self, shard: Shard, payload: raw.ClientServerRoleRanksUpdateEvent, /
+    ) -> ServerRoleRanksUpdateEvent:
+        """Parses a ServerRoleRanksUpdate event.
+
+        Parameters
+        ----------
+        shard: :class:`Shard`
+            The shard the event arrived on.
+        payload: Dict[:class:`str`, Any]
+            The event payload to parse.
+
+        Returns
+        -------
+        :class:`ServerRoleRanksUpdateEvent`
+            The parsed server role ranks update event object.
+        """
+        return ServerRoleRanksUpdateEvent(
+            shard=shard,
+            server_id=payload['id'],
+            role_ids=payload['ranks'],
+            server=None,
         )
 
     def parse_server_role_update_event(
