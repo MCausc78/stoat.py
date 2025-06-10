@@ -24,17 +24,20 @@ DEALINGS IN THE SOFTWARE.
 
 from __future__ import annotations
 
-from attrs import define, field
 import typing
+
+from attrs import define, field
 
 from .base import Base
 from .core import UNDEFINED, UndefinedOr
 from .enums import MFAMethod
 
 if typing.TYPE_CHECKING:
+    from datetime import datetime
+
+    from . import raw
     from .http import HTTPOverrideOptions
     from .state import State
-    from . import raw
 
 
 @define(slots=True, eq=True)
@@ -221,8 +224,23 @@ class Session(PartialSession):
     token: str = field(repr=True, kw_only=True)
     """:class:`str`: The session token."""
 
+    internal_last_seen: typing.Optional[datetime] = field(repr=True, kw_only=True)
+    """Optional[:class:`~datetime.datetime`]: When the session was seen last time. If ``None``, defaults to :attr:`created_at`."""
+
+    origin: typing.Optional[str] = field(repr=True, kw_only=True)
+    """Optional[:class:`str`]: The session's origin."""
+
     subscription: typing.Optional[WebPushSubscription] = field(repr=True, kw_only=True)
     """Optional[:class:`.WebPushSubscription`]: The Web Push subscription associated with this session."""
+
+    @property
+    def last_seen(self) -> datetime:
+        """class:`~datetime.datetime`: When the session was seen last time."""
+
+        if self.internal_last_seen is None:
+            return self.created_at
+
+        return self.internal_last_seen
 
 
 @define(slots=True)

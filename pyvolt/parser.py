@@ -3771,6 +3771,7 @@ class Parser:
         :class:`Session`
             The parsed session object.
         """
+        last_seen = payload.get('last_seen')
         subscription = payload.get('subscription')
 
         return Session(
@@ -3779,6 +3780,8 @@ class Parser:
             name=payload['name'],
             user_id=payload['user_id'],
             token=payload['token'],
+            internal_last_seen=None if last_seen is None else _parse_dt(last_seen),
+            origin=payload.get('origin'),
             subscription=None if subscription is None else self.parse_webpush_subscription(subscription),
         )
 

@@ -534,6 +534,11 @@ class SavedMessagesChannel(BaseChannel, Messageable):
         return me
 
     @property
+    def server(self) -> None:
+        """Optional[:class:`Server`]: The server this channel belongs to."""
+        return None
+
+    @property
     def type(self) -> typing.Literal[ChannelType.saved_messages]:
         """Literal[:attr:`ChannelType.saved_messages`]: The channel's type."""
         return ChannelType.saved_messages
@@ -796,7 +801,7 @@ class DMChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def server(self) -> None:
-        """Optional[:class:`Server`]: The server that channel belongs to."""
+        """Optional[:class:`Server`]: The server this channel belongs to."""
         return None
 
     @property
@@ -1157,7 +1162,7 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
     @property
     def server(self) -> None:
-        """Optional[:class:`Server`]: The server that channel belongs to."""
+        """Optional[:class:`Server`]: The server this channel belongs to."""
         return None
 
     @property
@@ -1731,7 +1736,7 @@ class UnknownPrivateChannel(BaseChannel):
 
     @property
     def server(self) -> None:
-        """Optional[:class:`Server`]: The server that channel belongs to."""
+        """Optional[:class:`Server`]: The server this channel belongs to."""
         return None
 
     @property
@@ -1831,7 +1836,8 @@ class BaseServerChannel(BaseChannel):
         return cache.get_server_member(self.server_id, state.my_id, ctx)
 
     def get_server(self) -> typing.Optional[Server]:
-        """Optional[:class:`Server`]: The server that channel belongs to."""
+        """Optional[:class:`Server`]: The server this channel belongs to."""
+
         state = self.state
         cache = state.cache
 
@@ -1872,7 +1878,7 @@ class BaseServerChannel(BaseChannel):
 
     @property
     def server(self) -> Server:
-        """:class:`Server`: The server that channel belongs to."""
+        """:class:`Server`: The server this channel belongs to."""
         server = self.get_server()
         if server is None:
             raise NoData(what=self.server_id, type='BaseServerChannel.server')
@@ -2793,6 +2799,11 @@ class PartialMessageable(Messageable):
 
     def get_channel_id(self) -> str:
         return self.id
+
+    @property
+    def server(self) -> None:
+        """Optional[:class:`Server`]: The server this channel belongs to."""
+        return None
 
     def permissions_for(self, _target: typing.Union[User, Member], /) -> Permissions:
         """Calculate permissions for given user.

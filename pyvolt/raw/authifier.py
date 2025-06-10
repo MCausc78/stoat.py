@@ -118,6 +118,8 @@ class Session(typing.TypedDict):
     user_id: str
     token: str
     name: str
+    last_seen: str
+    origin: typing_extensions.NotRequired[str]
     subscription: typing_extensions.NotRequired[WebPushSubscription]
 
 

@@ -206,6 +206,7 @@ class ClientEventHandler(EventHandler):
             'ServerMemberLeave': self.handle_server_member_leave,
             'ServerRoleUpdate': self.handle_server_role_update,
             'ServerRoleDelete': self.handle_server_role_delete,
+            'ServerRoleRanksUpdate': self.handle_server_role_ranks_update,
             'UserUpdate': self.handle_user_update,
             'UserRelationship': self.handle_user_relationship,
             'UserSettingsUpdate': self.handle_user_settings_update,
