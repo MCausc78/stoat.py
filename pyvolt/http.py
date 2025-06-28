@@ -119,6 +119,7 @@ if typing.TYPE_CHECKING:
     from .bot import BaseBot, Bot, PublicBot, BotOAuth2Edit
     from .channel import TextableChannel
     from .instance import Instance
+    from .oauth2 import PossibleOAuth2Authorization
     from .read_state import ReadState
     from .settings import UserSettings
     from .state import State
@@ -4472,7 +4473,7 @@ class HTTPClient:
     # OAuth2 control
     async def authorize(
         self,
-        client_id: ULIDOr[BaseBot],
+        client: ULIDOr[BaseBot],
         *,
         scopes: list[typing.Union[OAuth2Scope, str]],
         redirect_uri: str,
@@ -4487,8 +4488,8 @@ class HTTPClient:
 
         Parameters
         ----------
-        client_id: ULIDOr[:class:`BaseBot`]
-            The ID of the bot to authorize.
+        client: ULIDOr[:class:`BaseBot`]
+            The bot to authorize.
         scopes: List[Union[:class:`OAuth2Scope`, :class:`str`]]
             A list of scopes to authorize.
         redirect_uri: :class:`str`
@@ -4518,7 +4519,7 @@ class HTTPClient:
             |                      |                                                                                                      |
             |                      | - The bot did not had OAuth2 set up.                                                                 |
             |                      | - One of requested scopes is invalid.                                                                |
-            |                      | - You tried to request scope that.                                                                   |
+            |                      | - You tried to request scope that bot does not have access to.                                       |
             |                      | - Provided redirect URI was not whitelisted.                                                         |
             |                      | - No scope was provided.                                                                             |
             |                      | - One of ``state``, ``code_challenge`` or ``code_challenge_method`` is provided                      |
@@ -4562,7 +4563,7 @@ class HTTPClient:
             The redirect URI with ``code`` querystring parameter.
         """
         form = HTTPForm()
-        form.add_field('client_id', resolve_id(client_id))
+        form.add_field('client_id', resolve_id(client))
         form.add_field('scope', ' '.join(scope.value if isinstance(scope, OAuth2Scope) else scope for scope in scopes))
         form.add_field('redirect_uri', redirect_uri)
         form.add_field('response_type', response_type.value)
@@ -4576,6 +4577,90 @@ class HTTPClient:
 
         resp: raw.OAuth2AuthorizeAuthResponse = await self.request(routes.OAUTH2_AUTHORIZE_AUTH.compile(), form=form)
         return resp['redirect_uri']
+
+    async def get_possible_oauth2_authorization(
+        self,
+        client: ULIDOr[BaseBot],
+        *,
+        scopes: list[typing.Union[OAuth2Scope, str]],
+        redirect_uri: str,
+        response_type: OAuth2ResponseType = OAuth2ResponseType.code,
+        state: typing.Optional[str] = None,
+        code_challenge: typing.Optional[str] = None,
+        code_challenge_method: typing.Optional[OAuth2CodeChallengeMethod] = None,
+    ) -> PossibleOAuth2Authorization:
+        """|coro|
+
+        Retrieve information about possible OAuth2 authorization.
+
+        Parameters
+        ----------
+        client: ULIDOr[:class:`BaseBot`]
+            The bot to retrieve possible OAuth2 authorization for.
+        scopes: List[Union[:class:`OAuth2Scope`, :class:`str`]]
+            A list of scopes.
+        redirect_uri: :class:`str`
+            The redirect URI.
+        response_type: :class:`OAuth2ResponseType`
+            The response type. Defaults to :attr:`~OAuth2ResponseType.code`.
+        state: Optional[:class:`str`]
+            The state.
+        code_challenge: Optional[:class:`str`]
+            The code challenge.
+        code_challenge_method: Optional[:class:`OAuth2CodeChallengeMethod`]
+            The method of generating OAuth2 code challenge.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------+
+            | Value                | Reason                                       |
+            +----------------------+----------------------------------------------+
+            | ``InvalidOperation`` | One of these:                                |
+            |                      |                                              |
+            |                      | - The bot did not had OAuth2 set up.         |
+            |                      | - Provided redirect URI was not whitelisted. |
+            +----------------------+----------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.    |
+            +----------------------+----------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------+
+            | Value        | Reason                 |
+            +--------------+------------------------+
+            | ``NotFound`` | The bot was not found. |
+            +--------------+------------------------+
+        """
+
+        params: raw.OAuth2AuthorizationForm = {
+            'client_id': resolve_id(client),
+            'scope': ' '.join(scope.value if isinstance(scope, OAuth2Scope) else scope for scope in scopes),
+            'redirect_uri': redirect_uri,
+            'response_type': response_type.value,
+        }
+
+        if state is not None:
+            params['state'] = state
+        if code_challenge is not None:
+            params['code_challenge'] = code_challenge
+        if code_challenge_method is not None:
+            params['code_challenge_method'] = code_challenge_method.value
+
+        resp: raw.OAuth2AuthorizeInfoResponse = await self.request(
+            routes.OAUTH2_AUTHORIZE_INFO.compile(), params=params
+        )
+        return self.state.parser.parse_possible_oauth2_authorization(resp)
 
     # Onboarding control
     async def complete_onboarding(
