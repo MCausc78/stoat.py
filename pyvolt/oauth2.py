@@ -29,19 +29,51 @@ import typing
 from attrs import define, field
 
 if typing.TYPE_CHECKING:
+    from . import raw
     from .bot import PublicBot
     from .user import User
 
 
-@define(slots=True)
 class OAuth2ScopeReasoning:
-    """Represents reasoning why a certain OAuth2 scope is being requested."""
+    """Represents reasoning why a certain OAuth2 scope is being requested.
 
-    allow: str = field(repr=True, kw_only=True, eq=True)
-    """:class:`str`: ..."""
+    Attributes
+    ----------
+    allow: :class:`str`
+        ...
+    deny: :class:`str`
+        ...
 
-    deny: str = field(repr=True, kw_only=True, eq=True)
-    """:class:`str`: ..."""
+    Parameters
+    ----------
+    allow: :class:`str`
+        ...
+    deny: :class:`str`
+        ...
+    """
+
+    __slots__ = (
+        'allow',
+        'deny',
+    )
+
+    def __init__(self, *, allow: str, deny: str) -> None:
+        self.allow: str = allow
+        self.deny: str = deny
+
+    def __eq__(self, other: object, /) -> bool:
+        return self is other or (
+            isinstance(other, OAuth2ScopeReasoning) and other.allow == self.allow and other.deny == self.deny
+        )
+
+    def __repr__(self) -> str:
+        return f'<OAuth2ScopeReasoning allow={self.allow!r} deny={self.deny!r}>'
+
+    def to_dict(self) -> raw.OAuth2ScopeReasoning:
+        return {
+            'allow': self.allow,
+            'deny': self.deny,
+        }
 
 
 @define(slots=True)

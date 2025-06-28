@@ -36,6 +36,7 @@ from .flags import BotFlags
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .enums import OAuth2Scope
     from .http import HTTPOverrideOptions
     from .oauth2 import OAuth2ScopeReasoning
     from .user import User
@@ -329,9 +330,46 @@ class BotOAuth2:
     """Dict[:class:`str`, :class:`OAuth2ScopeReasoning`]:  A mapping of OAuth2 scopes to reasoning why would it be requested."""
 
 
+class BotOAuth2Edit:
+    __slots__ = (
+        'public',
+        'redirect_uris',
+        'allowed_scopes',
+    )
+
+    def __init__(
+        self,
+        *,
+        public: UndefinedOr[bool] = UNDEFINED,
+        redirect_uris: UndefinedOr[list[str]] = UNDEFINED,
+        allowed_scopes: UndefinedOr[dict[typing.Union[OAuth2Scope, str], OAuth2ScopeReasoning]] = UNDEFINED,
+    ) -> None:
+        self.public: UndefinedOr[bool] = public
+        self.redirect_uris: UndefinedOr[list[str]] = redirect_uris
+        self.allowed_scopes: UndefinedOr[dict[typing.Union[OAuth2Scope, str], OAuth2ScopeReasoning]] = allowed_scopes
+
+    @property
+    def remove(self) -> list[raw.FieldsBot]:
+        return []
+
+    def to_dict(self) -> raw.DataEditBotOauth2:
+        payload: raw.DataEditBotOauth2 = {}
+        if self.public is not UNDEFINED:
+            payload['public'] = self.public
+        if self.redirect_uris is not UNDEFINED:
+            payload['redirects'] = self.redirect_uris
+        if self.allowed_scopes is not UNDEFINED:
+            payload['allowed_scopes'] = {  # type: ignore
+                k.value if isinstance(k, OAuth2Scope) else k: v.to_dict() for k, v in self.allowed_scopes.items()
+            }
+
+        return payload
+
+
 __all__ = (
     'BaseBot',
     'Bot',
     'PublicBot',
     'BotOAuth2',
+    'BotOAuth2Edit',
 )

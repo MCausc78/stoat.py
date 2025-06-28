@@ -108,7 +108,7 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from . import raw
-    from .bot import BaseBot, Bot, PublicBot
+    from .bot import BaseBot, Bot, PublicBot, BotOAuth2Edit
     from .channel import TextableChannel
     from .instance import Instance
     from .read_state import ReadState
@@ -1295,6 +1295,8 @@ class HTTPClient:
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
         interactions_url: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        oauth2: UndefinedOr[typing.Optional[BotOAuth2Edit]] = UNDEFINED,
+        reset_oauth2_client_secret: bool = False,
         reset_token: bool = False,
     ) -> Bot:
         """|coro|
@@ -1317,6 +1319,10 @@ class HTTPClient:
             Whether to allow Revolt collect analytics about the bot.
         interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
+        oauth2: UndefinedOr[Optional[:class:`BotOAuth2Edit`]]
+            The new bot's OAuth2 settings.
+        reset_oauth2_client_secret: :class:`bool`
+            Whether to reset bot's OAuth2 client secret. The new client secret can be accessed via :attr:`BotOAuth2.secret`.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via :attr:`Bot.token`.
 
@@ -1375,6 +1381,14 @@ class HTTPClient:
                 remove.append('InteractionsURL')
             else:
                 payload['interactions_url'] = interactions_url
+        if oauth2 is not UNDEFINED:
+            if oauth2 is None:
+                remove.append('Oauth2')
+            else:
+                payload['oauth2'] = oauth2.to_dict()
+                remove.extend(oauth2.remove)
+        if reset_oauth2_client_secret:
+            remove.append('Oauth2Secret')
         if reset_token:
             remove.append('Token')
         if len(remove) > 0:
