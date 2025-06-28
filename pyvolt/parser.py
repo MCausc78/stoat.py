@@ -197,7 +197,7 @@ from .message import (
     StatelessSystemEvent,
     Message,
 )
-from .oauth2 import OAuth2ScopeReasoning, PossibleOAuth2Authorization
+from .oauth2 import OAuth2ScopeReasoning, PossibleOAuth2Authorization, OAuth2AccessToken
 from .permissions import PermissionOverride
 from .read_state import ReadState
 from .safety_reports import (
@@ -2793,6 +2793,25 @@ class Parser:
             The parsed empty embed special content object.
         """
         return _NONE_EMBED_SPECIAL
+
+    def parse_oauth2_access_token(self, payload: raw.OAuth2TokenExchangeResponse, /) -> OAuth2AccessToken:
+        """Parses an OAuth2 access token object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The OAuth2 access token payload to parse.
+
+        Returns
+        -------
+        :class:`OAuth2AccessToken`
+            The parsed OAuth2 access token.
+        """
+        return OAuth2AccessToken(
+            access_token=payload['access_token'],
+            token_type=payload['token_type'],
+            scopes=payload['scope'].split(' '),
+        )
 
     def parse_oauth2_scope_reasoning(self, payload: raw.OAuth2ScopeReasoning, /) -> OAuth2ScopeReasoning:
         """Parses an OAuth2 scope reasoning object.

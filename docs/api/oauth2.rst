@@ -25,3 +25,12 @@ PossibleOAuth2Authorization
 .. autoclass:: PossibleOAuth2Authorization
     :members:
     :inherited-members:
+
+OAuth2AccessToken
+~~~~~~~~~~~~~~~~~
+
+.. attributetable:: OAuth2AccessToken
+
+.. autoclass:: OAuth2AccessToken
+    :members:
+    :inherited-members:

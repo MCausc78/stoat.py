@@ -107,6 +107,8 @@ class BaseBot(Base):
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
         interactions_url: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        oauth2: UndefinedOr[typing.Optional[BotOAuth2Edit]] = UNDEFINED,
+        reset_oauth2_client_secret: bool = False,
         reset_token: bool = False,
     ) -> Bot:
         """|coro|
@@ -127,6 +129,10 @@ class BaseBot(Base):
             Whether to allow Revolt collect analytics about the bot.
         interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
+        oauth2: UndefinedOr[Optional[:class:`BotOAuth2Edit`]]
+            The new bot's OAuth2 settings.
+        reset_oauth2_client_secret: :class:`bool`
+            Whether to reset bot's OAuth2 client secret. The new client secret can be accessed via :attr:`BotOAuth2.secret`.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via ``bot.token``.
 
@@ -179,7 +185,9 @@ class BaseBot(Base):
             public=public,
             analytics=analytics,
             interactions_url=interactions_url,
+            oauth2=oauth2,
             reset_token=reset_token,
+            reset_oauth2_client_secret=reset_oauth2_client_secret,
         )
 
 
@@ -327,10 +335,22 @@ class BotOAuth2:
     """List[:class:`str`]: The whitelisted URIs for redirecting to during OAuth2 authorization."""
 
     allowed_scopes: dict[str, OAuth2ScopeReasoning] = field(repr=True, kw_only=True, eq=True)
-    """Dict[:class:`str`, :class:`OAuth2ScopeReasoning`]:  A mapping of OAuth2 scopes to reasoning why would it be requested."""
+    """Dict[:class:`str`, :class:`OAuth2ScopeReasoning`]: A mapping of OAuth2 scopes to reasoning why would it be requested."""
 
 
 class BotOAuth2Edit:
+    """Represents new bot's OAuth2 settings.
+
+    Attributes
+    ----------
+    public: UndefinedOr[:class:`bool`
+        Whether the bot is a public client.
+    redirect_uris: UndefinedOr[List[:class:`str`]]
+        The whitelisted URIs for redirecting to during OAuth2 authorization. Must be between 1 and 10 items.
+    allowed_scopes: UndefinedOr[Dict[Union[:class:`OAuth2Scope`, :class:`str`], :class:`OAuth2ScopeReasoning`]]
+        A mapping of OAuth2 scopes to reasoning why would it be requested.
+    """
+
     __slots__ = (
         'public',
         'redirect_uris',

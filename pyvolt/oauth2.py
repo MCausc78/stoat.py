@@ -87,10 +87,25 @@ class PossibleOAuth2Authorization:
     """:class:`User`: The bot user."""
 
     allowed_scopes: dict[str, OAuth2ScopeReasoning] = field(repr=True, kw_only=True, eq=True)
-    """Dict[:class:`str`]: A mapping of OAuth2 scopes to reasoning why would it be requested."""
+    """Dict[:class:`str`, :class:`OAuth2ScopeReasoning`]: A mapping of OAuth2 scopes to reasoning why would it be requested."""
+
+
+@define(slots=True)
+class OAuth2AccessToken:
+    """Represents result of exchanging OAuth2 code."""
+
+    access_token: str = field(repr=True, kw_only=True, eq=True)
+    """:class:`str`: The OAuth2 token."""
+
+    token_type: str = field(repr=True, kw_only=True, eq=True)
+    """:class:`str`: The token type of OAuth2 token."""
+
+    scopes: list[str] = field(repr=True, kw_only=True, eq=True)
+    """:class:`str`: The scopes that the OAuth2 token has."""
 
 
 __all__ = (
     'OAuth2ScopeReasoning',
     'PossibleOAuth2Authorization',
+    'OAuth2AccessToken',
 )
