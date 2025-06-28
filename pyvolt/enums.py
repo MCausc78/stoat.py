@@ -219,6 +219,67 @@ class ImageSize(Enum):
     preview = 'Preview'
 
 
+class MessageSort(Enum):
+    relevance = 'Relevance'
+    latest = 'Latest'
+    oldest = 'Oldest'
+
+
+class OAuth2ResponseType(Enum):
+    code = 'code'
+    token = 'token'
+
+
+class OAuth2GrantType(Enum):
+    authorization_code = 'authorization_code'
+    implicit = 'implicit'
+
+
+class OAuth2CodeChallengeMethod(Enum):
+    plain = 'plain'
+    s256 = 'S256'
+
+
+class OAuth2Scope(Enum):
+    identify = 'identify'
+    full = 'full'
+
+
+class ContentReportReason(Enum):
+    none = 'NoneSpecified'
+    illegal = 'Illegal'
+    illegal_goods = 'IllegalGoods'
+    illegal_extortion = 'IllegalExtortion'
+    illegal_pornography = 'IllegalPornography'
+    illegal_hacking = 'IllegalHacking'
+    extreme_violence = 'ExtremeViolence'
+    promotes_harm = 'PromotesHarm'
+    unsolicited_spam = 'UnsolicitedSpam'
+    raid = 'Raid'
+    spam_abuse = 'SpamAbuse'
+    scams_fraud = 'ScamsFraud'
+    malware = 'Malware'
+    harassment = 'Harassment'
+
+
+class ReportStatus(Enum):
+    created = 'Created'
+    rejected = 'Rejected'
+    resolved = 'Resolved'
+
+
+class ReportedContentType(Enum):
+    message = 'Message'
+    server = 'Server'
+    user = 'User'
+
+
+class MemberRemovalIntention(Enum):
+    leave = 'Leave'
+    kick = 'Kick'
+    ban = 'Ban'
+
+
 class Language(Enum):
     english = 'en'
     english_simplified = 'en_US'
@@ -291,50 +352,6 @@ class Language(Enum):
     leet = 'leet'
     piglatin = 'piglatin'
     enchantment_table = 'enchantment'
-
-
-class MessageSort(Enum):
-    relevance = 'Relevance'
-    latest = 'Latest'
-    oldest = 'Oldest'
-
-
-class ContentReportReason(Enum):
-    none = 'NoneSpecified'
-    illegal = 'Illegal'
-    illegal_goods = 'IllegalGoods'
-    illegal_extortion = 'IllegalExtortion'
-    illegal_pornography = 'IllegalPornography'
-    illegal_hacking = 'IllegalHacking'
-    extreme_violence = 'ExtremeViolence'
-    promotes_harm = 'PromotesHarm'
-    unsolicited_spam = 'UnsolicitedSpam'
-    raid = 'Raid'
-    spam_abuse = 'SpamAbuse'
-    scams_fraud = 'ScamsFraud'
-    malware = 'Malware'
-    harassment = 'Harassment'
-
-
-class UserReportReason(Enum):
-    none = 'NoneSpecified'
-    unsolicited_spam = 'UnsolicitedSpam'
-    spam_abuse = 'SpamAbuse'
-    inappropriate_profile = 'InappropriateProfile'
-    impersonation = 'Impersonation'
-    ban_evasion = 'BanEvasion'
-    underage = 'Underage'
-
-
-class MemberRemovalIntention(Enum):
-    leave = 'Leave'
-    kick = 'Kick'
-    ban = 'Ban'
-
-
-class ShardFormat(Enum):
-    json = 'json'
-    msgpack = 'msgpack'
 
 
 class AndroidTheme(Enum):
@@ -455,6 +472,11 @@ class ReviteMonoFont(Enum):
     jetbrains_mono = 'JetBrains Mono'
 
 
+class ShardFormat(Enum):
+    json = 'json'
+    msgpack = 'msgpack'
+
+
 class Presence(Enum):
     online = 'Online'
     idle = 'Idle'
@@ -473,56 +495,48 @@ class RelationshipStatus(Enum):
     blocked_other = 'BlockedOther'
 
 
-class ReportStatus(Enum):
-    created = 'Created'
-    rejected = 'Rejected'
-    resolved = 'Resolved'
-
-
-class ReportedContentType(Enum):
-    message = 'Message'
-    server = 'Server'
-    user = 'User'
-
-
-class OAuth2ResponseType(Enum):
-    code = 'code'
-    token = 'token'
-
-
-class OAuth2GrantType(Enum):
-    authorization_code = 'authorization_code'
-    implicit = 'implicit'
-
-
-class OAuth2CodeChallengeMethod(Enum):
-    plain = 'plain'
-    s256 = 'S256'
-
-
-class OAuth2Scope(Enum):
-    identify = 'identify'
-    full = 'full'
+class UserReportReason(Enum):
+    none = 'NoneSpecified'
+    unsolicited_spam = 'UnsolicitedSpam'
+    spam_abuse = 'SpamAbuse'
+    inappropriate_profile = 'InappropriateProfile'
+    impersonation = 'Impersonation'
+    ban_evasion = 'BanEvasion'
+    underage = 'Underage'
 
 
 __all__ = (
     'EnumMeta',
     'Enum',
+    # Authentication
     'MFAMethod',
+    # Asset
     'AssetMetadataType',
+    # Channel
     'ChannelType',
+    # Discover
     'ServerActivity',
     'BotUsage',
+    # Embeds
     'LightspeedContentType',
     'TwitchContentType',
     'BandcampContentType',
     'ImageSize',
-    'Language',
+    # Messages
     'MessageSort',
+    # OAuth2
+    'OAuth2ResponseType',
+    'OAuth2GrantType',
+    'OAuth2CodeChallengeMethod',
+    'OAuth2Scope',
+    # Reporting
     'ContentReportReason',
-    'UserReportReason',
+    'ReportStatus',
+    'ReportedContentType',
+    # Servers
     'MemberRemovalIntention',
-    'ShardFormat',
+    # Settings
+    'Language',
     'AndroidTheme',
     'AndroidProfilePictureShape',
     'AndroidMessageReplyStyle',
@@ -532,12 +546,10 @@ __all__ = (
     'ReviteBaseTheme',
     'ReviteFont',
     'ReviteMonoFont',
+    # Shard
+    'ShardFormat',
+    # Users
     'Presence',
     'RelationshipStatus',
-    'ReportStatus',
-    'ReportedContentType',
-    'OAuth2ResponseType',
-    'OAuth2GrantType',
-    'OAuth2CodeChallengeMethod',
-    'OAuth2Scope',
+    'UserReportReason',
 )

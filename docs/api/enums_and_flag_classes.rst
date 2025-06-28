@@ -93,6 +93,20 @@ Channel
 Discover
 ~~~~~~~~
 
+.. class:: BotUsage
+
+    Specifies bot's usage.
+    
+    .. attribute:: high
+
+        Bot is actively used.
+    .. attribute:: medium
+
+        Bot is used but not frequently.
+    .. attribute:: low
+
+        Bot is frequently unused.
+
 .. class:: ServerActivity
 
     Specifies server activity.
@@ -110,41 +124,8 @@ Discover
 
         Server has no activity at all.
 
-.. class:: BotUsage
-
-    Specifies bot's usage.
-    
-    .. attribute:: high
-
-        Bot is actively used.
-    .. attribute:: medium
-
-        Bot is used but not frequently.
-    .. attribute:: low
-
-        Bot is frequently unused.
-
-.. class:: LightspeedContentType
-
-    Specifies type of remote Lightspeed.tv content.
-
-    .. attribute:: channel
-        
-        A Lightspeed.tv channel.
-    
-.. class:: TwitchContentType
-    
-    Specifies type of remote Twitch content.
-
-    .. attribute:: channel
-        
-        A Twitch channel.
-    .. attribute:: video
-        
-        A Twitch video.
-    .. attribute:: clip
-        
-        A Twitch clip.
+Embeds
+~~~~~~
 
 .. class:: BandcampContentType
 
@@ -167,6 +148,190 @@ Discover
     .. attribute:: preview
 
         Show small preview to the side of the embed.
+
+.. class:: LightspeedContentType
+
+    Specifies type of remote Lightspeed.tv content.
+
+    .. attribute:: channel
+        
+        A Lightspeed.tv channel.
+
+.. class:: TwitchContentType
+    
+    Specifies type of remote Twitch content.
+
+    .. attribute:: channel
+        
+        A Twitch channel.
+    .. attribute:: video
+        
+        A Twitch video.
+    .. attribute:: clip
+        
+        A Twitch clip.
+
+Messages
+~~~~~~~~
+
+.. class:: MessageSort
+    
+    Specifies order of messages.
+
+    .. attribute:: relevance
+
+        Sort messages by relevance.
+    .. attribute:: latest
+        
+        Sort messages by timestamp in descending order.
+    .. attribute:: oldest
+
+        Sort messages by timestamp in ascending order.
+
+OAuth2
+~~~~~~
+
+.. class:: OAuth2ResponseType
+
+    Specifies what ``code`` querystring parameter in resulting OAuth2 redirect URL will contain.
+
+    .. attribute:: code
+
+        The parameter will contain code that should be exchanged.
+    .. attribute:: token
+
+        The parameter will contain OAuth2 token.
+
+.. class:: OAuth2GrantType
+
+    Specifies the grant type of OAuth2 flow.
+
+    .. attribute:: authorization_code
+
+        The client will have to ask server to exchange code.
+    .. attribute:: implicit
+
+        The client will receive OAuth2 token directly.
+
+.. class:: OAuth2CodeChallengeMethod
+
+    Specifies the method of generating OAuth2 code challenge.
+    
+    .. attribute:: plain
+
+        The code challenge will be provided as-is.
+    .. attribute:: s256
+
+        The code challenge will be hashed using :func:`SHA256 <hashlib.sha256>`.
+
+.. class:: OAuth2Scope
+
+    Specifies the scope(s) of OAuth2 token.
+    
+    .. attribute:: identify
+
+        The token can be only used to :meth:`retrieve user's information and friends <HTTPclient.get_me>`.
+    .. attribute:: full
+
+        The token can be used to access entire Revolt API (excluding WebSocket connections).
+
+Reporting
+~~~~~~~~~
+
+.. class:: ContentReportReason
+
+    Specifies reason for reporting message or a server.
+    
+    .. attribute:: none
+        
+        No reason has been specified.
+    .. attribute:: illegal
+    
+        Illegal content catch-all reason.
+    .. attribute:: illegal_goods
+    
+        Server or user is selling or facilitating use of drugs or other illegal goods.
+    .. attribute:: illegal_extortion
+    
+        Extortion or blackmail.
+    .. attribute:: illegal_pornography
+    
+        Revenge or child pornography.
+    .. attribute:: illegal_hacking
+    
+        Illegal hacking activity.
+    .. attribute:: extreme_violence
+    
+        Extreme violence, gore, or animal cruelty, with exception to violence potrayed in media / creative arts.
+    .. attribute:: promotes_harm
+    
+        Content that promotes harm to others / self.
+    .. attribute:: unsolicited_spam
+    
+        Unsolicited advertisements.
+    .. attribute:: raid
+    
+        Server or user is raiding.
+    .. attribute:: spam_abuse
+    
+        Server or user is spamming or doing other sort of platform abuse.
+    .. attribute:: scams_fraud
+    
+        Server is scamming or doing fraud.
+    .. attribute:: malware
+    
+        Server or user is distributing malware or malicious links.
+    .. attribute:: harassment
+    
+        Harassment or abuse targeted at another user.
+
+.. class:: ReportStatus
+
+    Specifies the status of a report.
+
+    .. attribute:: created
+        
+        The report was just created and pending.
+    .. attribute:: rejected
+
+        The report was rejected.
+    .. attribute:: resolved
+
+        The report was resolved.
+
+.. class:: ReportedContentType
+
+    Specifies the type of reported content.
+
+    .. attribute:: message
+
+        The content being reported is message.
+    .. attribute:: server
+
+        The content being reported is server.
+    .. attribute:: user
+
+        The content being reported is user.
+
+Servers
+~~~~~~~
+
+.. class:: MemberRemovalIntention
+    
+    Specifies reason why member was removed from server.
+
+    .. attribute:: leave
+
+        The member manually left.
+    .. attribute:: kick
+
+        The member was kicked.
+    .. attribute:: ban
+
+        The member was banned.
+
+Settings
+~~~~~~~~
 
 .. class:: Language
 
@@ -395,123 +560,6 @@ Discover
         .. note::
             This is joke language.
 
-.. class:: MessageSort
-    
-    Specifies order of messages.
-
-    .. attribute:: relevance
-
-        Sort messages by relevance.
-    .. attribute:: latest
-        
-        Sort messages by timestamp in descending order.
-    .. attribute:: oldest
-
-        Sort messages by timestamp in ascending order.
-
-.. class:: ContentReportReason
-
-    Specifies reason for reporting message or a server.
-    
-    .. attribute:: none
-        
-        No reason has been specified.
-
-    .. attribute:: illegal
-    
-        Illegal content catch-all reason.
-    .. attribute:: illegal_goods
-    
-        Server or user is selling or facilitating use of drugs or other illegal goods.
-    .. attribute:: illegal_extortion
-    
-        Extortion or blackmail.
-    .. attribute:: illegal_pornography
-    
-        Revenge or child pornography.
-    .. attribute:: illegal_hacking
-    
-        Illegal hacking activity.
-    .. attribute:: extreme_violence
-    
-        Extreme violence, gore, or animal cruelty, with exception to violence potrayed in media / creative arts.
-    .. attribute:: promotes_harm
-    
-        Content that promotes harm to others / self.
-    .. attribute:: unsolicited_spam
-    
-        Unsolicited advertisements.
-    .. attribute:: raid
-    
-        Server or user is raiding.
-    .. attribute:: spam_abuse
-    
-        Server or user is spamming or doing other sort of platform abuse.
-    .. attribute:: scams_fraud
-    
-        Server is scamming or doing fraud.
-    .. attribute:: malware
-    
-        Server or user is distributing malware or malicious links.
-    .. attribute:: harassment
-    
-        Harassment or abuse targeted at another user.
-
-.. class:: UserReportReason
-
-    Specifies reason for user report.
-
-    .. attribute:: none
-
-        No reason has been specified.
-    .. attribute:: unsolicited_spam
-
-        User is sending unsolicited advertisements.
-    .. attribute:: spam_abuse
-
-        User is sending spam or abusing the platform.
-    .. attribute:: inappropriate_profile
-
-        User's profile contains inappropriate content for a general audience.
-    .. attribute:: impersonation
-
-        User is impersonating another user.
-    .. attribute:: ban_evasion
-
-        User is evading a ban.
-    .. attribute:: underage
-
-        User is not of minimum age to use the platform.
-
-.. class:: MemberRemovalIntention
-    
-    Specifies reason why member was removed from server.
-
-    .. attribute:: leave
-
-        The member manually left.
-    .. attribute:: kick
-
-        The member was kicked.
-    .. attribute:: ban
-
-        The member was banned.
-
-.. class:: ShardFormat
-
-    Specifies WebSocket format the shard should communicate in.
-    
-    .. attribute:: json
-        
-        Communicate using JSON.
-        
-        Recommended for testing.
-    .. attribute:: msgpack
-
-        Communicate using `MessagePack <https://msgpack.org/index.html>`_ format.
-
-        Recommended for production due to being most efficient format.
-
 .. class:: AndroidTheme
 
     Specifies client theme for Revolt Android.
@@ -701,6 +749,27 @@ Discover
         
         Represents 'JetBrains Mono' mont.
 
+Shard
+~~~~~
+
+.. class:: ShardFormat
+
+    Specifies WebSocket format the shard should communicate in.
+    
+    .. attribute:: json
+        
+        Communicate using JSON.
+        
+        Recommended for testing.
+    .. attribute:: msgpack
+
+        Communicate using `MessagePack <https://msgpack.org/index.html>`_ format.
+
+        Recommended for production due to being most efficient format.
+
+Users
+~~~~~
+
 .. class:: Presence
     
     Specifies the presence of an user.
@@ -746,77 +815,31 @@ Discover
 
         This user blocked you.
 
-.. class:: ReportStatus
+.. class:: UserReportReason
 
-    Specifies the status of a report.
+    Specifies reason for user report.
 
-    .. attribute:: created
-        
-        The report was just created and pending.
-    .. attribute:: rejected
+    .. attribute:: none
 
-        The report was rejected.
-    .. attribute:: resolved
+        No reason has been specified.
+    .. attribute:: unsolicited_spam
 
-        The report was resolved.
+        User is sending unsolicited advertisements.
+    .. attribute:: spam_abuse
 
-.. class:: ReportedContentType
+        User is sending spam or abusing the platform.
+    .. attribute:: inappropriate_profile
 
-    Specifies the type of reported content.
+        User's profile contains inappropriate content for a general audience.
+    .. attribute:: impersonation
 
-    .. attribute:: message
+        User is impersonating another user.
+    .. attribute:: ban_evasion
 
-        The content being reported is message.
-    .. attribute:: server
+        User is evading a ban.
+    .. attribute:: underage
 
-        The content being reported is server.
-    .. attribute:: user
-
-        The content being reported is user.
-
-.. class:: OAuth2ResponseType
-
-    Specifies what ``code`` querystring parameter in resulting OAuth2 redirect URL will contain.
-
-    .. attribute:: code
-
-        The parameter will contain code that should be exchanged.
-    .. attribute:: token
-
-        The parameter will contain OAuth2 token.
-
-.. class:: OAuth2GrantType
-
-    Specifies the grant type of OAuth2 flow.
-
-    .. attribute:: authorization_code
-
-        The client will have to ask server to exchange code.
-    .. attribute:: implicit
-
-        The client will receive OAuth2 token directly.
-
-.. class:: OAuth2CodeChallengeMethod
-
-    Specifies the method of generating OAuth2 code challenge.
-    
-    .. attribute:: plain
-
-        The code challenge will be provided as-is.
-    .. attribute:: s256
-
-        The code challenge will be hashed using :func:`SHA256 <hashlib.sha256>`.
-
-.. class:: OAuth2Scope
-
-    Specifies the scope(s) of OAuth2 token.
-    
-    .. attribute:: identify
-
-        The token can be only used to :meth:`retrieve user's information and friends <HTTPclient.get_me>`.
-    .. attribute:: full
-
-        The token can be used to access entire Revolt API (excluding WebSocket connections).
+        User is not of minimum age to use the platform.
 
 .. _revolt-api-flags:
 
