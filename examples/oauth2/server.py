@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections import Counter
 import json
 
-from quart import Quart, make_response, render_template, request
+from quart import Quart, make_response, redirect, render_template, request
 import pyvolt
 
 app = Quart(__name__, template_folder='examples/oauth2/templates')
@@ -34,15 +34,20 @@ async def start_oauth2_flow():
 async def complete_oauth2_flow():
     http: pyvolt.HTTPClient = app.revolt_http  # type: ignore
 
-    code = request.args['code']
-    client_id = app.config['CLIENT_ID']
-    result = await http.exchange_token(
-        code,
-        client=client_id,
-        client_secret=app.config['CLIENT_SECRET'],
-        grant_type=pyvolt.OAuth2GrantType.authorization_code,
-    )
-    token = result.access_token
+    if 'code' in request.args:
+        code = request.args['code']
+        client_id = app.config['CLIENT_ID']
+        result = await http.exchange_token(
+            code,
+            client=client_id,
+            client_secret=app.config['CLIENT_SECRET'],
+            grant_type=pyvolt.OAuth2GrantType.authorization_code,
+        )
+        token = result.access_token
+    else:
+        token = request.cookies.get('token')
+        if not token:
+            return redirect('/oauth2/start')
 
     user = await http.get_me(http_overrides=pyvolt.HTTPOverrideOptions(bot=False, oauth2=True, token=token))
     
