@@ -49,6 +49,7 @@ class PartialServer(typing.TypedDict):
 
 class Role(typing.TypedDict):
     name: str
+    icon: typing_extensions.NotRequired[File]
     permissions: OverrideField
     colour: typing_extensions.NotRequired[str]
     hoist: typing_extensions.NotRequired[bool]
@@ -57,6 +58,7 @@ class Role(typing.TypedDict):
 
 class PartialRole(typing.TypedDict):
     name: typing_extensions.NotRequired[str]
+    icon: typing_extensions.NotRequired[File]
     permissions: typing_extensions.NotRequired[OverrideField]
     colour: typing_extensions.NotRequired[str]
     hoist: typing_extensions.NotRequired[bool]
@@ -64,7 +66,7 @@ class PartialRole(typing.TypedDict):
 
 
 FieldsServer = typing.Literal['Description', 'Categories', 'SystemMessages', 'Icon', 'Banner']
-FieldsRole = typing.Literal['Colour']
+FieldsRole = typing.Literal['Colour', 'Icon']
 
 
 class Category(typing.TypedDict):
@@ -128,6 +130,7 @@ class DataEditServer(typing.TypedDict):
 
 class DataEditRole(typing.TypedDict):
     name: typing_extensions.NotRequired[str]
+    icon: typing_extensions.NotRequired[str]
     colour: typing_extensions.NotRequired[str]
     hoist: typing_extensions.NotRequired[bool]
     rank: typing_extensions.NotRequired[int]

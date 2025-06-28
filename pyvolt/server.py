@@ -384,6 +384,7 @@ class BaseRole(Base):
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         name: UndefinedOr[str] = UNDEFINED,
+        icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         color: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         hoist: UndefinedOr[bool] = UNDEFINED,
         rank: UndefinedOr[int] = UNDEFINED,
@@ -402,6 +403,10 @@ class BaseRole(Base):
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
+        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+            The new role icon.
+
+            .. versionadded:: 1.2
         color: UndefinedOr[Optional[:class:`str`]]
             The new role color. Must be a valid CSS color.
         hoist: UndefinedOr[:class:`bool`]
@@ -439,11 +444,11 @@ class BaseRole(Base):
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
-            +--------------+--------------------------------+
-            | Value        | Reason                         |
-            +--------------+--------------------------------+
-            | ``NotFound`` | The server/role was not found. |
-            +--------------+--------------------------------+
+            +--------------+-------------------------------------+
+            | Value        | Reason                              |
+            +--------------+-------------------------------------+
+            | ``NotFound`` | The server/role/file was not found. |
+            +--------------+-------------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -463,6 +468,7 @@ class BaseRole(Base):
             self.id,
             http_overrides=http_overrides,
             name=name,
+            icon=icon,
             color=color,
             hoist=hoist,
             rank=rank,
@@ -554,6 +560,12 @@ class PartialRole(BaseRole):
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new role's name."""
 
+    internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
+    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new role's icon, if any.
+    
+    .. versionadded:: 1.2
+    """
+
     permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`.PermissionOverride`]: The new role's permissions."""
 
@@ -570,6 +582,7 @@ class PartialRole(BaseRole):
         """Optional[:class:`.Role`]: Tries transform this partial role into full object. This is useful when caching role."""
         if (
             self.name is not UNDEFINED
+            and self.internal_icon is not UNDEFINED
             and self.permissions is not UNDEFINED
             and self.hoist is not UNDEFINED
             and self.rank is not UNDEFINED
@@ -580,11 +593,20 @@ class PartialRole(BaseRole):
                 id=self.id,
                 server_id=self.server_id,
                 name=self.name,
+                internal_icon=self.internal_icon,
                 permissions=self.permissions,
                 color=color,
                 hoist=self.hoist,
                 rank=self.rank,
             )
+
+    @property
+    def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
+        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful role icon.
+
+        .. versionadded:: 1.2
+        """
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
 
 @define(slots=True)
@@ -596,6 +618,12 @@ class Role(BaseRole):
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The role's name."""
+
+    internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
+    """Optional[:class:`.StatelessAsset`]: The new server's icon, if any.
+    
+    .. versionadded:: 1.2
+    """
 
     permissions: PermissionOverride = field(repr=True, kw_only=True)
     """:class:`.PermissionOverride`: Permissions available to this role."""
@@ -617,6 +645,8 @@ class Role(BaseRole):
         """
         if data.name is not UNDEFINED:
             self.name = data.name
+        if data.internal_icon is not UNDEFINED:
+            self.internal_icon = data.internal_icon
         if data.permissions is not UNDEFINED:
             self.permissions = data.permissions
         if data.color is not UNDEFINED:
@@ -626,20 +656,27 @@ class Role(BaseRole):
         if data.rank is not UNDEFINED:
             self.rank = data.rank
 
+    @property
+    def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
+        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful role icon.
+
+        .. versionadded:: 1.2
+        """
+        return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
+
     def to_dict(self) -> raw.Role:
         """:class:`dict`: Convert role to raw data."""
 
-        if self.color is None:
-            payload = {
-                'name': self.name,
-                'permissions': self.permissions.to_field_dict(),
-            }
-        else:
-            payload = {
-                'name': self.name,
-                'permissions': self.permissions.to_field_dict(),
-                'colour': self.color,
-            }
+        payload: dict[str, typing.Any] = {
+            'name': self.name,
+        }
+        if self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+
+        payload['permissions'] = self.permissions.to_field_dict()
+
+        if self.color is not None:
+            payload['colour'] = self.color
 
         if self.hoist:
             payload['hoist'] = self.hoist
