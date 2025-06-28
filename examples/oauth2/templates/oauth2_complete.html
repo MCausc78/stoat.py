@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>OAuth2 with pyvolt</title>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const payload = JSON.parse(`{{ payload }}`);
+                const relationships = (
+                    `${payload.blocked_count} blocked users, ${payload.friend_count} friends, ` +
+                    `incoming/outgoing friend request count respectively: ${payload.incoming_friend_request}/${payload.outgoing_friend_request}`
+                );
+
+                document.getElementById('userinfo_id').innerText = payload.id;
+                document.getElementById('userinfo_name').innerText = payload.name;
+                document.getElementById('userinfo_discriminator').innerText = payload.discriminator;
+                document.getElementById('userinfo_relationships').innerText = relationships;
+            });
+        </script>
+    </head>
+    <body>
+        Hey, buddy! Congratulations, you just logged in using your Revolt account! Here's some information about you:
+
+        Your user ID: <a id="userinfo_id"></a><br />
+        Your name: <a id="userinfo_name"></a><br />
+        Your discriminator: <a id="userinfo_discriminator"></a><br />
+        Relationship count: <a id="userinfo_relationships"></a><br />
+    </body>
+</html>
