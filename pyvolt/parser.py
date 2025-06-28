@@ -197,6 +197,7 @@ from .message import (
     StatelessSystemEvent,
     Message,
 )
+from .oauth2 import OAuth2ScopeReasoning, PossibleOAuth2Authorization
 from .permissions import PermissionOverride
 from .read_state import ReadState
 from .safety_reports import (
@@ -2770,6 +2771,24 @@ class Parser:
         """
         return _NONE_EMBED_SPECIAL
 
+    def parse_oauth2_scope_reasoning(self, payload: raw.OAuth2ScopeReasoning, /) -> OAuth2ScopeReasoning:
+        """Parses an OAuth2 scope reasoning object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The OAuth2 scope reasoning payload to parse.
+
+        Returns
+        -------
+        :class:`OAuth2ScopeReasoning`
+            The parsed OAuth2 scope reasoning.
+        """
+        return OAuth2ScopeReasoning(
+            allow=payload['allow'],
+            deny=payload['deny'],
+        )
+
     def parse_own_user(self, payload: raw.User, /) -> OwnUser:
         """Parses an own user object.
 
@@ -2924,6 +2943,27 @@ class Parser:
             effective_at=_parse_dt(payload['effective_time']),
             description=payload['description'],
             url=payload['url'],
+        )
+
+    def parse_possible_oauth2_authorization(
+        self, payload: raw.OAuth2AuthorizeInfoResponse, /
+    ) -> PossibleOAuth2Authorization:
+        """Parses a possible OAuth2 authorization object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The possible OAuth2 authorization payload to parse.
+
+        Returns
+        -------
+        :class:`PossibleOAuth2Authorization`
+            The parsed possible OAuth2 authorization.
+        """
+        return PossibleOAuth2Authorization(
+            bot=self.parse_public_bot(payload['bot']),
+            user=self.parse_user(payload['user']),
+            allowed_scopes={},
         )
 
     def parse_public_bot(self, payload: raw.PublicBot, /) -> PublicBot:
