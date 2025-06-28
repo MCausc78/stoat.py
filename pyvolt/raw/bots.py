@@ -17,10 +17,11 @@ class Bot(typing.TypedDict):
     interactions_url: typing_extensions.NotRequired[str]
     terms_of_service_url: typing_extensions.NotRequired[str]
     privacy_policy_url: typing_extensions.NotRequired[str]
+    oauth2: typing_extensions.NotRequired[BotOauth2]
     flags: typing_extensions.NotRequired[int]
 
 
-FieldsBot = typing.Literal['Token', 'InteractionsURL']
+FieldsBot = typing.Literal['Token', 'InteractionsURL', 'Oauth2', 'Oauth2Secret']
 
 
 class PublicBot(typing.TypedDict):
@@ -44,6 +45,7 @@ class DataEditBot(typing.TypedDict):
     public: typing_extensions.NotRequired[bool]
     analytics: typing_extensions.NotRequired[bool]
     interactions_url: typing_extensions.NotRequired[str]
+    oauth2: typing_extensions.NotRequired[DataEditBotOauth2]
     remove: typing_extensions.NotRequired[list[FieldsBot]]
 
 
