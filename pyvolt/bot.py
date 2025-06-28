@@ -37,6 +37,7 @@ from .flags import BotFlags
 if typing.TYPE_CHECKING:
     from . import raw
     from .http import HTTPOverrideOptions
+    from .oauth2 import OAuth2ScopeReasoning
     from .user import User
 
 _new_bot_flags = BotFlags.__new__
@@ -216,6 +217,9 @@ class Bot(BaseBot):
     privacy_policy_url: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The privacy policy URL."""
 
+    oauth2: typing.Optional[BotOAuth2] = field(repr=True, kw_only=True)
+    """Optional[:class:`BotOAuth2`]: The bot's OAuth2 settings."""
+
     raw_flags: int = field(repr=True, kw_only=True)
     """:class:`int`: The bot's flags raw value."""
 
@@ -308,4 +312,26 @@ class PublicBot(BaseBot):
         return payload
 
 
-__all__ = ('BaseBot', 'Bot', 'PublicBot')
+@define(slots=True)
+class BotOAuth2:
+    """Represents how the bot does use OAuth2."""
+
+    public: bool = field(repr=True, kw_only=True, eq=True)
+    """:class:`bool`: Whether bot users do not need to invoke server to exchange code."""
+
+    secret: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
+    """Optional[:class:`str`]: The client secret, only available if :attr:`public` is ``False``."""
+
+    redirect_uris: list[str] = field(repr=True, kw_only=True, eq=True)
+    """List[:class:`str`]: The whitelisted URIs for redirecting to during OAuth2 authorization."""
+
+    allowed_scopes: dict[str, OAuth2ScopeReasoning] = field(repr=True, kw_only=True, eq=True)
+    """Dict[:class:`str`, :class:`OAuth2ScopeReasoning`]:  A mapping of OAuth2 scopes to reasoning why would it be requested."""
+
+
+__all__ = (
+    'BaseBot',
+    'Bot',
+    'PublicBot',
+    'BotOAuth2',
+)

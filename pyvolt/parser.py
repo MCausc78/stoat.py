@@ -41,7 +41,7 @@ from .authentication import (
     MFAStatus,
     LoginResult,
 )
-from .bot import Bot, PublicBot
+from .bot import Bot, PublicBot, BotOAuth2
 from .cdn import (
     AssetMetadata,
     StatelessAsset,
@@ -565,6 +565,8 @@ class Parser:
         :class:`Bot`
             The parsed bot object.
         """
+        oauth2 = payload.get('oauth2')
+
         return Bot(
             state=self.state,
             id=payload['_id'],
@@ -576,6 +578,7 @@ class Parser:
             interactions_url=payload.get('interactions_url'),
             terms_of_service_url=payload.get('terms_of_service_url'),
             privacy_policy_url=payload.get('privacy_policy_url'),
+            oauth2=None if oauth2 is None else self.parse_bot_oauth2(oauth2),
             raw_flags=payload.get('flags', 0),
             user=user,
         )
@@ -596,6 +599,26 @@ class Parser:
             The parsed bot object.
         """
         return self._parse_bot(payload, self.parse_user(user))
+
+    def parse_bot_oauth2(self, payload: raw.BotOauth2, /) -> BotOAuth2:
+        """Parses a bot OAuth2 settings object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The bot OAuth2 settings payload to parse.
+
+        Returns
+        -------
+        :class:`BotOAuth2`
+            The parsed bot OAuth2 settings object.
+        """
+        return BotOAuth2(
+            public=payload['public'],
+            secret=payload.get('secret'),
+            redirect_uris=payload['redirects'],
+            allowed_scopes={k: self.parse_oauth2_scope_reasoning(v) for k, v in payload['allowed_scopes'].items()},
+        )
 
     def parse_bot_user_metadata(self, payload: raw.BotInformation, /) -> BotUserMetadata:
         """Parses a bot user metadata.
@@ -2963,7 +2986,7 @@ class Parser:
         return PossibleOAuth2Authorization(
             bot=self.parse_public_bot(payload['bot']),
             user=self.parse_user(payload['user']),
-            allowed_scopes={},
+            allowed_scopes={k: self.parse_oauth2_scope_reasoning(v) for k, v in payload['allowed_scopes'].items()},
         )
 
     def parse_public_bot(self, payload: raw.PublicBot, /) -> PublicBot:
