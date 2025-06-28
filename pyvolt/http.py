@@ -34,7 +34,7 @@ import typing
 from multidict import CIMultiDict, MultiMapping
 
 from . import __version__, routes, utils
-from .adapter import HTTPResponse, HTTPAdapter, AIOHTTPAdapter
+from .adapter import HTTPResponse, HTTPForm, HTTPAdapter, AIOHTTPAdapter
 from .authentication import (
     PartialAccount,
     MFATicket,
@@ -66,7 +66,15 @@ from .core import (
     resolve_id,
 )
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
-from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
+from .enums import (
+    ChannelType,
+    MessageSort,
+    ContentReportReason,
+    UserReportReason,
+    OAuth2Scope,
+    OAuth2ResponseType,
+    OAuth2CodeChallengeMethod,
+)
 from .errors import (
     HTTPException,
     NoEffect,
@@ -4460,6 +4468,35 @@ class HTTPClient:
             )
         else:
             raise NotImplementedError(resp)
+
+    # OAuth2 control
+    async def authorize(
+        self,
+        client_id: str,
+        *,
+        scopes: list[typing.Union[OAuth2Scope, str]],
+        redirect_uri: str,
+        response_type: OAuth2ResponseType = OAuth2ResponseType.code,
+        state: typing.Optional[str] = None,
+        code_challenge: typing.Optional[str] = None,
+        code_challenge_method: typing.Optional[OAuth2CodeChallengeMethod] = None,
+    ) -> str:
+        """TODO: document"""
+        form = HTTPForm()
+        form.add_field('client_id', client_id)
+        form.add_field('scope', ' '.join(scope.value if isinstance(scope, OAuth2Scope) else scope for scope in scopes))
+        form.add_field('redirect_uri', redirect_uri)
+        form.add_field('response_type', response_type.value)
+
+        if state is not None:
+            form.add_field('state', state)
+        if code_challenge is not None:
+            form.add_field('code_challenge', code_challenge)
+        if code_challenge_method is not None:
+            form.add_field('code_challenge_method', code_challenge_method.value)
+
+        data: raw.OAuth2AuthorizeAuthResponse = await self.request(routes.OAUTH2_AUTHORIZE_AUTH.compile(), form=form)
+        return data['redirect_uri']
 
     # Onboarding control
     async def complete_onboarding(

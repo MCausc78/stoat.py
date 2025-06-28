@@ -40,3 +40,12 @@ BotOAuth2
 .. autoclass:: BotOAuth2
     :members:
     :inherited-members:
+
+BotOAuth2Edit
+~~~~~~~~~~~~~
+
+.. attributetable:: BotOAuth2Edit
+
+.. autoclass:: BotOAuth2Edit
+    :members:
+    :inherited-members:
