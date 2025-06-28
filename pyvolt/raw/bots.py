@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 import typing_extensions
 
+from .oauth2 import OAuth2ScopeReasoning, OAuth2Scope
 from .users import User
 
 
@@ -46,6 +47,13 @@ class DataEditBot(typing.TypedDict):
     remove: typing_extensions.NotRequired[list[FieldsBot]]
 
 
+class DataEditBotOauth2(typing.TypedDict):
+    # All of them don't have skip_serializing_if on backend and are marked as Option<T> :(
+    public: typing_extensions.NotRequired[typing.Optional[bool]]
+    redirects: typing_extensions.NotRequired[typing.Optional[list[str]]]  # 1-10 items
+    allowed_scopes: typing_extensions.NotRequired[typing.Optional[dict[OAuth2Scope, OAuth2ScopeReasoning]]]
+
+
 class ServerInviteBotDestination(typing.TypedDict):
     server: str
 
@@ -64,3 +72,10 @@ class OwnedBotsResponse(typing.TypedDict):
 
 class BotWithUserResponse(Bot):
     user: User
+
+
+class BotOauth2(typing.TypedDict):
+    public: bool
+    secret: typing.Optional[str]
+    redirects: list[str]
+    allowed_scopes: dict[OAuth2Scope, OAuth2ScopeReasoning]
