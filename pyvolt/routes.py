@@ -176,6 +176,7 @@ INVITES_INVITE_JOIN: typing.Final[Route] = Route(POST, '/invites/{invite_code}')
 # OAuth2 control
 OAUTH2_AUTHORIZE_AUTH: typing.Final[Route] = Route(POST, '/oauth2/authorize')
 OAUTH2_AUTHORIZE_INFO: typing.Final[Route] = Route(GET, '/oauth2/authorize')
+OAUTH2_TOKEN: typing.Final[Route] = Route(POST, '/oauth2/token')
 
 # Onboarding control
 ONBOARD_COMPLETE: typing.Final[Route] = Route(POST, '/onboard/complete')
@@ -333,6 +334,7 @@ __all__ = (
     'INVITES_INVITE_JOIN',
     'OAUTH2_AUTHORIZE_AUTH',
     'OAUTH2_AUTHORIZE_INFO',
+    'OAUTH2_TOKEN',
     'ONBOARD_COMPLETE',
     'ONBOARD_HELLO',
     'POLICY_ACKNOWLEDGE_POLICY_CHANGES',

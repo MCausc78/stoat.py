@@ -485,6 +485,26 @@ class ReportedContentType(Enum):
     user = 'User'
 
 
+class OAuth2ResponseType(Enum):
+    code = 'code'
+    token = 'token'
+
+
+class OAuth2GrantType(Enum):
+    authorization_code = 'authorization_code'
+    implicit = 'implicit'
+
+
+class OAuth2CodeChallengeMethod(Enum):
+    plain = 'plain'
+    s256 = 'S256'
+
+
+class OAuth2Scope(Enum):
+    identify = 'identify'
+    full = 'full'
+
+
 __all__ = (
     'EnumMeta',
     'Enum',
@@ -516,4 +536,8 @@ __all__ = (
     'RelationshipStatus',
     'ReportStatus',
     'ReportedContentType',
+    'OAuth2ResponseType',
+    'OAuth2GrantType',
+    'OAuth2CodeChallengeMethod',
+    'OAuth2Scope',
 )

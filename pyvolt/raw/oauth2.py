@@ -61,6 +61,6 @@ class OAuth2TokenExchangeResponse(typing.TypedDict):
 
 
 OAuth2Scope = typing.Literal[
-    'Identify',
-    'Full',
+    'identify',
+    'full',
 ]

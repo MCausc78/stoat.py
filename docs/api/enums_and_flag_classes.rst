@@ -774,6 +774,50 @@ Discover
 
         The content being reported is user.
 
+.. class:: OAuth2ResponseType
+
+    Specifies what ``code`` querystring parameter in resulting OAuth2 redirect URL will contain.
+
+    .. attribute:: code
+
+        The parameter will contain code that should be exchanged.
+    .. attribute:: token
+
+        The parameter will contain OAuth2 token.
+
+.. class:: OAuth2GrantType
+
+    Specifies the grant type of OAuth2 flow.
+
+    .. attribute:: authorization_code
+
+        The client will have to ask server to exchange code.
+    .. attribute:: implicit
+
+        The client will receive OAuth2 token directly.
+
+.. class:: OAuth2CodeChallengeMethod
+
+    Specifies the method of generating OAuth2 code challenge.
+    
+    .. attribute:: plain
+
+        The code challenge will be provided as-is.
+    .. attribute:: s256
+
+        The code challenge will be hashed using :func:`SHA256 <hashlib.sha256>`.
+
+.. class:: OAuth2Scope
+
+    Specifies the scope(s) of OAuth2 token.
+    
+    .. attribute:: identify
+
+        The token can be only used to :meth:`retrieve user's information and friends <HTTPclient.get_me>`.
+    .. attribute:: full
+
+        The token can be used to access entire Revolt API (excluding WebSocket connections).
+
 .. _revolt-api-flags:
 
 Flag Classes
