@@ -469,7 +469,7 @@ class HTTPOverrideOptions:
     base_url: :class:`str`
         The base API url to use when sending a HTTP request.
     bot: UndefinedOr[:class:`bool`]
-        Whether the authentication token belongs to bot account. Defaults to :attr:`~HTTPOverrideOptions.bot`.
+        Whether the authentication token belongs to bot account. Defaults to :attr:`HTTPClient.bot`.
     cookie: UndefinedOr[:class:`str`]
         The cookies to use when performing a request.
     headers: MultiMapping[:class:`str`]
@@ -480,6 +480,8 @@ class HTTPOverrideOptions:
         The JSON payload to pass in.
     mfa_ticket: Optional[:class:`str`]
         The MFA ticket to pass in headers.
+    oauth2: :class:`bool`
+        Whether the authentication token is an OAuth2 access token. Defaults to :attr:`HTTPClient.oauth2`.
     token: UndefinedOr[Optional[:class:`str`]]
         The token to use when requesting the route.
     user_agent: UndefinedOr[:class:`str`]
@@ -498,6 +500,7 @@ class HTTPOverrideOptions:
         idempotency_key: typing.Optional[str]
         json: UndefinedOr[typing.Any]
         mfa_ticket: typing.Optional[str]
+        oauth2: UndefinedOr[bool]
         token: UndefinedOr[typing.Optional[str]]
         user_agent: UndefinedOr[str]
 
@@ -544,6 +547,8 @@ class HTTPClient:
         The cookie used to make requests. If ``cf_clearance`` cookie is present, then it's used to prevent HTML pages when service is down.
     max_retries: :class:`int`
         How many times to retry requests that received 429 or 502 HTTP status code.
+    oauth2: :class:`bool`
+        Whether the token is an OAuth2 access token.
     rate_limiter: Optional[:class:`RateLimiter`]
         The rate limiter in use.
     state: :class:`State`
@@ -562,6 +567,7 @@ class HTTPClient:
         'bot',
         'cookie',
         'max_retries',
+        'oauth2',
         'rate_limiter',
         'state',
         'token',
@@ -577,6 +583,7 @@ class HTTPClient:
         bot: bool = True,
         cookie: typing.Optional[str] = None,
         max_retries: typing.Optional[int] = None,
+        oauth2: bool = False,
         rate_limiter: UndefinedOr[
             typing.Optional[typing.Union[Callable[[HTTPClient], typing.Optional[RateLimiter]], RateLimiter]]
         ] = UNDEFINED,
@@ -593,6 +600,7 @@ class HTTPClient:
         self.bot: bool = bot
         self.cookie: typing.Optional[str] = cookie
         self.max_retries: int = max_retries or 3
+        self.oauth2: bool = oauth2
 
         if rate_limiter is UNDEFINED:
             self.rate_limiter: typing.Optional[RateLimiter] = DefaultRateLimiter()
@@ -656,7 +664,7 @@ class HTTPClient:
         """
         return self._base + route.build()
 
-    def with_credentials(self, token: str, *, bot: bool = True) -> None:
+    def with_credentials(self, token: str, *, bot: bool = True, oauth2: bool = False) -> None:
         """Modifies HTTP client credentials.
 
         Parameters
@@ -665,9 +673,12 @@ class HTTPClient:
             The authentication token.
         bot: :class:`bool`
             Whether the token belongs to bot account or not. Defaults to ``True``.
+        oauth2: :class:`bool`
+            Whether the token is an OAuth2 access token. Defaults to ``False``.
         """
         self.token = token
         self.bot = bot
+        self.oauth2 = oauth2
 
     async def get_adapter(self) -> HTTPAdapter:
         if self._adapter is None:
@@ -707,6 +718,7 @@ class HTTPClient:
         idempotency_key: typing.Optional[str] = None,
         json_body: bool = False,
         mfa_ticket: typing.Optional[str] = None,
+        oauth2: UndefinedOr[bool] = UNDEFINED,
         overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
@@ -722,7 +734,7 @@ class HTTPClient:
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
         bot: UndefinedOr[:class:`bool`]
-            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+            Whether the authentication token belongs to bot account. Defaults to :attr:`bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
         idempotency_key: Optional[:class:`str`]
@@ -731,12 +743,14 @@ class HTTPClient:
             Whether the request body is JSON.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        oauth2: UndefinedOr[:class:`bool`]
+            Whether the token is an OAuth2 access token. Defaults to :attr:`oauth2`.
         overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
-            The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+            The user agent to use for HTTP request. Defaults to :attr:`user_agent`.
 
         Returns
         -------
@@ -759,7 +773,15 @@ class HTTPClient:
         if bot is UNDEFINED:
             bot = self.bot
 
-        th = 'X-Bot-Token' if bot else 'X-Session-Token'
+        if oauth2 is UNDEFINED:
+            oauth2 = self.oauth2
+
+        if bot:
+            th = 'X-Bot-Token'
+        elif oauth2:
+            th = 'X-OAuth2-Token'
+        else:
+            th = 'X-Session-Token'
 
         if token is UNDEFINED:
             token = self.token
