@@ -29,8 +29,11 @@ import typing
 from attrs import define, field
 
 if typing.TYPE_CHECKING:
+    from datetime import datetime
+
     from . import raw
     from .bot import PublicBot
+    from .state import State
     from .user import User
 
 
@@ -98,14 +101,38 @@ class OAuth2AccessToken:
     """:class:`str`: The OAuth2 token."""
 
     token_type: str = field(repr=True, kw_only=True, eq=True)
-    """:class:`str`: The token type of OAuth2 token."""
+    """:class:`str`: The type of OAuth2 token."""
 
     scopes: list[str] = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The scopes that the OAuth2 token has."""
+
+
+@define(slots=True)
+class OAuth2Authorization:
+    """Represents OAuth2 bot authorization."""
+
+    state: State = field(repr=False, kw_only=True)
+    """:class:`State`: State that controls this OAuth2 authorization."""
+
+    bot_id: str = field(repr=True, kw_only=True, eq=True)
+    """:class:`str`: The bot's ID this OAuth2 authorization is for."""
+
+    user_id: str = field(repr=True, kw_only=True, eq=True)
+    """:class:`str`: The user's ID who has this OAuth2 authorization."""
+
+    created_at: datetime = field(repr=True, kw_only=True)
+    """:class:`~datetime.datetime`: When the OAuth2 authorization was created."""
+
+    deauthorized_at: typing.Optional[datetime] = field(repr=True, kw_only=True)
+    """Optional[:class:`~datetime.datetime`]: When the OAuth2 authorization was deleted."""
+
+    scopes: list[str] = field(repr=True, kw_only=True)
+    """List[:class:`str`]: The scopes this OAuth2 authorization grants."""
 
 
 __all__ = (
     'OAuth2ScopeReasoning',
     'PossibleOAuth2Authorization',
     'OAuth2AccessToken',
+    'OAuth2Authorization',
 )

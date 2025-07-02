@@ -174,8 +174,10 @@ INVITES_INVITE_FETCH: typing.Final[Route] = Route(GET, '/invites/{invite_code}')
 INVITES_INVITE_JOIN: typing.Final[Route] = Route(POST, '/invites/{invite_code}')
 
 # OAuth2 control
+OAUTH2_AUTHORIZED_BOTS: typing.Final[Route] = Route(GET, '/oauth2/authorized_bots')
 OAUTH2_AUTHORIZE_AUTH: typing.Final[Route] = Route(POST, '/oauth2/authorize')
 OAUTH2_AUTHORIZE_INFO: typing.Final[Route] = Route(GET, '/oauth2/authorize')
+OAUTH2_REVOKE: typing.Final[Route] = Route(POST, '/oauth2/revoke')
 OAUTH2_TOKEN: typing.Final[Route] = Route(POST, '/oauth2/token')
 
 # Onboarding control
@@ -332,8 +334,10 @@ __all__ = (
     'INVITES_INVITE_DELETE',
     'INVITES_INVITE_FETCH',
     'INVITES_INVITE_JOIN',
+    'OAUTH2_AUTHORIZED_BOTS',
     'OAUTH2_AUTHORIZE_AUTH',
     'OAUTH2_AUTHORIZE_INFO',
+    'OAUTH2_REVOKE',
     'OAUTH2_TOKEN',
     'ONBOARD_COMPLETE',
     'ONBOARD_HELLO',

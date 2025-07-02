@@ -197,7 +197,12 @@ from .message import (
     StatelessSystemEvent,
     Message,
 )
-from .oauth2 import OAuth2ScopeReasoning, PossibleOAuth2Authorization, OAuth2AccessToken
+from .oauth2 import (
+    OAuth2ScopeReasoning,
+    PossibleOAuth2Authorization,
+    OAuth2AccessToken,
+    OAuth2Authorization,
+)
 from .permissions import PermissionOverride
 from .read_state import ReadState
 from .safety_reports import (
@@ -2810,6 +2815,31 @@ class Parser:
         return OAuth2AccessToken(
             access_token=payload['access_token'],
             token_type=payload['token_type'],
+            scopes=payload['scope'].split(' '),
+        )
+
+    def parse_oauth2_authorization(self, payload: raw.AuthorizedBot, /) -> OAuth2Authorization:
+        """Parses an OAuth2 authorization object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The OAuth2 authorization payload to parse.
+
+        Returns
+        -------
+        :class:`OAuth2Authorization`
+            The parsed OAuth2 authorization.
+        """
+        id = payload['_id']
+        deauthorized_at = payload.get('deauthorized_at')
+
+        return OAuth2Authorization(
+            state=self.state,
+            bot_id=id['bot'],
+            user_id=id['user'],
+            created_at=_parse_dt(payload['created_at']),
+            deauthorized_at=None if deauthorized_at is None else _parse_dt(deauthorized_at),
             scopes=payload['scope'].split(' '),
         )
 
