@@ -47,6 +47,7 @@ from .authentication import (
     MFAResponse,
     LoginResult,
 )
+from .base import Base
 from .channel import (
     BaseChannel,
     SavedMessagesChannel,
@@ -97,6 +98,7 @@ from .message import (
     BaseMessage,
     Message,
 )
+from .oauth2 import OAuth2Authorization
 from .permissions import PermissionOverride
 from .server import (
     Category,
@@ -120,7 +122,10 @@ if typing.TYPE_CHECKING:
     from .bot import BaseBot, Bot, PublicBot, BotOAuth2Edit
     from .channel import TextableChannel
     from .instance import Instance
-    from .oauth2 import PossibleOAuth2Authorization, OAuth2AccessToken
+    from .oauth2 import (
+        PossibleOAuth2Authorization,
+        OAuth2AccessToken,
+    )
     from .read_state import ReadState
     from .settings import UserSettings
     from .state import State
@@ -4494,6 +4499,41 @@ class HTTPClient:
             raise NotImplementedError(resp)
 
     # OAuth2 control
+    async def get_authorized_bots(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[OAuth2Authorization]:
+        """|coro|
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+
+        resp: list[raw.AuthorizedBot] = await self.request(
+            routes.OAUTH2_AUTHORIZED_BOTS.compile(), http_overrides=http_overrides
+        )
+        return list(map(self.state.parser.parse_oauth2_authorization, resp))
+
     async def authorize(
         self,
         client: ULIDOr[BaseBot],
@@ -4606,7 +4646,9 @@ class HTTPClient:
             form.add_field('code_challenge_method', code_challenge_method.value)
 
         resp: raw.OAuth2AuthorizeAuthResponse = await self.request(
-            routes.OAUTH2_AUTHORIZE_AUTH.compile(), http_overrides=http_overrides, form=form
+            routes.OAUTH2_AUTHORIZE_AUTH.compile(),
+            http_overrides=http_overrides,
+            form=form,
         )
         return resp['redirect_uri']
 
@@ -4703,6 +4745,122 @@ class HTTPClient:
             params=params,
         )
         return self.state.parser.parse_possible_oauth2_authorization(resp)
+
+    async def revoke_oauth2_authorization(
+        self,
+        bot: typing.Union[BaseBot, OAuth2Authorization, str],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> OAuth2Authorization:
+        """|coro|
+
+        Revokes the OAuth2 authorization.
+
+        Parameters
+        ----------
+        bot: Union[:class:`BaseBot`, :class:`OAuth2Authorization`, :class:`str`]
+            The bot to deauthorize, OAuth2 authorization to remove, or ID of the bot to deauthorize.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------------+
+            | Value                | Reason                         |
+            +----------------------+--------------------------------+
+            | ``InvalidOperation`` | The token was already revoked. |
+            +----------------------+--------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The OAuth2 authorization was deleted. |
+            +--------------+---------------------------------------+
+
+        Returns
+        -------
+        :class:`OAuth2Authorization`
+            The revoked OAuth2 authorization.
+        """
+
+        if isinstance(bot, OAuth2Authorization):
+            bot = bot.bot_id
+        elif isinstance(bot, Base):
+            bot = bot.id
+
+        resp: raw.AuthorizedBot = await self.request(
+            routes.OAUTH2_REVOKE.compile(),
+            http_overrides=http_overrides,
+            params={'client_id': bot},
+        )
+        return self.state.parser.parse_oauth2_authorization(resp)
+
+    async def revoke_oauth2_token(
+        self,
+        token: typing.Optional[str] = None,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> OAuth2Authorization:
+        """|coro|
+
+        Revokes the OAuth2 token.
+
+        Parameters
+        ----------
+        token: Optional[:class:`str`]
+            The token to revoke. Defaults to the current one.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------------------------------------------------------------+
+            | Value                | Reason                                                                       |
+            +----------------------+------------------------------------------------------------------------------+
+            | ``InvalidOperation`` | The token was not an access/refresh token, or the token was already revoked. |
+            +----------------------+------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------+
+            | Value                | Reason                 |
+            +----------------------+------------------------+
+            | ``NotAuthenticated`` | The token was invalid. |
+            +----------------------+------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The OAuth2 authorization was deleted. |
+            +--------------+---------------------------------------+
+
+        Returns
+        -------
+        :class:`OAuth2Authorization`
+            The revoked OAuth2 authorization.
+        """
+        if token is None:
+            token = self.token
+
+        resp: raw.AuthorizedBot = await self.request(
+            routes.OAUTH2_REVOKE.compile(),
+            http_overrides=http_overrides,
+            params={
+                'token': token,
+            },
+            token=None,
+        )
+        return self.state.parser.parse_oauth2_authorization(resp)
 
     async def exchange_token(
         self,

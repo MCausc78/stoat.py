@@ -33,6 +33,7 @@ if typing.TYPE_CHECKING:
 
     from . import raw
     from .bot import PublicBot
+    from .http import HTTPOverrideOptions
     from .state import State
     from .user import User
 
@@ -97,6 +98,9 @@ class PossibleOAuth2Authorization:
 class OAuth2AccessToken:
     """Represents result of exchanging OAuth2 code."""
 
+    state: State = field(repr=False, kw_only=True)
+    """:class:`State`: State that controls this OAuth2 authorization."""
+
     access_token: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The OAuth2 token."""
 
@@ -105,6 +109,54 @@ class OAuth2AccessToken:
 
     scopes: list[str] = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The scopes that the OAuth2 token has."""
+
+    async def revoke(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> OAuth2Authorization:
+        """|coro|
+
+        Revokes the OAuth2 token.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------------+
+            | Value                | Reason                         |
+            +----------------------+--------------------------------+
+            | ``InvalidOperation`` | The token was already revoked. |
+            +----------------------+--------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------+
+            | Value                | Reason                 |
+            +----------------------+------------------------+
+            | ``NotAuthenticated`` | The token was invalid. |
+            +----------------------+------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The OAuth2 authorization was deleted. |
+            +--------------+---------------------------------------+
+
+        Returns
+        -------
+        :class:`OAuth2Authorization`
+            The revoked OAuth2 authorization.
+        """
+        return await self.state.http.revoke_oauth2_token(self.access_token, http_overrides=http_overrides)
 
 
 @define(slots=True)
@@ -128,6 +180,47 @@ class OAuth2Authorization:
 
     scopes: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The scopes this OAuth2 authorization grants."""
+
+    async def revoke(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> OAuth2Authorization:
+        """|coro|
+
+        Revokes the OAuth2 authorization.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------------+
+            | Value                | Reason                         |
+            +----------------------+--------------------------------+
+            | ``InvalidOperation`` | The token was already revoked. |
+            +----------------------+--------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The OAuth2 authorization was deleted. |
+            +--------------+---------------------------------------+
+
+        Returns
+        -------
+        :class:`OAuth2Authorization`
+            The revoked OAuth2 authorization.
+        """
+
+        return await self.state.http.revoke_oauth2_authorization(self.bot_id, http_overrides=http_overrides)
 
 
 __all__ = (

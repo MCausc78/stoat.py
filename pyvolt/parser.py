@@ -2813,6 +2813,7 @@ class Parser:
             The parsed OAuth2 access token.
         """
         return OAuth2AccessToken(
+            state=self.state,
             access_token=payload['access_token'],
             token_type=payload['token_type'],
             scopes=payload['scope'].split(' '),
