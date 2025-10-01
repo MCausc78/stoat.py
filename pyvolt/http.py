@@ -4504,6 +4504,10 @@ class HTTPClient:
     ) -> list[OAuth2Authorization]:
         """|coro|
 
+        Retrieve bots that you have authorized.
+
+        .. versionadded:: 1.2
+
         Parameters
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
@@ -4553,6 +4557,8 @@ class HTTPClient:
         .. note::
             This can only be used by non-bot accounts.
 
+        .. versionadded:: 1.2
+        
         Parameters
         ----------
         client: ULIDOr[:class:`BaseBot`]
@@ -4668,6 +4674,8 @@ class HTTPClient:
 
         Retrieve information about possible OAuth2 authorization.
 
+        .. versionadded:: 1.2
+
         Parameters
         ----------
         client: ULIDOr[:class:`BaseBot`]
@@ -4756,6 +4764,8 @@ class HTTPClient:
 
         Revokes the OAuth2 authorization.
 
+        .. versionadded:: 1.2
+
         Parameters
         ----------
         bot: Union[:class:`BaseBot`, :class:`OAuth2Authorization`, :class:`str`]
@@ -4809,6 +4819,8 @@ class HTTPClient:
         """|coro|
 
         Revokes the OAuth2 token.
+
+        .. versionadded:: 1.2
 
         Parameters
         ----------
@@ -4864,22 +4876,23 @@ class HTTPClient:
 
     async def exchange_token(
         self,
-        code: str,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         client: ULIDOr[BaseBot],
         client_secret: typing.Optional[str] = None,
+        code: typing.Optional[str] = None,
+        refresh_token: typing.Optional[str] = None,
         grant_type: OAuth2GrantType,
         code_verifier: typing.Optional[str] = None,
     ) -> OAuth2AccessToken:
         """|coro|
 
-        Exchanges an access token.
+        Exchanges an access token, or refresh an existing one.
+
+        .. versionadded:: 1.2
 
         Parameters
         ----------
-        code: :class:`str`
-            The code to exchange.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         client: ULIDOr[:class:`BaseBot`]
@@ -4888,11 +4901,12 @@ class HTTPClient:
             The client secret. Required if ``grant_type`` is :attr:`~OAuth2GrantType.authorization_code`.
         grant_type: :class:`OAuth2GrantType`
             The grant type. Only :attr:`~OAuth2GrantType.authorization_code` is currently supported.
+        code: Optional[:class:`str`]
+            The code to exchange.
+        refresh_token: Optional[:class:`str`]
+            The refresh token to exchange access token from.
         code_verifier: Optional[:class:`str`]
             The code verifier.
-
-        Raises
-        ------
 
         Raises
         ------
@@ -4948,7 +4962,10 @@ class HTTPClient:
         form.add_field('client_id', resolve_id(client))
         if client_secret is not None:
             form.add_field('client_secret', client_secret)
-        form.add_field('code', code)
+        if code is not None:
+            form.add_field('code', code)
+        if refresh_token is not None:
+            form.add_field('refresh_token', refresh_token)
         if code_verifier is not None:
             form.add_field('code_verifier', code_verifier)
 
@@ -8220,6 +8237,61 @@ class HTTPClient:
         """
         resp: raw.User = await self.request(routes.USERS_FETCH_SELF.compile(), http_overrides=http_overrides)
         return self.state.parser.parse_own_user(resp)
+
+    async def get_servers(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        populate_channels: typing.Optional[bool] = None,
+    ) -> Server:
+        """|coro|
+
+        Retrieves the list of :class:`Server`\\'s the user is in.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`~pyvolt.HTTPOverrideOptions`]
+            The HTTP request overrides.
+        populate_channels: Optional[:class:`bool`]
+            Whether to populate :attr:`Server.channels`.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+
+        Returns
+        -------
+        List[:class:`Server`]
+            The retrieved servers.
+        """
+        params: raw.OptionsFetchServer = {}
+        if populate_channels is not None:
+            params['include_channels'] = utils._bool(populate_channels)
+
+        resp: list[raw.FetchServerResponse] = await self.request(
+            routes.USERS_FETCH_SELF_SERVERS.compile(),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        return [self.state.parser.parse_server(
+            d,  # type: ignore
+            (not populate_channels, d['channels']),  # type: ignore
+        ) for d in resp]
 
     async def get_user(
         self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None

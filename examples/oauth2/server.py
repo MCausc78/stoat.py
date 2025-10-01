@@ -36,13 +36,14 @@ async def start_oauth2_flow():
 
 @app.get('/oauth2/complete')
 async def complete_oauth2_flow():
-    http: pyvolt.HTTPClient = app.revolt_http  # type: ignore
+    http = app.revolt_http  # type: ignore
+    assert isinstance(http, pyvolt.HTTPClient)
 
     if 'code' in request.args:
         code = request.args['code']
         client_id = app.config['CLIENT_ID']
         result = await http.exchange_token(
-            code,
+            code=code,
             client=client_id,
             client_secret=app.config['CLIENT_SECRET'],
             grant_type=pyvolt.OAuth2GrantType.authorization_code,

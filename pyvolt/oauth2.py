@@ -41,6 +41,8 @@ if typing.TYPE_CHECKING:
 class OAuth2ScopeReasoning:
     """Represents reasoning why a certain OAuth2 scope is being requested.
 
+    .. versionadded:: 1.2
+
     Attributes
     ----------
     allow: :class:`str`
@@ -82,7 +84,10 @@ class OAuth2ScopeReasoning:
 
 @define(slots=True)
 class PossibleOAuth2Authorization:
-    """Represents a possible OAuth2 authorization."""
+    """Represents a possible OAuth2 authorization.
+    
+    .. versionadded:: 1.2
+    """
 
     bot: PublicBot = field(repr=True, kw_only=True, eq=True)
     """:class:`PublicBot`: The bot."""
@@ -96,13 +101,19 @@ class PossibleOAuth2Authorization:
 
 @define(slots=True)
 class OAuth2AccessToken:
-    """Represents result of exchanging OAuth2 code."""
+    """Represents result of exchanging OAuth2 code, or refreshing token.
+    
+    .. versionadded:: 1.2
+    """
 
     state: State = field(repr=False, kw_only=True)
     """:class:`State`: State that controls this OAuth2 authorization."""
 
     access_token: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The OAuth2 token."""
+
+    refresh_token: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
+    """Optional[:class:`str`]: The refresh token, used to retrieve new access tokens."""
 
     token_type: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The type of OAuth2 token."""
@@ -161,13 +172,19 @@ class OAuth2AccessToken:
 
 @define(slots=True)
 class OAuth2Authorization:
-    """Represents OAuth2 bot authorization."""
+    """Represents OAuth2 bot authorization.
+    
+    .. versionadded:: 1.2
+    """
 
     state: State = field(repr=False, kw_only=True)
     """:class:`State`: State that controls this OAuth2 authorization."""
 
     bot_id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The bot's ID this OAuth2 authorization is for."""
+
+    bot: typing.Optional[PublicBot] = field(repr=True, kw_only=True, eq=True)
+    """Optional[:class:`PublicBot`]: The bot."""
 
     user_id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The user's ID who has this OAuth2 authorization."""

@@ -241,7 +241,10 @@ class OAuth2CodeChallengeMethod(Enum):
 
 
 class OAuth2Scope(Enum):
-    identify = 'identify'
+    identify = 'read:identify'
+    servers = 'read:servers'
+    upload_files = 'write:files'
+    events = 'events'
     full = 'full'
 
 

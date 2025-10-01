@@ -233,6 +233,7 @@ USERS_EDIT_USER: typing.Final[Route] = Route(PATCH, '/users/{user_id}', ratelimi
 USERS_FETCH_DMS: typing.Final[Route] = Route(GET, '/users/dms')
 USERS_FETCH_PROFILE: typing.Final[Route] = Route(GET, '/users/{user_id}/profile')
 USERS_FETCH_SELF: typing.Final[Route] = Route(GET, '/users/@me')
+USERS_FETCH_SELF_SERVERS: typing.Final[Route] = Route(GET, '/users/@me/servers')
 USERS_FETCH_USER: typing.Final[Route] = Route(GET, '/users/{user_id}')
 USERS_FETCH_USER_FLAGS: typing.Final[Route] = Route(GET, '/users/{user_id}/flags')
 USERS_FIND_MUTUAL: typing.Final[Route] = Route(GET, '/users/{user_id}/mutual')
@@ -379,6 +380,7 @@ __all__ = (
     'USERS_FETCH_DMS',
     'USERS_FETCH_PROFILE',
     'USERS_FETCH_SELF',
+    'USERS_FETCH_SELF_SERVERS',
     'USERS_FETCH_USER',
     'USERS_FETCH_USER_FLAGS',
     'USERS_FIND_MUTUAL',

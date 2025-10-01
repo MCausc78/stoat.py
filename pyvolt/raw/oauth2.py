@@ -29,6 +29,7 @@ OAuth2ResponseType = typing.Literal[
 OAuth2GrantType = typing.Literal[
     'authorization_code',
     'implicit',
+    'refresh_token',
 ]
 OAuth2CodeChallengeMethod = typing.Literal[
     'plain',
@@ -50,17 +51,21 @@ class OAuth2TokenExchangeForm(typing.TypedDict):
     grant_type: OAuth2GrantType
     client_id: str
     client_secret: typing_extensions.NotRequired[str]
-    code: str
+    code: typing_extensions.NotRequired[str]
+    refresh_token: typing_extensions.NotRequired[str]
     code_verifier: typing_extensions.NotRequired[str]
 
 
 class OAuth2TokenExchangeResponse(typing.TypedDict):
     access_token: str
+    refresh_token: typing.Optional[str]
     token_type: str
     scope: str
 
 
 OAuth2Scope = typing.Literal[
-    'identify',
+    'read:identify',
+    'read:servers',
+    'events',
     'full',
 ]

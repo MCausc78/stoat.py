@@ -608,6 +608,8 @@ class Parser:
     def parse_bot_oauth2(self, payload: raw.BotOauth2, /) -> BotOAuth2:
         """Parses a bot OAuth2 settings object.
 
+        .. versionadded:: 1.2
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -2802,6 +2804,8 @@ class Parser:
     def parse_oauth2_access_token(self, payload: raw.OAuth2TokenExchangeResponse, /) -> OAuth2AccessToken:
         """Parses an OAuth2 access token object.
 
+        .. versionadded:: 1.2
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -2815,12 +2819,22 @@ class Parser:
         return OAuth2AccessToken(
             state=self.state,
             access_token=payload['access_token'],
+            refresh_token=payload.get('refresh_token'),
             token_type=payload['token_type'],
             scopes=payload['scope'].split(' '),
         )
 
-    def parse_oauth2_authorization(self, payload: raw.AuthorizedBot, /) -> OAuth2Authorization:
+    def parse_oauth2_authorization(
+        self,
+        payload: typing.Union[
+            raw.AuthorizedBot,
+            raw.AuthorizedBotsResponse,
+        ],
+        /,
+    ) -> OAuth2Authorization:
         """Parses an OAuth2 authorization object.
+
+        .. versionadded:: 1.2
 
         Parameters
         ----------
@@ -2832,12 +2846,20 @@ class Parser:
         :class:`OAuth2Authorization`
             The parsed OAuth2 authorization.
         """
+
+        if 'authorized_bot' in payload:
+            bot = self.parse_public_bot(payload['public_bot'])
+            payload = payload['authorized_bot']
+        else:
+            bot = None
+
         id = payload['_id']
         deauthorized_at = payload.get('deauthorized_at')
 
         return OAuth2Authorization(
             state=self.state,
             bot_id=id['bot'],
+            bot=bot,
             user_id=id['user'],
             created_at=_parse_dt(payload['created_at']),
             deauthorized_at=None if deauthorized_at is None else _parse_dt(deauthorized_at),
@@ -2846,6 +2868,8 @@ class Parser:
 
     def parse_oauth2_scope_reasoning(self, payload: raw.OAuth2ScopeReasoning, /) -> OAuth2ScopeReasoning:
         """Parses an OAuth2 scope reasoning object.
+
+        .. versionadded:: 1.2
 
         Parameters
         ----------
@@ -3022,6 +3046,8 @@ class Parser:
         self, payload: raw.OAuth2AuthorizeInfoResponse, /
     ) -> PossibleOAuth2Authorization:
         """Parses a possible OAuth2 authorization object.
+
+        .. versionadded:: 1.2
 
         Parameters
         ----------

@@ -230,10 +230,19 @@ OAuth2
     
     .. attribute:: identify
 
-        The token can be only used to :meth:`retrieve user's information and friends <HTTPclient.get_me>`.
+        The token can be used to :meth:`retrieve user's information and friends <HTTPClient.get_me>`.
+    .. attribute:: servers
+
+        The token can be used to :meth:`retrieve user's servers <HTTPClient.get_servers>`.
+    .. attribute:: upload_files
+
+        The token can be used to upload files.
+    .. attribute:: events
+
+        The token can be used to connect to Gateway on user's behalf.
     .. attribute:: full
 
-        The token can be used to access entire Revolt API (excluding WebSocket connections).
+        The token can be used to access entire Revolt HTTP API.
 
 Reporting
 ~~~~~~~~~
