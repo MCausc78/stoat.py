@@ -1,5 +1,6 @@
 # This is actually used
 from . import authifier as a  # noqa: F401
+from .authorized_bots import *
 from .basic import *
 from .bots import *
 from .channel_invites import *
@@ -14,6 +15,7 @@ from .gateway import *
 from .localization import *
 from .messages import *
 from .misc import *
+from .oauth2 import *
 from .permissions import *
 from .safety_reports import *
 from .server_bans import *

@@ -14,6 +14,15 @@ BaseBot
     :members:
     :inherited-members:
 
+Bot
+~~~
+
+.. attributetable:: Bot
+
+.. autoclass:: Bot
+    :members:
+    :inherited-members:
+
 PublicBot
 ~~~~~~~~~
 
@@ -23,11 +32,20 @@ PublicBot
     :members:
     :inherited-members:
 
-Bot
-~~~
+BotOAuth2
+~~~~~~~~~
 
-.. attributetable:: Bot
+.. attributetable:: BotOAuth2
 
-.. autoclass:: Bot
+.. autoclass:: BotOAuth2
+    :members:
+    :inherited-members:
+
+BotOAuth2Edit
+~~~~~~~~~~~~~
+
+.. attributetable:: BotOAuth2Edit
+
+.. autoclass:: BotOAuth2Edit
     :members:
     :inherited-members:

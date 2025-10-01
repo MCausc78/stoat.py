@@ -31,6 +31,8 @@ import typing
 import aiohttp
 
 if typing.TYPE_CHECKING:
+    from typing_extensions import Self
+
     from multidict import MultiMapping, CIMultiDict
     from yarl import URL
 
@@ -156,6 +158,54 @@ class HTTPWebSocket(typing.Generic[F], typing.Protocol):  # type: ignore
     async def send_str(self, data: str, compress: typing.Optional[int] = None) -> None: ...
 
 
+class HTTPForm:
+    """Represents a form.
+
+    This is constructed by the library and meant
+    to be converted to form consumable by underlying HTTP backend.
+    """
+
+    __slots__ = (
+        'fields',
+        'charset',
+        'quote_fields',
+    )
+
+    def __init__(
+        self,
+        fields: typing.Optional[list[dict[str, typing.Any]]] = None,
+        *,
+        charset: typing.Optional[str] = None,
+        quote_fields: bool = True,
+    ) -> None:
+        if fields is None:
+            fields = []
+
+        self.fields: list[dict[str, typing.Any]] = fields
+        self.charset: typing.Optional[str] = charset
+        self.quote_fields: bool = quote_fields
+
+    def add_field(
+        self,
+        name: str,
+        value: typing.Any,
+        *,
+        content_type: typing.Optional[str] = None,
+        filename: typing.Optional[str] = None,
+    ) -> Self:
+        """Adds a field."""
+
+        self.fields.append(
+            {
+                'name': name,
+                'value': value,
+                'content_type': content_type,
+                'filename': filename,
+            }
+        )
+        return self
+
+
 class HTTPAdapter(ABC, typing.Generic[F]):
     """Represents a HTTP adapter."""
 
@@ -194,6 +244,7 @@ class HTTPAdapter(ABC, typing.Generic[F]):
 
             Usually these are passed:
 
+            - ``form``
             - ``json``
             - ``params``
             - ``proxy``
@@ -341,13 +392,23 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
         :class:`AIOHTTPResponseWrapper`
             The response.
         """
+
+        if 'form' in kwargs:
+            form = kwargs.pop('form')
+            if form is None:
+                modified_kwargs = {}
+            else:
+                modified_kwargs = kwargs | {'data': self.convert_form(form)}
+        else:
+            modified_kwargs = kwargs
+
         session = await self.get_session()
 
         response = await session.request(
             method,
             url,
             headers=headers,
-            **kwargs,
+            **modified_kwargs,
         )
         return AIOHTTPResponseWrapper(response)
 
@@ -417,12 +478,22 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
         """Any: Returns frame payload."""
         return frame.data
 
+    def convert_form(self, form: HTTPForm, /) -> aiohttp.FormData:
+        """Converts agnostic :class:`HTTPForm` to :class:`aiohttp.FormData`."""
+        res = aiohttp.FormData(
+            form.fields,
+            quote_fields=form.quote_fields,
+            charset=form.charset,
+        )
+        return res
+
 
 __all__ = (
     'WebSocketConnectionFailure',
     'HTTPResponse',
     'AIOHTTPResponseWrapper',
     'HTTPWebSocket',
+    'HTTPForm',
     'HTTPAdapter',
     'AIOHTTPAdapter',
 )

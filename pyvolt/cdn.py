@@ -507,13 +507,18 @@ class CDNClient:
 
     @property
     def base(self) -> str:
-        """:class:`str`: The base URL"""
+        """:class:`str`: The base URL."""
         return self._base
 
     @property
     def bot(self) -> bool:
         """:class:`bool`: Whether the token belongs to bot account."""
         return self.state.http.bot
+
+    @property
+    def oauth2(self) -> bool:
+        """:class:`bool`: Whether the token is an OAuth2 access token."""
+        return self.state.http.oauth2
 
     @property
     def token(self) -> str:
@@ -531,7 +536,12 @@ class CDNClient:
             headers = CIMultiDict(tmp)
 
         if kwargs.pop('authenticated', True):
-            th = 'X-Bot-Token' if self.bot else 'X-Session-Token'
+            if self.bot:
+                th = 'X-Bot-Token'
+            elif self.oauth2:
+                th = 'X-OAuth2-Token'
+            else:
+                th = 'X-Session-Token'
             headers[th] = self.token
 
         if not kwargs.pop('manual_accept', False):

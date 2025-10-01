@@ -34,7 +34,7 @@ import typing
 from multidict import CIMultiDict, MultiMapping
 
 from . import __version__, routes, utils
-from .adapter import HTTPResponse, HTTPAdapter, AIOHTTPAdapter
+from .adapter import HTTPResponse, HTTPForm, HTTPAdapter, AIOHTTPAdapter
 from .authentication import (
     PartialAccount,
     MFATicket,
@@ -47,6 +47,7 @@ from .authentication import (
     MFAResponse,
     LoginResult,
 )
+from .base import Base
 from .channel import (
     BaseChannel,
     SavedMessagesChannel,
@@ -66,7 +67,16 @@ from .core import (
     resolve_id,
 )
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
-from .enums import ChannelType, MessageSort, ContentReportReason, UserReportReason
+from .enums import (
+    ChannelType,
+    MessageSort,
+    ContentReportReason,
+    UserReportReason,
+    OAuth2ResponseType,
+    OAuth2GrantType,
+    OAuth2CodeChallengeMethod,
+    OAuth2Scope,
+)
 from .errors import (
     HTTPException,
     NoEffect,
@@ -88,6 +98,7 @@ from .message import (
     BaseMessage,
     Message,
 )
+from .oauth2 import OAuth2Authorization
 from .permissions import PermissionOverride
 from .server import (
     Category,
@@ -108,9 +119,13 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from . import raw
-    from .bot import BaseBot, Bot, PublicBot
+    from .bot import BaseBot, Bot, PublicBot, BotOAuth2Edit
     from .channel import TextableChannel
     from .instance import Instance
+    from .oauth2 import (
+        PossibleOAuth2Authorization,
+        OAuth2AccessToken,
+    )
     from .read_state import ReadState
     from .settings import UserSettings
     from .state import State
@@ -459,7 +474,7 @@ class HTTPOverrideOptions:
     base_url: :class:`str`
         The base API url to use when sending a HTTP request.
     bot: UndefinedOr[:class:`bool`]
-        Whether the authentication token belongs to bot account. Defaults to :attr:`~HTTPOverrideOptions.bot`.
+        Whether the authentication token belongs to bot account. Defaults to :attr:`HTTPClient.bot`.
     cookie: UndefinedOr[:class:`str`]
         The cookies to use when performing a request.
     headers: MultiMapping[:class:`str`]
@@ -470,6 +485,8 @@ class HTTPOverrideOptions:
         The JSON payload to pass in.
     mfa_ticket: Optional[:class:`str`]
         The MFA ticket to pass in headers.
+    oauth2: :class:`bool`
+        Whether the authentication token is an OAuth2 access token. Defaults to :attr:`HTTPClient.oauth2`.
     token: UndefinedOr[Optional[:class:`str`]]
         The token to use when requesting the route.
     user_agent: UndefinedOr[:class:`str`]
@@ -488,6 +505,7 @@ class HTTPOverrideOptions:
         idempotency_key: typing.Optional[str]
         json: UndefinedOr[typing.Any]
         mfa_ticket: typing.Optional[str]
+        oauth2: UndefinedOr[bool]
         token: UndefinedOr[typing.Optional[str]]
         user_agent: UndefinedOr[str]
 
@@ -534,6 +552,8 @@ class HTTPClient:
         The cookie used to make requests. If ``cf_clearance`` cookie is present, then it's used to prevent HTML pages when service is down.
     max_retries: :class:`int`
         How many times to retry requests that received 429 or 502 HTTP status code.
+    oauth2: :class:`bool`
+        Whether the token is an OAuth2 access token.
     rate_limiter: Optional[:class:`RateLimiter`]
         The rate limiter in use.
     state: :class:`State`
@@ -552,6 +572,7 @@ class HTTPClient:
         'bot',
         'cookie',
         'max_retries',
+        'oauth2',
         'rate_limiter',
         'state',
         'token',
@@ -567,6 +588,7 @@ class HTTPClient:
         bot: bool = True,
         cookie: typing.Optional[str] = None,
         max_retries: typing.Optional[int] = None,
+        oauth2: bool = False,
         rate_limiter: UndefinedOr[
             typing.Optional[typing.Union[Callable[[HTTPClient], typing.Optional[RateLimiter]], RateLimiter]]
         ] = UNDEFINED,
@@ -583,6 +605,7 @@ class HTTPClient:
         self.bot: bool = bot
         self.cookie: typing.Optional[str] = cookie
         self.max_retries: int = max_retries or 3
+        self.oauth2: bool = oauth2
 
         if rate_limiter is UNDEFINED:
             self.rate_limiter: typing.Optional[RateLimiter] = DefaultRateLimiter()
@@ -646,7 +669,7 @@ class HTTPClient:
         """
         return self._base + route.build()
 
-    def with_credentials(self, token: str, *, bot: bool = True) -> None:
+    def with_credentials(self, token: str, *, bot: bool = True, oauth2: bool = False) -> None:
         """Modifies HTTP client credentials.
 
         Parameters
@@ -655,9 +678,12 @@ class HTTPClient:
             The authentication token.
         bot: :class:`bool`
             Whether the token belongs to bot account or not. Defaults to ``True``.
+        oauth2: :class:`bool`
+            Whether the token is an OAuth2 access token. Defaults to ``False``.
         """
         self.token = token
         self.bot = bot
+        self.oauth2 = oauth2
 
     async def get_adapter(self) -> HTTPAdapter:
         if self._adapter is None:
@@ -697,6 +723,7 @@ class HTTPClient:
         idempotency_key: typing.Optional[str] = None,
         json_body: bool = False,
         mfa_ticket: typing.Optional[str] = None,
+        oauth2: UndefinedOr[bool] = UNDEFINED,
         overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
@@ -712,7 +739,7 @@ class HTTPClient:
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
         bot: UndefinedOr[:class:`bool`]
-            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+            Whether the authentication token belongs to bot account. Defaults to :attr:`bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
         idempotency_key: Optional[:class:`str`]
@@ -721,12 +748,14 @@ class HTTPClient:
             Whether the request body is JSON.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        oauth2: UndefinedOr[:class:`bool`]
+            Whether the token is an OAuth2 access token. Defaults to :attr:`oauth2`.
         overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
-            The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+            The user agent to use for HTTP request. Defaults to :attr:`user_agent`.
 
         Returns
         -------
@@ -749,7 +778,15 @@ class HTTPClient:
         if bot is UNDEFINED:
             bot = self.bot
 
-        th = 'X-Bot-Token' if bot else 'X-Session-Token'
+        if oauth2 is UNDEFINED:
+            oauth2 = self.oauth2
+
+        if bot:
+            th = 'X-Bot-Token'
+        elif oauth2:
+            th = 'X-OAuth2-Token'
+        else:
+            th = 'X-Session-Token'
 
         if token is UNDEFINED:
             token = self.token
@@ -1295,6 +1332,8 @@ class HTTPClient:
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
         interactions_url: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        oauth2: UndefinedOr[typing.Optional[BotOAuth2Edit]] = UNDEFINED,
+        reset_oauth2_client_secret: bool = False,
         reset_token: bool = False,
     ) -> Bot:
         """|coro|
@@ -1317,6 +1356,10 @@ class HTTPClient:
             Whether to allow Revolt collect analytics about the bot.
         interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
+        oauth2: UndefinedOr[Optional[:class:`BotOAuth2Edit`]]
+            The new bot's OAuth2 settings.
+        reset_oauth2_client_secret: :class:`bool`
+            Whether to reset bot's OAuth2 client secret. The new client secret can be accessed via :attr:`BotOAuth2.secret`.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via :attr:`Bot.token`.
 
@@ -1375,6 +1418,14 @@ class HTTPClient:
                 remove.append('InteractionsURL')
             else:
                 payload['interactions_url'] = interactions_url
+        if oauth2 is not UNDEFINED:
+            if oauth2 is None:
+                remove.append('Oauth2')
+            else:
+                payload['oauth2'] = oauth2.to_dict()
+                remove.extend(oauth2.remove)
+        if reset_oauth2_client_secret:
+            remove.append('Oauth2Secret')
         if reset_token:
             remove.append('Token')
         if len(remove) > 0:
@@ -4446,6 +4497,482 @@ class HTTPClient:
             )
         else:
             raise NotImplementedError(resp)
+
+    # OAuth2 control
+    async def get_authorized_bots(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[OAuth2Authorization]:
+        """|coro|
+
+        Retrieve bots that you have authorized.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+
+        resp: list[raw.AuthorizedBot] = await self.request(
+            routes.OAUTH2_AUTHORIZED_BOTS.compile(), http_overrides=http_overrides
+        )
+        return list(map(self.state.parser.parse_oauth2_authorization, resp))
+
+    async def authorize(
+        self,
+        client: ULIDOr[BaseBot],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        scopes: list[typing.Union[OAuth2Scope, str]],
+        redirect_uri: str,
+        response_type: OAuth2ResponseType = OAuth2ResponseType.code,
+        state: typing.Optional[str] = None,
+        code_challenge: typing.Optional[str] = None,
+        code_challenge_method: typing.Optional[OAuth2CodeChallengeMethod] = None,
+    ) -> str:
+        """|coro|
+
+        Authorizes the bot.
+
+        .. note::
+            This can only be used by non-bot accounts.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        client: ULIDOr[:class:`BaseBot`]
+            The bot to authorize.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        scopes: List[Union[:class:`OAuth2Scope`, :class:`str`]]
+            A list of scopes to authorize.
+        redirect_uri: :class:`str`
+            The URI to redirect to after authorizing the bot.
+        response_type: :class:`OAuth2ResponseType`
+            The response type. Defaults to :attr:`~OAuth2ResponseType.code`.
+
+            This specifies what will be received in ``code`` parameter in returned URI.
+        state: Optional[:class:`str`]
+            The state. Must be between 44 and 127 characters if provided.
+
+            This cannot be specified if ``response_type`` is set to :attr:`~OAuth2ResponseType.code`.
+        code_challenge: Optional[:class:`str`]
+            The code challenge.
+        code_challenge_method: Optional[:class:`OAuth2CodeChallengeMethod`]
+            The method of generating OAuth2 code challenge.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------------------------------------------------------------------------------------+
+            | Value                | Reason                                                                                               |
+            +----------------------+------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation`` | One of these:                                                                                        |
+            |                      |                                                                                                      |
+            |                      | - The bot did not had OAuth2 set up.                                                                 |
+            |                      | - One of requested scopes is invalid.                                                                |
+            |                      | - You tried to request scope that bot does not have access to.                                       |
+            |                      | - Provided redirect URI was not whitelisted.                                                         |
+            |                      | - No scope was provided.                                                                             |
+            |                      | - One of ``state``, ``code_challenge`` or ``code_challenge_method`` is provided                      |
+            |                      | and ``response_type`` was :attr:`~OAuth2ResponseType.code`.                                          |
+            |                      | - The provided code challenge was invalid.                                                           |
+            |                      | - The state violated length constraints described above. This won't be thrown if ``response_type``   |
+            |                      | is not :attr:`~OAuth2ResponseType.code`.                                                             |
+            |                      | - An OAuth2 token was directly requested and the bot was not a public client.                        |
+            +----------------------+------------------------------------------------------------------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.                                                            |
+            +----------------------+------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------+
+            | Value        | Reason                 |
+            +--------------+------------------------+
+            | ``NotFound`` | The bot was not found. |
+            +--------------+------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+----------------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                                   | Populated attributes                                                |
+            +-------------------+----------------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.           | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+----------------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during authorizing the bot. |                                                                     |
+            +-------------------+----------------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`str`
+            The redirect URI with ``code`` querystring parameter.
+        """
+        form = HTTPForm()
+        form.add_field('client_id', resolve_id(client))
+        form.add_field('scope', ' '.join(scope.value if isinstance(scope, OAuth2Scope) else scope for scope in scopes))
+        form.add_field('redirect_uri', redirect_uri)
+        form.add_field('response_type', response_type.value)
+
+        if state is not None:
+            form.add_field('state', state)
+        if code_challenge is not None:
+            form.add_field('code_challenge', code_challenge)
+        if code_challenge_method is not None:
+            form.add_field('code_challenge_method', code_challenge_method.value)
+
+        resp: raw.OAuth2AuthorizeAuthResponse = await self.request(
+            routes.OAUTH2_AUTHORIZE_AUTH.compile(),
+            http_overrides=http_overrides,
+            form=form,
+        )
+        return resp['redirect_uri']
+
+    async def get_possible_oauth2_authorization(
+        self,
+        client: ULIDOr[BaseBot],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        scopes: list[typing.Union[OAuth2Scope, str]],
+        redirect_uri: str,
+        response_type: OAuth2ResponseType = OAuth2ResponseType.code,
+        state: typing.Optional[str] = None,
+        code_challenge: typing.Optional[str] = None,
+        code_challenge_method: typing.Optional[OAuth2CodeChallengeMethod] = None,
+    ) -> PossibleOAuth2Authorization:
+        """|coro|
+
+        Retrieve information about possible OAuth2 authorization.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        client: ULIDOr[:class:`BaseBot`]
+            The bot to retrieve possible OAuth2 authorization for.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        scopes: List[Union[:class:`OAuth2Scope`, :class:`str`]]
+            A list of scopes.
+        redirect_uri: :class:`str`
+            The redirect URI.
+        response_type: :class:`OAuth2ResponseType`
+            The response type. Defaults to :attr:`~OAuth2ResponseType.code`.
+        state: Optional[:class:`str`]
+            The state.
+        code_challenge: Optional[:class:`str`]
+            The code challenge.
+        code_challenge_method: Optional[:class:`OAuth2CodeChallengeMethod`]
+            The method of generating OAuth2 code challenge.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------+
+            | Value                | Reason                                       |
+            +----------------------+----------------------------------------------+
+            | ``InvalidOperation`` | One of these:                                |
+            |                      |                                              |
+            |                      | - The bot did not had OAuth2 set up.         |
+            |                      | - Provided redirect URI was not whitelisted. |
+            +----------------------+----------------------------------------------+
+            | ``IsBot``            | The current token belongs to bot account.    |
+            +----------------------+----------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------+
+            | Value        | Reason                 |
+            +--------------+------------------------+
+            | ``NotFound`` | The bot was not found. |
+            +--------------+------------------------+
+
+        Returns
+        -------
+        :class:`PossibleOAuth2Authorization`
+            The retrieved possible OAuth2 authorization.
+        """
+
+        params: raw.OAuth2AuthorizationForm = {
+            'client_id': resolve_id(client),
+            'scope': ' '.join(scope.value if isinstance(scope, OAuth2Scope) else scope for scope in scopes),
+            'redirect_uri': redirect_uri,
+            'response_type': response_type.value,
+        }
+
+        if state is not None:
+            params['state'] = state
+        if code_challenge is not None:
+            params['code_challenge'] = code_challenge
+        if code_challenge_method is not None:
+            params['code_challenge_method'] = code_challenge_method.value
+
+        resp: raw.OAuth2AuthorizeInfoResponse = await self.request(
+            routes.OAUTH2_AUTHORIZE_INFO.compile(),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        return self.state.parser.parse_possible_oauth2_authorization(resp)
+
+    async def revoke_oauth2_authorization(
+        self,
+        bot: typing.Union[BaseBot, OAuth2Authorization, str],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> OAuth2Authorization:
+        """|coro|
+
+        Revokes the OAuth2 authorization.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        bot: Union[:class:`BaseBot`, :class:`OAuth2Authorization`, :class:`str`]
+            The bot to deauthorize, OAuth2 authorization to remove, or ID of the bot to deauthorize.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------------+
+            | Value                | Reason                         |
+            +----------------------+--------------------------------+
+            | ``InvalidOperation`` | The token was already revoked. |
+            +----------------------+--------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The OAuth2 authorization was deleted. |
+            +--------------+---------------------------------------+
+
+        Returns
+        -------
+        :class:`OAuth2Authorization`
+            The revoked OAuth2 authorization.
+        """
+
+        if isinstance(bot, OAuth2Authorization):
+            bot = bot.bot_id
+        elif isinstance(bot, Base):
+            bot = bot.id
+
+        resp: raw.AuthorizedBot = await self.request(
+            routes.OAUTH2_REVOKE.compile(),
+            http_overrides=http_overrides,
+            params={'client_id': bot},
+        )
+        return self.state.parser.parse_oauth2_authorization(resp)
+
+    async def revoke_oauth2_token(
+        self,
+        token: typing.Optional[str] = None,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> OAuth2Authorization:
+        """|coro|
+
+        Revokes the OAuth2 token.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        token: Optional[:class:`str`]
+            The token to revoke. Defaults to the current one.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------------------------------------------------------------+
+            | Value                | Reason                                                                       |
+            +----------------------+------------------------------------------------------------------------------+
+            | ``InvalidOperation`` | The token was not an access/refresh token, or the token was already revoked. |
+            +----------------------+------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+------------------------+
+            | Value                | Reason                 |
+            +----------------------+------------------------+
+            | ``NotAuthenticated`` | The token was invalid. |
+            +----------------------+------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The OAuth2 authorization was deleted. |
+            +--------------+---------------------------------------+
+
+        Returns
+        -------
+        :class:`OAuth2Authorization`
+            The revoked OAuth2 authorization.
+        """
+        if token is None:
+            token = self.token
+
+        resp: raw.AuthorizedBot = await self.request(
+            routes.OAUTH2_REVOKE.compile(),
+            http_overrides=http_overrides,
+            params={
+                'token': token,
+            },
+            token=None,
+        )
+        return self.state.parser.parse_oauth2_authorization(resp)
+
+    async def exchange_token(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        client: ULIDOr[BaseBot],
+        client_secret: typing.Optional[str] = None,
+        code: typing.Optional[str] = None,
+        refresh_token: typing.Optional[str] = None,
+        grant_type: OAuth2GrantType,
+        code_verifier: typing.Optional[str] = None,
+    ) -> OAuth2AccessToken:
+        """|coro|
+
+        Exchanges an access token, or refresh an existing one.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        client: ULIDOr[:class:`BaseBot`]
+            The bot to exchange token for.
+        client_secret: Optional[:class:`str`]
+            The client secret. Required if ``grant_type`` is :attr:`~OAuth2GrantType.authorization_code`.
+        grant_type: :class:`OAuth2GrantType`
+            The grant type. Only :attr:`~OAuth2GrantType.authorization_code` is currently supported.
+        code: Optional[:class:`str`]
+            The code to exchange.
+        refresh_token: Optional[:class:`str`]
+            The refresh token to exchange access token from.
+        code_verifier: Optional[:class:`str`]
+            The code verifier.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------------------------+
+            | Value                | Reason                                                         |
+            +----------------------+----------------------------------------------------------------+
+            | ``InvalidOperation`` | One of these:                                                  |
+            |                      |                                                                |
+            |                      | - The provided "code" was an access token.                     |
+            |                      | - ``grant_type`` was set to :attr:`~OAuth2GrantType.implicit`. |
+            +----------------------+----------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+-----------------------------------------------------------------+
+            | Value                | Reason                                                          |
+            +----------------------+-----------------------------------------------------------------+
+            | ``NotAuthenticated`` | One of these:                                                   |
+            |                      |                                                                 |
+            |                      | - The code was tamped.                                          |
+            |                      | - The provided client secret did not match bot's client secret. |
+            |                      | - The code does not belong to provided client.                  |
+            |                      | - The code expired.                                             |
+            +----------------------+-----------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+------------------------+
+            | Value        | Reason                 |
+            +--------------+------------------------+
+            | ``NotFound`` | The bot was not found. |
+            +--------------+------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+----------------------------------------------------------+
+            | Value             | Reason                                                   |
+            +-------------------+----------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during authorizing the bot. |
+            +-------------------+----------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`OAuth2AccessToken`
+            The OAuth2 access token.
+        """
+        form = HTTPForm()
+
+        form.add_field('grant_type', grant_type.value)
+        form.add_field('client_id', resolve_id(client))
+        if client_secret is not None:
+            form.add_field('client_secret', client_secret)
+        if code is not None:
+            form.add_field('code', code)
+        if refresh_token is not None:
+            form.add_field('refresh_token', refresh_token)
+        if code_verifier is not None:
+            form.add_field('code_verifier', code_verifier)
+
+        resp: raw.OAuth2TokenExchangeResponse = await self.request(
+            routes.OAUTH2_TOKEN.compile(), http_overrides=http_overrides, form=form, token=None
+        )
+        return self.state.parser.parse_oauth2_access_token(resp)
 
     # Onboarding control
     async def complete_onboarding(
@@ -8185,6 +8712,64 @@ class HTTPClient:
         """
         resp: raw.User = await self.request(routes.USERS_FETCH_SELF.compile(), http_overrides=http_overrides)
         return self.state.parser.parse_own_user(resp)
+
+    async def get_servers(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        populate_channels: typing.Optional[bool] = None,
+    ) -> Server:
+        """|coro|
+
+        Retrieves the list of :class:`Server`\\'s the user is in.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`~pyvolt.HTTPOverrideOptions`]
+            The HTTP request overrides.
+        populate_channels: Optional[:class:`bool`]
+            Whether to populate :attr:`Server.channels`.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+
+        Returns
+        -------
+        List[:class:`Server`]
+            The retrieved servers.
+        """
+        params: raw.OptionsFetchServer = {}
+        if populate_channels is not None:
+            params['include_channels'] = utils._bool(populate_channels)
+
+        resp: list[raw.FetchServerResponse] = await self.request(
+            routes.USERS_FETCH_SELF_SERVERS.compile(),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        return [
+            self.state.parser.parse_server(
+                d,  # type: ignore
+                (not populate_channels, d['channels']),  # type: ignore
+            )
+            for d in resp
+        ]
 
     async def get_user(
         self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
