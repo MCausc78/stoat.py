@@ -1,7 +1,7 @@
-pyvolt
-======
+stoat.py
+========
 
-A simple, flexible API wrapper for Revolt.
+A simple, flexible API wrapper for Stoat.
 
 .. note::
     This is beta software. Please report bugs on GitHub issues if you will find any.

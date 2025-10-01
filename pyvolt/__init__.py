@@ -1,8 +1,8 @@
 """
-Revolt API Wrapper
-~~~~~~~~~~~~~~~~~~~
+Stoat API Wrapper
+~~~~~~~~~~~~~~~~~
 
-A basic wrapper for the Revolt API.
+A basic wrapper for the Stoat API.
 
 :copyright: (c) 2024-present MCausc78
 :license: MIT, see LICENSE for more details.

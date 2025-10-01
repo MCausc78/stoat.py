@@ -86,11 +86,11 @@ class EventHandler(ABC):
         ...
 
     def before_connect(self, shard: Shard, /) -> utils.MaybeAwaitable[None]:
-        """Called before connecting to Revolt."""
+        """Called before connecting to Stoat."""
         ...
 
     def after_connect(self, shard: Shard, socket: HTTPWebSocket, /) -> utils.MaybeAwaitable[None]:
-        """Called when successfully connected to Revolt WebSocket.
+        """Called when successfully connected to Stoat WebSocket.
 
         Parameters
         ----------
@@ -129,7 +129,7 @@ class Shard(ABC):
     @property
     @abstractmethod
     def format(self) -> ShardFormat:
-        """:class:`ShardFormat`: The message format to use when communicating with Revolt WebSocket."""
+        """:class:`ShardFormat`: The message format to use when communicating with Stoat WebSocket."""
         ...
 
     @property
@@ -168,7 +168,7 @@ class Shard(ABC):
 
     @abstractmethod
     async def close(self) -> None:
-        """Closes the connection to Revolt."""
+        """Closes the connection to Stoat."""
         ...
 
     @property
@@ -290,7 +290,7 @@ class Shard(ABC):
 
 
 class ShardImpl(Shard):
-    """Implements Revolt WebSocket client.
+    """Implements Stoat WebSocket client.
 
     Attributes
     ----------
@@ -301,7 +301,7 @@ class ShardImpl(Shard):
     connect_delay: Optional[:class:`float`]
         The duration in seconds to sleep when reconnecting to WebSocket due to aiohttp errors. Defaults to 2.
     format: :class:`ShardFormat`
-        The message format to use when communicating with Revolt WebSocket.
+        The message format to use when communicating with Stoat WebSocket.
     handler: Optional[:class:`EventHandler`]
         The handler that receives events. Defaults to ``None`` if not provided.
     last_ping_at: Optional[:class:`~datetime.datetime`]
@@ -369,7 +369,7 @@ class ShardImpl(Shard):
         self._adapter: typing.Optional[typing.Union[utils.MaybeAwaitableFunc[[Shard], HTTPAdapter], HTTPAdapter]] = (
             adapter
         )
-        self._base_url: str = base_url or 'wss://ws.revolt.chat/'
+        self._base_url: str = base_url or 'wss://events.stoat.chat/'
         self._bot: bool = bot
         self._closed: bool = False
         self._format: ShardFormat = format
@@ -512,7 +512,7 @@ class ShardImpl(Shard):
     async def close(self) -> None:
         """|coro|
 
-        Closes the connection to Revolt.
+        Closes the connection to Stoat.
         """
         if self._socket is not None:
             if self._closed:

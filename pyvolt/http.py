@@ -173,7 +173,7 @@ class RateLimit(ABC):
 
     @abstractmethod
     def on_response(self, route: routes.CompiledRoute, response: HTTPResponse, /) -> None:
-        """Called when any response from Revolt API is received.
+        """Called when any response from Stoat API is received.
 
         This has same note as :meth:`RateLimiter.on_response`.
 
@@ -210,7 +210,7 @@ class RateLimiter(ABC):
 
     @abstractmethod
     async def on_response(self, route: routes.CompiledRoute, path: str, response: HTTPResponse, /) -> None:
-        """Called when any response from Revolt API is received.
+        """Called when any response from Stoat API is received.
 
         .. note::
             This is always called, even when request fails for other reasons like failed validation,
@@ -542,7 +542,7 @@ def _resolve_member_id(target: typing.Union[str, BaseUser, BaseMember], /) -> st
 
 
 class HTTPClient:
-    """Represents a HTTP client sending HTTP requests to the Revolt API.
+    """Represents a HTTP client sending HTTP requests to the Stoat API.
 
     Attributes
     ----------
@@ -596,7 +596,7 @@ class HTTPClient:
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if base is None:
-            base = 'https://api.revolt.chat/0.8'
+            base = 'https://api.stoat.chat/0.8'
 
         self._adapter: typing.Optional[
             typing.Union[utils.MaybeAwaitableFunc[[HTTPClient], HTTPAdapter], HTTPAdapter]
@@ -768,7 +768,7 @@ class HTTPClient:
         if json_body:
             headers['Content-type'] = 'application/json'
 
-        # Allow users to set cookie if Revolt is under attack mode
+        # Allow users to set cookie if Stoat is under attack mode
         if cookie is UNDEFINED:
             if self.cookie:
                 headers['Cookie'] = self.cookie
@@ -1207,7 +1207,7 @@ class HTTPClient:
     async def create_bot(self, name: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Bot:
         """|coro|
 
-        Creates a new Revolt bot.
+        Creates a new Stoat bot.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -1270,7 +1270,7 @@ class HTTPClient:
             routes.BOTS_CREATE.compile(), http_overrides=http_overrides, json=payload
         )
 
-        # TODO: Remove when Revolt will fix this
+        # TODO: Remove when Stoat will fix this
         if resp['user']['relationship'] == 'User':
             resp['user']['relationship'] = 'None'
         return self.state.parser.parse_bot(resp, resp['user'])
@@ -1353,7 +1353,7 @@ class HTTPClient:
         public: UndefinedOr[:class:`bool`]
             Whether the bot should be public (could be invited by anyone).
         analytics: UndefinedOr[:class:`bool`]
-            Whether to allow Revolt collect analytics about the bot.
+            Whether to allow Stoat collect analytics about the bot.
         interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
         oauth2: UndefinedOr[Optional[:class:`BotOAuth2Edit`]]
@@ -1437,7 +1437,7 @@ class HTTPClient:
             json=payload,
         )
 
-        # TODO: Remove when Revolt will fix this
+        # TODO: Remove when Stoat will fix this
         if resp['user']['relationship'] == 'User':
             resp['user']['relationship'] = 'None'
 
@@ -7790,7 +7790,7 @@ class HTTPClient:
         flags: UndefinedOr[:class:`ServerFlags`]
             The new server flags. You must be a privileged user to provide this.
         discoverable: UndefinedOr[:class:`bool`]
-            Whether this server is public and should show up on `Revolt Discover <https://rvlt.gg>`_.
+            Whether this server is public and should show up on `Stoat Discover <https://rvlt.gg>`_.
 
             The new server flags. You must be a privileged user to provide this.
         analytics: UndefinedOr[:class:`bool`]

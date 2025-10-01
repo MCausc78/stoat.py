@@ -55,9 +55,9 @@ _new_server_flags = ServerFlags.__new__
 
 @define(slots=True)
 class DiscoverableServer(BaseServer):
-    """Represents a server on Revolt Discovery. The ID is an invite code.
+    """Represents a server on Stoat Discovery. The ID is an invite code.
 
-    This inherits from :class:`.BaseServer`.
+    This inherits from :class:`BaseServer`.
     """
 
     name: str = field(repr=True, kw_only=True)
@@ -67,10 +67,10 @@ class DiscoverableServer(BaseServer):
     """Optional[:class:`str`]: The server's description."""
 
     internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless server icon."""
+    """Optional[:class:`StatelessAsset`]: The stateless server icon."""
 
     internal_banner: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless server banner."""
+    """Optional[:class:`StatelessAsset`]: The stateless server banner."""
 
     raw_flags: int = field(repr=True, kw_only=True)
     """:class:`int`: The server's flags raw value."""
@@ -82,18 +82,18 @@ class DiscoverableServer(BaseServer):
     """:class:`int`: The server's member count."""
 
     activity: ServerActivity = field(repr=True, kw_only=True)
-    """:class:`.ServerActivity`: The server's activity."""
+    """:class:`ServerActivity`: The server's activity."""
 
     @property
     def flags(self) -> ServerFlags:
-        """:class:`.ServerFlags`: The server's flags."""
+        """:class:`ServerFlags`: The server's flags."""
         ret = _new_server_flags(ServerFlags)
         ret.value = self.raw_flags
         return ret
 
     @property
     def icon(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The server's icon."""
+        """Optional[:class:`Asset`]: The server's icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
@@ -103,7 +103,7 @@ class DiscoverableServer(BaseServer):
 
     @property
     def banner(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The server's banner."""
+        """Optional[:class:`Asset`]: The server's banner."""
         return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
 
 
@@ -112,7 +112,7 @@ class DiscoverableServersPage:
     """A data class representing results for getting all listed servers."""
 
     servers: list[DiscoverableServer] = field(repr=True, kw_only=True)
-    """List[:class:`.DiscoverableServer`]: The listed servers, up to 200 servers."""
+    """List[:class:`DiscoverableServer`]: The listed servers, up to 200 servers."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The popular tags used in discoverable servers."""
@@ -120,19 +120,19 @@ class DiscoverableServersPage:
 
 @define(slots=True)
 class DiscoverableBot(BaseBot):
-    """Represents a bot on Revolt Discovery.
+    """Represents a bot on Stoat Discovery.
 
-    This inherits from :class:`.BaseBot`.
+    This inherits from :class:`BaseBot`.
     """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The bot's name."""
 
     internal_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless bot's avatar."""
+    """Optional[:class:`StatelessAsset`]: The stateless bot's avatar."""
 
     internal_profile: StatelessUserProfile = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessUserProfile`]: The stateless bot's profile."""
+    """Optional[:class:`StatelessUserProfile`]: The stateless bot's profile."""
 
     tags: list[str] = field(repr=True, kw_only=True)
     """List[:class:`int`]: The bot's tags."""
@@ -141,11 +141,11 @@ class DiscoverableBot(BaseBot):
     """:class:`int`: The bot's servers count."""
 
     usage: BotUsage = field(repr=True, kw_only=True)
-    """:class:`.BotUsage`: How frequently is bot being used."""
+    """:class:`BotUsage`: How frequently is bot being used."""
 
     @property
     def avatar(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The bot's avatar."""
+        """Optional[:class:`Asset`]: The bot's avatar."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
@@ -155,7 +155,7 @@ class DiscoverableBot(BaseBot):
 
     @property
     def profile(self) -> UserProfile:
-        """:class:`.UserProfile`: The bot's profile."""
+        """:class:`UserProfile`: The bot's profile."""
         return self.internal_profile.attach_state(self.state, self.id)
 
 
@@ -164,7 +164,7 @@ class DiscoverableBotsPage:
     """A data class representing results for getting all listed bots."""
 
     bots: list[DiscoverableBot] = field(repr=True, kw_only=True)
-    """List[:class:`.DiscoverableBot`]: The listed bots, up to 200 bots."""
+    """List[:class:`DiscoverableBot`]: The listed bots, up to 200 bots."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The popular tags used in discoverable bots."""
@@ -172,13 +172,13 @@ class DiscoverableBotsPage:
 
 @define(slots=True)
 class DiscoverableTheme:
-    """Represents a theme on Revolt Discovery.
+    """Represents a theme on Stoat Discovery.
 
     Themes are currently only available in Discover.
     """
 
     state: State = field(repr=False)
-    """:class:`.State`: State that controls this theme."""
+    """:class:`State`: State that controls this theme."""
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The theme name."""
@@ -196,7 +196,7 @@ class DiscoverableTheme:
     """List[:class:`str`]: The theme tags."""
 
     overrides: dict[ReviteThemeVariable, str] = field(repr=True, kw_only=True)
-    """Dict[:class:`.ReviteThemeVariable`, :class:`str`]: The theme overrides in format ``{css_class: css_color}``."""
+    """Dict[:class:`ReviteThemeVariable`, :class:`str`]: The theme overrides in format ``{css_class: css_color}``."""
 
     version: str = field(repr=True, kw_only=True)
     """:class:`str`: The theme version."""
@@ -222,7 +222,7 @@ class DiscoverableTheme:
 
         Parameters
         ----------
-        base_theme: UndefinedOr[:class:`.ReviteBaseTheme`]
+        base_theme: UndefinedOr[:class:`ReviteBaseTheme`]
             The base theme to use, when applying theme.
         """
         await self.state.settings.revite.edit(
@@ -237,7 +237,7 @@ class DiscoverableThemesPage:
     """A data class representing results for getting all listed themes."""
 
     themes: list[DiscoverableTheme] = field(repr=True, kw_only=True)
-    """List[:class:`.DiscoverableTheme`]: The listed themes, up to 200 themes."""
+    """List[:class:`DiscoverableTheme`]: The listed themes, up to 200 themes."""
 
     popular_tags: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The popular tags used in discoverable themes."""
@@ -264,7 +264,7 @@ class ServerSearchResult:
     """:class:`int`: The servers count."""
 
     servers: list[DiscoverableServer] = field(repr=True, kw_only=True)
-    """List[:class:`.DiscoverableServer`]: The listed servers."""
+    """List[:class:`DiscoverableServer`]: The listed servers."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: All of tags that listed servers have."""
@@ -281,7 +281,7 @@ class BotSearchResult:
     """:class:`int`: The bots count."""
 
     bots: list[DiscoverableBot] = field(repr=True, kw_only=True)
-    """List[:class:`.DiscoverableBot`]: The listed bots."""
+    """List[:class:`DiscoverableBot`]: The listed bots."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: All of tags that listed bots have."""
@@ -298,13 +298,13 @@ class ThemeSearchResult:
     """:class:`int`: The themes count."""
 
     themes: list[DiscoverableTheme] = field(repr=True, kw_only=True)
-    """List[:class:`.DiscoverableTheme`]: The listed themes."""
+    """List[:class:`DiscoverableTheme`]: The listed themes."""
 
     related_tags: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: All of tags that listed themes have."""
 
 
-DISCOVERY_BUILD_ID: typing.Final[str] = '9I_qurZmA2SKF8CAOcQAv'
+DISCOVERY_BUILD_ID: typing.Final[str] = 'xRifBCgSq3i4ArCw9rSHg'
 RE_DISCOVERY_BUILD_ID: typing.Final[re.Pattern[str]] = re.compile(r'"buildId":\s*"([0-9A-Za-z_-]+)"')
 
 
@@ -313,7 +313,7 @@ class DiscoveryClient:
 
     Parameters
     ----------
-    adapter: Optional[Union[MaybeAwaitableFunc[[:class:`.DiscoveryClient`], :class:`.HTTPAdapter`], :class:`.HTTPAdapter`]]
+    adapter: Optional[Union[MaybeAwaitableFunc[[:class:`DiscoveryClient`], :class:`HTTPAdapter`], :class:`HTTPAdapter`]]
         The adapter to use when making HTTP requests.
     base_url: Optional[:class:`str`]
         The base Discover API URL.
@@ -344,7 +344,7 @@ class DiscoveryClient:
             typing.Union[utils.MaybeAwaitableFunc[[DiscoveryClient], HTTPAdapter], HTTPAdapter]
         ] = adapter
         self._base: str = (
-            f'https://rvlt.gg/_next/data/{DISCOVERY_BUILD_ID}' if base_url is None else base_url.rstrip('/')
+            f'https://stt.gg/_next/data/{DISCOVERY_BUILD_ID}' if base_url is None else base_url.rstrip('/')
         )
         self.state: State = state
         self.user_agent: str = user_agent or DEFAULT_DISCOVERY_USER_AGENT
@@ -384,7 +384,7 @@ class DiscoveryClient:
         Retrieves latest discover client build ID.
 
         .. note::
-            This always retrieves **only from** `official Discover instance <https://rvlt.gg/>`_.
+            This always retrieves **only from** `official Discover instance <https://stt.gg/>`_.
 
         Raises
         ------
@@ -405,7 +405,7 @@ class DiscoveryClient:
         if isawaitable(tmp):
             await tmp
 
-        response = await adapter.request('GET', 'https://rvlt.gg/discover/servers', headers=headers)
+        response = await adapter.request('GET', 'https://stt.gg/discover/servers', headers=headers)
         data = await utils._json_or_text(response)
 
         if not response.closed:
@@ -468,12 +468,12 @@ class DiscoveryClient:
                 if (
                     i == 1
                     and response.status == 404
-                    and self._base.startswith('https://rvlt.gg/_next/data/')
+                    and self._base.startswith('https://stt.gg/_next/data/')
                     and isinstance(data, str)
                 ):
                     match = RE_DISCOVERY_BUILD_ID.search(data)
                     if match is not None:
-                        self._base = f'https://rvlt.gg/_next/data/{match.group(1)}'
+                        self._base = f'https://stt.gg/_next/data/{match.group(1)}'
                     continue
                 raise DiscoverError(response, response.status, data)
             return response
@@ -492,7 +492,7 @@ class DiscoveryClient:
             The build ID.
         """
         build_id = await self.fetch_build_id()
-        self._base = f'https://rvlt.gg/_next/data/{build_id}'
+        self._base = f'https://stt.gg/_next/data/{build_id}'
         return build_id
 
     async def request(self, method: str, path: str, /, **kwargs) -> typing.Any:
