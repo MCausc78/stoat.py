@@ -97,7 +97,7 @@ class InstanceLivekitVoiceFeature:
     """:class:`bool`: Whether the voice server is enabled on current instance."""
 
     nodes: list[InstanceLivekitVoiceNode] = field(repr=True, kw_only=True)
-    """List[:class:`.InstanceLivekitVoiceNode`]: The Livekit nodes on this instance."""
+    """List[:class:`InstanceLivekitVoiceNode`]: The Livekit nodes on this instance."""
 
     def is_voso(self) -> typing.Literal[False]:
         return False
@@ -117,7 +117,7 @@ class InstanceFeaturesConfig:
     """Represents how features are configured on this Revolt instance."""
 
     captcha: InstanceCaptchaFeature = field(repr=True, kw_only=True)
-    """:class:`.InstanceCaptchaFeature`: The CAPTCHA configuration."""
+    """:class:`InstanceCaptchaFeature`: The CAPTCHA configuration."""
 
     email_verification: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether is E-Mail verification required."""
@@ -126,13 +126,13 @@ class InstanceFeaturesConfig:
     """:class:`bool`: Whether this server is invite only."""
 
     autumn: InstanceGenericFeature = field(repr=True, kw_only=True)
-    """:class:`.InstanceGenericFeature`: The configuration for Autumn (file server service)."""
+    """:class:`InstanceGenericFeature`: The configuration for Autumn (file server service)."""
 
     january: InstanceGenericFeature = field(repr=True, kw_only=True)
-    """:class:`.InstanceGenericFeature`: The configuration for January (embed server service)."""
+    """:class:`InstanceGenericFeature`: The configuration for January (embed server service)."""
 
     voice: InstanceVoiceFeature = field(repr=True, kw_only=True)
-    """:class:`.InstanceVoiceFeature`: The configuration for Vortex or Livekit (voice server service)."""
+    """:class:`InstanceVoiceFeature`: The configuration for Vortex or Livekit (voice server service)."""
 
 
 # Sample build object (own instance):
@@ -178,7 +178,7 @@ class Instance:
     """:class:`str`: The API version."""
 
     features: InstanceFeaturesConfig = field(repr=True, kw_only=True)
-    """:class:`.InstanceFeaturesConfig`: The configuration of features enabled on this Revolt node."""
+    """:class:`InstanceFeaturesConfig`: The configuration of features enabled on this Revolt node."""
 
     websocket_url: str = field(repr=True, kw_only=True)
     """:class:`str`: The WebSocket URL."""
@@ -190,7 +190,7 @@ class Instance:
     """:class:`str`: The VAPID public key, used for WebPush."""
 
     build: InstanceBuild = field(repr=True, kw_only=True)
-    """:class:`.InstanceBuild`: The information of build of this instance."""
+    """:class:`InstanceBuild`: The information of build of this instance."""
 
 
 @define(slots=True)

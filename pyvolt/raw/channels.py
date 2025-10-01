@@ -46,6 +46,7 @@ class TextChannel(typing.TypedDict):
     last_message_id: typing_extensions.NotRequired[str]
     default_permissions: typing_extensions.NotRequired[OverrideField]
     role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
+    parent: typing_extensions.NotRequired[str]
     nsfw: typing_extensions.NotRequired[bool]
     voice: typing_extensions.NotRequired[VoiceInformation]
 
@@ -59,6 +60,7 @@ class VoiceChannel(typing.TypedDict):
     icon: typing_extensions.NotRequired[File]
     default_permissions: typing_extensions.NotRequired[OverrideField]
     role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
+    parent: typing_extensions.NotRequired[str]
     nsfw: typing_extensions.NotRequired[bool]
 
 
@@ -82,6 +84,7 @@ class PartialChannel(typing.TypedDict):
     role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
     default_permissions: typing_extensions.NotRequired[OverrideField]
     last_message_id: typing_extensions.NotRequired[str]
+    parent: typing_extensions.NotRequired[str]
     voice: typing_extensions.NotRequired[VoiceInformation]
 
 

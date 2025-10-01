@@ -200,12 +200,12 @@ class RateLimiter(ABC):
 
     @abstractmethod
     def fetch_ratelimit_for(self, route: routes.CompiledRoute, path: str, /) -> typing.Optional[RateLimit]:
-        """Optional[:class:`.RateLimit`]: Must return ratelimit information, if available."""
+        """Optional[:class:`RateLimit`]: Must return ratelimit information, if available."""
         ...
 
     @abstractmethod
     def fetch_blocker_for(self, route: routes.CompiledRoute, path: str, /) -> RateLimitBlocker:
-        """:class:`.RateLimitBlocker`: Returns request blocker."""
+        """:class:`RateLimitBlocker`: Returns request blocker."""
         ...
 
     @abstractmethod
@@ -229,7 +229,7 @@ class RateLimiter(ABC):
 
         Parameters
         ----------
-        response: :class:`.HTTPResponse`
+        response: :class:`HTTPResponse`
             The response.
         route: :class:`~routes.CompiledRoute`
             The route.
@@ -469,7 +469,7 @@ class HTTPOverrideOptions:
     ----------
     accept_json: :class:`bool`
         Whether to explicitly receive JSON or not.
-    adapter: :class:`.HTTPAdapter`
+    adapter: :class:`HTTPAdapter`
         The adapter to use when sending a HTTP request.
     base_url: :class:`str`
         The base API url to use when sending a HTTP request.
@@ -636,7 +636,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        state: Optional[:class:`.State`]
+        state: Optional[:class:`State`]
             The state to attach this HTTP client to. Defaults to :attr:`.state` if set is ``None``.
 
         Returns
@@ -750,7 +750,7 @@ class HTTPClient:
             The MFA ticket to pass in headers.
         oauth2: UndefinedOr[:class:`bool`]
             Whether the token is an OAuth2 access token. Defaults to :attr:`oauth2`.
-        overrides: Optional[:class:`.HTTPOverrideOptions`]
+        overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
@@ -817,7 +817,7 @@ class HTTPClient:
     ) -> HTTPResponse:
         """Perform an actual HTTP request.
 
-        This is different from :meth:`.raw_request` as latter performs complete error and ratelimit handling.
+        This is different from :meth:`raw_request` as latter performs complete error and ratelimit handling.
 
         Parameters
         ----------
@@ -827,14 +827,14 @@ class HTTPClient:
             The URL to send HTTP request to.
         headers: CIMultiDict[Any]
             The HTTP headers.
-        overrides: Optional[:class:`.HTTPOverrideOptions`]
+        overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         \\*\\*kwargs
             The keyword arguments to pass to :meth:`HTTPAdapter.request`.
 
         Returns
         -------
-        :class:`.HTTPResponse`
+        :class:`HTTPResponse`
             The response.
         """
         if overrides and hasattr(overrides, 'adapter') and overrides.adapter is not UNDEFINED:
@@ -878,7 +878,7 @@ class HTTPClient:
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         idempotency_key: Optional[:class:`str`]
             The idempotency key.
@@ -891,7 +891,7 @@ class HTTPClient:
         user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
         \\*\\*kwargs
-            The keyword arguments to pass to :meth:`.send_request`.
+            The keyword arguments to pass to :meth:`send_request`.
 
         Raises
         ------
@@ -900,7 +900,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.HTTPResponse`
+        :class:`HTTPResponse`
             The HTTP response.
         """
         headers: CIMultiDict[str]
@@ -1113,7 +1113,7 @@ class HTTPClient:
             Whether to explicitly receive JSON or not. Defaults to ``True``.
         bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         idempotency_key: Optional[:class:`str`]
             The idempotency key.
@@ -1127,9 +1127,9 @@ class HTTPClient:
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
-            The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+            The user agent to use for HTTP request. Defaults to :attr:`user_agent`.
         \\*\\*kwargs
-            The keyword arguments to pass to :meth:`.send_request`.
+            The keyword arguments to pass to :meth:`send_request`.
 
         Raises
         ------
@@ -1187,7 +1187,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1197,7 +1197,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Instance`
+        :class:`Instance`
             The instance.
         """
         resp: raw.RevoltConfig = await self.request(routes.ROOT.compile(), http_overrides=http_overrides, token=None)
@@ -1216,7 +1216,7 @@ class HTTPClient:
         ----------
         name: :class:`str`
             The bot name. Must be between 2 and 32 characters and not contain whitespace characters.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1282,16 +1282,16 @@ class HTTPClient:
 
         Deletes a bot.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
+        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        bot: ULIDOr[:class:`.BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The bot to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1340,13 +1340,13 @@ class HTTPClient:
 
         Edits the bot.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
+        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
 
         Parameters
         ----------
-        bot: ULIDOr[:class:`.BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The bot to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
@@ -1402,7 +1402,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Bot`
+        :class:`Bot`
             The updated bot.
         """
         payload: raw.DataEditBot = {}
@@ -1460,9 +1460,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: ULIDOr[:class:`.BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The bot to fetch.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1494,7 +1494,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Bot`
+        :class:`Bot`
             The retrieved bot.
         """
         resp: raw.FetchBotResponse = await self.request(
@@ -1512,7 +1512,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1536,7 +1536,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.Bot`]
+        List[:class:`Bot`]
             The owned bots.
         """
         resp: raw.OwnedBotsResponse = await self.request(
@@ -1556,9 +1556,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        bot: ULIDOr[:class:`.BaseBot`]
+        bot: ULIDOr[:class:`BaseBot`]
             The bot to fetch.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1590,7 +1590,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.PublicBot`
+        :class:`PublicBot`
             The retrieved bot.
         """
         resp: raw.PublicBot = await self.request(
@@ -1632,21 +1632,21 @@ class HTTPClient:
 
         If destination is a server, you must have :attr:`~Permissions.manage_server` to do this, otherwise :attr:`~Permissions.create_invites` is required.
 
-        For groups, fires :class:`.PrivateChannelCreateEvent` for bot, :class:`.GroupRecipientAddEvent` and :class:`.MessageCreateEvent` for all group recipients.
-        For servers, fires :class:`.ServerCreateEvent` for bot, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent` for all server members.
+        For groups, fires :class:`PrivateChannelCreateEvent` for bot, :class:`GroupRecipientAddEvent` and :class:`MessageCreateEvent` for all group recipients.
+        For servers, fires :class:`ServerCreateEvent` for bot, :class:`ServerMemberJoinEvent` and :class:`MessageCreateEvent` for all server members.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        bot: ULIDOr[Union[:class:`.BaseBot`, :class:`.BaseUser`]]
+        bot: ULIDOr[Union[:class:`BaseBot`, :class:`BaseUser`]]
             The bot.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        server: Optional[ULIDOr[:class:`.BaseServer`]]
+        server: Optional[ULIDOr[:class:`BaseServer`]]
             The destination server.
-        group: Optional[ULIDOr[:class:`.GroupChannel`]]
+        group: Optional[ULIDOr[:class:`GroupChannel`]]
             The destination group.
 
         Raises
@@ -1744,18 +1744,18 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
-        Fires :class:`.MessageAckEvent` for the current user.
+        Fires :class:`MessageAckEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1814,19 +1814,19 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.view_channel` to do this. If target channel is server channel, :attr:`~Permissions.manage_channels` is also required.
 
-        For DMs, fires :class:`.ChannelUpdateEvent` for the current user and DM recipient.
-        For groups, if the current user is group owner, fires :class:`.PrivateChannelDeleteEvent` for all group recipients (including group owner),
-        otherwise :class:`.PrivateChannelDeleteEvent` is fired for the current user,
-        and :class:`.GroupRecipientRemoveEvent` is fired for rest of group recipients.
-        For server channels, :class:`.ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`.ServerUpdateEvent` for all server members.
+        For DMs, fires :class:`ChannelUpdateEvent` for the current user and DM recipient.
+        For groups, if the current user is group owner, fires :class:`PrivateChannelDeleteEvent` for all group recipients (including group owner),
+        otherwise :class:`PrivateChannelDeleteEvent` is fired for the current user,
+        and :class:`GroupRecipientRemoveEvent` is fired for rest of group recipients.
+        For server channels, :class:`ServerChannelDeleteEvent` is fired for all users who could see target channel, and :class:`ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel to close.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1895,34 +1895,34 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
-        Fires :class:`.ChannelUpdateEvent` for all users who still can see target channel,
-        optionally :class:`.ServerChannelCreateEvent` for all users who now can see target server channel, and
-        optionally :class:`.ChannelDeleteEvent` for users who no longer can see target server channel.
+        Fires :class:`ChannelUpdateEvent` for all users who still can see target channel,
+        optionally :class:`ServerChannelCreateEvent` for all users who now can see target server channel, and
+        optionally :class:`ChannelDeleteEvent` for users who no longer can see target server channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
-            The new channel name. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+            The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
-            The new channel description. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
-        owner: UndefinedOr[ULIDOr[:class:`.BaseUser`]]
-            The new channel owner. Only applicable when target channel is :class:`.GroupChannel`.
-        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
-            The new channel icon. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+            The new channel description. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
+        owner: UndefinedOr[ULIDOr[:class:`BaseUser`]]
+            The new channel owner. Only applicable when target channel is :class:`GroupChannel`.
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
+            The new channel icon. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         nsfw: UndefinedOr[:class:`bool`]
-            To mark the channel as NSFW or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+            To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
-        voice: UndefinedOr[:class:`.ChannelVoiceMetadata`]
+        voice: UndefinedOr[:class:`ChannelVoiceMetadata`]
             The new voice-specific metadata for this channel.
 
             .. versionadded:: 1.2
         default_permissions: UndefinedOr[None]
-            To remove default permissions or not. Only applicable when target channel is :class:`.GroupChannel`, or :class:`.ServerChannel`.
+            To remove default permissions or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
 
         Raises
         ------
@@ -1975,7 +1975,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Channel`
+        :class:`Channel`
             The newly updated channel.
         """
         payload: raw.DataEditChannel = {}
@@ -2018,15 +2018,15 @@ class HTTPClient:
     ) -> Channel:
         """|coro|
 
-        Fetch a :class:`.Channel` with the specified ID.
+        Fetch a :class:`Channel` with the specified ID.
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.BaseChannel`]
+        channel: ULIDOr[:class:`BaseChannel`]
             The channel to fetch.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2058,7 +2058,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Channel`
+        :class:`Channel`
             The retrieved channel.
         """
         resp: raw.Channel = await self.request(
@@ -2080,18 +2080,18 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.create_invites` to do this.
 
-        Fires :class:`.PrivateChannelCreateEvent` for added recipient, and :class:`.GroupRecipientAddEvent` for rest of group recipients.
+        Fires :class:`PrivateChannelCreateEvent` for added recipient, and :class:`GroupRecipientAddEvent` for rest of group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.GroupChannel`]
+        channel: ULIDOr[:class:`GroupChannel`]
             The group.
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to add.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2171,7 +2171,7 @@ class HTTPClient:
 
         Creates a new group.
 
-        Fires :class:`.PrivateChannelCreateEvent` for the current user and all specified recipients.
+        Fires :class:`PrivateChannelCreateEvent` for the current user and all specified recipients.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -2180,13 +2180,13 @@ class HTTPClient:
         ----------
         name: :class:`str`
             The group name. Must be between 1 and 32 characters long.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
             The group description. Can be only up to 1024 characters.
-        icon: Optional[:class:`.ResolvableResource`]
+        icon: Optional[:class:`ResolvableResource`]
             The group's icon.
-        recipients: Optional[List[ULIDOr[:class:`.BaseUser`]]]
+        recipients: Optional[List[ULIDOr[:class:`BaseUser`]]]
             The users to create the group with, only up to 49 users. You must be friends with these users.
         nsfw: Optional[:class:`bool`]
             To mark the group as NSFW or not.
@@ -2242,7 +2242,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.GroupChannel`
+        :class:`GroupChannel`
             The new group.
         """
         payload: raw.DataCreateGroup = {'name': name}
@@ -2273,18 +2273,18 @@ class HTTPClient:
 
         Removes a recipient from the group.
 
-        Fires :class:`.PrivateChannelDeleteEvent` for removed recipient, and :class:`.GroupRecipientRemoveEvent` for rest of group recipients.
+        Fires :class:`PrivateChannelDeleteEvent` for removed recipient, and :class:`GroupRecipientRemoveEvent` for rest of group recipients.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.GroupChannel`]
+        channel: ULIDOr[:class:`GroupChannel`]
             The group.
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to remove.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2359,9 +2359,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.ServerChannel`]]
+        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
             The invite destination channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2411,7 +2411,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Invite`
+        :class:`Invite`
             The invite that was created.
         """
         resp: raw.Invite = await self.request(
@@ -2431,9 +2431,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.GroupChannel`]
+        channel: ULIDOr[:class:`GroupChannel`]
             The group channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2481,7 +2481,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.User`]
+        List[:class:`User`]
             The group recipients.
         """
         resp: list[raw.User] = await self.request(
@@ -2505,15 +2505,15 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_messages` to do this regardless whether you authored the message or not.
 
-        Fires :class:`.MessageDeleteBulkEvent` for all users who can see target channel.
+        Fires :class:`MessageDeleteBulkEvent` for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel.
-        messages: Sequence[ULIDOr[:class:`.BaseMessage`]]
+        messages: Sequence[ULIDOr[:class:`BaseMessage`]]
             The messages to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2580,15 +2580,15 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_messages` to do this.
 
-        Fires :class:`.MessageUpdateEvent` with empty :attr:`~PartialMessage.reactions` for all users who can see target channel.
+        Fires :class:`MessageUpdateEvent` with empty :attr:`~PartialMessage.reactions` for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2647,15 +2647,15 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_messages` to do this if message is not yours.
 
-        Fires :class:`.MessageDeleteEvent` for all users who can see target channel.
+        Fires :class:`MessageDeleteEvent` for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2714,19 +2714,19 @@ class HTTPClient:
 
         Edits a message in channel.
 
-        Fires :class:`.MessageUpdateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
+        Fires :class:`MessageUpdateEvent` and optionally :class:`MessageAppendEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel the message is in.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         content: UndefinedOr[:class:`str`]
             The new content to replace the message with. Must be between 1 and 2000 characters long.
-        embeds: UndefinedOr[List[:class:`.SendableEmbed`]]
+        embeds: UndefinedOr[List[:class:`SendableEmbed`]]
             The new embeds to replace the original with. Must be a maximum of 10. To remove all embeds ``[]`` should be passed.
 
             You must have :attr:`~Permissions.send_embeds` to provide this.
@@ -2780,7 +2780,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Message`
+        :class:`Message`
             The newly edited message.
         """
         payload: raw.DataEditMessage = {}
@@ -2813,11 +2813,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel the message is in.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2857,7 +2857,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Message`
+        :class:`Message`
             The retrieved message.
         """
         resp: raw.Message = await self.request(
@@ -2880,17 +2880,17 @@ class HTTPClient:
 
         Pins a message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`DMChannel`.
 
-        Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
+        Fires :class:`MessageUpdateEvent` and :class:`MessageCreateEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel the message is in.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message to pin.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2964,21 +2964,21 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel to retrieve messages from.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
 
             If ``nearby`` is provided, then this is ``(limit + 2)``.
-        before: Optional[ULIDOr[:class:`.BaseMessage`]]
+        before: Optional[ULIDOr[:class:`BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[ULIDOr[:class:`.BaseMessage`]]
+        after: Optional[ULIDOr[:class:`BaseMessage`]]
             The message after which messages should be fetched.
-        sort: Optional[:class:`.MessageSort`]
+        sort: Optional[:class:`MessageSort`]
             The message sort direction. Defaults to :attr:`.MessageSort.latest`
-        nearby: Optional[ULIDOr[:class:`.BaseMessage`]]
+        nearby: Optional[ULIDOr[:class:`BaseMessage`]]
             The message to search around.
 
             Providing this parameter will discard ``before``, ``after`` and ``sort`` parameters.
@@ -3024,7 +3024,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.Message`]
+        List[:class:`Message`]
             The messages retrieved.
         """
         params: raw.OptionsQueryMessages = {}
@@ -3063,17 +3063,17 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.react` to do this.
 
-        Fires :class:`.MessageReactEvent` for all users who can see target channel.
+        Fires :class:`MessageReactEvent` for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel the message was sent in.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message to react to.
-        emoji: :class:`.ResolvableEmoji`
+        emoji: :class:`ResolvableEmoji`
             The emoji to react with.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -3159,11 +3159,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel to search in.
         query: Optional[:class:`str`]
             The full-text search query. See `MongoDB documentation <https://www.mongodb.com/docs/manual/text-search/>`_ for more information.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
@@ -3171,13 +3171,13 @@ class HTTPClient:
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
 
             If ``nearby`` is provided, then this is ``(limit + 2)``.
-        before: Optional[ULIDOr[:class:`.BaseMessage`]]
+        before: Optional[ULIDOr[:class:`BaseMessage`]]
             The message before which messages should be fetched.
-        after: Optional[ULIDOr[:class:`.BaseMessage`]]
+        after: Optional[ULIDOr[:class:`BaseMessage`]]
             The message after which messages should be fetched.
-        sort: Optional[:class:`.MessageSort`]
+        sort: Optional[:class:`MessageSort`]
             The message sort direction. Defaults to :attr:`.MessageSort.latest`
-        nearby: Optional[ULIDOr[:class:`.BaseMessage`]]
+        nearby: Optional[ULIDOr[:class:`BaseMessage`]]
             The message to search around.
 
             Providing this parameter will discard ``before``, ``after`` and ``sort`` parameters.
@@ -3235,7 +3235,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.Message`]
+        List[:class:`Message`]
             The messages matched.
         """
         payload: raw.DataMessageSearch = {}
@@ -3287,35 +3287,35 @@ class HTTPClient:
 
         If message mentions any roles, you must have :attr:`~Permissions.mention_roles` to do that.
 
-        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
+        Fires :class:`MessageCreateEvent` and optionally :class:`MessageAppendEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The destination channel.
         content: Optional[:class:`str`]
             The message content.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
-        attachments: Optional[List[:class:`.ResolvableResource`]]
+        attachments: Optional[List[:class:`ResolvableResource`]]
             The attachments to send the message with.
 
             You must have :attr:`~Permissions.upload_files` to provide this.
-        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
             The message replies.
-        embeds: Optional[List[:class:`.SendableEmbed`]]
+        embeds: Optional[List[:class:`SendableEmbed`]]
             The embeds to send the message with.
 
             You must have :attr:`~Permissions.send_embeds` to provide this.
-        masquerade: Optional[:class:`.MessageMasquerade`]
+        masquerade: Optional[:class:`MessageMasquerade`]
             The masquerade for the message.
 
             You must have :attr:`~Permissions.use_masquerade` to provide this.
 
             If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.manage_roles` is also required.
-        interactions: Optional[:class:`.MessageInteractions`]
+        interactions: Optional[:class:`MessageInteractions`]
             The message interactions.
 
             If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
@@ -3401,7 +3401,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Message`
+        :class:`Message`
             The message that was sent.
         """
         payload: raw.DataMessageSend = {}
@@ -3468,17 +3468,17 @@ class HTTPClient:
 
         Unpins a message.
 
-        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`.DMChannel`.
+        You must have :attr:`~Permissions.manage_messages` to do this, unless the channel is :class:`DMChannel`.
 
-        Fires :class:`.MessageUpdateEvent` and :class:`.MessageCreateEvent`, both for all users who can see target channel.
+        Fires :class:`MessageUpdateEvent` and :class:`MessageCreateEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -3548,20 +3548,20 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.react` to do this.
 
-        Fires :class:`.MessageClearReactionEvent` if ``remove_all`` is ``True`` or :class:`.MessageUnreactEvent`, for all users
+        Fires :class:`MessageClearReactionEvent` if ``remove_all`` is ``True`` or :class:`MessageUnreactEvent`, for all users
         who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message.
-        emoji: :class:`.ResolvableEmoji`
+        emoji: :class:`ResolvableEmoji`
             The emoji to remove.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        user: Optional[ULIDOr[:class:`.BaseUser`]]
+        user: Optional[ULIDOr[:class:`BaseUser`]]
             The user to remove reactions from.
 
             You must have :attr:`~Permissions.manage_messages` to provide this.
@@ -3639,23 +3639,23 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        The provided channel must be a :class:`.ServerChannel`.
+        The provided channel must be a :class:`ServerChannel`.
 
-        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel,
-        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
-        and :class:`.ChannelDeleteEvent` for users who no longer can see target channel.
+        Fires :class:`ChannelUpdateEvent` for all users who still see target channel,
+        :class:`ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`ChannelDeleteEvent` for users who no longer can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.ServerChannel`]
+        channel: ULIDOr[:class:`ServerChannel`]
             The channel.
-        role: ULIDOr[:class:`.BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        allow: :class:`.Permissions`
+        allow: :class:`Permissions`
             The permissions to allow for role in channel.
-        deny: :class:`.Permissions`
+        deny: :class:`Permissions`
             The permissions to deny for role in channel.
 
         Raises
@@ -3707,7 +3707,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.ServerChannel`
+        :class:`ServerChannel`
             The updated server channel with new permissions.
         """
         payload: raw.DataSetRolePermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
@@ -3753,19 +3753,19 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        Channel must be a :class:`GroupChannel`, or :class:`.ServerChannel`.
+        Channel must be a :class:`GroupChannel`, or :class:`ServerChannel`.
 
-        Fires :class:`.ChannelUpdateEvent` for all users who still see target channel, and for server channels,
-        :class:`.ServerChannelCreateEvent` for all users who now can see target channel,
-        and :class:`.ChannelDeleteEvent` is fired for users who no longer can see target channel.
+        Fires :class:`ChannelUpdateEvent` for all users who still see target channel, and for server channels,
+        :class:`ServerChannelCreateEvent` for all users who now can see target channel,
+        and :class:`ChannelDeleteEvent` is fired for users who no longer can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.ServerChannel`]]
+        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`ServerChannel`]]
             The channel to set default permissions for.
-        permissions: Union[:class:`.Permissions`, :class:`.PermissionOverride`]
-            The new permissions. Must be :class:`.Permissions` for groups and :class:`.PermissionOverride` for server channels.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        permissions: Union[:class:`Permissions`, :class:`PermissionOverride`]
+            The new permissions. Must be :class:`Permissions` for groups and :class:`PermissionOverride` for server channels.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -3778,8 +3778,8 @@ class HTTPClient:
             +----------------------+----------------------------------------------------------+
             | ``InvalidOperation`` | One of these:                                            |
             |                      |                                                          |
-            |                      | - You provided :class:`.PermissionOverride` for group.   |
-            |                      | - You provided :class:`.Permissions` for server channel. |
+            |                      | - You provided :class:`PermissionOverride` for group.   |
+            |                      | - You provided :class:`Permissions` for server channel. |
             |                      | - The provided channel was not group/server channel.     |
             +----------------------+----------------------------------------------------------+
         :class:`Unauthorized`
@@ -3819,7 +3819,7 @@ class HTTPClient:
 
         Returns
         -------
-        Union[:class:`.GroupChannel`, :class:`.ServerChannel`]
+        Union[:class:`GroupChannel`, :class:`ServerChannel`]
             The updated group/server channel with new permissions.
         """
         payload: raw.DataDefaultChannelPermissions = {
@@ -3846,19 +3846,19 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.connect` to do this.
 
-        For Livekit instances, fires :class:`.MessageCreateEvent` and :class:`.VoiceChannelJoinEvent` / :class:`.VoiceChannelMoveEvent`
+        For Livekit instances, fires :class:`MessageCreateEvent` and :class:`VoiceChannelJoinEvent` / :class:`VoiceChannelMoveEvent`
         for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[Union[:class:`.DMChannel`, :class:`.GroupChannel`, :class:`.TextChannel`, :class:`.VoiceChannel`]]
+        channel: ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`, :class:`TextChannel`, :class:`VoiceChannel`]]
             The channel to join a call in.
 
             If current instance uses legacy voice server (determined by
             whether :attr:`InstanceFeaturesConfig.livekit_voice` is ``False``), then
             a channel with type of :attr:`~ChannelType.text` cannot be passed and
             will raise :class:`HTTPException` with ``CannotJoinCall`` type.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         node: UndefinedOr[Optional[:class:`str`]]
             The node's name to use for starting a call.
@@ -3955,17 +3955,17 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_webhooks` permission to do this.
 
-        Fires :class:`.WebhookCreateEvent` for all users who can see target channel.
+        Fires :class:`WebhookCreateEvent` for all users who can see target channel.
 
         Parameters
         ----------
-        channel: ULIDOr[Union[:class:`.GroupChannel`, :class:`.TextChannel`]]
+        channel: ULIDOr[Union[:class:`GroupChannel`, :class:`TextChannel`]]
             The channel to create webhook in.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
-        avatar: Optional[:class:`.ResolvableResource`]
+        avatar: Optional[:class:`ResolvableResource`]
             The webhook avatar.
 
         Raises
@@ -4013,7 +4013,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Webhook`
+        :class:`Webhook`
             The created webhook.
         """
         payload: raw.CreateWebhookBody = {'name': name}
@@ -4037,9 +4037,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.ServerChannel`]
+        channel: ULIDOr[:class:`ServerChannel`]
             The channel to retrieve webhooks from.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4079,7 +4079,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.Webhook`]
+        List[:class:`Webhook`]
             The webhooks for this channel.
         """
         resp: list[raw.Webhook] = await self.request(
@@ -4104,22 +4104,22 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_customization` to do this.
 
-        Fires :class:`.EmojiCreateEvent` for all server members.
+        Fires :class:`EmojiCreateEvent` for all server members.
 
         .. note::
             Prior to API v0.8.4, this could only be used by non-bot accounts.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to create emoji in.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: :class:`str`
             The emoji name. Must be between 1 and 32 chars long. Can only contain ASCII digits, underscore and lowercase letters.
         nsfw: Optional[:class:`bool`]
             Whether the emoji is NSFW or not. Defaults to ``False``.
-        image: :class:`.ResolvableResource`
+        image: :class:`ResolvableResource`
             The emoji data.
 
         Raises
@@ -4171,7 +4171,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.ServerEmoji`
+        :class:`ServerEmoji`
             The created emoji.
         """
         payload: raw.DataCreateEmoji = {
@@ -4204,7 +4204,7 @@ class HTTPClient:
         You must have :attr:`~Permissions.manage_customization` to do this if you do not own
         the emoji, unless it was detached (already deleted).
 
-        May fire :class:`.EmojiDeleteEvent` for all server members.
+        May fire :class:`EmojiDeleteEvent` for all server members.
 
         .. note::
             If deleting detached emoji, this will successfully return.
@@ -4214,9 +4214,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        emoji: ULIDOr[:class:`.ServerEmoji`]
+        emoji: ULIDOr[:class:`ServerEmoji`]
             The emoji to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4275,9 +4275,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        emoji: ULIDOr[:class:`.BaseEmoji`]
+        emoji: ULIDOr[:class:`BaseEmoji`]
             The emoji to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4293,7 +4293,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Emoji`
+        :class:`Emoji`
             The retrieved emoji.
         """
         resp: raw.Emoji = await self.request(
@@ -4315,9 +4315,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        code: Union[:class:`str`, :class:`.BaseInvite`]
+        code: Union[:class:`str`, :class:`BaseInvite`]
             The invite code.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4367,9 +4367,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        code: Union[:class:`str`, :class:`.BaseInvite`]
+        code: Union[:class:`str`, :class:`BaseInvite`]
             The code to retrieve invite from.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4385,7 +4385,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.PublicInvite`
+        :class:`PublicInvite`
             The invite retrieved.
         """
         invite_code = code.code if isinstance(code, BaseInvite) else code
@@ -4412,9 +4412,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        code: Union[:class:`str`, :class:`.BaseInvite`]
+        code: Union[:class:`str`, :class:`BaseInvite`]
             The invite code.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4476,7 +4476,7 @@ class HTTPClient:
 
         Returns
         -------
-        Union[:class:`.Server`, :class:`.GroupChannel`]
+        Union[:class:`Server`, :class:`GroupChannel`]
             The joined server or group.
         """
         invite_code = code.code if isinstance(code, BaseInvite) else code
@@ -4986,7 +4986,7 @@ class HTTPClient:
         ----------
         username: :class:`str`
             The username to use. Must be between 2 and 32 characters and not contain whitespace characters.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5036,7 +5036,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.OwnUser`
+        :class:`OwnUser`
             The updated user.
         """
         payload: raw.DataOnboard = {'username': username}
@@ -5056,7 +5056,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5131,7 +5131,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         endpoint: :class:`str`
             The HTTP `endpoint <https://developer.mozilla.org/en-US/docs/Web/API/PushSubscription/endpoint>`_ associated with push subscription.
@@ -5177,7 +5177,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5219,20 +5219,20 @@ class HTTPClient:
 
         Report a message to the instance moderation team.
 
-        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+        Fires :class:`ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message to report.
 
             Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
-        reason: :class:`.ContentReportReason`
+        reason: :class:`ContentReportReason`
             The reason for reporting.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
@@ -5297,18 +5297,18 @@ class HTTPClient:
 
         Report a server to the instance moderation team.
 
-        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+        Fires :class:`ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to report.
-        reason: :class:`.ContentReportReason`
+        reason: :class:`ContentReportReason`
             The reason for reporting.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
@@ -5374,22 +5374,22 @@ class HTTPClient:
 
         Report an user to the instance moderation team.
 
-        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+        Fires :class:`ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to report.
-        reason: :class:`.UserReportReason`
+        reason: :class:`UserReportReason`
             The reason for reporting user.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
-        message_context: Optional[ULIDOr[:class:`.BaseMessage`]]
+        message_context: Optional[ULIDOr[:class:`BaseMessage`]]
             The message context.
 
             Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
@@ -5461,15 +5461,15 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
-        May fire :class:`.ServerMemberRemoveEvent` for banned user and all server members.
+        May fire :class:`ServerMemberRemoveEvent` for banned user and all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        user: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+        user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The user to ban from the server.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The ban reason. Can be only up to 1024 characters long.
@@ -5525,7 +5525,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Ban`
+        :class:`Ban`
             The created ban.
         """
         payload: raw.DataBanCreate = {'reason': reason}
@@ -5550,9 +5550,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5573,6 +5573,14 @@ class HTTPClient:
             +-----------------------+--------------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to retrieve all bans. |
             +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------------+
+            | Value        | Reason                        |
+            +--------------+-------------------------------+
+            | ``NotFound`` | The server/ban was not found. |
+            +--------------+-------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5584,7 +5592,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.Ban`]
+        List[:class:`Ban`]
             The ban entries.
         """
         resp: raw.BanListResult = await self.request(
@@ -5607,11 +5615,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to unban from the server.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5632,6 +5640,14 @@ class HTTPClient:
             +-----------------------+----------------------------------------------------------+
             | ``MissingPermission`` | You do not have the proper permissions to unban members. |
             +-----------------------+----------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------------+
+            | Value        | Reason                        |
+            +--------------+-------------------------------+
+            | ``NotFound`` | The server/ban was not found. |
+            +--------------+-------------------------------+
         :class:`InternalServerError`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5645,6 +5661,456 @@ class HTTPClient:
             routes.SERVERS_BAN_REMOVE.compile(server_id=resolve_id(server), user_id=resolve_id(user)),
             http_overrides=http_overrides,
         )
+
+    async def create_server_category(
+        self,
+        server: ULIDOr[BaseServer],
+        title: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        channels: list[ULIDOr[ServerChannel]],
+    ) -> Category:
+        """|coro|
+
+        Create a new category within server.
+
+        You must have :attr:`~Permissions.manage_channels` to do this.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server to create category in.
+        title: :class:`str`
+            The category name. Must be between 1 and 32 characters.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        channels: List[ULIDOr[:class:`ServerChannel`]]
+            The channel's IDs inside this category.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------+
+            | Value                 | Reason                                                            |
+            +-----------------------+-------------------------------------------------------------------+
+            | ``TooManyCategories`` | The server has too many categories than allowed on this instance. |
+            +-----------------------+-------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create categories. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Category`
+            The category created in server.
+        """
+        payload: raw.DataCreateCategory = {
+            'title': title,
+            'channels': list(map(resolve_id, channels)),
+        }
+        resp: raw.Category = await self.request(
+            routes.SERVERS_CATEGORY_CREATE.compile(
+                server_id=resolve_id(server),
+            ),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_category(resp)
+
+    async def delete_server_category(
+        self,
+        server: ULIDOr[BaseServer],
+        category: ULIDOr[Category],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
+        """|coro|
+
+        Deletes a category in server.
+
+        You must have :attr:`~Permissions.manage_channels` to do this.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server the category is in.
+        category: ULIDOr[:class:`Category`]
+            The category to delete.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------+
+            | Value                 | Reason                                                            |
+            +-----------------------+-------------------------------------------------------------------+
+            | ``TooManyCategories`` | The server has too many categories than allowed on this instance. |
+            +-----------------------+-------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete categories. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+-----------------------------+
+            | Value               | Reason                      |
+            +---------------------+-----------------------------+
+            | ``NotFound``        | The server was not found.   |
+            +---------------------+-----------------------------+
+            | ``UnknownCategory`` | The category was not found. |
+            +---------------------+-----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        await self.request(
+            routes.SERVERS_CATEGORY_DELETE.compile(
+                server_id=resolve_id(server),
+                category_id=resolve_id(category),
+            ),
+            http_overrides=http_overrides,
+        )
+
+    async def edit_server_category(
+        self,
+        server: ULIDOr[BaseServer],
+        category: ULIDOr[Category],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        title: UndefinedOr[str] = UNDEFINED,
+        channels: UndefinedOr[list[ULIDOr[ServerChannel]]] = UNDEFINED,
+        default_permissions: UndefinedOr[None] = UNDEFINED,
+    ) -> Category:
+        """|coro|
+
+        Edits a category in server.
+
+        You must have :attr:`~Permissions.manage_channels` to do this.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server the category is in.
+        category: ULIDOr[:class:`Category`]
+            The category to edit.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        title: UndefinedOr[:class:`str`]
+            The new category title.
+        channels: UndefinedOr[List[ULIDOr[:class:`ServerChannel`]]]
+            The channel's IDs inside this category.
+        default_permissions: UndefinedOr[None]
+            To remove default permissions or not.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------+
+            | Value                 | Reason                                                            |
+            +-----------------------+-------------------------------------------------------------------+
+            | ``TooManyCategories`` | The server has too many categories than allowed on this instance. |
+            +-----------------------+-------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit categories. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+-------------------------------+
+            | Value               | Reason                        |
+            +---------------------+-------------------------------+
+            | ``NotFound``        | The server/ban was not found. |
+            +---------------------+-------------------------------+
+            | ``UnknownCategory`` | The category was not found.   |
+            +---------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Category`
+            The newly updated category.
+        """
+        payload: raw.DataEditCategory = {}
+        remove: list[raw.FieldsCategory] = []
+
+        if title is not UNDEFINED:
+            payload['title'] = title
+        if channels is not UNDEFINED:
+            payload['channels'] = list(map(resolve_id, channels))
+
+        if default_permissions is None:
+            remove.append('DefaultPermissions')
+
+        if len(remove) > 0:
+            payload['remove'] = remove
+
+        resp: raw.Category = await self.request(
+            routes.SERVERS_CATEGORY_EDIT.compile(
+                server_id=resolve_id(server),
+                category_id=resolve_id(category),
+            ),
+            http_overrides=http_overrides,
+        )
+        return self.state.parser.parse_category(resp)
+
+    async def set_category_permissions_for_role(
+        self,
+        server: ULIDOr[BaseServer],
+        category: ULIDOr[Category],
+        role: ULIDOr[BaseRole],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        allow: Permissions = Permissions.none(),
+        deny: Permissions = Permissions.none(),
+    ) -> Category:
+        """|coro|
+
+        Sets permissions for the specified category.
+
+        You must have :attr:`~Permissions.manage_permissions` to do this.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        category: ULIDOr[:class:`Category`]
+            The category.
+        role: ULIDOr[:class:`BaseRole`]
+            The role.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        allow: :class:`Permissions`
+            The permissions to allow for the specified role.
+        deny: :class:`Permissions`
+            The permissions to deny for the specified role.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                               |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                 |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``NotElevated``                  | Rank of your top role is higher than rank of role you're trying to set override for. |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to edit permissions for this category.        |
+            +----------------------------------+--------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+--------------------------------+
+            | Value               | Reason                         |
+            +---------------------+--------------------------------+
+            | ``NotFound``        | The server/role was not found. |
+            +---------------------+--------------------------------+
+            | ``UnknownCategory`` | The category was not found.    |
+            +---------------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Category`
+            The newly updated category with new permissions.
+        """
+
+        payload: raw.DataSetRolePermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
+        resp: raw.Category = await self.request(
+            routes.SERVERS_CATEGORY_PERMISSIONS_SET.compile(
+                server_id=resolve_id(server),
+                category_id=resolve_id(category),
+                role_id=resolve_id(role),
+            ),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+
+        return self.state.parser.parse_category(resp)
+
+    async def set_default_category_permissions(
+        self,
+        server: ULIDOr[BaseServer],
+        category: ULIDOr[Category],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        allow: Permissions = Permissions.none(),
+        deny: Permissions = Permissions.none(),
+    ) -> Category:
+        """|coro|
+
+        Sets default permissions for everyone in a category.
+
+        You must have :attr:`~Permissions.manage_permissions` to do this.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server the category is in.
+        category: ULIDOr[:class:`Category`]
+            The category to set default permissions for.
+        permissions: :class:`Permissions`
+            The new permissions.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | Value                            | Reason                                                                              |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``CannotGiveMissingPermissions`` | Your new provided permissions contained permissions you didn't have.                |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+            | ``MissingPermission``            | You do not have the proper permissions to edit default permissions for this server. |
+            +----------------------------------+-------------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------+
+            | Value        | Reason                     |
+            +--------------+----------------------------+
+            | ``NotFound`` | The channel was not found. |
+            +--------------+----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Server`
+            The newly updated server.
+        """
+        payload: raw.DataDefaultCategoryPermissions = {'permissions': {'allow': allow.value, 'deny': deny.value}}
+        resp: raw.Category = await self.request(
+            routes.SERVERS_CATEGORY_PERMISSIONS_SET_DEFAULT.compile(
+                server_id=resolve_id(server), category_id=resolve_id(category)
+            ),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_category(resp)
 
     @typing.overload
     async def create_server_channel(
@@ -5715,15 +6181,15 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
-        Fires :class:`.ServerChannelCreateEvent` for all server members.
+        Fires :class:`ServerChannelCreateEvent` for all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to create channel in.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        type: Optional[:class:`.ChannelType`]
+        type: Optional[:class:`ChannelType`]
             The channel type. Defaults to :attr:`~.ChannelType.text` if not provided.
         name: :class:`str`
             The channel name. Must be between 1 and 32 characters.
@@ -5731,7 +6197,7 @@ class HTTPClient:
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             To mark channel as NSFW or not.
-        voice: Optional[:class:`.ChannelVoiceMetadata`]
+        voice: Optional[:class:`ChannelVoiceMetadata`]
             The voice-specific metadata for this channel.
 
             .. versionadded:: 1.2
@@ -5781,7 +6247,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.ServerChannel`
+        :class:`ServerChannel`
             The channel created in server.
         """
 
@@ -5811,13 +6277,13 @@ class HTTPClient:
     ) -> list[ServerEmoji]:
         """|coro|
 
-        Retrieves all custom :class:`.ServerEmoji`'s that belong to a server.
+        Retrieves all custom :class:`ServerEmoji`'s that belong to a server.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5849,7 +6315,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.ServerEmoji`]
+        List[:class:`ServerEmoji`]
             The retrieved emojis.
         """
         resp: list[raw.ServerEmoji] = await self.request(
@@ -5869,9 +6335,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -5911,7 +6377,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.ServerInvite`]
+        List[:class:`ServerInvite`]
             The retrieved invites.
         """
         resp: list[raw.ServerInvite] = await self.request(
@@ -5938,35 +6404,35 @@ class HTTPClient:
 
         Edits a member.
 
-        Fires :class:`.ServerMemberUpdateEvent` for all server members,
-        and optionally fires multiple/single :class:`.ServerChannelCreateEvent` / :class:`.ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
+        Fires :class:`ServerMemberUpdateEvent` for all server members,
+        and optionally fires multiple/single :class:`ServerChannelCreateEvent` / :class:`ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
 
         For Livekit instances:
 
-        - If ``voice`` parameter is provided, fires :class:`.VoiceChannelMoveEvent` / :class:`.VoiceChannelLeaveEvent`
-          if specified as ``None``, otherwise :class:`.VoiceChannelLeaveEvent` is fired. The specified events are fired for all users who can see voice channel the member is currently in.
-        - If any of ``roles``, ``can_publish`` or ``can_receive`` parameters is provided, may fire :class:`.UserVoiceStateUpdateEvent` for all users who can see voice channel the member is currently in.
+        - If ``voice`` parameter is provided, fires :class:`VoiceChannelMoveEvent` / :class:`VoiceChannelLeaveEvent`
+          if specified as ``None``, otherwise :class:`VoiceChannelLeaveEvent` is fired. The specified events are fired for all users who can see voice channel the member is currently in.
+        - If any of ``roles``, ``can_publish`` or ``can_receive`` parameters is provided, may fire :class:`UserVoiceStateUpdateEvent` for all users who can see voice channel the member is currently in.
 
         Parameters
         ----------
-        server: :class:`.BaseServer`
+        server: :class:`BaseServer`
             The server.
-        member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The member.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
 
             To provide this, you must have :attr:`~Permissions.manage_nicknames` if changing other member's nick.
             Otherwise, :attr:`~Permissions.change_nickname` is required instead.
-        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The member's new avatar. Use ``None`` to remove the avatar.
 
             You can only change your own server avatar.
 
             You must have :attr:`~Permissions.change_avatar` to provide this.
-        roles: UndefinedOr[Optional[List[ULIDOr[:class:`.BaseRole`]]]]
+        roles: UndefinedOr[Optional[List[ULIDOr[:class:`BaseRole`]]]]
             The member's new list of roles. This *replaces* the roles.
 
             You must have :attr:`~Permissions.assign_roles` to provide this.
@@ -5984,7 +6450,7 @@ class HTTPClient:
             Whether the member should receive voice data.
 
             You must have :attr:`~Permissions.deafen_members` to provide this.
-        voice: UndefinedOr[ULIDOr[Union[:class:`.TextChannel`, :class:`.VoiceChannel`]]]
+        voice: UndefinedOr[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]
             The voice channel to move the member to.
 
             You must have :attr:`~Permissions.move_members` to provide this.
@@ -6046,7 +6512,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Member`
+        :class:`Member`
             The newly updated member.
         """
         payload: raw.DataMemberEdit = {}
@@ -6120,11 +6586,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
         query: :class:`str`
             The query to search members for.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6156,7 +6622,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.Member`]
+        List[:class:`Member`]
             The members matched.
         """
         params = {
@@ -6183,11 +6649,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to retrieve member in.
-        member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The user to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6219,7 +6685,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Member`
+        :class:`Member`
             The retrieved member.
         """
         resp: raw.Member = await self.request(
@@ -6244,9 +6710,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -6280,7 +6746,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.Member`]
+        List[:class:`Member`]
             The retrieved members.
         """
         params: raw.OptionsFetchAllMembers = {}
@@ -6307,9 +6773,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -6343,7 +6809,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.MemberList`
+        :class:`MemberList`
             The member list.
         """
         params: raw.OptionsFetchAllMembers = {}
@@ -6368,15 +6834,15 @@ class HTTPClient:
 
         Kicks a member from the server.
 
-        Fires :class:`.ServerMemberRemoveEvent` for kicked user and all server members.
+        Fires :class:`ServerMemberRemoveEvent` for kicked user and all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The member to kick.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6446,19 +6912,19 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+        Fires :class:`RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: ULIDOr[:class:`.BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        allow: :class:`.Permissions`
+        allow: :class:`Permissions`
             The permissions to allow for the specified role.
-        deny: :class:`.Permissions`
+        deny: :class:`Permissions`
             The permissions to deny for the specified role.
 
         Raises
@@ -6502,7 +6968,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The updated server with new permissions.
         """
 
@@ -6528,15 +6994,15 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        Fires :class:`.ServerUpdateEvent` for all server members.
+        Fires :class:`ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to set default permissions for.
-        permissions: :class:`.Permissions`
+        permissions: :class:`Permissions`
             The new permissions.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6578,7 +7044,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The newly updated server.
         """
         payload: raw.DataPermissionsValue = {'permissions': permissions.value}
@@ -6606,13 +7072,13 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
-        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+        Fires :class:`RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to create role in.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
@@ -6668,7 +7134,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Role`
+        :class:`Role`
             The role created in server.
         """
         server_id = resolve_id(server)
@@ -6693,15 +7159,15 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
-        Fires :class:`.ServerRoleDeleteEvent` for all server members.
+        Fires :class:`ServerRoleDeleteEvent` for all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: ULIDOr[:class:`.BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -6763,15 +7229,15 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
-        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+        Fires :class:`RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server the role in.
-        role: ULIDOr[:class:`.BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
@@ -6828,7 +7294,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Role`
+        :class:`Role`
             The newly updated role.
         """
         payload: raw.DataEditRole = {}
@@ -6979,11 +7445,11 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server.
-        role: ULIDOr[:class:`.BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7007,7 +7473,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Role`
+        :class:`Role`
             The retrieved role.
         """
         server_id = resolve_id(server)
@@ -7034,9 +7500,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to mark as read.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7091,7 +7557,7 @@ class HTTPClient:
 
         Create a new server.
 
-        Fires :class:`.ServerCreateEvent` for the current user.
+        Fires :class:`ServerCreateEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -7100,7 +7566,7 @@ class HTTPClient:
         ----------
         name: :class:`str`
             The server name. Must be between 1 and 32 characters long.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
             The server description. Can be only up to 1024 characters.
@@ -7142,7 +7608,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The created server.
         """
         payload: raw.DataCreateServer = {'name': name}
@@ -7166,13 +7632,13 @@ class HTTPClient:
 
         Deletes a server if owner, or leaves otherwise.
 
-        Fires :class:`.ServerDeleteEvent` (if owner) or :class:`.ServerMemberRemoveEvent` for all server members.
+        Fires :class:`ServerDeleteEvent` (if owner) or :class:`ServerMemberRemoveEvent` for all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to delete or leave.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7218,13 +7684,13 @@ class HTTPClient:
 
         Leaves a server if not owner, or deletes otherwise.
 
-        Fires :class:`.ServerMemberRemoveEvent` or :class:`.ServerDeleteEvent` (if owner) for all server members.
+        Fires :class:`ServerMemberRemoveEvent` or :class:`ServerDeleteEvent` (if owner) for all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to leave.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         silent: Optional[:class:`bool`]
             Whether to silently leave server or not.
@@ -7288,13 +7754,13 @@ class HTTPClient:
 
         To provide any of parameters below (except for ``categories``, ``discoverable`` and ``flags``), you must have :attr:`~Permissions.manage_server`.
 
-        Fires :class:`.ServerUpdateEvent` for all server members.
+        Fires :class:`ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
@@ -7302,17 +7768,26 @@ class HTTPClient:
             The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]
             The new server description. Can be only up to 1024 characters.
-        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new server icon.
-        banner: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        banner: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new server banner.
-        categories: UndefinedOr[Optional[List[:class:`.Category`]]]
+        categories: UndefinedOr[Optional[List[:class:`Category`]]]
             The new server categories structure.
 
             You must have :attr:`~Permissions.manage_channels`.
-        system_messages: UndefinedOr[Optional[:class:`.SystemMessageChannels`]]
+
+            .. deprecated:: 1.2
+
+                Due to categories rework in API v0.8.5, this parameter will be ignored on newer API versions,
+                and was deprecated in favor of these dedicated methods:
+
+                - :meth:`HTTPClient.create_server_category`
+                - :meth:`HTTPClient.delete_server_category`
+                - :meth:`HTTPClient.edit_server_category`
+        system_messages: UndefinedOr[Optional[:class:`SystemMessageChannels`]]
             The new system message channels configuration.
-        flags: UndefinedOr[:class:`.ServerFlags`]
+        flags: UndefinedOr[:class:`ServerFlags`]
             The new server flags. You must be a privileged user to provide this.
         discoverable: UndefinedOr[:class:`bool`]
             Whether this server is public and should show up on `Revolt Discover <https://rvlt.gg>`_.
@@ -7320,7 +7795,7 @@ class HTTPClient:
             The new server flags. You must be a privileged user to provide this.
         analytics: UndefinedOr[:class:`bool`]
             Whether analytics should be collected for this server. Must be enabled in order to show up on `Revolt Discover <https://rvlt.gg>`_.
-        owner: UndefinedOr[Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]]
+        owner: UndefinedOr[Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]]
             The member to transfer ownership to.
 
             You must own the server, or be a privileged user to provide this.
@@ -7386,7 +7861,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The newly updated server.
         """
         payload: raw.DataEditServer = {}
@@ -7464,9 +7939,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         populate_channels: Optional[:class:`bool`]
             Whether to populate :attr:`Server.channels`.
@@ -7492,7 +7967,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The retrieved server.
         """
         params: raw.OptionsFetchServer = {}
@@ -7524,7 +7999,7 @@ class HTTPClient:
         ----------
         keys: Optional[List[:class:`str`]]
             The keys of user settings to retrieve. To retrieve all user settings, pass ``None`` or empty list.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7548,7 +8023,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.UserSettings`
+        :class:`UserSettings`
             The partial user settings with provided keys.
         """
         # Sync endpoints aren't meant to be used with bot accounts
@@ -7573,7 +8048,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7597,7 +8072,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.ReadState`]
+        List[:class:`ReadState`]
             The channel read states.
         """
         resp: list[raw.ChannelUnread] = await self.request(
@@ -7616,7 +8091,7 @@ class HTTPClient:
 
         Edits the current user settings.
 
-        Fires :class:`.UserSettingsUpdateEvent` for the current user.
+        Fires :class:`UserSettingsUpdateEvent` for the current user.
 
         .. note::
             This is not supposed to be used by bot accounts.
@@ -7627,7 +8102,7 @@ class HTTPClient:
             The dict to merge into the current user settings.
         edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
             The revision.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7676,16 +8151,16 @@ class HTTPClient:
 
         Accept another user's friend request.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you accepted friend request from.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and user you accepted friend request from.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to accept friend request from.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7749,7 +8224,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The user you accepted friend request from.
         """
         resp: raw.User = await self.request(
@@ -7766,16 +8241,16 @@ class HTTPClient:
 
         Blocks an user.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and blocked user.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and blocked user.
 
         .. note::
             This is not supposed to be used by bot accounts.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to block.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -7809,7 +8284,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The blocked user.
         """
         resp: raw.User = await self.request(
@@ -7826,14 +8301,14 @@ class HTTPClient:
 
         Change your username.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
+        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         username: :class:`str`
             The new username. Must be between 2 and 32 characters and not contain whitespace characters.
@@ -7887,7 +8362,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.OwnUser`
+        :class:`OwnUser`
             The newly updated user.
         """
         payload: raw.DataChangeUsername = {'username': username, 'password': current_password}
@@ -7952,23 +8427,23 @@ class HTTPClient:
 
         Edits the current user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
+        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
-        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new avatar. Could be ``None`` to remove avatar.
-        status: UndefinedOr[:class:`.UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             The new user status.
-        profile: UndefinedOr[:class:`.UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             The new user profile data. This is applied as a partial.
-        badges: UndefinedOr[:class:`.UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges. You must be privileged user to provide this.
-        flags: UndefinedOr[:class:`.UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags. You must be privileged user to provide this.
 
         Raises
@@ -8008,7 +8483,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.OwnUser`
+        :class:`OwnUser`
             The newly updated authenticated user.
         """
         resp = await self._edit_user(
@@ -8039,25 +8514,25 @@ class HTTPClient:
 
         Edits an user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to target user.
+        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to target user.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
-        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new avatar. Could be ``None`` to remove avatar.
-        status: UndefinedOr[:class:`.UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             The new user status.
-        profile: UndefinedOr[:class:`.UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             The new user profile data. This is applied as a partial.
-        badges: UndefinedOr[:class:`.UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges. You must be privileged user to provide this.
-        flags: UndefinedOr[:class:`.UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags. You must be privileged user to provide this.
 
         Raises
@@ -8097,7 +8572,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The newly updated user.
         """
         resp = await self._edit_user(
@@ -8123,7 +8598,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8147,7 +8622,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[Union[:class:`.SavedMessagesChannel`, :class:`.DMChannel`, :class:`.GroupChannel`]]
+        List[Union[:class:`SavedMessagesChannel`, :class:`DMChannel`, :class:`GroupChannel`]]
             The private channels.
         """
         resp: list[
@@ -8166,9 +8641,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to retrieve profile of.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8200,7 +8675,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.UserProfile`
+        :class:`UserProfile`
             The retrieved user profile.
         """
         user_id = resolve_id(user)
@@ -8216,7 +8691,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8232,7 +8707,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.OwnUser`
+        :class:`OwnUser`
             The retrieved user.
         """
         resp: raw.User = await self.request(routes.USERS_FETCH_SELF.compile(), http_overrides=http_overrides)
@@ -8307,9 +8782,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8341,7 +8816,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The retrieved user.
         """
         resp: raw.User = await self.request(
@@ -8358,14 +8833,14 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to retrieve flags for.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Returns
         -------
-        :class:`.UserFlags`
+        :class:`UserFlags`
             The retrieved flags.
         """
         # Apparently, this is only method that doesn't raise anything
@@ -8387,9 +8862,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to retrieve mutuals with.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8437,7 +8912,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Mutuals`
+        :class:`Mutuals`
             The found mutuals.
         """
         resp: raw.MutualResponse = await self.request(
@@ -8454,9 +8929,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to retrieve default avatar of.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Returns
@@ -8482,17 +8957,17 @@ class HTTPClient:
 
         Retrieve a DM (or create if it doesn't exist) with another user.
 
-        If target is current user, a :class:`.SavedMessagesChannel` is always returned.
+        If target is current user, a :class:`SavedMessagesChannel` is always returned.
 
         You must have :attr:`~UserPermissions.send_messages` to do this.
 
-        May fire :class:`.PrivateChannelCreateEvent` for the current user and user you opened DM with.
+        May fire :class:`PrivateChannelCreateEvent` for the current user and user you opened DM with.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to open DM with.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8532,7 +9007,7 @@ class HTTPClient:
 
         Returns
         -------
-        Union[:class:`.SavedMessagesChannel`, :class:`.DMChannel`]
+        Union[:class:`SavedMessagesChannel`, :class:`DMChannel`]
             The private channel.
         """
         resp: typing.Union[raw.SavedMessagesChannel, raw.DirectMessageChannel] = await self.request(
@@ -8550,16 +9025,16 @@ class HTTPClient:
 
         Denies another user's friend request.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you denide friend request from.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and user you denide friend request from.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to deny friend request from.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8601,7 +9076,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The user you denied friend request from.
         """
         resp: raw.User = await self.request(
@@ -8618,16 +9093,16 @@ class HTTPClient:
 
         Removes the user from friend list.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to remove from friend list.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8669,7 +9144,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The user you removed from friend list.
         """
         resp: raw.User = await self.request(
@@ -8690,7 +9165,7 @@ class HTTPClient:
 
         Sends a friend request to another user.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you sent friend request to.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and user you sent friend request to.
 
         .. note::
             This can only be used by non-bot accounts.
@@ -8701,7 +9176,7 @@ class HTTPClient:
             The username and optionally discriminator combo separated by `#`.
         discriminator: Optional[:class:`str`]
             The user's discriminator.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8767,7 +9242,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The user you sent friend request to.
         """
         if discriminator is not None:
@@ -8790,16 +9265,16 @@ class HTTPClient:
 
         Unblocks an user.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and unblocked user.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and unblocked user.
 
         .. note::
             This is not supposed to be used by bot accounts.
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to unblock.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -8835,7 +9310,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The unblocked user.
         """
 
@@ -8862,13 +9337,13 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_webhooks` to do this if ``token`` parameter is ``None`` or missing.
 
-        Fires :class:`.WebhookDeleteEvent` for all users who can see webhook channel.
+        Fires :class:`WebhookDeleteEvent` for all users who can see webhook channel.
 
         Parameters
         ----------
-        webhook: ULIDOr[:class:`.BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The webhook to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
@@ -8931,21 +9406,21 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.manage_webhooks` to do this if ``token`` parameter is ``None`` or missing.
 
-        Fires :class:`.WebhookUpdateEvent` for all users who can see webhook channel.
+        Fires :class:`WebhookUpdateEvent` for all users who can see webhook channel.
 
         Parameters
         ----------
-        webhook: ULIDOr[:class:`.BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The webhook to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
         name: UndefinedOr[:class:`str`]
             The new webhook name. Must be between 1 and 32 chars long.
-        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new webhook avatar.
-        permissions: UndefinedOr[:class:`.Permissions`]
+        permissions: UndefinedOr[:class:`Permissions`]
             The new webhook permissions.
 
         Raises
@@ -8987,7 +9462,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Webhook`
+        :class:`Webhook`
             The newly updated webhook.
         """
         payload: raw.DataEditWebhook = {}
@@ -9046,37 +9521,37 @@ class HTTPClient:
 
         If message mentions any roles, the webhook must have :attr:`~Permissions.mention_roles` to do that.
 
-        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see target channel.
+        Fires :class:`MessageCreateEvent` and optionally :class:`MessageAppendEvent`, both for all users who can see target channel.
 
         Parameters
         ----------
-        webhook: ULIDOr[:class:`.BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The webhook to execute.
         token: :class:`str`
             The webhook token.
         content: Optional[:class:`str`]
             The message content.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
-        attachments: Optional[List[:class:`.ResolvableResource`]]
+        attachments: Optional[List[:class:`ResolvableResource`]]
             The attachments to send the message with.
 
             Webhook must have :attr:`~Permissions.upload_files` to provide this.
-        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`.BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`BaseMessage`]]]]
             The message replies.
-        embeds: Optional[List[:class:`.SendableEmbed`]]
+        embeds: Optional[List[:class:`SendableEmbed`]]
             The embeds to send the message with.
 
             Webhook must have :attr:`~Permissions.send_embeds` to provide this.
-        masquerade: Optional[:class:`.MessageMasquerade`]
+        masquerade: Optional[:class:`MessageMasquerade`]
             The masquerade for the message.
 
             Webhook must have :attr:`~Permissions.use_masquerade` to provide this.
 
             If :attr:`.MessageMasquerade.color` is provided, :attr:`~Permissions.manage_roles` is also required.
-        interactions: Optional[:class:`.MessageInteractions`]
+        interactions: Optional[:class:`MessageInteractions`]
             The message interactions.
 
             If :attr:`.MessageInteractions.reactions` is provided, :attr:`~Permissions.react` is required.
@@ -9150,7 +9625,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Message`
+        :class:`Message`
             The message that was sent.
         """
         payload: raw.DataMessageSend = {}
@@ -9228,9 +9703,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        webhook: ULIDOr[:class:`.BaseWebhook`]
+        webhook: ULIDOr[:class:`BaseWebhook`]
             The webhook to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         token: Optional[:class:`str`]
             The webhook token.
@@ -9274,7 +9749,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.Webhook`
+        :class:`Webhook`
             The retrieved webhook.
         """
 
@@ -9318,7 +9793,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         email: :class:`str`
             The new email for current account.
@@ -9387,7 +9862,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         new_password: :class:`str`
             The new password for this account. Must be at least 8 characters.
@@ -9448,11 +9923,11 @@ class HTTPClient:
 
         Schedule an account for deletion by confirming the received token.
 
-        Fires :class:`.LogoutEvent` for the current user.
+        Fires :class:`LogoutEvent` for the current user.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         token: :class:`str`
             The deletion token received.
@@ -9510,7 +9985,7 @@ class HTTPClient:
             The account email.
         password: :class:`str`
             The account password. Must be at least 8 characters.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         invite: Optional[:class:`str`]
             The instance invite code.
@@ -9590,7 +10065,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -9635,14 +10110,14 @@ class HTTPClient:
 
         Disable an account.
 
-        Fires :class:`.LogoutEvent` for the current user.
+        Fires :class:`LogoutEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -9685,7 +10160,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -9709,7 +10184,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.PartialAccount`
+        :class:`PartialAccount`
             The retrieved account.
         """
         resp: raw.a.AccountInfo = await self.request(
@@ -9733,7 +10208,7 @@ class HTTPClient:
         ----------
         token: :class:`str`
             The password reset token.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         new_password: :class:`str`
             The new password for the account. Must be at least 8 characters.
@@ -9796,7 +10271,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         email: :class:`str`
             The email associated with the account.
@@ -9858,7 +10333,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         email: :class:`str`
             The email associated with the account.
@@ -9916,7 +10391,7 @@ class HTTPClient:
         ----------
         code: :class:`str`
             The code from email.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -9940,7 +10415,7 @@ class HTTPClient:
 
         Returns
         -------
-        Optional[:class:`.MFATicket`]
+        Optional[:class:`MFATicket`]
             The MFA ticket.
         """
         response = await self.request(
@@ -9990,7 +10465,7 @@ class HTTPClient:
         ----------
         password: :class:`str`
             The current account password.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The token of existing MFA ticket to validate, if applicable.
@@ -10038,7 +10513,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.MFATicket`
+        :class:`MFATicket`
             The MFA ticket created.
         """
         payload: raw.a.PasswordMFAResponse = {'password': password}
@@ -10060,7 +10535,7 @@ class HTTPClient:
         ----------
         recovery_code: :class:`str`
             The recovery code in format ``xxxx-yyyy``.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The token of existing MFA ticket to validate, if applicable.
@@ -10109,7 +10584,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.MFATicket`
+        :class:`MFATicket`
             The MFA ticket created.
         """
 
@@ -10132,7 +10607,7 @@ class HTTPClient:
         ----------
         totp_code: :class:`str`
             The TOTP code, in format ``123456``.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The token of existing MFA ticket to validate, if applicable.
@@ -10180,7 +10655,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.MFATicket`
+        :class:`MFATicket`
             The MFA ticket created.
         """
 
@@ -10199,7 +10674,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -10244,7 +10719,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -10270,7 +10745,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.MFAStatus`
+        :class:`MFAStatus`
             The MFA status.
         """
         resp: raw.a.MultiFactorStatus = await self.request(
@@ -10290,7 +10765,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -10336,7 +10811,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -10360,7 +10835,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.MFAMethod`]
+        List[:class:`MFAMethod`]
             The available MFA methods.
         """
         resp: list[raw.a.MFAMethod] = await self.request(
@@ -10380,7 +10855,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -10427,9 +10902,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        response: :class:`.MFAResponse`
-            The password, TOTP or recovery code to verify. Currently can be only :class:`.ByTOTP`.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        response: :class:`MFAResponse`
+            The password, TOTP or recovery code to verify. Currently can be only :class:`ByTOTP`.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -10478,7 +10953,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: :class:`str`
             The valid MFA ticket token.
@@ -10536,9 +11011,9 @@ class HTTPClient:
 
         Parameters
         ----------
-        session: ULIDOr[:class:`.PartialSession`]
+        session: ULIDOr[:class:`PartialSession`]
             The session to edit.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         friendly_name: :class:`str`
             The new user-friendly client name. Because of Authifier limitation, this is not :class:`UndefinedOr`.
@@ -10575,7 +11050,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.PartialSession`
+        :class:`PartialSession`
             The newly updated session.
         """
         payload: raw.a.DataEditSession = {'friendly_name': friendly_name}
@@ -10596,7 +11071,7 @@ class HTTPClient:
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -10620,7 +11095,7 @@ class HTTPClient:
 
         Returns
         -------
-        List[:class:`.PartialSession`]
+        List[:class:`PartialSession`]
             The sessions.
         """
         resp: list[raw.a.SessionInfo] = await self.request(
@@ -10646,7 +11121,7 @@ class HTTPClient:
             The email.
         password: :class:`str`
             The password. Must be at least 8 characters.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         friendly_name: Optional[:class:`str`]
             The user-friendly client name.
@@ -10692,7 +11167,7 @@ class HTTPClient:
 
         Returns
         -------
-        :class:`.LoginResult`
+        :class:`LoginResult`
             The login response.
         """
         payload: raw.a.EmailDataLogin = {
@@ -10721,9 +11196,9 @@ class HTTPClient:
         ----------
         ticket: :class:`str`
             The valid MFA ticket token.
-        by: Optional[:class:`.MFAResponse`]
-            The :class:`.ByRecoveryCode` or :class:`.ByTOTP` object.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        by: Optional[:class:`MFAResponse`]
+            The :class:`ByRecoveryCode` or :class:`ByTOTP` object.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         friendly_name: Optional[:class:`str`]
             The user-friendly client name.
@@ -10772,8 +11247,8 @@ class HTTPClient:
 
         Returns
         -------
-        Union[:class:`.Session`, :class:`.AccountDisabled`]
-            The session if successfully logged in, or :class:`.AccountDisabled` containing user ID associated with the account.
+        Union[:class:`Session`, :class:`AccountDisabled`]
+            The session if successfully logged in, or :class:`AccountDisabled` containing user ID associated with the account.
         """
         payload: raw.a.MFADataLogin = {
             'mfa_ticket': ticket,
@@ -10792,11 +11267,11 @@ class HTTPClient:
 
         Deletes the current session.
 
-        Fires :class:`.SessionDeleteEvent` for the current session.
+        Fires :class:`SessionDeleteEvent` for the current session.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -10827,13 +11302,13 @@ class HTTPClient:
 
         Deletes a specific active session.
 
-        Fires :class:`.SessionDeleteEvent` for the provided session.
+        Fires :class:`SessionDeleteEvent` for the provided session.
 
         Parameters
         ----------
-        session: ULIDOr[:class:`.PartialSession`]
+        session: ULIDOr[:class:`PartialSession`]
             The session to delete.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -10879,11 +11354,11 @@ class HTTPClient:
 
         Deletes all active sessions, optionally including current one.
 
-        Fires :class:`.SessionDeleteAllEvent` for the all sessions (may include current session if ``revoke_self`` is ``True``).
+        Fires :class:`SessionDeleteAllEvent` for the all sessions (may include current session if ``revoke_self`` is ``True``).
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         revoke_self: Optional[:class:`bool`]
             Whether to revoke current session or not.

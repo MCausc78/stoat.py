@@ -109,7 +109,7 @@ from .core import (
 from .emoji import ServerEmoji
 from .enums import ChannelType, ContentReportReason, RelationshipStatus, UserReportReason
 from .errors import NoData
-from .flags import Permissions, ServerFlags, UserBadges, UserFlags
+from .flags import Permissions, ALLOW_PERMISSIONS_IN_TIMEOUT, ServerFlags, UserBadges, UserFlags
 from .permissions import Permissions, PermissionOverride
 from .user import (
     UserStatus,
@@ -156,6 +156,16 @@ class Category:
         The category's ID. Must be between 1 and 32 characters long.
     title: :class:`str`
         The category's title. Must be between 1 and 32 characters long.
+    channels: List[:class:`str`]
+        The channel's IDs inside this category.
+    default_permissions: Optional[:class:`PermissionOverride`]
+        The default permissions in this category.
+
+        .. versionadded:: 1.2
+    role_permissions: Optional[Dict[:class:`str`, :class:`PermissionOverride`]]
+        The role permissions in this category.
+
+        .. versionadded:: 1.2
 
     Attributes
     ----------
@@ -163,20 +173,41 @@ class Category:
         The category's ID.
     title: :class:`str`
         The category's title.
+    default_permissions: Optional[:class:`PermissionOverride`]
+        The default permissions in this category.
+
+        .. versionadded:: 1.2
+    role_permissions: Dict[:class:`str`, :class:`PermissionOverride`]
+        The role permissions in this category.
+
+        .. versionadded:: 1.2
     channels: List[:class:`str`]
         The channel's IDs inside this category.
     """
 
-    __slots__ = ('id', 'title', 'channels')
+    __slots__ = (
+        'id',
+        'title',
+        'default_permissions',
+        'role_permissions',
+        'channels',
+    )
 
     def __init__(
         self,
         id: ULIDOr[Category],
         title: str,
         channels: list[ULIDOr[ServerChannel]],
+        *,
+        default_permissions: typing.Optional[PermissionOverride] = None,
+        role_permissions: typing.Optional[dict[str, PermissionOverride]] = None,
     ) -> None:
         self.id: str = resolve_id(id)
         self.title: str = title
+        self.default_permissions: typing.Optional[PermissionOverride] = default_permissions
+        self.role_permissions: typing.Optional[dict[str, PermissionOverride]] = (
+            {} if role_permissions is None else role_permissions
+        )
         self.channels: list[str] = list(map(resolve_id, channels))
 
     def __hash__(self) -> int:
@@ -188,11 +219,16 @@ class Category:
     def to_dict(self) -> raw.Category:
         """:class:`dict`: Convert category to raw data."""
 
-        return {
+        payload: raw.Category = {
             'id': self.id,
             'title': self.title,
             'channels': self.channels,
         }
+        if self.default_permissions is not None:
+            payload['default_permissions'] = self.default_permissions.to_field_dict()
+        if self.role_permissions is not None:
+            payload['role_permissions'] = {k: v.to_field_dict() for k, v in self.role_permissions.items()}
+        return payload
 
 
 class SystemMessageChannels:
@@ -256,14 +292,14 @@ class SystemMessageChannels:
 class BaseRole(Base):
     """Represents a base role in Revolt server.
 
-    This inherits from :class:`.Base`.
+    This inherits from :class:`Base`.
     """
 
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID the role belongs to."""
 
     def get_server(self) -> typing.Optional[Server]:
-        """Optional[:class:`.Server`]: The server this role belongs to."""
+        """Optional[:class:`Server`]: The server this role belongs to."""
 
         state = self.state
         cache = state.cache
@@ -290,7 +326,7 @@ class BaseRole(Base):
 
     @property
     def members(self) -> list[Member]:
-        """List[:class:`.Member`]: The members who have this role."""
+        """List[:class:`Member`]: The members who have this role."""
 
         state = self.state
         cache = state.cache
@@ -316,7 +352,7 @@ class BaseRole(Base):
 
     @property
     def server(self) -> Server:
-        """:class:`.Server`: The server this role belongs to."""
+        """:class:`Server`: The server this role belongs to."""
         server = self.get_server()
         if server is None:
             raise NoData(
@@ -332,11 +368,11 @@ class BaseRole(Base):
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
-        Fires :class:`.ServerRoleDeleteEvent` for all server members.
+        Fires :class:`ServerRoleDeleteEvent` for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -394,11 +430,11 @@ class BaseRole(Base):
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
-        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+        Fires :class:`RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
@@ -455,7 +491,7 @@ class BaseRole(Base):
 
         Returns
         -------
-        :class:`.Role`
+        :class:`Role`
             The newly updated role.
         """
         return await self.state.http.edit_role(
@@ -481,15 +517,15 @@ class BaseRole(Base):
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+        Fires :class:`RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        allow: :class:`.Permissions`
+        allow: :class:`Permissions`
             The permissions to allow.
-        deny: :class:`.Permissions`
+        deny: :class:`Permissions`
             The permissions to deny.
 
         Raises
@@ -533,7 +569,7 @@ class BaseRole(Base):
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The updated server with new permissions.
         """
 
@@ -548,14 +584,14 @@ class PartialRole(BaseRole):
 
     Unmodified fields will have :data:`.UNDEFINED` value.
 
-    This inherits from :class:`.BaseRole`.
+    This inherits from :class:`BaseRole`.
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new role's name."""
 
     permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
-    """UndefinedOr[:class:`.PermissionOverride`]: The new role's permissions."""
+    """UndefinedOr[:class:`PermissionOverride`]: The new role's permissions."""
 
     color: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`str`]]: The new role's color. This can be any valid CSS color."""
@@ -567,7 +603,7 @@ class PartialRole(BaseRole):
     """UndefinedOr[:class:`int`]: The new role's rank."""
 
     def into_full(self) -> typing.Optional[Role]:
-        """Optional[:class:`.Role`]: Tries transform this partial role into full object. This is useful when caching role."""
+        """Optional[:class:`Role`]: Tries transform this partial role into full object. This is useful when caching role."""
         if (
             self.name is not UNDEFINED
             and self.permissions is not UNDEFINED
@@ -591,14 +627,14 @@ class PartialRole(BaseRole):
 class Role(BaseRole):
     """Represents a role in Revolt server.
 
-    This inherits from :class:`.BaseRole`.
+    This inherits from :class:`BaseRole`.
     """
 
     name: str = field(repr=True, kw_only=True)
     """:class:`str`: The role's name."""
 
     permissions: PermissionOverride = field(repr=True, kw_only=True)
-    """:class:`.PermissionOverride`: Permissions available to this role."""
+    """:class:`PermissionOverride`: Permissions available to this role."""
 
     color: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The role's color. This is valid CSS color."""
@@ -653,7 +689,7 @@ class Role(BaseRole):
 class BaseServer(Base):
     """Represents a server on Revolt.
 
-    This inherits from :class:`.Base`.
+    This inherits from :class:`Base`.
     """
 
     def get_emoji(self, emoji_id: str, /) -> typing.Optional[ServerEmoji]:
@@ -666,7 +702,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        Optional[:class:`.ServerEmoji`]
+        Optional[:class:`ServerEmoji`]
             The emoji or ``None`` if not found.
         """
         state = self.state
@@ -701,7 +737,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        Optional[:class:`.Member`]
+        Optional[:class:`Member`]
             The member or ``None`` if not found.
         """
         state = self.state
@@ -725,7 +761,7 @@ class BaseServer(Base):
 
     @property
     def emojis(self) -> Mapping[str, ServerEmoji]:
-        """Mapping[:class:`str`, :class:`.ServerEmoji`]: Returns all emojis of this server."""
+        """Mapping[:class:`str`, :class:`ServerEmoji`]: Returns all emojis of this server."""
         state = self.state
         cache = state.cache
 
@@ -745,7 +781,7 @@ class BaseServer(Base):
 
     @property
     def members(self) -> Mapping[str, Member]:
-        """Mapping[:class:`str`, :class:`.Member`]: Returns all members of this server."""
+        """Mapping[:class:`str`, :class:`Member`]: Returns all members of this server."""
         state = self.state
         cache = state.cache
 
@@ -775,16 +811,16 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_server` to do this.
 
-        For servers, fires :class:`.ServerCreateEvent` for bot, :class:`.ServerMemberJoinEvent` and :class:`.MessageCreateEvent` for all server members.
+        For servers, fires :class:`ServerCreateEvent` for bot, :class:`ServerMemberJoinEvent` and :class:`MessageCreateEvent` for all server members.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        bot: ULIDOr[Union[:class:`.BaseBot`, :class:`.BaseUser`]]
+        bot: ULIDOr[Union[:class:`BaseBot`, :class:`BaseUser`]]
             The bot.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -858,13 +894,13 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
-        May fire :class:`.ServerMemberRemoveEvent` for banned user and all server members.
+        May fire :class:`ServerMemberRemoveEvent` for banned user and all server members.
 
         Parameters
         ----------
-        user: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+        user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The user to ban from the server.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The ban reason. Can be only up to 1024 characters long.
@@ -920,7 +956,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.Ban`
+        :class:`Ban`
             The created ban.
         """
         return await self.state.http.ban(self.id, user, http_overrides=http_overrides, reason=reason)
@@ -1012,6 +1048,77 @@ class BaseServer(Base):
         """
         return await self.state.http.bulk_edit_role_ranks(self.id, ranks, http_overrides=http_overrides)
 
+    async def create_category(
+        self,
+        title: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        channels: list[ULIDOr[ServerChannel]],
+    ) -> Category:
+        """|coro|
+
+        Create a new category within server.
+
+        You must have :attr:`~Permissions.manage_channels` to do this.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        title: :class:`str`
+            The category name. Must be between 1 and 32 characters.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        channels: List[ULIDOr[:class:`ServerChannel`]]
+            The channel's IDs inside this category.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------+
+            | Value                 | Reason                                                            |
+            +-----------------------+-------------------------------------------------------------------+
+            | ``TooManyCategories`` | The server has too many categories than allowed on this instance. |
+            +-----------------------+-------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create categories. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+
+        :class:`Category`
+            The category created in server.
+        """
+        return await self.state.http.create_server_category(
+            self.id,
+            title,
+            http_overrides=http_overrides,
+            channels=channels,
+        )
+
     @typing.overload
     async def create_channel(
         self,
@@ -1063,13 +1170,13 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
-        Fires :class:`.ServerChannelCreateEvent` for all server members.
+        Fires :class:`ServerChannelCreateEvent` for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        type: Optional[:class:`.ChannelType`]
+        type: Optional[:class:`ChannelType`]
             The channel type. Defaults to :attr:`.ChannelType.text` if not provided.
         name: :class:`str`
             The channel name. Must be between 1 and 32 characters.
@@ -1077,7 +1184,7 @@ class BaseServer(Base):
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             To mark channel as NSFW or not.
-        voice: Optional[:class:`.ChannelVoiceMetadata`]
+        voice: Optional[:class:`ChannelVoiceMetadata`]
             The voice-specific metadata for this channel.
 
             .. versionadded:: 1.2
@@ -1127,7 +1234,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.ServerChannel`
+        :class:`ServerChannel`
             The channel created in server.
         """
 
@@ -1155,7 +1262,7 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_customization` to do this.
 
-        Fires :class:`.EmojiCreateEvent` for all server members.
+        Fires :class:`EmojiCreateEvent` for all server members.
 
         .. note::
             Prior to API v0.8.4, this could only be used by non-bot accounts.
@@ -1164,11 +1271,11 @@ class BaseServer(Base):
         ----------
         name: :class:`str`
             The emoji name. Must be between 1 and 32 chars long. Can only contain ASCII digits, underscore and lowercase letters.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         nsfw: Optional[:class:`bool`]
             Whether the emoji is NSFW or not. Defaults to ``False``.
-        image: :class:`.ResolvableResource`
+        image: :class:`ResolvableResource`
             The emoji data.
 
         Raises
@@ -1220,7 +1327,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.ServerEmoji`
+        :class:`ServerEmoji`
             The created emoji.
         """
         return await self.state.http.create_server_emoji(
@@ -1246,19 +1353,19 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
-        Fires :class:`.ServerChannelCreateEvent` for all server members.
+        Fires :class:`ServerChannelCreateEvent` for all server members.
 
         Parameters
         ----------
         name: :class:`str`
             The channel name. Must be between 1 and 32 characters.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             To mark channel as NSFW or not.
-        voice: Optional[:class:`.ChannelVoiceMetadata`]
+        voice: Optional[:class:`ChannelVoiceMetadata`]
             The voice-specific metadata for this channel.
 
             .. versionadded:: 1.2
@@ -1308,7 +1415,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.TextChannel`
+        :class:`TextChannel`
             The channel created in server.
         """
         channel = await self.create_channel(
@@ -1336,19 +1443,19 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_channels` to do this.
 
-        Fires :class:`.ServerChannelCreateEvent` for all server members.
+        Fires :class:`ServerChannelCreateEvent` for all server members.
 
         Parameters
         ----------
         name: :class:`str`
             The channel name. Must be between 1 and 32 characters.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         description: Optional[:class:`str`]
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
             To mark channel as NSFW or not.
-        voice: Optional[:class:`.ChannelVoiceMetadata`]
+        voice: Optional[:class:`ChannelVoiceMetadata`]
             The voice-specific metadata for this channel.
 
             .. versionadded:: 1.2
@@ -1398,7 +1505,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.VoiceChannel`
+        :class:`VoiceChannel`
             The channel created in server.
         """
         channel = await self.create_channel(
@@ -1424,11 +1531,11 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_roles` to do this.
 
-        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+        Fires :class:`RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
@@ -1484,7 +1591,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.Role`
+        :class:`Role`
             The role created in server.
         """
 
@@ -1495,11 +1602,11 @@ class BaseServer(Base):
 
         Deletes a server if owner, or leaves otherwise.
 
-        Fires :class:`.ServerDeleteEvent` (if owner) or :class:`.ServerMemberRemoveEvent` for all server members.
+        Fires :class:`ServerDeleteEvent` (if owner) or :class:`ServerMemberRemoveEvent` for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1531,6 +1638,80 @@ class BaseServer(Base):
         """
         return await self.state.http.delete_server(self.id, http_overrides=http_overrides)
 
+    async def delete_category(
+        self,
+        category: ULIDOr[Category],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
+        """|coro|
+
+        Deletes a category in server.
+
+        You must have :attr:`~Permissions.manage_channels` to do this.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        category: ULIDOr[:class:`Category`]
+            The category to delete.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------+
+            | Value                 | Reason                                                            |
+            +-----------------------+-------------------------------------------------------------------+
+            | ``TooManyCategories`` | The server has too many categories than allowed on this instance. |
+            +-----------------------+-------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete categories. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+-----------------------------+
+            | Value               | Reason                      |
+            +---------------------+-----------------------------+
+            | ``NotFound``        | The server was not found.   |
+            +---------------------+-----------------------------+
+            | ``UnknownCategory`` | The category was not found. |
+            +---------------------+-----------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        await self.state.http.delete_server_category(
+            self.id,
+            category,
+            http_overrides=http_overrides,
+        )
+
     async def edit(
         self,
         *,
@@ -1553,11 +1734,11 @@ class BaseServer(Base):
 
         To provide any of parameters below (except for ``categories``, ``discoverable`` and ``flags``), you must have :attr:`~Permissions.manage_server`.
 
-        Fires :class:`.ServerUpdateEvent` for all server members.
+        Fires :class:`ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
@@ -1565,17 +1746,26 @@ class BaseServer(Base):
             The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]
             The new server description. Can be only up to 1024 characters.
-        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new server icon.
-        banner: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        banner: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new server banner.
-        categories: UndefinedOr[Optional[List[:class:`.Category`]]]
+        categories: UndefinedOr[Optional[List[:class:`Category`]]]
             The new server categories structure.
 
             You must have :attr:`~Permissions.manage_channels`.
-        system_messsages: UndefinedOr[Optional[:class:`.SystemMessageChannels`]]
+
+            .. deprecated:: 1.2
+
+                Due to categories rework in API v0.8.5, this parameter will be ignored on newer API versions,
+                and was deprecated in favor of these dedicated methods:
+
+                - :meth:`create_category`
+                - :meth:`delete_category`
+                - :meth:`edit_category`
+        system_messsages: UndefinedOr[Optional[:class:`SystemMessageChannels`]]
             The new system message channels configuration.
-        flags: UndefinedOr[:class:`.ServerFlags`]
+        flags: UndefinedOr[:class:`ServerFlags`]
             The new server flags. You must be a privileged user to provide this.
         discoverable: UndefinedOr[:class:`bool`]
             Whether this server is public and should show up on `Revolt Discover <https://rvlt.gg>`_.
@@ -1583,7 +1773,7 @@ class BaseServer(Base):
             The new server flags. You must be a privileged user to provide this.
         analytics: UndefinedOr[:class:`bool`]
             Whether analytics should be collected for this server. Must be enabled in order to show up on `Revolt Discover <https://rvlt.gg>`_.
-        owner: UndefinedOr[Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]]
+        owner: UndefinedOr[Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]]
             The member to transfer ownership to.
 
             You must own the server, or be a privileged user to provide this.
@@ -1649,7 +1839,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The newly updated server.
         """
         return await self.state.http.edit_server(
@@ -1668,6 +1858,97 @@ class BaseServer(Base):
             owner=owner,
         )
 
+    async def edit_category(
+        self,
+        category: ULIDOr[Category],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        title: UndefinedOr[str] = UNDEFINED,
+        channels: UndefinedOr[list[ULIDOr[ServerChannel]]] = UNDEFINED,
+        default_permissions: UndefinedOr[None] = UNDEFINED,
+    ) -> Category:
+        """|coro|
+
+        Edits a category in server.
+
+        You must have :attr:`~Permissions.manage_channels` to do this.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        category: ULIDOr[:class:`Category`]
+            The category to edit.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        title: UndefinedOr[:class:`str`]
+            The new category title.
+        channels: UndefinedOr[List[ULIDOr[:class:`ServerChannel`]]]
+            The channel's IDs inside this category.
+        default_permissions: UndefinedOr[None]
+            To remove default permissions or not.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------+
+            | Value                 | Reason                                                            |
+            +-----------------------+-------------------------------------------------------------------+
+            | ``TooManyCategories`` | The server has too many categories than allowed on this instance. |
+            +-----------------------+-------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+-----------------------------------------+
+            | Value              | Reason                                  |
+            +--------------------+-----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid.  |
+            +--------------------+-----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit categories. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+-------------------------------+
+            | Value               | Reason                        |
+            +---------------------+-------------------------------+
+            | ``NotFound``        | The server/ban was not found. |
+            +---------------------+-------------------------------+
+            | ``UnknownCategory`` | The category was not found.   |
+            +---------------------+-------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Category`
+            The newly updated category.
+        """
+        return await self.state.http.edit_server_category(
+            self.id,
+            category,
+            http_overrides=http_overrides,
+            title=title,
+            channels=channels,
+            default_permissions=default_permissions,
+        )
+
     async def fetch(
         self,
         *,
@@ -1680,7 +1961,7 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         populate_channels: Optional[:class:`bool`]
             Whether to populate :attr:`Server.channels`.
@@ -1706,7 +1987,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The retrieved server.
         """
         return await self.state.http.get_server(
@@ -1722,7 +2003,7 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1754,7 +2035,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        List[:class:`.Ban`]
+        List[:class:`Ban`]
             The ban entries.
         """
         return await self.state.http.get_bans(self.id, http_overrides=http_overrides)
@@ -1766,7 +2047,7 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1798,7 +2079,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        List[:class:`.ServerEmoji`]
+        List[:class:`ServerEmoji`]
             The retrieved emojis.
         """
         return await self.state.http.get_server_emojis(self.id, http_overrides=http_overrides)
@@ -1812,7 +2093,7 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1852,7 +2133,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        List[:class:`.ServerInvite`]
+        List[:class:`ServerInvite`]
             The retrieved invites.
         """
         return await self.state.http.get_server_invites(self.id, http_overrides=http_overrides)
@@ -1869,9 +2150,9 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The user to retrieve.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1903,7 +2184,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.Member`
+        :class:`Member`
             The retrieved member.
         """
         return await self.state.http.get_member(self.id, member, http_overrides=http_overrides)
@@ -1920,7 +2201,7 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -1954,7 +2235,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        List[:class:`.Member`]
+        List[:class:`Member`]
             The retrieved members.
         """
         return await self.state.http.get_members(
@@ -1973,7 +2254,7 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         exclude_offline: Optional[:class:`bool`]
             Whether to exclude offline users.
@@ -2007,7 +2288,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.MemberList`
+        :class:`MemberList`
             The member list.
         """
         return await self.state.http.get_member_list(
@@ -2023,9 +2304,9 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        role: ULIDOr[:class:`.BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role to retrieve.
 
         Raises
@@ -2049,7 +2330,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.Role`
+        :class:`Role`
             The retrieved role.
         """
         return await self.state.http.get_role(self.id, role, http_overrides=http_overrides)
@@ -2067,7 +2348,7 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2125,7 +2406,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The server you just joined.
         """
         server = await self.state.http.accept_invite(self.id, http_overrides=http_overrides)
@@ -2141,13 +2422,13 @@ class BaseServer(Base):
 
         Kicks a member from the server.
 
-        Fires :class:`.ServerMemberRemoveEvent` for kicked user and all server members.
+        Fires :class:`ServerMemberRemoveEvent` for kicked user and all server members.
 
         Parameters
         ----------
-        member: Union[:class:`str`, :class:`.BaseUser`, :class:`.BaseMember`]
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The member to kick.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2206,11 +2487,11 @@ class BaseServer(Base):
 
         Leaves a server if not owner, or deletes otherwise.
 
-        Fires :class:`.ServerMemberRemoveEvent` or :class:`.ServerDeleteEvent` (if owner) for all server members.
+        Fires :class:`ServerMemberRemoveEvent` or :class:`ServerDeleteEvent` (if owner) for all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         silent: Optional[:class:`bool`]
             Whether to silently leave server or not.
@@ -2254,7 +2535,7 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2309,7 +2590,7 @@ class BaseServer(Base):
         ----------
         query: :class:`str`
             The query to search members for.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2341,7 +2622,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        List[:class:`.Member`]
+        List[:class:`Member`]
             The members matched.
         """
         return await self.state.http.query_members_by_name(self.id, query)
@@ -2357,16 +2638,16 @@ class BaseServer(Base):
 
         Report the server to the instance moderation team.
 
-        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+        Fires :class:`ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        reason: :class:`.ContentReportReason`
+        reason: :class:`ContentReportReason`
             The reason for reporting.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
@@ -2427,17 +2708,17 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        Fires :class:`.RawServerRoleUpdateEvent` for all server members.
+        Fires :class:`RawServerRoleUpdateEvent` for all server members.
 
         Parameters
         ----------
-        role: ULIDOr[:class:`.BaseRole`]
+        role: ULIDOr[:class:`BaseRole`]
             The role.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        allow: :class:`.Permissions`
+        allow: :class:`Permissions`
             The permissions to allow for the specified role.
-        deny: :class:`.Permissions`
+        deny: :class:`Permissions`
             The permissions to deny for the specified role.
 
         Raises
@@ -2481,7 +2762,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The updated server with new permissions.
         """
         return await self.state.http.set_server_permissions_for_role(
@@ -2497,13 +2778,13 @@ class BaseServer(Base):
 
         You must have :attr:`~Permissions.manage_permissions` to do this.
 
-        Fires :class:`.ServerUpdateEvent` for all server members.
+        Fires :class:`ServerUpdateEvent` for all server members.
 
         Parameters
         ----------
-        permissions: :class:`.Permissions`
+        permissions: :class:`Permissions`
             The new permissions.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2545,7 +2826,7 @@ class BaseServer(Base):
 
         Returns
         -------
-        :class:`.Server`
+        :class:`Server`
             The newly updated server.
         """
 
@@ -2569,9 +2850,9 @@ class BaseServer(Base):
 
         Parameters
         ----------
-        user: ULIDOr[:class:`.BaseUser`]
+        user: ULIDOr[:class:`BaseUser`]
             The user to unban from the server.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -2611,7 +2892,7 @@ class PartialServer(BaseServer):
 
     Unmodified fields will have ``UNDEFINED`` value.
 
-    This inherits from :class:`.BaseServer`.
+    This inherits from :class:`BaseServer`.
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
@@ -2626,20 +2907,22 @@ class PartialServer(BaseServer):
     channel_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
     """UndefinedOr[List[:class:`str`]]: The server's channels now."""
 
-    categories: UndefinedOr[typing.Optional[list[Category]]] = field(repr=True, kw_only=True)
-    """UndefinedOr[Optional[List[:class:`.Category`]]]: The server's categories now."""
+    internal_categories: UndefinedOr[typing.Optional[typing.Union[list[Category], dict[str, Category]]]] = field(
+        repr=True, kw_only=True
+    )
+    """UndefinedOr[Optional[Union[List[:class:`Category`], Dict[:class:`str`, :class:`Category`]]]]: The server's categories now."""
 
     system_messages: UndefinedOr[typing.Optional[SystemMessageChannels]] = field(repr=True, kw_only=True)
-    """UndefinedOr[Optional[:class:`.SystemMessageChannels`]]: The new server's system message assignments."""
+    """UndefinedOr[Optional[:class:`SystemMessageChannels`]]: The new server's system message assignments."""
 
     raw_default_permissions: UndefinedOr[int] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The raw value of new default permissions for everyone."""
 
     internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
-    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new server's icon, if any."""
+    """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new server's icon, if any."""
 
     internal_banner: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
-    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new server's banner, if any."""
+    """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new server's banner, if any."""
 
     raw_flags: UndefinedOr[int] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The new server's flags raw value."""
@@ -2651,8 +2934,15 @@ class PartialServer(BaseServer):
     """UndefinedOr[:class:`bool`]: Whether the server activity is being analyzed in real-time."""
 
     @property
+    def categories(self) -> UndefinedOr[typing.Optional[list[Category]]]:
+        """UndefinedOr[Optional[List[:class:`Category`]]]: The server's categories now."""
+        if isinstance(self.internal_categories, dict):
+            return list(self.internal_categories.values())
+        return
+
+    @property
     def default_permissions(self) -> UndefinedOr[Permissions]:
-        """UndefinedOr[:class:`.Permissions`]: The new default permissions for everyone."""
+        """UndefinedOr[:class:`Permissions`]: The new default permissions for everyone."""
         if self.raw_default_permissions is UNDEFINED:
             return self.raw_default_permissions
         ret = _new_permissions(Permissions)
@@ -2661,7 +2951,7 @@ class PartialServer(BaseServer):
 
     @property
     def flags(self) -> UndefinedOr[ServerFlags]:
-        """UndefinedOr[:class:`.ServerFlags`]: The new server's flags."""
+        """UndefinedOr[:class:`ServerFlags`]: The new server's flags."""
         if self.raw_flags is UNDEFINED:
             return self.raw_flags
         ret = _new_server_flags(ServerFlags)
@@ -2670,12 +2960,12 @@ class PartialServer(BaseServer):
 
     @property
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
-        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful server icon."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The stateful server icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def banner(self) -> UndefinedOr[typing.Optional[Asset]]:
-        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful server banner."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The stateful server banner."""
         return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
 
 
@@ -2694,7 +2984,7 @@ def sort_member_roles(
         The IDs of roles to sort (:attr:`.Member.role_ids`).
     safe: :class:`bool`
         Whether to raise exception or not if role is missing in cache.
-    server_roles: Dict[:class:`str`, :class:`.Role`]
+    server_roles: Dict[:class:`str`, :class:`Role`]
         The mapping of role IDs to role objects (:attr:`.Server.roles`).
 
     Raises
@@ -2704,7 +2994,7 @@ def sort_member_roles(
 
     Returns
     -------
-    List[:class:`.Role`]
+    List[:class:`Role`]
         The sorted result, in ascending order.
     """
     if not safe:
@@ -2731,13 +3021,14 @@ def calculate_server_permissions(
     default_permissions: Permissions,
     can_publish: bool = True,
     can_receive: bool = True,
+    category: typing.Optional[Category] = None,
 ) -> Permissions:
-    """Calculates the permissions in :class:`.Server` scope.
+    """Calculates the permissions in :class:`Server` scope.
 
     Parameters
     ----------
-    target_roles: List[:class:`.Role`]
-        The target member's roles. Should be empty list if calculating against :class:`.User`,
+    target_roles: List[:class:`Role`]
+        The target member's roles. Should be empty list if calculating against :class:`User`,
         or ``pyvolt.sort_member_roles(member.roles, server_roles=server.roles)`` if calculating
         against member.
     target_timeout: Optional[:class:`~datetime.datetime`]
@@ -2748,10 +3039,12 @@ def calculate_server_permissions(
         Whether the member can send voice data. Defaults to ``True``.
     can_receive: :class:`bool`
         Whether the member can receive voice data. Defaults to ``True``.
+    category: Optional[:class:`Category`]
+        The category to calculate permissions with.
 
     Returns
     -------
-    :class:`.Permissions`
+    :class:`Permissions`
         The calculated permissions.
     """
     result = default_permissions.copy()
@@ -2760,14 +3053,28 @@ def calculate_server_permissions(
         result |= role.permissions.allow
         result &= ~role.permissions.deny
 
-    if target_timeout is not None and target_timeout <= utils.utcnow():
-        result.send_messages = False
-
     if not can_publish:
         result.speak = False
 
     if not can_receive:
         result.listen = False
+
+    if target_timeout is not None and target_timeout <= utils.utcnow():
+        result &= ALLOW_PERMISSIONS_IN_TIMEOUT
+
+    if category is not None:
+        default_category_permissions = category.default_permissions
+        if default_category_permissions is not None:
+            result |= default_category_permissions.allow
+            result &= ~default_category_permissions.deny
+
+        role_category_permissions = category.role_permissions
+        if role_category_permissions:
+            for role in target_roles:
+                override = role_category_permissions.get(role.id)
+                if override is not None:
+                    result |= override.allow
+                    result &= ~override.deny
 
     return result
 
@@ -2776,7 +3083,7 @@ def calculate_server_permissions(
 class Server(BaseServer):
     """Represents a server on Revolt.
 
-    This inherits from :class:`.BaseServer`.
+    This inherits from :class:`BaseServer`.
     """
 
     owner_id: str = field(repr=True, kw_only=True)
@@ -2788,27 +3095,30 @@ class Server(BaseServer):
     description: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The server's description."""
 
-    internal_channels: tuple[typing.Literal[True], list[str]] | tuple[typing.Literal[False], list[ServerChannel]] = (
-        field(repr=True, kw_only=True)
-    )
+    internal_channels: typing.Union[
+        tuple[typing.Literal[True], list[str]],
+        tuple[typing.Literal[False], list[ServerChannel]],
+    ] = field(repr=True, kw_only=True)
 
-    categories: typing.Optional[list[Category]] = field(repr=True, kw_only=True)
-    """Optional[List[:class:`.Category`]]: The server's categories."""
+    internal_categories: typing.Optional[typing.Union[list[Category], dict[str, Category]]] = field(
+        repr=True, kw_only=True
+    )
+    """Optional[Union[List[:class:`Category`], Dict[:class:`str`, :class:`Category`]]]: The server's categories."""
 
     system_messages: typing.Optional[SystemMessageChannels] = field(repr=True, kw_only=True)
-    """Optional[:class:`.SystemMessageChannels`]: The configuration for sending system event messages."""
+    """Optional[:class:`SystemMessageChannels`]: The configuration for sending system event messages."""
 
     roles: dict[str, Role] = field(repr=True, kw_only=True)
-    """Dict[:class:`str`, :class:`.Role`]: The server's roles."""
+    """Dict[:class:`str`, :class:`Role`]: The server's roles."""
 
     raw_default_permissions: int = field(repr=True, kw_only=True)
     """:class:`int`: The raw value of default permissions for everyone."""
 
     internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless server's icon."""
+    """Optional[:class:`StatelessAsset`]: The stateless server's icon."""
 
     internal_banner: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless server's banner."""
+    """Optional[:class:`StatelessAsset`]: The stateless server's banner."""
 
     raw_flags: int = field(repr=True, kw_only=True)
     """:class:`int`: The server's flags raw value."""
@@ -2822,6 +3132,30 @@ class Server(BaseServer):
     discoverable: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the server is publicly discoverable."""
 
+    def get_category(self, category_id: str, /) -> typing.Optional[Category]:
+        """Retrieves a server category from cache.
+
+        Parameters
+        ----------
+        category_id: :class:`str`
+            The category ID.
+
+        Returns
+        -------
+        Optional[:class:`Category`]
+            The category or ``None`` if not found.
+        """
+        if self.internal_categories is None:
+            return None
+
+        if isinstance(self.internal_categories, dict):
+            return self.internal_categories.get(category_id)
+
+        for category in self.internal_categories:
+            if category.id == category_id:
+                return category
+        return None
+
     def get_channel(self, channel_id: str, /) -> typing.Optional[ServerChannel]:
         """Retrieves a server channel from cache.
 
@@ -2832,7 +3166,7 @@ class Server(BaseServer):
 
         Returns
         -------
-        Optional[:class:`.ServerChannel`]
+        Optional[:class:`ServerChannel`]
             The channel or ``None`` if not found.
         """
         state = self.state
@@ -2868,7 +3202,7 @@ class Server(BaseServer):
                 return t
 
     def get_me(self) -> typing.Optional[Member]:
-        """Optional[:class:`.Member`]: The own user for this server."""
+        """Optional[:class:`Member`]: The own user for this server."""
 
         state = self.state
         cache = state.cache
@@ -2890,7 +3224,7 @@ class Server(BaseServer):
         return cache.get_server_member(self.id, state.my_id, ctx)
 
     def get_owner(self) -> typing.Optional[typing.Union[Member, User]]:
-        """Optional[Union[:class:`.Member`, :class:`.User`]]: The server's owner."""
+        """Optional[Union[:class:`Member`, :class:`User`]]: The server's owner."""
 
         state = self.state
         cache = state.cache
@@ -2913,7 +3247,7 @@ class Server(BaseServer):
         return member
 
     def get_owner_as_member(self) -> typing.Optional[Member]:
-        """Optional[:class:`.Member`]: The server's owner."""
+        """Optional[:class:`Member`]: The server's owner."""
 
         state = self.state
         cache = state.cache
@@ -2933,7 +3267,7 @@ class Server(BaseServer):
         return cache.get_server_member(self.id, self.owner_id, ctx)
 
     def get_owner_as_user(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The server's owner."""
+        """Optional[:class:`User`]: The server's owner."""
 
         state = self.state
         cache = state.cache
@@ -2954,8 +3288,30 @@ class Server(BaseServer):
 
     @property
     def banner(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The server banner."""
+        """Optional[:class:`Asset`]: The server banner."""
         return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
+
+    @property
+    def categories(self) -> typing.Optional[list[Category]]:
+        """Optional[List[:class:`Category`]]: The server's categories."""
+        if self.internal_categories is None:
+            return None
+
+        if isinstance(self.internal_categories, dict):
+            return list(self.internal_categories.values())
+
+        return self.internal_categories
+
+    @property
+    def categories_as_mapping(self) -> typing.Optional[dict[str, Category]]:
+        """Optional[Dict[:class:`str`, :class:`Category`]]: The server's categories as mapping."""
+        if self.internal_categories is None:
+            return None
+
+        if isinstance(self.internal_categories, dict):
+            return self.internal_categories
+
+        return {category.id: category for category in self.internal_categories}
 
     @property
     def channel_ids(self) -> list[str]:
@@ -2967,7 +3323,7 @@ class Server(BaseServer):
 
     @property
     def channels(self) -> list[ServerChannel]:
-        """List[:class:`.ServerChannel`]: The channels within this server."""
+        """List[:class:`ServerChannel`]: The channels within this server."""
 
         if not self.internal_channels[0]:
             return self.internal_channels[1]  # type: ignore
@@ -3005,26 +3361,26 @@ class Server(BaseServer):
 
     @property
     def default_permissions(self) -> Permissions:
-        """:class:`.Permissions`: The default permissions for everyone."""
+        """:class:`Permissions`: The default permissions for everyone."""
         ret = _new_permissions(Permissions)
         ret.value = self.raw_default_permissions
         return ret
 
     @property
     def flags(self) -> ServerFlags:
-        """:class:`.ServerFlags`: The server's flags."""
+        """:class:`ServerFlags`: The server's flags."""
         ret = _new_server_flags(ServerFlags)
         ret.value = self.raw_flags
         return ret
 
     @property
     def icon(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The server icon."""
+        """Optional[:class:`Asset`]: The server icon."""
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
     @property
     def me(self) -> Member:
-        """:class:`.Member`: The own user for this server."""
+        """:class:`Member`: The own user for this server."""
 
         me = self.get_me()
         if me is None:
@@ -3033,7 +3389,7 @@ class Server(BaseServer):
 
     @property
     def owner(self) -> typing.Union[Member, User]:
-        """Union[:class:`.Member`, :class:`.User`]: The server's owner."""
+        """Union[:class:`Member`, :class:`User`]: The server's owner."""
 
         owner = self.get_owner()
         if owner is None:
@@ -3042,7 +3398,7 @@ class Server(BaseServer):
 
     @property
     def owner_as_member(self) -> Member:
-        """:class:`.Member`: The server's owner."""
+        """:class:`Member`: The server's owner."""
 
         owner = self.get_owner_as_member()
         if owner is None:
@@ -3051,7 +3407,7 @@ class Server(BaseServer):
 
     @property
     def owner_as_user(self) -> User:
-        """:class:`.User`: The server's owner."""
+        """:class:`User`: The server's owner."""
 
         owner = self.get_owner_as_user()
         if owner is None:
@@ -3071,7 +3427,7 @@ class Server(BaseServer):
 
         .. warning::
             This is called by library internally to keep cache up to date.
-            You likely want to use :meth:`.BaseServer.edit` method instead.
+            You likely want to use :meth:`BaseServer.edit` method instead.
         """
         if data.owner_id is not UNDEFINED:
             self.owner_id = data.owner_id
@@ -3081,8 +3437,8 @@ class Server(BaseServer):
             self.description = data.description
         if data.channel_ids is not UNDEFINED:
             self.internal_channels = (True, data.channel_ids)
-        if data.categories is not UNDEFINED:
-            self.categories = data.categories or []
+        if data.internal_categories is not UNDEFINED:
+            self.internal_categories = data.internal_categories
         if data.system_messages is not UNDEFINED:
             self.system_messages = data.system_messages
         if data.raw_default_permissions is not UNDEFINED:
@@ -3111,7 +3467,7 @@ class Server(BaseServer):
 
         Parameters
         ----------
-        member: Union[:class:`.Member`, :class:`.User`]
+        member: Union[:class:`Member`, :class:`User`]
             The member to calculate permissions for.
         safe: :class:`bool`
             Whether to raise exception or not if role is missing in cache.
@@ -3146,7 +3502,7 @@ class Server(BaseServer):
         )
 
     def prepare_cached(self) -> list[ServerChannel]:
-        """List[:class:`.ServerChannel`]: Prepares the server to be cached."""
+        """List[:class:`ServerChannel`]: Prepares the server to be cached."""
         if self.internal_channels[0]:
             return []
         channels = self.internal_channels[1]
@@ -3178,8 +3534,12 @@ class Server(BaseServer):
             payload['channels'] = [channel.to_dict() for channel in self.channels]
         else:
             payload['channels'] = self.channel_ids
-        if self.categories is not None:
-            payload['categories'] = [category.to_dict() for category in self.categories]
+        if self.internal_categories is not None:
+            if isinstance(self.internal_categories, dict):
+                if len(self.internal_categories):
+                    payload['categories'] = {k: v.to_dict() for k, v in self.internal_categories.items()}
+            else:
+                payload['categories'] = [category.to_dict() for category in self.internal_categories]
         if self.system_messages is not None:
             payload['system_messages'] = self.system_messages.to_dict()
 
@@ -3209,7 +3569,7 @@ class Server(BaseServer):
 
         Parameters
         ----------
-        role: Union[:class:`.PartialRole`, :class:`.Role`]
+        role: Union[:class:`PartialRole`, :class:`Role`]
             The role to upsert.
         """
         if isinstance(role, PartialRole):
@@ -3232,7 +3592,7 @@ class Ban:
     """Optional[:class:`str`]: The ban's reason."""
 
     user: typing.Optional[DisplayUser] = field(repr=False, kw_only=True)
-    """Optional[:class:`.DisplayUser`]: The user that was banned."""
+    """Optional[:class:`DisplayUser`]: The user that was banned."""
 
     def __hash__(self) -> int:
         return hash((self.server_id, self.user_id))
@@ -3263,20 +3623,20 @@ class BaseMember(Connectable, Messageable):
     """
 
     state: State = field(repr=False, kw_only=True)
-    """:class:`.State`: State that controls this member."""
+    """:class:`State`: State that controls this member."""
 
     server_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The server's ID the member in."""
 
     internal_user: typing.Union[User, str] = field(repr=True, kw_only=True)
-    """Union[:class:`.User`, :class:`str`]: The ID of the user, or full user instance."""
+    """Union[:class:`User`, :class:`str`]: The ID of the user, or full user instance."""
 
     def get_bot_owner(self) -> tuple[typing.Optional[User], str]:
         """Returns the user who created this bot user.
 
         Returns
         -------
-        Tuple[Optional[:class:`.User`], :class:`str`]
+        Tuple[Optional[:class:`User`], :class:`str`]
             The bot owner and their ID (may be empty if user is not a bot).
         """
 
@@ -3314,7 +3674,7 @@ class BaseMember(Connectable, Messageable):
         return self.dm_channel_id or ''
 
     def get_server(self) -> typing.Optional[Server]:
-        """Optional[:class:`.Server`]: The server this member belongs to."""
+        """Optional[:class:`Server`]: The server this member belongs to."""
 
         state = self.state
         cache = state.cache
@@ -3334,7 +3694,7 @@ class BaseMember(Connectable, Messageable):
         return cache.get_server(self.server_id, ctx)
 
     def get_user(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user."""
+        """Optional[:class:`User`]: The user."""
         if isinstance(self.internal_user, User):
             return self.internal_user
 
@@ -3407,7 +3767,7 @@ class BaseMember(Connectable, Messageable):
 
     @property
     def user(self) -> User:
-        """:class:`.User`: The user."""
+        """:class:`User`: The user."""
 
         user = self.get_user()
         if user is None:
@@ -3419,7 +3779,7 @@ class BaseMember(Connectable, Messageable):
 
     @property
     def bot_owner(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Returns the user who created this bot user."""
+        """Optional[:class:`User`]: Returns the user who created this bot user."""
 
         bot_owner, bot_owner_id = self.get_bot_owner()
         if bot_owner is None and len(bot_owner_id):
@@ -3471,7 +3831,7 @@ class BaseMember(Connectable, Messageable):
 
     @property
     def dm_channel(self) -> typing.Optional[DMChannel]:
-        """Optional[:class:`.DMChannel`]: The private channel with this member."""
+        """Optional[:class:`DMChannel`]: The private channel with this member."""
 
         state = self.state
         cache = state.cache
@@ -3588,7 +3948,7 @@ class BaseMember(Connectable, Messageable):
 
     @property
     def internal_avatar(self) -> typing.Optional[StatelessAsset]:
-        """Optional[:class:`.StatelessAsset`]: The stateless avatar of the member user."""
+        """Optional[:class:`StatelessAsset`]: The stateless avatar of the member user."""
         if isinstance(self.internal_user, User):
             return self.internal_user.internal_avatar
 
@@ -3616,7 +3976,7 @@ class BaseMember(Connectable, Messageable):
 
     @property
     def avatar(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The avatar of the member user."""
+        """Optional[:class:`Asset`]: The avatar of the member user."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
@@ -3649,14 +4009,14 @@ class BaseMember(Connectable, Messageable):
 
     @property
     def badges(self) -> UserBadges:
-        """:class:`.UserBadges`: The member user's badges."""
+        """:class:`UserBadges`: The member user's badges."""
         ret = _new_user_badges(UserBadges)
         ret.value = self.raw_badges
         return ret
 
     @property
     def status(self) -> typing.Optional[UserStatus]:
-        """Optional[:class:`.UserStatus`]: The current member user's status."""
+        """Optional[:class:`UserStatus`]: The current member user's status."""
         if isinstance(self.internal_user, User):
             return self.internal_user.status
 
@@ -3712,7 +4072,7 @@ class BaseMember(Connectable, Messageable):
 
     @property
     def flags(self) -> UserFlags:
-        """:class:`.UserFlags`: The member user's flags."""
+        """:class:`UserFlags`: The member user's flags."""
         ret = _new_user_flags(UserFlags)
         ret.value = self.raw_flags
         return ret
@@ -3747,7 +4107,7 @@ class BaseMember(Connectable, Messageable):
 
     @property
     def bot(self) -> typing.Optional[BotUserMetadata]:
-        """Optional[:class:`.BotUserMetadata`]: The information about the bot."""
+        """Optional[:class:`BotUserMetadata`]: The information about the bot."""
         if isinstance(self.internal_user, User):
             return self.internal_user.bot
 
@@ -3870,11 +4230,11 @@ class BaseMember(Connectable, Messageable):
 
         You must have :attr:`~Permissions.ban_members` to do this.
 
-        May fire :class:`.ServerMemberRemoveEvent` for banned user and all server members.
+        May fire :class:`ServerMemberRemoveEvent` for banned user and all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The ban reason. Can be only up to 1024 characters long.
@@ -3930,7 +4290,7 @@ class BaseMember(Connectable, Messageable):
 
         Returns
         -------
-        :class:`.Ban`
+        :class:`Ban`
             The created ban.
         """
 
@@ -3951,7 +4311,7 @@ class BaseMember(Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Returns
@@ -3968,12 +4328,12 @@ class BaseMember(Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Returns
         -------
-        :class:`.UserFlags`
+        :class:`UserFlags`
             The retrieved flags.
         """
         return await self.state.http.get_user_flags(self.id, http_overrides=http_overrides)
@@ -3987,7 +4347,7 @@ class BaseMember(Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4019,7 +4379,7 @@ class BaseMember(Connectable, Messageable):
 
         Returns
         -------
-        :class:`.UserProfile`
+        :class:`UserProfile`
             The retrieved user profile.
         """
 
@@ -4041,31 +4401,31 @@ class BaseMember(Connectable, Messageable):
 
         Edits the member.
 
-        Fires :class:`.ServerMemberUpdateEvent` for all server members,
-        and optionally fires multiple/single :class:`.ServerChannelCreateEvent` / :class:`.ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
+        Fires :class:`ServerMemberUpdateEvent` for all server members,
+        and optionally fires multiple/single :class:`ServerChannelCreateEvent` / :class:`ChannelDeleteEvent` events for target member if ``roles`` parameter is provided.
 
         For Livekit instances:
 
-        - If ``voice`` parameter is provided, fires :class:`.VoiceChannelMoveEvent` / :class:`.VoiceChannelLeaveEvent`
-          if specified as ``None``, otherwise :class:`.VoiceChannelLeaveEvent` is fired. The specified events are fired for all users who can see voice channel the member is currently in.
-        - If any of ``roles``, ``can_publish`` or ``can_receive`` parameters is provided, may fire :class:`.UserVoiceStateUpdateEvent` for all users who can see voice channel the member is currently in.
+        - If ``voice`` parameter is provided, fires :class:`VoiceChannelMoveEvent` / :class:`VoiceChannelLeaveEvent`
+          if specified as ``None``, otherwise :class:`VoiceChannelLeaveEvent` is fired. The specified events are fired for all users who can see voice channel the member is currently in.
+        - If any of ``roles``, ``can_publish`` or ``can_receive`` parameters is provided, may fire :class:`UserVoiceStateUpdateEvent` for all users who can see voice channel the member is currently in.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
 
             To provide this, you must have :attr:`~Permissions.manage_nicknames` if changing other member's nick.
             Otherwise, :attr:`~Permissions.change_nickname` is required instead.
-        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The member's new avatar. Use ``None`` to remove the avatar.
 
             You can only change your own server avatar.
 
             You must have :attr:`~Permissions.change_avatar` to provide this.
-        roles: UndefinedOr[Optional[List[ULIDOr[:class:`.BaseRole`]]]]
+        roles: UndefinedOr[Optional[List[ULIDOr[:class:`BaseRole`]]]]
             The member's new list of roles. This *replaces* the roles.
 
             You must have :attr:`~Permissions.assign_roles` to provide this.
@@ -4083,7 +4443,7 @@ class BaseMember(Connectable, Messageable):
             Whether the member should receive voice data.
 
             You must have :attr:`~Permissions.deafen_members` to provide this.
-        voice: UndefinedOr[ULIDOr[Union[:class:`.TextChannel`, :class:`.VoiceChannel`]]]
+        voice: UndefinedOr[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]
             The voice channel to move the member to.
 
             You must have :attr:`~Permissions.move_members` to provide this.
@@ -4145,7 +4505,7 @@ class BaseMember(Connectable, Messageable):
 
         Returns
         -------
-        :class:`.Member`
+        :class:`Member`
             The newly updated member.
         """
         return await self.state.http.edit_member(
@@ -4166,11 +4526,11 @@ class BaseMember(Connectable, Messageable):
 
         Kicks the member from the server.
 
-        Fires :class:`.ServerMemberRemoveEvent` for kicked user and all server members.
+        Fires :class:`ServerMemberRemoveEvent` for kicked user and all server members.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4231,7 +4591,7 @@ class BaseMember(Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4295,7 +4655,7 @@ class BaseMember(Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4358,7 +4718,7 @@ class BaseMember(Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4406,7 +4766,7 @@ class BaseMember(Connectable, Messageable):
 
         Returns
         -------
-        :class:`.Mutuals`
+        :class:`Mutuals`
             The found mutuals.
         """
         return await self.state.http.get_mutuals_with(self.id, http_overrides=http_overrides)
@@ -4418,15 +4778,15 @@ class BaseMember(Connectable, Messageable):
 
         Retrieve a DM (or create if it doesn't exist) with another user.
 
-        If target is current user, a :class:`.SavedMessagesChannel` is always returned.
+        If target is current user, a :class:`SavedMessagesChannel` is always returned.
 
         You must have :attr:`~UserPermissions.send_messages` to do this.
 
-        May fire :class:`.PrivateChannelCreateEvent` for the current user and user you opened DM with.
+        May fire :class:`PrivateChannelCreateEvent` for the current user and user you opened DM with.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4466,7 +4826,7 @@ class BaseMember(Connectable, Messageable):
 
         Returns
         -------
-        Union[:class:`.SavedMessagesChannel`, :class:`.DMChannel`]
+        Union[:class:`SavedMessagesChannel`, :class:`DMChannel`]
             The private channel.
         """
 
@@ -4477,14 +4837,14 @@ class BaseMember(Connectable, Messageable):
 
         Removes the user from friend list.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4526,7 +4886,7 @@ class BaseMember(Connectable, Messageable):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The user you removed from friend list.
         """
 
@@ -4544,20 +4904,20 @@ class BaseMember(Connectable, Messageable):
 
         Report the user to the instance moderation team.
 
-        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+        Fires :class:`ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        reason: :class:`.UserReportReason`
+        reason: :class:`UserReportReason`
             The reason for reporting user.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
-        message_context: Optional[ULIDOr[:class:`.BaseMessage`]]
+        message_context: Optional[ULIDOr[:class:`BaseMessage`]]
             The message context.
 
             Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
@@ -4620,7 +4980,7 @@ class BaseMember(Connectable, Messageable):
 
         You must have :attr:`~Permissions.timeout_members` to do this.
 
-        Fires :class:`.ServerMemberUpdateEvent` for all server members.
+        Fires :class:`ServerMemberUpdateEvent` for all server members.
 
         Parameters
         ----------
@@ -4628,7 +4988,7 @@ class BaseMember(Connectable, Messageable):
             The duration/date the member's timeout should expire, or ``None`` to remove the timeout.
 
             This must be a timezone-aware datetime object. Consider using :func:`pyvolt.utils.utcnow()`.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4678,7 +5038,7 @@ class BaseMember(Connectable, Messageable):
 
         Returns
         -------
-        :class:`.Member`
+        :class:`Member`
             The newly updated member.
         """
         return await self.state.http.edit_member(self.server_id, self.id, http_overrides=http_overrides, timeout=length)
@@ -4688,14 +5048,14 @@ class BaseMember(Connectable, Messageable):
 
         Unblocks an user.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and unblocked user.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and unblocked user.
 
         .. note::
             This is not supposed to be used by bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -4731,7 +5091,7 @@ class BaseMember(Connectable, Messageable):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The unblocked user.
         """
         return await self.state.http.unblock_user(self.id, http_overrides=http_overrides)
@@ -4747,14 +5107,14 @@ class PartialMember(BaseMember):
 
     Unmodified fields will have :data:`.UNDEFINED` value.
 
-    This inherits from :class:`.BaseMember`.
+    This inherits from :class:`BaseMember`.
     """
 
     nick: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`str`]]: The new member's nick."""
 
     internal_server_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
-    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new member's avatar."""
+    """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new member's avatar."""
 
     role_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
     """UndefinedOr[List[:class:`str`]]: The new member's roles."""
@@ -4770,15 +5130,15 @@ class PartialMember(BaseMember):
 
     @property
     def server_avatar(self) -> UndefinedOr[typing.Optional[Asset]]:
-        """UndefinedOr[Optional[:class:`.Asset`]]: The member's avatar on server."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
 
 
 @define(slots=True)
 class Member(BaseMember):
-    """Represents a Revolt member to a :class:`.Server`.
+    """Represents a Revolt member to a :class:`Server`.
 
-    This inherits from :class:`.BaseMember`.
+    This inherits from :class:`BaseMember`.
     """
 
     joined_at: datetime = field(repr=True, kw_only=True)
@@ -4788,7 +5148,7 @@ class Member(BaseMember):
     """Optional[:class:`str`]: The member's nick."""
 
     internal_server_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The member's avatar on server."""
+    """Optional[:class:`StatelessAsset`]: The member's avatar on server."""
 
     role_ids: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The member's roles."""
@@ -4810,7 +5170,7 @@ class Member(BaseMember):
 
         Parameters
         ----------
-        data: :class:`.PartialMember`
+        data: :class:`PartialMember`
             The data to update member with.
         """
         if data.nick is not UNDEFINED:
@@ -4826,7 +5186,7 @@ class Member(BaseMember):
 
     @property
     def roles(self) -> list[Role]:
-        """List[:class:`.Role`]: The member's roles."""
+        """List[:class:`Role`]: The member's roles."""
 
         state = self.state
         cache = state.cache
@@ -4860,12 +5220,12 @@ class Member(BaseMember):
 
     @property
     def server_avatar(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The member's avatar on server."""
+        """Optional[:class:`Asset`]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
 
     @property
     def server_permissions(self) -> Permissions:
-        """:class:`.Permissions`: The permissions for this member in the server."""
+        """:class:`Permissions`: The permissions for this member in the server."""
 
         state = self.state
         cache = state.cache
@@ -4890,7 +5250,7 @@ class Member(BaseMember):
 
     @property
     def top_role(self) -> typing.Optional[Role]:
-        """Optional[:class:`.Role`]: The member's top role."""
+        """Optional[:class:`Role`]: The member's top role."""
 
         state = self.state
         cache = state.cache
@@ -4943,10 +5303,10 @@ class MemberList:
     """A list of members in a server."""
 
     members: list[Member] = field(repr=True, kw_only=True)
-    """List[:class:`.Member`]: The members in server."""
+    """List[:class:`Member`]: The members in server."""
 
     users: list[User] = field(repr=True, kw_only=True)
-    """List[:class:`.User`]: The users."""
+    """List[:class:`User`]: The users."""
 
 
 __all__ = (

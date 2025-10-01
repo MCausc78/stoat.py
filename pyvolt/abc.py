@@ -58,14 +58,14 @@ class Messageable:
 
     The following classes implement this ABC:
 
-    - :class:`.SavedMessagesChannel`
-    - :class:`.DMChannel`
-    - :class:`.GroupChannel`
-    - :class:`.TextChannel`
-    - :class:`.VoiceChannel`
-    - :class:`.BaseMember`
-    - :class:`.BaseUser`
-    - :class:`.PartialMessageable`
+    - :class:`SavedMessagesChannel`
+    - :class:`DMChannel`
+    - :class:`GroupChannel`
+    - :class:`TextChannel`
+    - :class:`VoiceChannel`
+    - :class:`BaseMember`
+    - :class:`BaseUser`
+    - :class:`PartialMessageable`
     - :class:`pyvolt.ext.commands.Context`
     """
 
@@ -152,7 +152,7 @@ class Messageable:
         channel_id = await self.fetch_channel_id(http_overrides=http_overrides)
         await state.shard.end_typing(channel_id)
 
-    # We can't use normal references like :class:`HTTPException` or :class:`.MessageInteractions`,
+    # We can't use normal references like :class:`HTTPException` or :class:`MessageInteractions`,
     # because it breaks references in commands extension.
     # Use :class:`~pyvolt.HTTPException` and :class:`~pyvolt.MessageInteractions` explicitly.
 
@@ -169,18 +169,18 @@ class Messageable:
 
         You must have :attr:`~Permissions.view_channel` to do this.
 
-        Fires :class:`.MessageAckEvent` for the current user.
+        Fires :class:`MessageAckEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message to mark as read.
-        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -243,13 +243,13 @@ class Messageable:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel the message is in.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message to retrieve.
-        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -316,9 +316,9 @@ class Messageable:
 
         Parameters
         ----------
-        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
@@ -420,9 +420,9 @@ class Messageable:
         ----------
         query: Optional[:class:`str`]
             The full-text search query. See `MongoDB documentation <https://www.mongodb.com/docs/manual/text-search/>`_ for more information.
-        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
@@ -539,15 +539,15 @@ class Messageable:
 
         If message mentions any roles, you must :attr:`~pyvolt.Permission.mention_roles` to do that.
 
-        Fires :class:`.MessageCreateEvent` and optionally :class:`.MessageAppendEvent`, both for all users who can see destination channel.
+        Fires :class:`MessageCreateEvent` and optionally :class:`MessageAppendEvent`, both for all users who can see destination channel.
 
         Parameters
         ----------
         content: Optional[:class:`str`]
             The message content.
-        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
@@ -555,7 +555,7 @@ class Messageable:
             The attachments to send the message with.
 
             You must have :attr:`~pyvolt.Permissions.upload_files` to provide this.
-        replies: Optional[List[Union[:class:`.Reply`, ULIDOr[:class:`~pyvolt.BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`~pyvolt.BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`~pyvolt.SendableEmbed`]]
             The embeds to send the message with.
@@ -689,11 +689,11 @@ class Connectable:
 
     The following classes implement this ABC:
 
-    - :class:`.DMChannel`
-    - :class:`.GroupChannel`
-    - :class:`.TextChannel`
-    - :class:`.VoiceChannel`
-    - :class:`.User`
+    - :class:`DMChannel`
+    - :class:`GroupChannel`
+    - :class:`TextChannel`
+    - :class:`VoiceChannel`
+    - :class:`User`
     """
 
     __slots__ = ()
@@ -721,14 +721,14 @@ class Connectable:
 
         You must have :attr:`~Permissions.connect` to do this.
 
-        For Livekit instances, fires :class:`.MessageCreateEvent` and :class:`.VoiceChannelJoinEvent` / :class:`.VoiceChannelMoveEvent`
+        For Livekit instances, fires :class:`MessageCreateEvent` and :class:`VoiceChannelJoinEvent` / :class:`VoiceChannelMoveEvent`
         for all users who can see target channel.
 
         Parameters
         ----------
-        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         node: UndefinedOr[Optional[:class:`str`]]
             The node's name to use for starting a call.
@@ -814,9 +814,9 @@ class Connectable:
 
         Parameters
         ----------
-        channel_http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         node: Optional[:class:`str`]
             The node's name to use for starting a call.

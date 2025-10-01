@@ -68,7 +68,7 @@ class UserStatus:
     """Optional[:class:`str`]: The custom status text."""
 
     presence: typing.Optional[Presence] = field(repr=True, kw_only=True)
-    """Optional[:class:`.Presence`]: The current presence option."""
+    """Optional[:class:`Presence`]: The current presence option."""
 
     def locally_update(self, data: UserStatusEdit, /) -> None:
         """Locally updates user status with provided data.
@@ -99,7 +99,7 @@ class UserStatusEdit:
     ----------
     text: UndefinedOr[Optional[:class:`str`]]
         The new custom status text.
-    presence: UndefinedOr[Optional[:class:`.Presence`]]
+    presence: UndefinedOr[Optional[:class:`Presence`]]
         The presence to use.
     """
 
@@ -134,20 +134,20 @@ class UserStatusEdit:
 
 @define(slots=True)
 class StatelessUserProfile:
-    r"""Represents Revolt :class:`.User`\'s stateless profile."""
+    r"""Represents Revolt :class:`User`\'s stateless profile."""
 
     content: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The user's profile content."""
 
     internal_background: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless background visible on user's profile."""
+    """Optional[:class:`StatelessAsset`]: The stateless background visible on user's profile."""
 
     def attach_state(self, state: State, user_id: str, /) -> UserProfile:
-        """:class:`.UserProfile`: Attach a state to user profile.
+        """:class:`UserProfile`: Attach a state to user profile.
 
         Parameters
         ----------
-        state: :class:`.State`
+        state: :class:`State`
             The state to attach.
         user_id: :class:`str`
             The user's ID to attach.
@@ -162,20 +162,20 @@ class StatelessUserProfile:
 
 @define(slots=True)
 class UserProfile(StatelessUserProfile):
-    r"""Represents Revolt :class:`.User`\'s profile.
+    r"""Represents Revolt :class:`User`\'s profile.
 
-    This inherits from :class:`.StatelessUserProfile`.
+    This inherits from :class:`StatelessUserProfile`.
     """
 
     state: State = field(repr=False, kw_only=True)
-    """:class:`.State`: The internal state used to attach state to other fields."""
+    """:class:`State`: The internal state used to attach state to other fields."""
 
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who holds this profile."""
 
     @property
     def background(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The background visible on user's profile."""
+        """Optional[:class:`Asset`]: The background visible on user's profile."""
         return self.internal_background and self.internal_background.attach_state(self.state, 'backgrounds')
 
 
@@ -184,17 +184,17 @@ class PartialUserProfile:
     """Represents partial user's profile."""
 
     state: State = field(repr=False, kw_only=True)
-    """:class:`.State`: The state."""
+    """:class:`State`: The state."""
 
     content: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
     """Undefined[Optional[:class:`str`]]: The user's profile content."""
 
     internal_background: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
-    """Undefined[Optional[:class:`.StatelessAsset`]]: The new stateless background visible on user's profile."""
+    """Undefined[Optional[:class:`StatelessAsset`]]: The new stateless background visible on user's profile."""
 
     @property
     def background(self) -> UndefinedOr[typing.Optional[Asset]]:
-        """UndefinedOr[Optional[:class:`.Asset`]]: The new background visible on user's profile."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The new background visible on user's profile."""
         return self.internal_background and self.internal_background.attach_state(self.state, 'backgrounds')
 
 
@@ -205,7 +205,7 @@ class UserProfileEdit:
     ----------
     content: UndefinedOr[Optional[:class:`str`]]
         The text to use in user profile description.
-    background: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+    background: UndefinedOr[Optional[:class:`ResolvableResource`]]
         The background to use on user's profile.
     """
 
@@ -234,7 +234,7 @@ class UserProfileEdit:
 
         Parameters
         ----------
-        state: :class:`.State`
+        state: :class:`State`
             The state. Required to resolve :attr:`~UserProfileEdit.media` attribute into file ID.
 
         Returns
@@ -258,7 +258,7 @@ class Relationship:
     """:class:`str`: The user's ID the relationship with."""
 
     status: RelationshipStatus = field(repr=True, kw_only=True)
-    """:class:`.RelationshipStatus`: The relationship status with them."""
+    """:class:`RelationshipStatus`: The relationship status with them."""
 
     def __hash__(self) -> int:
         return hash(self.id)
@@ -290,7 +290,7 @@ class Mutuals:
 class BaseUser(Base, Connectable, Messageable):
     """Represents an user on Revolt.
 
-    This inherits from :class:`.Base`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
+    This inherits from :class:`Base`, :class:`~pyvolt.abc.Connectable` and :class:`~pyvolt.abc.Messageable`.
     """
 
     def get_channel_id(self) -> str:
@@ -353,7 +353,7 @@ class BaseUser(Base, Connectable, Messageable):
 
     @property
     def dm_channel(self) -> typing.Optional[DMChannel]:
-        """Optional[:class:`.DMChannel`]: The private channel with this user."""
+        """Optional[:class:`DMChannel`]: The private channel with this user."""
 
         state = self.state
         cache = state.cache
@@ -389,14 +389,14 @@ class BaseUser(Base, Connectable, Messageable):
 
         Accept another user's friend request.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you accepted friend request from.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and user you accepted friend request from.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -460,7 +460,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The user you accepted friend request from.
         """
         return await self.state.http.accept_friend_request(self.id, http_overrides=http_overrides)
@@ -470,14 +470,14 @@ class BaseUser(Base, Connectable, Messageable):
 
         Blocks an user.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and blocked user.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and blocked user.
 
         .. note::
             This is not supposed to be used by bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -511,7 +511,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The blocked user.
         """
 
@@ -522,14 +522,14 @@ class BaseUser(Base, Connectable, Messageable):
 
         Denies another user's friend request.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you denide friend request from.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and user you denide friend request from.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -571,7 +571,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The user you denied friend request from.
         """
 
@@ -592,23 +592,23 @@ class BaseUser(Base, Connectable, Messageable):
 
         Edits the user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to target user.
+        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to target user.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
-        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new avatar. Could be ``None`` to remove avatar.
-        status: UndefinedOr[:class:`.UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             The new user status.
-        profile: UndefinedOr[:class:`.UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             The new user profile data. This is applied as a partial.
-        badges: UndefinedOr[:class:`.UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges. You must be privileged user to provide this.
-        flags: UndefinedOr[:class:`.UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags. You must be privileged user to provide this.
 
         Raises
@@ -648,7 +648,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The newly updated user.
         """
         return await self.state.http.edit_user(
@@ -671,7 +671,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -703,7 +703,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The retrieved user.
         """
         return await self.state.http.get_user(self.id, http_overrides=http_overrides)
@@ -723,7 +723,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Returns
@@ -740,12 +740,12 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Returns
         -------
-        :class:`.UserFlags`
+        :class:`UserFlags`
             The retrieved flags.
         """
         return await self.state.http.get_user_flags(self.id, http_overrides=http_overrides)
@@ -759,7 +759,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -791,7 +791,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.UserProfile`
+        :class:`UserProfile`
             The retrieved user profile.
         """
 
@@ -806,7 +806,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -870,7 +870,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -933,7 +933,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -981,7 +981,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.Mutuals`
+        :class:`Mutuals`
             The found mutuals.
         """
         return await self.state.http.get_mutuals_with(self.id, http_overrides=http_overrides)
@@ -993,15 +993,15 @@ class BaseUser(Base, Connectable, Messageable):
 
         Retrieve a DM (or create if it doesn't exist) with another user.
 
-        If target is current user, a :class:`.SavedMessagesChannel` is always returned.
+        If target is current user, a :class:`SavedMessagesChannel` is always returned.
 
         You must have :attr:`~UserPermissions.send_messages` to do this.
 
-        May fire :class:`.PrivateChannelCreateEvent` for the current user and user you opened DM with.
+        May fire :class:`PrivateChannelCreateEvent` for the current user and user you opened DM with.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1041,7 +1041,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        Union[:class:`.SavedMessagesChannel`, :class:`.DMChannel`]
+        Union[:class:`SavedMessagesChannel`, :class:`DMChannel`]
             The private channel.
         """
 
@@ -1052,14 +1052,14 @@ class BaseUser(Base, Connectable, Messageable):
 
         Removes the user from friend list.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and user you removed from friend list.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1101,7 +1101,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The user you removed from friend list.
         """
 
@@ -1119,20 +1119,20 @@ class BaseUser(Base, Connectable, Messageable):
 
         Report the user to the instance moderation team.
 
-        Fires :class:`.ReportCreateEvent` internally (but not fired over WebSocket).
+        Fires :class:`ReportCreateEvent` internally (but not fired over WebSocket).
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        reason: :class:`.UserReportReason`
+        reason: :class:`UserReportReason`
             The reason for reporting user.
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         additional_context: Optional[:class:`str`]
             The additional context for moderation team. Can be only up to 1000 characters.
-        message_context: Optional[ULIDOr[:class:`.BaseMessage`]]
+        message_context: Optional[ULIDOr[:class:`BaseMessage`]]
             The message context.
 
             Internally, 15 messages around provided message will be snapshotted for context. All attachments of provided message are snapshotted as well.
@@ -1188,14 +1188,14 @@ class BaseUser(Base, Connectable, Messageable):
 
         Unblocks an user.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and unblocked user.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and unblocked user.
 
         .. note::
             This is not supposed to be used by bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1231,7 +1231,7 @@ class BaseUser(Base, Connectable, Messageable):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The unblocked user.
         """
         return await self.state.http.unblock_user(self.id, http_overrides=http_overrides)
@@ -1241,7 +1241,7 @@ class BaseUser(Base, Connectable, Messageable):
 class PartialUser(BaseUser):
     """Represents a partial user on Revolt.
 
-    This inherits from :class:`.BaseUser`.
+    This inherits from :class:`BaseUser`.
     """
 
     name: UndefinedOr[str] = field(repr=True, kw_only=True)
@@ -1254,13 +1254,13 @@ class PartialUser(BaseUser):
     """UndefinedOr[Optional[:class:`str`]]: The new user's display name."""
 
     internal_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
-    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new user's stateless avatar."""
+    """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new user's stateless avatar."""
 
     raw_badges: UndefinedOr[int] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The new user's badges raw value."""
 
     status: UndefinedOr[UserStatusEdit] = field(repr=True, kw_only=True)
-    """UndefinedOr[:class:`.UserStatusEdit`]: The new user's status."""
+    """UndefinedOr[:class:`UserStatusEdit`]: The new user's status."""
 
     # internal_profile: UndefinedOr[PartialUserProfile] = field(repr=True, kw_only=True)
     # """The new user's profile page."""
@@ -1269,21 +1269,21 @@ class PartialUser(BaseUser):
     """UndefinedOr[:class:`int`]: The user's flags raw value."""
 
     bot: UndefinedOr[BotUserMetadata] = field(repr=True, kw_only=True)
-    """UndefinedOr[:class:`.BotUserMetadata`]: The information about the bot."""
+    """UndefinedOr[:class:`BotUserMetadata`]: The information about the bot."""
 
     online: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether the user came online."""
 
     @property
     def avatar(self) -> UndefinedOr[typing.Optional[Asset]]:
-        """UndefinedOr[Optional[:class:`.Asset`]]: The new user's avatar."""
+        """UndefinedOr[Optional[:class:`Asset`]]: The new user's avatar."""
         if self.internal_avatar in (None, UNDEFINED):
             return self.internal_avatar  # pyright: ignore[reportReturnType]
         return self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
     def badges(self) -> UndefinedOr[UserBadges]:
-        """UndefinedOr[:class:`.UserBadges`]: The new user's badges."""
+        """UndefinedOr[:class:`UserBadges`]: The new user's badges."""
         if self.raw_badges is UNDEFINED:
             return self.raw_badges
         ret = _new_user_badges(UserBadges)
@@ -1292,7 +1292,7 @@ class PartialUser(BaseUser):
 
     @property
     def flags(self) -> UndefinedOr[UserFlags]:
-        """UndefinedOr[:class:`.UserFlags`]: The user's flags."""
+        """UndefinedOr[:class:`UserFlags`]: The user's flags."""
         if self.raw_flags is UNDEFINED:
             return self.raw_flags
         ret = _new_user_flags(UserFlags)
@@ -1304,7 +1304,7 @@ class PartialUser(BaseUser):
 class DisplayUser(BaseUser):
     """Represents an user on Revolt that can be easily displayed in UI.
 
-    This inherits from :class:`.BaseUser`.
+    This inherits from :class:`BaseUser`.
     """
 
     name: str = field(repr=True, kw_only=True)
@@ -1314,14 +1314,14 @@ class DisplayUser(BaseUser):
     """:class:`str`: The discriminator of the user."""
 
     internal_avatar: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The stateless avatar of the user."""
+    """Optional[:class:`StatelessAsset`]: The stateless avatar of the user."""
 
     def __str__(self) -> str:
         return self.name
 
     @property
     def avatar(self) -> typing.Optional[Asset]:
-        """Optional[:class:`.Asset`]: The avatar of the user."""
+        """Optional[:class:`Asset`]: The avatar of the user."""
         return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
 
     @property
@@ -1338,14 +1338,14 @@ class DisplayUser(BaseUser):
 
         Sends a friend request to this user.
 
-        Fires :class:`.UserRelationshipUpdateEvent` for the current user and user you sent friend request to.
+        Fires :class:`UserRelationshipUpdateEvent` for the current user and user you sent friend request to.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -1411,7 +1411,7 @@ class DisplayUser(BaseUser):
 
         Returns
         -------
-        :class:`.User`
+        :class:`User`
             The user you sent friend request to.
         """
 
@@ -1451,20 +1451,20 @@ def calculate_user_permissions(
     ----------
     user_id: :class:`str`
         The target ID.
-    user_relationship: :class:`.RelationshipStatus`
+    user_relationship: :class:`RelationshipStatus`
         The relationship between us and target user (:attr:`.User.relationship`).
-    user_bot: Optional[:class:`.BotUserMetadata`]
+    user_bot: Optional[:class:`BotUserMetadata`]
         The bot information about the user (:attr:`.User.bot`), if applicable.
     perspective_id: :class:`str`
         The ID of the current user.
-    perspective_bot: Optional[:class:`.BotUserMetadata`]
+    perspective_bot: Optional[:class:`BotUserMetadata`]
         The bot information about the current user (:attr:`.User.bot`), if applicable.
     perspective_privileged: :class:`bool`
         Whether the current user is privileged (:attr:`.User.privileged`).
 
     Returns
     -------
-    :class:`.UserPermissions`
+    :class:`UserPermissions`
         The calculated permissions.
     """
     if perspective_privileged or user_id == perspective_id or user_relationship is RelationshipStatus.friend:
@@ -1486,7 +1486,7 @@ def calculate_user_permissions(
 class User(DisplayUser):
     """Represents an user on Revolt.
 
-    This inherits from :class:`.DisplayUser`.
+    This inherits from :class:`DisplayUser`.
     """
 
     display_name: typing.Optional[str] = field(repr=True, kw_only=True)
@@ -1496,7 +1496,7 @@ class User(DisplayUser):
     """:class:`int`: The user's badges raw value."""
 
     status: typing.Optional[UserStatus] = field(repr=True, kw_only=True)
-    """Optional[:class:`.UserStatus`]: The current user's status."""
+    """Optional[:class:`UserStatus`]: The current user's status."""
 
     raw_flags: int = field(repr=True, kw_only=True)
     """:class:`int`: The user's flags raw value."""
@@ -1505,10 +1505,10 @@ class User(DisplayUser):
     """:class:`bool`: Whether the user is privileged."""
 
     bot: typing.Optional[BotUserMetadata] = field(repr=True, kw_only=True)
-    """Optional[:class:`.BotUserMetadata`]: The information about the bot."""
+    """Optional[:class:`BotUserMetadata`]: The information about the bot."""
 
     relationship: RelationshipStatus = field(repr=True, kw_only=True)
-    """:class:`.RelationshipStatus`: The current user's relationship with this user."""
+    """:class:`RelationshipStatus`: The current user's relationship with this user."""
 
     online: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the user is currently online."""
@@ -1518,7 +1518,7 @@ class User(DisplayUser):
 
         Returns
         -------
-        Tuple[Optional[:class:`.User`], :class:`str`]
+        Tuple[Optional[:class:`User`], :class:`str`]
             The bot owner and their ID (may be empty if user is not a bot).
         """
         bot = self.bot
@@ -1576,14 +1576,14 @@ class User(DisplayUser):
 
     @property
     def badges(self) -> UserBadges:
-        """:class:`.UserBadges`: The user's badges."""
+        """:class:`UserBadges`: The user's badges."""
         ret = _new_user_badges(UserBadges)
         ret.value = self.raw_badges
         return ret
 
     @property
     def bot_owner(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Returns the user who created this bot user."""
+        """Optional[:class:`User`]: Returns the user who created this bot user."""
 
         bot_owner, bot_owner_id = self.get_bot_owner()
         if bot_owner is None and len(bot_owner_id):
@@ -1595,7 +1595,7 @@ class User(DisplayUser):
 
     @property
     def flags(self) -> UserFlags:
-        """:class:`.UserFlags`: The user's badges."""
+        """:class:`UserFlags`: The user's badges."""
         ret = _new_user_flags(UserFlags)
         ret.value = self.raw_flags
         return ret
@@ -1692,11 +1692,11 @@ class User(DisplayUser):
 class OwnUser(User):
     """Represents a current user on Revolt.
 
-    This inherits from :class:`.User`.
+    This inherits from :class:`User`.
     """
 
     relations: dict[str, Relationship] = field(repr=True, kw_only=True)
-    """Dict[:class:`str`, :class:`.Relationship`]: The dictionary of relationships with other users."""
+    """Dict[:class:`str`, :class:`Relationship`]: The dictionary of relationships with other users."""
 
     async def edit(
         self,
@@ -1713,23 +1713,23 @@ class OwnUser(User):
 
         Edits the current user.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
+        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to you.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         display_name: UndefinedOr[Optional[:class:`str`]]
             The new display name. Must be between 2 and 32 characters and not contain zero width space, newline or carriage return characters.
-        avatar: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        avatar: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new avatar. Could be ``None`` to remove avatar.
-        status: UndefinedOr[:class:`.UserStatusEdit`]
+        status: UndefinedOr[:class:`UserStatusEdit`]
             The new user status.
-        profile: UndefinedOr[:class:`.UserProfileEdit`]
+        profile: UndefinedOr[:class:`UserProfileEdit`]
             The new user profile data. This is applied as a partial.
-        badges: UndefinedOr[:class:`.UserBadges`]
+        badges: UndefinedOr[:class:`UserBadges`]
             The new user badges. You must be privileged user to provide this.
-        flags: UndefinedOr[:class:`.UserFlags`]
+        flags: UndefinedOr[:class:`UserFlags`]
             The new user flags. You must be privileged user to provide this.
 
         Raises
@@ -1769,7 +1769,7 @@ class OwnUser(User):
 
         Returns
         -------
-        :class:`.OwnUser`
+        :class:`OwnUser`
             The newly updated authenticated user.
         """
 

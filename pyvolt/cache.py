@@ -190,6 +190,7 @@ class CacheContextType(Enum):
     user_through_group_channel_owner = 'GroupChannel.owner: User'
     read_state_through_group_channel_read_state = 'GroupChannel.read_state: ReadState'
     user_through_group_channel_recipients = 'GroupChannel.recipients: List[User]'
+    server_through_server_channel_category = 'BaseServerChannel.category: Optional[Category]'
     member_through_server_channel_me = 'BaseServerChannel.me: Member'
     server_through_server_channel_server = 'BaseServerChannel.server: Server'
     message_through_text_channel_last_message = 'TextChannel.last_message: Optional[Message]'
@@ -321,7 +322,7 @@ class BaseCacheContext:
     """Represents a cache context."""
 
     type: CacheContextType = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.CacheContextType`: The context's type."""
+    """:class:`CacheContextType`: The context's type."""
 
 
 @define(slots=True)
@@ -336,226 +337,226 @@ class EventCacheContext(BaseCacheContext):
 
 @define(slots=True)
 class ReadyEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ReadyEvent`."""
+    """Represents a cache context that involves a :class:`ReadyEvent`."""
 
     event: ReadyEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ReadyEvent`: The event involved."""
+    """:class:`ReadyEvent`: The event involved."""
 
 
 @define(slots=True)
 class PrivateChannelCreateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.PrivateChannelCreateEvent`."""
+    """Represents a cache context that involves a :class:`PrivateChannelCreateEvent`."""
 
     event: PrivateChannelCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.PrivateChannelCreateEvent`: The event involved."""
+    """:class:`PrivateChannelCreateEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerChannelCreateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerChannelCreateEvent`."""
+    """Represents a cache context that involves a :class:`ServerChannelCreateEvent`."""
 
     event: ServerChannelCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerChannelCreateEvent`: The event involved."""
+    """:class:`ServerChannelCreateEvent`: The event involved."""
 
 
 @define(slots=True)
 class ChannelUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ChannelUpdateEvent`."""
+    """Represents a cache context that involves a :class:`ChannelUpdateEvent`."""
 
     event: ChannelUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ChannelUpdateEvent`: The event involved."""
+    """:class:`ChannelUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class ChannelDeleteEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ChannelDeleteEvent`."""
+    """Represents a cache context that involves a :class:`ChannelDeleteEvent`."""
 
     event: ChannelDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ChannelDeleteEvent`: The event involved."""
+    """:class:`ChannelDeleteEvent`: The event involved."""
 
 
 @define(slots=True)
 class GroupRecipientAddEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.GroupRecipientAddEvent`."""
+    """Represents a cache context that involves a :class:`GroupRecipientAddEvent`."""
 
     event: GroupRecipientAddEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.GroupRecipientAddEvent`: The event involved."""
+    """:class:`GroupRecipientAddEvent`: The event involved."""
 
 
 @define(slots=True)
 class GroupRecipientRemoveEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.GroupRecipientRemoveEvent`."""
+    """Represents a cache context that involves a :class:`GroupRecipientRemoveEvent`."""
 
     event: GroupRecipientRemoveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.GroupRecipientRemoveEvent`: The event involved."""
+    """:class:`GroupRecipientRemoveEvent`: The event involved."""
 
 
 @define(slots=True)
 class ChannelStartTypingEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ChannelStartTypingEvent`."""
+    """Represents a cache context that involves a :class:`ChannelStartTypingEvent`."""
 
     event: ChannelStartTypingEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ChannelStartTypingEvent`: The event involved."""
+    """:class:`ChannelStartTypingEvent`: The event involved."""
 
 
 @define(slots=True)
 class ChannelStopTypingEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ChannelStopTypingEvent`."""
+    """Represents a cache context that involves a :class:`ChannelStopTypingEvent`."""
 
     event: ChannelStopTypingEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ChannelStopTypingEvent`: The event involved."""
+    """:class:`ChannelStopTypingEvent`: The event involved."""
 
 
 @define(slots=True)
 class MessageAckEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.MessageAckEvent`."""
+    """Represents a cache context that involves a :class:`MessageAckEvent`."""
 
     event: MessageAckEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.MessageAckEvent`: The event involved."""
+    """:class:`MessageAckEvent`: The event involved."""
 
 
 @define(slots=True)
 class MessageCreateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.MessageCreateEvent`."""
+    """Represents a cache context that involves a :class:`MessageCreateEvent`."""
 
     event: MessageCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.MessageCreateEvent`: The event involved."""
+    """:class:`MessageCreateEvent`: The event involved."""
 
 
 @define(slots=True)
 class MessageUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.MessageUpdateEvent`."""
+    """Represents a cache context that involves a :class:`MessageUpdateEvent`."""
 
     event: MessageUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.MessageUpdateEvent`: The event involved."""
+    """:class:`MessageUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class MessageAppendEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.MessageAppendEvent`."""
+    """Represents a cache context that involves a :class:`MessageAppendEvent`."""
 
     event: MessageAppendEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.MessageAppendEvent`: The event involved."""
+    """:class:`MessageAppendEvent`: The event involved."""
 
 
 @define(slots=True)
 class MessageDeleteEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.MessageDeleteEvent`."""
+    """Represents a cache context that involves a :class:`MessageDeleteEvent`."""
 
     event: MessageDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.MessageDeleteEvent`: The event involved."""
+    """:class:`MessageDeleteEvent`: The event involved."""
 
 
 @define(slots=True)
 class MessageReactEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.MessageReactEvent`."""
+    """Represents a cache context that involves a :class:`MessageReactEvent`."""
 
     event: MessageReactEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.MessageReactEvent`: The event involved."""
+    """:class:`MessageReactEvent`: The event involved."""
 
 
 @define(slots=True)
 class MessageUnreactEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.MessageUnreactEvent`."""
+    """Represents a cache context that involves a :class:`MessageUnreactEvent`."""
 
     event: MessageUnreactEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.MessageUnreactEvent`: The event involved."""
+    """:class:`MessageUnreactEvent`: The event involved."""
 
 
 @define(slots=True)
 class MessageClearReactionEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.MessageClearReactionEvent`."""
+    """Represents a cache context that involves a :class:`MessageClearReactionEvent`."""
 
     event: MessageClearReactionEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.MessageClearReactionEvent`: The event involved."""
+    """:class:`MessageClearReactionEvent`: The event involved."""
 
 
 @define(slots=True)
 class MessageDeleteBulkEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.MessageDeleteBulkEvent`."""
+    """Represents a cache context that involves a :class:`MessageDeleteBulkEvent`."""
 
     event: MessageDeleteBulkEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.MessageDeleteBulkEvent`: The event involved."""
+    """:class:`MessageDeleteBulkEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerCreateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerCreateEvent`."""
+    """Represents a cache context that involves a :class:`ServerCreateEvent`."""
 
     event: ServerCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerCreateEvent`: The event involved."""
+    """:class:`ServerCreateEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerEmojiCreateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerEmojiCreateEvent`."""
+    """Represents a cache context that involves a :class:`ServerEmojiCreateEvent`."""
 
     event: ServerEmojiCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerEmojiCreateEvent`: The event involved."""
+    """:class:`ServerEmojiCreateEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerEmojiDeleteEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerEmojiDeleteEvent`."""
+    """Represents a cache context that involves a :class:`ServerEmojiDeleteEvent`."""
 
     event: ServerEmojiDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerEmojiDeleteEvent`: The event involved."""
+    """:class:`ServerEmojiDeleteEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerUpdateEvent`."""
+    """Represents a cache context that involves a :class:`ServerUpdateEvent`."""
 
     event: ServerUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerUpdateEvent`: The event involved."""
+    """:class:`ServerUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerDeleteEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerDeleteEvent`."""
+    """Represents a cache context that involves a :class:`ServerDeleteEvent`."""
 
     event: ServerDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerDeleteEvent`: The event involved."""
+    """:class:`ServerDeleteEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerMemberJoinEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerMemberJoinEvent`."""
+    """Represents a cache context that involves a :class:`ServerMemberJoinEvent`."""
 
     event: ServerMemberJoinEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerMemberJoinEvent`: The event involved."""
+    """:class:`ServerMemberJoinEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerMemberUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerMemberUpdateEvent`."""
+    """Represents a cache context that involves a :class:`ServerMemberUpdateEvent`."""
 
     event: ServerMemberUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerMemberUpdateEvent`: The event involved."""
+    """:class:`ServerMemberUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerMemberRemoveEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerMemberRemoveEvent`."""
+    """Represents a cache context that involves a :class:`ServerMemberRemoveEvent`."""
 
     event: ServerMemberRemoveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerMemberRemoveEvent`: The event involved."""
+    """:class:`ServerMemberRemoveEvent`: The event involved."""
 
 
 @define(slots=True)
 class RawServerRoleUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.RawServerRoleUpdateEvent`."""
+    """Represents a cache context that involves a :class:`RawServerRoleUpdateEvent`."""
 
     event: RawServerRoleUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.RawServerRoleUpdateEvent`: The event involved."""
+    """:class:`RawServerRoleUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class ServerRoleDeleteEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ServerRoleDeleteEvent`."""
+    """Represents a cache context that involves a :class:`ServerRoleDeleteEvent`."""
 
     event: ServerRoleDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerRoleDeleteEvent`: The event involved."""
+    """:class:`ServerRoleDeleteEvent`: The event involved."""
 
 
 @define(slots=True)
@@ -568,130 +569,130 @@ class ServerRoleRanksUpdateEventCacheContext(EventCacheContext):
 
 @define(slots=True)
 class ReportCreateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.ReportCreateEvent`."""
+    """Represents a cache context that involves a :class:`ReportCreateEvent`."""
 
     event: ReportCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ReportCreateEvent`: The event involved."""
+    """:class:`ReportCreateEvent`: The event involved."""
 
 
 @define(slots=True)
 class UserUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.UserUpdateEvent`."""
+    """Represents a cache context that involves a :class:`UserUpdateEvent`."""
 
     event: UserUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.UserUpdateEvent`: The event involved."""
+    """:class:`UserUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class UserRelationshipUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.UserRelationshipUpdateEvent`."""
+    """Represents a cache context that involves a :class:`UserRelationshipUpdateEvent`."""
 
     event: UserRelationshipUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.UserRelationshipUpdateEvent`: The event involved."""
+    """:class:`UserRelationshipUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class UserSettingsUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.UserSettingsUpdateEvent`."""
+    """Represents a cache context that involves a :class:`UserSettingsUpdateEvent`."""
 
     event: UserSettingsUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.UserSettingsUpdateEvent`: The event involved."""
+    """:class:`UserSettingsUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class UserPlatformWipeEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.UserPlatformWipeEvent`."""
+    """Represents a cache context that involves a :class:`UserPlatformWipeEvent`."""
 
     event: UserPlatformWipeEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.UserPlatformWipeEvent`: The event involved."""
+    """:class:`UserPlatformWipeEvent`: The event involved."""
 
 
 @define(slots=True)
 class WebhookCreateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.WebhookCreateEvent`."""
+    """Represents a cache context that involves a :class:`WebhookCreateEvent`."""
 
     event: WebhookCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.WebhookCreateEvent`: The event involved."""
+    """:class:`WebhookCreateEvent`: The event involved."""
 
 
 @define(slots=True)
 class WebhookUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.WebhookUpdateEvent`."""
+    """Represents a cache context that involves a :class:`WebhookUpdateEvent`."""
 
     event: WebhookUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.WebhookUpdateEvent`: The event involved."""
+    """:class:`WebhookUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class WebhookDeleteEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.WebhookDeleteEvent`."""
+    """Represents a cache context that involves a :class:`WebhookDeleteEvent`."""
 
     event: WebhookDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.WebhookDeleteEvent`: The event involved."""
+    """:class:`WebhookDeleteEvent`: The event involved."""
 
 
 @define(slots=True)
 class SessionCreateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.SessionCreateEvent`."""
+    """Represents a cache context that involves a :class:`SessionCreateEvent`."""
 
     event: SessionCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.SessionCreateEvent`: The event involved."""
+    """:class:`SessionCreateEvent`: The event involved."""
 
 
 @define(slots=True)
 class SessionDeleteEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.SessionDeleteEvent`."""
+    """Represents a cache context that involves a :class:`SessionDeleteEvent`."""
 
     event: SessionDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.SessionDeleteEvent`: The event involved."""
+    """:class:`SessionDeleteEvent`: The event involved."""
 
 
 @define(slots=True)
 class SessionDeleteAllEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.SessionDeleteAllEvent`."""
+    """Represents a cache context that involves a :class:`SessionDeleteAllEvent`."""
 
     event: SessionDeleteAllEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.SessionDeleteAllEvent`: The event involved."""
+    """:class:`SessionDeleteAllEvent`: The event involved."""
 
 
 @define(slots=True)
 class VoiceChannelJoinEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.VoiceChannelJoinEvent`."""
+    """Represents a cache context that involves a :class:`VoiceChannelJoinEvent`."""
 
     event: VoiceChannelJoinEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.VoiceChannelJoinEvent`: The event involved."""
+    """:class:`VoiceChannelJoinEvent`: The event involved."""
 
 
 @define(slots=True)
 class VoiceChannelLeaveEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.VoiceChannelLeaveEvent`."""
+    """Represents a cache context that involves a :class:`VoiceChannelLeaveEvent`."""
 
     event: VoiceChannelLeaveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.VoiceChannelLeaveEvent`: The event involved."""
+    """:class:`VoiceChannelLeaveEvent`: The event involved."""
 
 
 @define(slots=True)
 class VoiceChannelMoveEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.VoiceChannelMoveEvent`."""
+    """Represents a cache context that involves a :class:`VoiceChannelMoveEvent`."""
 
     event: VoiceChannelMoveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.VoiceChannelMoveEvent`: The event involved."""
+    """:class:`VoiceChannelMoveEvent`: The event involved."""
 
 
 @define(slots=True)
 class UserVoiceStateUpdateEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.UserVoiceStateUpdateEvent`."""
+    """Represents a cache context that involves a :class:`UserVoiceStateUpdateEvent`."""
 
     event: UserVoiceStateUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.UserVoiceStateUpdateEvent`: The event involved."""
+    """:class:`UserVoiceStateUpdateEvent`: The event involved."""
 
 
 @define(slots=True)
 class AuthenticatedEventCacheContext(EventCacheContext):
-    """Represents a cache context that involves a :class:`.AuthenticatedEvent`."""
+    """Represents a cache context that involves a :class:`AuthenticatedEvent`."""
 
     event: AuthenticatedEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.AuthenticatedEvent`: The event involved."""
+    """:class:`AuthenticatedEvent`: The event involved."""
 
 
 @define(slots=True)
@@ -708,306 +709,306 @@ class MessageableCacheContext(EntityCacheContext):
 
 @define(slots=True)
 class BotCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.Bot` entity."""
+    """Represents a cache context that involves an :class:`Bot` entity."""
 
     bot: Bot = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.Bot`: The bot involved."""
+    """:class:`Bot`: The bot involved."""
 
 
 @define(slots=True)
 class DMChannelCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.DMChannel` entity."""
+    """Represents a cache context that involves an :class:`DMChannel` entity."""
 
     channel: DMChannel = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.DMChannel`: The channel involved."""
+    """:class:`DMChannel`: The channel involved."""
 
 
 @define(slots=True)
 class GroupChannelCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.GroupChannel` entity."""
+    """Represents a cache context that involves an :class:`GroupChannel` entity."""
 
     channel: GroupChannel = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.GroupChannel`: The channel involved."""
+    """:class:`GroupChannel`: The channel involved."""
 
 
 @define(slots=True)
 class BaseServerChannelCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServerChannel` entity."""
+    """Represents a cache context that involves an :class:`BaseServerChannel` entity."""
 
     channel: BaseServerChannel = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.BaseServerChannel`: The channel involved."""
+    """:class:`BaseServerChannel`: The channel involved."""
 
 
 @define(slots=True)
 class TextChannelCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.TextChannel` entity."""
+    """Represents a cache context that involves an :class:`TextChannel` entity."""
 
     channel: TextChannel = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.TextChannel`: The channel involved."""
+    """:class:`TextChannel`: The channel involved."""
 
 
 @define(slots=True)
 class VoiceChannelCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.VoiceChannel` entity."""
+    """Represents a cache context that involves an :class:`VoiceChannel` entity."""
 
     channel: VoiceChannel = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.VoiceChannel`: The channel involved."""
+    """:class:`VoiceChannel`: The channel involved."""
 
 
 @define(slots=True)
 class BaseEmojiCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.BaseEmoji` entity."""
+    """Represents a cache context that involves an :class:`BaseEmoji` entity."""
 
     emoji: BaseEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.BaseEmoji`: The emoji involved."""
+    """:class:`BaseEmoji`: The emoji involved."""
 
 
 @define(slots=True)
 class ServerEmojiCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.ServerEmoji` entity."""
+    """Represents a cache context that involves an :class:`ServerEmoji` entity."""
 
     emoji: ServerEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerEmoji`: The emoji involved."""
+    """:class:`ServerEmoji`: The emoji involved."""
 
 
 @define(slots=True)
 class DetachedEmojiCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.DetachedEmoji` entity."""
+    """Represents a cache context that involves an :class:`DetachedEmoji` entity."""
 
     emoji: DetachedEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.DetachedEmoji`: The emoji involved."""
+    """:class:`DetachedEmoji`: The emoji involved."""
 
 
 @define(slots=True)
 class ClientCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.Client`."""
+    """Represents a cache context that involves an :class:`Client`."""
 
     client: Client = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.Client`: The client involved."""
+    """:class:`Client`: The client involved."""
 
 
 @define(slots=True)
 class ServerPublicInviteCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.ServerPublicInvite` entity."""
+    """Represents a cache context that involves an :class:`ServerPublicInvite` entity."""
 
     invite: ServerPublicInvite = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerPublicInvite`: The invite involved."""
+    """:class:`ServerPublicInvite`: The invite involved."""
 
 
 @define(slots=True)
 class GroupPublicInviteCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.GroupPublicInvite` entity."""
+    """Represents a cache context that involves an :class:`GroupPublicInvite` entity."""
 
     invite: GroupPublicInvite = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.GroupPublicInvite`: The invite involved."""
+    """:class:`GroupPublicInvite`: The invite involved."""
 
 
 @define(slots=True)
 class GroupInviteCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.GroupInvite` entity."""
+    """Represents a cache context that involves an :class:`GroupInvite` entity."""
 
     invite: GroupInvite = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.GroupInvite`: The invite involved."""
+    """:class:`GroupInvite`: The invite involved."""
 
 
 @define(slots=True)
 class ServerInviteCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInvite` entity."""
+    """Represents a cache context that involves an :class:`ServerInvite` entity."""
 
     invite: ServerInvite = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ServerInvite`: The invite involved."""
+    """:class:`ServerInvite`: The invite involved."""
 
 
 @define(slots=True)
 class BaseMessageCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMessage` entity."""
+    """Represents a cache context that involves an :class:`BaseMessage` entity."""
 
     message: BaseMessage = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.BaseMessage`: The message involved."""
+    """:class:`BaseMessage`: The message involved."""
 
 
 @define(slots=True)
 class MessageCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.Message` entity."""
+    """Represents a cache context that involves an :class:`Message` entity."""
 
     message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.Message`: The message involved."""
+    """:class:`Message`: The message involved."""
 
 
 @define(slots=True)
 class ReadStateCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.ReadState` entity."""
+    """Represents a cache context that involves an :class:`ReadState` entity."""
 
     read_state: ReadState = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.ReadState`: The read state involved."""
+    """:class:`ReadState`: The read state involved."""
 
 
 @define(slots=True)
 class BaseRoleCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.BaseRole` entity."""
+    """Represents a cache context that involves an :class:`BaseRole` entity."""
 
     role: BaseRole = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.BaseRole`: The role involved."""
+    """:class:`BaseRole`: The role involved."""
 
 
 @define(slots=True)
 class BaseServerCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServer` entity."""
+    """Represents a cache context that involves an :class:`BaseServer` entity."""
 
     server: BaseServer = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.BaseServer`: The server involved."""
+    """:class:`BaseServer`: The server involved."""
 
 
 @define(slots=True)
 class BaseMemberCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember` entity."""
+    """Represents a cache context that involves an :class:`BaseMember` entity."""
 
     member: BaseMember = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.BaseMember`: The member involved."""
+    """:class:`BaseMember`: The member involved."""
 
 
 @define(slots=True)
 class MemberCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.Member` entity."""
+    """Represents a cache context that involves an :class:`Member` entity."""
 
     member: Member = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.Member`: The member involved."""
+    """:class:`Member`: The member involved."""
 
 
 @define(slots=True)
 class ServerCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.Server` entity."""
+    """Represents a cache context that involves an :class:`Server` entity."""
 
     server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.Server`: The server involved."""
+    """:class:`Server`: The server involved."""
 
 
 @define(slots=True)
 class BaseUserCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.BaseUser` entity."""
+    """Represents a cache context that involves an :class:`BaseUser` entity."""
 
     user: BaseUser = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.BaseUser`: The user involved."""
+    """:class:`BaseUser`: The user involved."""
 
 
 @define(slots=True)
 class UserCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.User` entity."""
+    """Represents a cache context that involves an :class:`User` entity."""
 
     user: User = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.User`: The user involved."""
+    """:class:`User`: The user involved."""
 
 
 @define(slots=True)
 class WebhookCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.Webhook` entity."""
+    """Represents a cache context that involves an :class:`Webhook` entity."""
 
     webhook: Webhook = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.Webhook`: The webhook involved."""
+    """:class:`Webhook`: The webhook involved."""
 
 
 @define(slots=True)
 class UserAddedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserAddedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessUserAddedSystemEvent` entity."""
 
     system_message: StatelessUserAddedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessUserAddedSystemEvent`: The system message involved."""
+    """:class:`StatelessUserAddedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class UserRemovedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserRemovedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessUserRemovedSystemEvent` entity."""
 
     system_message: StatelessUserRemovedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessUserRemovedSystemEvent`: The system message involved."""
+    """:class:`StatelessUserRemovedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class UserJoinedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessStatelessUserJoinedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessStatelessUserJoinedSystemEvent` entity."""
 
     system_message: StatelessUserJoinedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessUserJoinedSystemEvent`: The system message involved."""
+    """:class:`StatelessUserJoinedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class UserLeftSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessUserLeftSystemEvent` entity."""
 
     system_message: StatelessUserLeftSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessUserLeftSystemEvent`: The system message involved."""
+    """:class:`StatelessUserLeftSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class UserKickedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessUserKickedSystemEvent` entity."""
 
     system_message: StatelessUserKickedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessUserKickedSystemEvent`: The system message involved."""
+    """:class:`StatelessUserKickedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class UserBannedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessUserBannedSystemEvent` entity."""
 
     system_message: StatelessUserBannedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessUserBannedSystemEvent`: The system message involved."""
+    """:class:`StatelessUserBannedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class ChannelRenamedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessChannelRenamedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessChannelRenamedSystemEvent` entity."""
 
     system_message: StatelessChannelRenamedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessChannelRenamedSystemEvent`: The system message involved."""
+    """:class:`StatelessChannelRenamedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class ChannelDescriptionChangedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessChannelDescriptionChangedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessChannelDescriptionChangedSystemEvent` entity."""
 
     system_message: StatelessChannelDescriptionChangedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessChannelDescriptionChangedSystemEvent`: The system message involved."""
+    """:class:`StatelessChannelDescriptionChangedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class ChannelIconChangedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessChannelIconChangedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessChannelIconChangedSystemEvent` entity."""
 
     system_message: StatelessChannelIconChangedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessChannelIconChangedSystemEvent`: The system message involved."""
+    """:class:`StatelessChannelIconChangedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class ChannelOwnershipChangedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessChannelOwnershipChangedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessChannelOwnershipChangedSystemEvent` entity."""
 
     system_message: StatelessChannelOwnershipChangedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessChannelOwnershipChangedSystemEvent`: The system message involved."""
+    """:class:`StatelessChannelOwnershipChangedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class MessagePinnedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessMessagePinnedSystemEvent` entity."""
 
     system_message: StatelessMessagePinnedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessMessagePinnedSystemEvent`: The system message involved."""
+    """:class:`StatelessMessagePinnedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class MessageUnpinnedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessMessageUnpinnedSystemEvent` entity."""
 
     system_message: StatelessMessageUnpinnedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessMessageUnpinnedSystemEvent`: The system message involved."""
+    """:class:`StatelessMessageUnpinnedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
 class CallStartedSystemEventCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessCallStartedSystemEvent` entity."""
+    """Represents a cache context that involves an :class:`StatelessCallStartedSystemEvent` entity."""
 
     system_message: StatelessCallStartedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
-    """:class:`.StatelessCallStartedSystemEvent`: The system message involved."""
+    """:class:`StatelessCallStartedSystemEvent`: The system message involved."""
 
 
 @define(slots=True)
@@ -1022,564 +1023,569 @@ class MessagesThroughMessageableGetterCacheContext(MessageableCacheContext):
 
 @define(slots=True)
 class UserThroughBotOwnerCacheContext(BotCacheContext):
-    """Represents a cache context that involves an :class:`.Bot` entity, wishing to retrieve bot's owner."""
+    """Represents a cache context that involves an :class:`Bot` entity, wishing to retrieve bot's owner."""
 
 
 @define(slots=True)
 class UserThroughDMChannelInitiatorCacheContext(DMChannelCacheContext):
-    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve DM channel's initiator."""
+    """Represents a cache context that involves an :class:`DMChannel`, wishing to retrieve DM channel's initiator."""
 
 
 @define(slots=True)
 class MessageThroughDMChannelLastMessageCacheContext(DMChannelCacheContext):
-    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve last DM channel's message."""
+    """Represents a cache context that involves an :class:`DMChannel`, wishing to retrieve last DM channel's message."""
 
 
 @define(slots=True)
 class ReadStateThroughDMChannelReadStateCacheContext(DMChannelCacheContext):
-    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve DM channel's read state."""
+    """Represents a cache context that involves an :class:`DMChannel`, wishing to retrieve DM channel's read state."""
 
 
 @define(slots=True)
 class UserThroughDMChannelRecipientCacheContext(DMChannelCacheContext):
-    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve DM channel's recipient."""
+    """Represents a cache context that involves an :class:`DMChannel`, wishing to retrieve DM channel's recipient."""
 
 
 @define(slots=True)
 class UserThroughDMChannelRecipientsCacheContext(DMChannelCacheContext):
-    """Represents a cache context that involves an :class:`.DMChannel`, wishing to retrieve DM channel's recipients."""
+    """Represents a cache context that involves an :class:`DMChannel`, wishing to retrieve DM channel's recipients."""
 
 
 @define(slots=True)
 class MessageThroughGroupChannelLastMessageCacheContext(GroupChannelCacheContext):
-    """Represents a cache context that involves an :class:`.GroupChannel`, wishing to retrieve last group channel's message."""
+    """Represents a cache context that involves an :class:`GroupChannel`, wishing to retrieve last group channel's message."""
 
 
 @define(slots=True)
 class ReadStateThroughGroupChannelReadStateCacheContext(GroupChannelCacheContext):
-    """Represents a cache context that involves an :class:`.GroupChannel`, wishing to retrieve group channel's read state."""
+    """Represents a cache context that involves an :class:`GroupChannel`, wishing to retrieve group channel's read state."""
 
 
 @define(slots=True)
 class UserThroughGroupChannelOwnerCacheContext(GroupChannelCacheContext):
-    """Represents a cache context that involves an :class:`.GroupChannel`, wishing to retrieve group channel's owner."""
+    """Represents a cache context that involves an :class:`GroupChannel`, wishing to retrieve group channel's owner."""
 
 
 @define(slots=True)
 class UserThroughGroupChannelRecipientsCacheContext(GroupChannelCacheContext):
-    """Represents a cache context that involves an :class:`.GroupChannel`, wishing to retrieve group channel's recipients."""
+    """Represents a cache context that involves an :class:`GroupChannel`, wishing to retrieve group channel's recipients."""
+
+
+@define(slots=True)
+class ServerThroughServerChannelCategoryCacheContext(BaseServerChannelCacheContext):
+    """Represents a cache context that involves an :class:`BaseServerChannel`, wishing to retrieve category the channel is in."""
 
 
 @define(slots=True)
 class MemberThroughServerChannelMeCacheContext(BaseServerChannelCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServerChannel`, wishing to retrieve own member for the server the channel belongs to."""
+    """Represents a cache context that involves an :class:`BaseServerChannel`, wishing to retrieve own member for the server the channel belongs to."""
 
 
 @define(slots=True)
 class ServerThroughServerChannelServerCacheContext(BaseServerChannelCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServerChannel`, wishing to retrieve server the channel belongs to."""
+    """Represents a cache context that involves an :class:`BaseServerChannel`, wishing to retrieve server the channel belongs to."""
 
 
 @define(slots=True)
 class MessageThroughTextChannelLastMessageCacheContext(TextChannelCacheContext):
-    """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve last text channel's message."""
+    """Represents a cache context that involves an :class:`TextChannel`, wishing to retrieve last text channel's message."""
 
 
 @define(slots=True)
 class UserThroughUserAddedSystemEventUserCacheContext(UserAddedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserAddedSystemEvent`, wishing to retrieve system message's user."""
+    """Represents a cache context that involves an :class:`StatelessUserAddedSystemEvent`, wishing to retrieve system message's user."""
 
 
 @define(slots=True)
 class UserThroughUserAddedSystemEventAuthorCacheContext(UserAddedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserAddedSystemEvent`, wishing to retrieve system message's author."""
+    """Represents a cache context that involves an :class:`StatelessUserAddedSystemEvent`, wishing to retrieve system message's author."""
 
 
 @define(slots=True)
 class UserThroughUserRemovedSystemEventUserCacheContext(UserRemovedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserRemovedSystemEvent`, wishing to retrieve system message's user."""
+    """Represents a cache context that involves an :class:`StatelessUserRemovedSystemEvent`, wishing to retrieve system message's user."""
 
 
 @define(slots=True)
 class UserThroughUserRemovedSystemEventAuthorCacheContext(UserRemovedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserRemovedSystemEvent`, wishing to retrieve system message's author."""
+    """Represents a cache context that involves an :class:`StatelessUserRemovedSystemEvent`, wishing to retrieve system message's author."""
 
 
 @define(slots=True)
 class MemberOrUserThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user."""
+    """Represents a cache context that involves an :class:`StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user."""
 
 
 @define(slots=True)
 class MemberThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user as member."""
+    """Represents a cache context that involves an :class:`StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user as member."""
 
 
 @define(slots=True)
 class UserThroughUserJoinedSystemEventUserCacheContext(UserJoinedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user as user."""
+    """Represents a cache context that involves an :class:`StatelessUserJoinedSystemEvent`, wishing to retrieve system message's user as user."""
 
 
 @define(slots=True)
 class MemberOrUserThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user."""
+    """Represents a cache context that involves an :class:`StatelessUserLeftSystemEvent`, wishing to retrieve system message's user."""
 
 
 @define(slots=True)
 class MemberThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user as member."""
+    """Represents a cache context that involves an :class:`StatelessUserLeftSystemEvent`, wishing to retrieve system message's user as member."""
 
 
 @define(slots=True)
 class UserThroughUserLeftSystemEventUserCacheContext(UserLeftSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserLeftSystemEvent`, wishing to retrieve system message's user as user."""
+    """Represents a cache context that involves an :class:`StatelessUserLeftSystemEvent`, wishing to retrieve system message's user as user."""
 
 
 @define(slots=True)
 class MemberOrUserThroughUserKickedSystemEventUserCacheContext(UserKickedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent`, wishing to retrieve system message's user."""
+    """Represents a cache context that involves an :class:`StatelessUserKickedSystemEvent`, wishing to retrieve system message's user."""
 
 
 @define(slots=True)
 class MemberThroughUserKickedSystemEventUserCacheContext(UserKickedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent`, wishing to retrieve system message's user as member."""
+    """Represents a cache context that involves an :class:`StatelessUserKickedSystemEvent`, wishing to retrieve system message's user as member."""
 
 
 @define(slots=True)
 class UserThroughUserKickedSystemEventUserCacheContext(UserKickedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserKickedSystemEvent`, wishing to retrieve system message's user as user."""
+    """Represents a cache context that involves an :class:`StatelessUserKickedSystemEvent`, wishing to retrieve system message's user as user."""
 
 
 @define(slots=True)
 class MemberOrUserThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user."""
+    """Represents a cache context that involves an :class:`StatelessUserBannedSystemEvent`, wishing to retrieve system message's user."""
 
 
 @define(slots=True)
 class MemberThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user as member."""
+    """Represents a cache context that involves an :class:`StatelessUserBannedSystemEvent`, wishing to retrieve system message's user as member."""
 
 
 @define(slots=True)
 class UserThroughUserBannedSystemEventUserCacheContext(UserBannedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessUserBannedSystemEvent`, wishing to retrieve system message's user as user."""
+    """Represents a cache context that involves an :class:`StatelessUserBannedSystemEvent`, wishing to retrieve system message's user as user."""
 
 
 @define(slots=True)
 class UserThroughChannelRenamedSystemEventAuthorCacheContext(ChannelRenamedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessChannelRenamedSystemEvent`, wishing to retrieve system message's author."""
+    """Represents a cache context that involves an :class:`StatelessChannelRenamedSystemEvent`, wishing to retrieve system message's author."""
 
 
 @define(slots=True)
 class UserThroughChannelDescriptionChangedSystemEventAuthorCacheContext(
     ChannelDescriptionChangedSystemEventCacheContext
 ):
-    """Represents a cache context that involves an :class:`.StatelessChannelDescriptionChangedSystemEvent`, wishing to retrieve system message's author."""
+    """Represents a cache context that involves an :class:`StatelessChannelDescriptionChangedSystemEvent`, wishing to retrieve system message's author."""
 
 
 @define(slots=True)
 class UserThroughChannelIconChangedSystemEventAuthorCacheContext(ChannelIconChangedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessChannelIconChangedSystemEvent`, wishing to retrieve system message's author."""
+    """Represents a cache context that involves an :class:`StatelessChannelIconChangedSystemEvent`, wishing to retrieve system message's author."""
 
 
 @define(slots=True)
 class UserThroughChannelOwnershipChangedSystemEventFromCacheContext(ChannelOwnershipChangedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessChannelOwnershipChangedSystemEvent`, wishing to retrieve system message's old group owner."""
+    """Represents a cache context that involves an :class:`StatelessChannelOwnershipChangedSystemEvent`, wishing to retrieve system message's old group owner."""
 
 
 @define(slots=True)
 class UserThroughChannelOwnershipChangedSystemEventToCacheContext(ChannelOwnershipChangedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessChannelOwnershipChangedSystemEvent`, wishing to retrieve system message's new group owner."""
+    """Represents a cache context that involves an :class:`StatelessChannelOwnershipChangedSystemEvent`, wishing to retrieve system message's new group owner."""
 
 
 @define(slots=True)
 class MessageThroughMessagePinnedSystemEventPinnedMessageCacheContext(MessagePinnedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's pinned message."""
+    """Represents a cache context that involves an :class:`StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's pinned message."""
 
 
 @define(slots=True)
 class MemberOrUserThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinnedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author."""
+    """Represents a cache context that involves an :class:`StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author."""
 
 
 @define(slots=True)
 class MemberThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinnedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author as member."""
+    """Represents a cache context that involves an :class:`StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author as member."""
 
 
 @define(slots=True)
 class UserThroughMessagePinnedSystemEventAuthorCacheContext(MessagePinnedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author as user."""
+    """Represents a cache context that involves an :class:`StatelessMessagePinnedSystemEvent`, wishing to retrieve system message's author as user."""
 
 
 @define(slots=True)
 class MessageThroughMessageUnpinnedSystemEventUnpinnedMessageCacheContext(MessageUnpinnedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's pinned message."""
+    """Represents a cache context that involves an :class:`StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's pinned message."""
 
 
 @define(slots=True)
 class MemberOrUserThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author."""
+    """Represents a cache context that involves an :class:`StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author."""
 
 
 @define(slots=True)
 class MemberThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author as member."""
+    """Represents a cache context that involves an :class:`StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author as member."""
 
 
 @define(slots=True)
 class UserThroughMessageUnpinnedSystemEventAuthorCacheContext(MessageUnpinnedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author as user."""
+    """Represents a cache context that involves an :class:`StatelessMessageUnpinnedSystemEvent`, wishing to retrieve system message's author as user."""
 
 
 @define(slots=True)
 class UserThroughCallStartedSystemEventAuthorCacheContext(CallStartedSystemEventCacheContext):
-    """Represents a cache context that involves an :class:`.StatelessCallStartedSystemEvent`, wishing to retrieve system message's author."""
+    """Represents a cache context that involves an :class:`StatelessCallStartedSystemEvent`, wishing to retrieve system message's author."""
 
 
 @define(slots=True)
 class ChannelThroughMessageChannelCacheContext(BaseMessageCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMessage`, wishing to retrieve message's channel."""
+    """Represents a cache context that involves an :class:`BaseMessage`, wishing to retrieve message's channel."""
 
 
 @define(slots=True)
 class ServerThroughMessageServerCacheContext(BaseMessageCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMessage`, wishing to retrieve message's server."""
+    """Represents a cache context that involves an :class:`BaseMessage`, wishing to retrieve message's server."""
 
 
 @define(slots=True)
 class MemberOrUserThroughMessageAuthorCacheContext(MessageCacheContext):
-    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's author."""
+    """Represents a cache context that involves an :class:`Message`, wishing to retrieve message's author."""
 
 
 @define(slots=True)
 class MemberThroughMessageAuthorCacheContext(MessageCacheContext):
-    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's author as member."""
+    """Represents a cache context that involves an :class:`Message`, wishing to retrieve message's author as member."""
 
 
 @define(slots=True)
 class UserThroughMessageAuthorCacheContext(MessageCacheContext):
-    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's author as user."""
+    """Represents a cache context that involves an :class:`Message`, wishing to retrieve message's author as user."""
 
 
 @define(slots=True)
 class MemberOrUsersThroughMessageMentionsCacheContext(MessageCacheContext):
-    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's mentions as members or users."""
+    """Represents a cache context that involves an :class:`Message`, wishing to retrieve message's mentions as members or users."""
 
 
 @define(slots=True)
 class MembersThroughMessageMentionsCacheContext(MessageCacheContext):
-    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's mentions as members."""
+    """Represents a cache context that involves an :class:`Message`, wishing to retrieve message's mentions as members."""
 
 
 @define(slots=True)
 class UsersThroughMessageMentionsCacheContext(MessageCacheContext):
-    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's mentions as users."""
+    """Represents a cache context that involves an :class:`Message`, wishing to retrieve message's mentions as users."""
 
 
 @define(slots=True)
 class RoleThroughMessageRoleMentionsCacheContext(MessageCacheContext):
-    """Represents a cache context that involves an :class:`.Message`, wishing to retrieve message's role mentions."""
+    """Represents a cache context that involves an :class:`Message`, wishing to retrieve message's role mentions."""
 
 
 @define(slots=True)
 class ReadStateThroughTextChannelReadStateCacheContext(TextChannelCacheContext):
-    """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve text channel's read state."""
+    """Represents a cache context that involves an :class:`TextChannel`, wishing to retrieve text channel's read state."""
 
 
 @define(slots=True)
 class MembersThroughRoleMembersCacheContext(BaseRoleCacheContext):
-    """Represents a cache context that involves an :class:`.BaseRole`, wishing to retrieve server's members."""
+    """Represents a cache context that involves an :class:`BaseRole`, wishing to retrieve server's members."""
 
 
 @define(slots=True)
 class ServerThroughRoleServerCacheContext(BaseRoleCacheContext):
-    """Represents a cache context that involves an :class:`.BaseRole`, wishing to retrieve role's server."""
+    """Represents a cache context that involves an :class:`BaseRole`, wishing to retrieve role's server."""
 
 
 @define(slots=True)
 class ChannelVoiceStateContainerThroughTextChannelVoiceStatesCacheContext(TextChannelCacheContext):
-    """Represents a cache context that involves an :class:`.TextChannel`, wishing to retrieve channel's voice states."""
+    """Represents a cache context that involves an :class:`TextChannel`, wishing to retrieve channel's voice states."""
 
 
 @define(slots=True)
 class ChannelVoiceStateContainerThroughVoiceChannelVoiceStatesCacheContext(VoiceChannelCacheContext):
-    """Represents a cache context that involves an :class:`.VoiceChannel`, wishing to retrieve channel's voice states."""
+    """Represents a cache context that involves an :class:`VoiceChannel`, wishing to retrieve channel's voice states."""
 
 
 @define(slots=True)
 class MemberOrUserThroughServerEmojiCreatorCacheContext(ServerEmojiCacheContext):
-    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's creator."""
+    """Represents a cache context that involves an :class:`ServerEmoji`, wishing to retrieve emoji's creator."""
 
 
 @define(slots=True)
 class MemberThroughServerEmojiCreatorCacheContext(ServerEmojiCacheContext):
-    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's creator as member."""
+    """Represents a cache context that involves an :class:`ServerEmoji`, wishing to retrieve emoji's creator as member."""
 
 
 @define(slots=True)
 class UserThroughServerEmojiCreatorCacheContext(ServerEmojiCacheContext):
-    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's creator as user."""
+    """Represents a cache context that involves an :class:`ServerEmoji`, wishing to retrieve emoji's creator as user."""
 
 
 @define(slots=True)
 class UserThroughDetachedEmojiCreatorCacheContext(DetachedEmojiCacheContext):
-    """Represents a cache context that involves an :class:`.DetachedEmoji`, wishing to retrieve emoji's creator."""
+    """Represents a cache context that involves an :class:`DetachedEmoji`, wishing to retrieve emoji's creator."""
 
 
 @define(slots=True)
 class ServerThroughServerEmojiServerCacheContext(ServerEmojiCacheContext):
-    """Represents a cache context that involves an :class:`.ServerEmoji`, wishing to retrieve emoji's server."""
+    """Represents a cache context that involves an :class:`ServerEmoji`, wishing to retrieve emoji's server."""
 
 
 @define(slots=True)
 class ServerThroughServerPublicInviteServerCacheContext(ServerPublicInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerPublicInvite`, wishing to retrieve destination server."""
+    """Represents a cache context that involves an :class:`ServerPublicInvite`, wishing to retrieve destination server."""
 
 
 @define(slots=True)
 class ChannelThroughServerPublicInviteChannelCacheContext(ServerPublicInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerPublicInvite`, wishing to retrieve destination channel."""
+    """Represents a cache context that involves an :class:`ServerPublicInvite`, wishing to retrieve destination channel."""
 
 
 @define(slots=True)
 class UserThroughServerPublicInviteUserCacheContext(ServerPublicInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerPublicInvite`, wishing to retrieve invite's creator."""
+    """Represents a cache context that involves an :class:`ServerPublicInvite`, wishing to retrieve invite's creator."""
 
 
 @define(slots=True)
 class ChannelThroughGroupPublicInviteChannelCacheContext(GroupPublicInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupPublicInvite`, wishing to retrieve destination group channel."""
+    """Represents a cache context that involves an :class:`GroupPublicInvite`, wishing to retrieve destination group channel."""
 
 
 @define(slots=True)
 class UserThroughGroupPublicInviteUserCacheContext(GroupPublicInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupPublicInvite`, wishing to retrieve invite's creator.."""
+    """Represents a cache context that involves an :class:`GroupPublicInvite`, wishing to retrieve invite's creator.."""
 
 
 @define(slots=True)
 class UserThroughGroupInviteCreatorCacheContext(GroupInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupInvite`, wishing to retrieve invite's creator."""
+    """Represents a cache context that involves an :class:`GroupInvite`, wishing to retrieve invite's creator."""
 
 
 @define(slots=True)
 class ChannelThroughGroupInviteChannelCacheContext(GroupInviteCacheContext):
-    """Represents a cache context that involves an :class:`.GroupInvite`, wishing to retrieve destination group channel."""
+    """Represents a cache context that involves an :class:`GroupInvite`, wishing to retrieve destination group channel."""
 
 
 @define(slots=True)
 class ServerThroughServerInviteServerCacheContext(ServerInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve destination server."""
+    """Represents a cache context that involves an :class:`ServerInvite`, wishing to retrieve destination server."""
 
 
 @define(slots=True)
 class ChannelThroughServerInviteChannelCacheContext(ServerInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve destination server channel."""
+    """Represents a cache context that involves an :class:`ServerInvite`, wishing to retrieve destination server channel."""
 
 
 @define(slots=True)
 class MemberOrUserThroughServerInviteCreatorCacheContext(ServerInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve invite's creator."""
+    """Represents a cache context that involves an :class:`ServerInvite`, wishing to retrieve invite's creator."""
 
 
 @define(slots=True)
 class MemberThroughServerInviteCreatorCacheContext(ServerInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve invite's creator."""
+    """Represents a cache context that involves an :class:`ServerInvite`, wishing to retrieve invite's creator."""
 
 
 @define(slots=True)
 class UserThroughServerInviteCreatorCacheContext(ServerInviteCacheContext):
-    """Represents a cache context that involves an :class:`.ServerInvite`, wishing to retrieve invite's creator."""
+    """Represents a cache context that involves an :class:`ServerInvite`, wishing to retrieve invite's creator."""
 
 
 @define(slots=True)
 class ChannelThroughReadStateChannelCacheContext(ReadStateCacheContext):
-    """Represents a cache context that involves an :class:`.ReadState`, wishing to retrieve read state's channel."""
+    """Represents a cache context that involves an :class:`ReadState`, wishing to retrieve read state's channel."""
 
 
 @define(slots=True)
 class EmojiThroughServerGetterCacheContext(BaseServerCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server emoji."""
+    """Represents a cache context that involves an :class:`BaseServer`, wishing to retrieve server emoji."""
 
 
 @define(slots=True)
 class MemberThroughServerGetterCacheContext(BaseServerCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server member."""
+    """Represents a cache context that involves an :class:`BaseServer`, wishing to retrieve server member."""
 
 
 @define(slots=True)
 class EmojisThroughServerGetterCacheContext(BaseServerCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server's emojis."""
+    """Represents a cache context that involves an :class:`BaseServer`, wishing to retrieve server's emojis."""
 
 
 @define(slots=True)
 class MembersThroughServerGetterCacheContext(BaseServerCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server's members."""
+    """Represents a cache context that involves an :class:`BaseServer`, wishing to retrieve server's members."""
 
 
 @define(slots=True)
 class ChannelThroughServerGetterCacheContext(BaseServerCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server channel."""
+    """Represents a cache context that involves an :class:`BaseServer`, wishing to retrieve server channel."""
 
 
 @define(slots=True)
 class ChannelsThroughServerGetterCacheContext(BaseServerCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve server's channels."""
+    """Represents a cache context that involves an :class:`BaseServer`, wishing to retrieve server's channels."""
 
 
 @define(slots=True)
 class MemberThroughServerMeCacheContext(BaseServerCacheContext):
-    """Represents a cache context that involves an :class:`.BaseServer`, wishing to retrieve own member for server."""
+    """Represents a cache context that involves an :class:`BaseServer`, wishing to retrieve own member for server."""
 
 
 @define(slots=True)
 class MemberOrUserThroughServerOwnerCacheContext(ServerCacheContext):
-    """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner."""
+    """Represents a cache context that involves an :class:`Server`, wishing to retrieve server's owner."""
 
 
 @define(slots=True)
 class MemberThroughServerOwnerCacheContext(ServerCacheContext):
-    """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner as member."""
+    """Represents a cache context that involves an :class:`Server`, wishing to retrieve server's owner as member."""
 
 
 @define(slots=True)
 class UserThroughServerOwnerCacheContext(ServerCacheContext):
-    """Represents a cache context that involves an :class:`.Server`, wishing to retrieve server's owner as user."""
+    """Represents a cache context that involves an :class:`Server`, wishing to retrieve server's owner as user."""
 
 
 @define(slots=True)
 class ServerThroughMemberServerCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's server."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's server."""
 
 
 @define(slots=True)
 class UserThroughMemberUserCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's user."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's user."""
 
 
 @define(slots=True)
 class UserThroughMemberBotOwnerCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's bot owner."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's bot owner."""
 
 
 @define(slots=True)
 class ChannelIDThroughMemberDMChannelIDCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's DM channel ID."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's DM channel ID."""
 
 
 @define(slots=True)
 class ChannelThroughMemberDMChannelCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's DM channel."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's DM channel."""
 
 
 @define(slots=True)
 class UserThroughMemberNameCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's name."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's name."""
 
 
 @define(slots=True)
 class UserThroughMemberDiscriminatorCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's discriminator."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's discriminator."""
 
 
 @define(slots=True)
 class UserThroughMemberDisplayNameCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's display name."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's display name."""
 
 
 @define(slots=True)
 class UserThroughMemberInternalAvatarCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's stateless avatar."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's stateless avatar."""
 
 
 @define(slots=True)
 class UserThroughMemberRawBadgesCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's raw badges value."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's raw badges value."""
 
 
 @define(slots=True)
 class UserThroughMemberStatusCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's status."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's status."""
 
 
 @define(slots=True)
 class UserThroughMemberRawFlagsCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's raw flags value."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's raw flags value."""
 
 
 @define(slots=True)
 class UserThroughMemberPrivilegedCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's privileged."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's privileged."""
 
 
 @define(slots=True)
 class UserThroughMemberBotCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's user bot-specific metadata."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's user bot-specific metadata."""
 
 
 @define(slots=True)
 class UserThroughMemberRelationshipCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's relationship."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's relationship."""
 
 
 @define(slots=True)
 class UserThroughMemberOnlineCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's online status."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's online status."""
 
 
 @define(slots=True)
 class UserThroughMemberTagCacheContext(BaseMemberCacheContext):
-    """Represents a cache context that involves an :class:`.BaseMember`, wishing to retrieve member's tag."""
+    """Represents a cache context that involves an :class:`BaseMember`, wishing to retrieve member's tag."""
 
 
 @define(slots=True)
 class ServerThroughMemberRolesCacheContext(MemberCacheContext):
-    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's roles."""
+    """Represents a cache context that involves an :class:`Member`, wishing to retrieve member's roles."""
 
 
 @define(slots=True)
 class ServerThroughMemberServerPermissionsCacheContext(MemberCacheContext):
-    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's permissions."""
+    """Represents a cache context that involves an :class:`Member`, wishing to retrieve member's permissions."""
 
 
 @define(slots=True)
 class ServerThroughMemberTopRoleCacheContext(MemberCacheContext):
-    """Represents a cache context that involves an :class:`.Member`, wishing to retrieve member's top role."""
+    """Represents a cache context that involves an :class:`Member`, wishing to retrieve member's top role."""
 
 
 @define(slots=True)
 class UserThroughUserBotOwnerCacheContext(UserCacheContext):
-    """Represents a cache context that involves an :class:`.User`, wishing to retrieve owner of bot user."""
+    """Represents a cache context that involves an :class:`User`, wishing to retrieve owner of bot user."""
 
 
 @define(slots=True)
 class ChannelIDThroughUserDMChannelIDCacheContext(BaseUserCacheContext):
-    """Represents a cache context that involves an :class:`.BaseUser`, wishing to retrieve ID of the DM channel with this user."""
+    """Represents a cache context that involves an :class:`BaseUser`, wishing to retrieve ID of the DM channel with this user."""
 
 
 @define(slots=True)
 class ChannelThroughUserDMChannelIDCacheContext(BaseUserCacheContext):
-    """Represents a cache context that involves an :class:`.BaseUser`, wishing to retrieve the DM channel with this user."""
+    """Represents a cache context that involves an :class:`BaseUser`, wishing to retrieve the DM channel with this user."""
 
 
 @define(slots=True)
 class MemberOrUserThroughWebhookCreatorCacheContext(WebhookCacheContext):
-    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator."""
+    """Represents a cache context that involves an :class:`Webhook`, wishing to retrieve webhook's creator."""
 
 
 @define(slots=True)
 class MemberThroughWebhookCreatorCacheContext(WebhookCacheContext):
-    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator as member."""
+    """Represents a cache context that involves an :class:`Webhook`, wishing to retrieve webhook's creator as member."""
 
 
 @define(slots=True)
 class UserThroughWebhookCreatorCacheContext(WebhookCacheContext):
-    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's creator as user."""
+    """Represents a cache context that involves an :class:`Webhook`, wishing to retrieve webhook's creator as user."""
 
 
 @define(slots=True)
 class ChannelThroughWebhookChannelCacheContext(WebhookCacheContext):
-    """Represents a cache context that involves an :class:`.Webhook`, wishing to retrieve webhook's channel."""
+    """Represents a cache context that involves an :class:`Webhook`, wishing to retrieve webhook's channel."""
 
 
 _UNDEFINED: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(type=CacheContextType.undefined)
@@ -1754,6 +1760,9 @@ _READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE: typing.Final[UndefinedCacheContext
 )
 _USER_THROUGH_GROUP_CHANNEL_RECIPIENTS: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_through_group_channel_recipients,
+)
+_SERVER_THROUGH_SERVER_CHANNEL_CATEGORY: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.server_through_server_channel_category,
 )
 _MEMBER_THROUGH_SERVER_CHANNEL_ME: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.member_through_server_channel_me,
@@ -2168,6 +2177,7 @@ ProvideCacheContextIn = typing.Literal[
     'GroupChannel.owner',
     'GroupChannel.read_state',
     'GroupChannel.recipients',
+    'BaseServerChannel.category',
     'BaseServerChannel.me',
     'BaseServerChannel.server',
     'TextChannel.read_state',
@@ -2292,7 +2302,7 @@ class Cache(ABC):
 
     .. note::
         This class might not be what you're looking for.
-        Head over to :class:`.EmptyCache` and :class:`.MapCache` for implementations.
+        Head over to :class:`EmptyCache` and :class:`MapCache` for implementations.
     """
 
     __slots__ = ()
@@ -2303,34 +2313,34 @@ class Cache(ABC):
 
     @abstractmethod
     def get_channel(self, channel_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Channel]:
-        """Optional[:class:`.Channel`]: Retrieves a channel using ID.
+        """Optional[:class:`Channel`]: Retrieves a channel using ID.
 
         Parameters
         ----------
         channel_id: :class:`str`
             The channel's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
 
     def get_all_channels(self, ctx: BaseCacheContext, /) -> Sequence[Channel]:
-        """Sequence[:class:`.Channel`]: Retrieves all available channels as sequence.
+        """Sequence[:class:`Channel`]: Retrieves all available channels as sequence.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         return list(self.get_channels_mapping(ctx).values())
 
     @abstractmethod
     def get_channels_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Channel]:
-        """Mapping[:class:`str`, :class:`.Channel`]: Retrieves all available channels as mapping.
+        """Mapping[:class:`str`, :class:`Channel`]: Retrieves all available channels as mapping.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2341,9 +2351,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        channel: :class:`.Channel`
+        channel: :class:`Channel`
             The channel to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2356,7 +2366,7 @@ class Cache(ABC):
         ----------
         channel_id: :class:`str`
             The channel's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
 
@@ -2366,11 +2376,11 @@ class Cache(ABC):
     def get_private_channels_mapping(
         self, ctx: BaseCacheContext, /
     ) -> Mapping[str, typing.Union[DMChannel, GroupChannel]]:
-        """Mapping[:class:`str`, Union[:class:`.DMChannel`, :class:`.GroupChannel`]]: Retrieve all private channels as mapping.
+        """Mapping[:class:`str`, Union[:class:`DMChannel`, :class:`GroupChannel`]]: Retrieve all private channels as mapping.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2380,7 +2390,7 @@ class Cache(ABC):
     ####################
     @abstractmethod
     def get_message(self, channel_id: str, message_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Message]:
-        """Optional[:class:`.Message`]: Retrieves a message in channel using channel and message IDs.
+        """Optional[:class:`Message`]: Retrieves a message in channel using channel and message IDs.
 
         Parameters
         ----------
@@ -2388,19 +2398,19 @@ class Cache(ABC):
             The channel's ID.
         message_id: :class:`str`
             The message's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
 
     def get_all_messages_of(self, channel_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Sequence[Message]]:
-        """Optional[Sequence[:class:`.Message`]]: Retrieves all messages from a channel.
+        """Optional[Sequence[:class:`Message`]]: Retrieves all messages from a channel.
 
         Parameters
         ----------
         channel_id: :class:`str`
             The channel's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ms = self.get_messages_mapping_of(channel_id, ctx)
@@ -2412,13 +2422,13 @@ class Cache(ABC):
     def get_messages_mapping_of(
         self, channel_id: str, ctx: BaseCacheContext, /
     ) -> typing.Optional[Mapping[str, Message]]:
-        """Optional[Mapping[:class:`str`, :class:`.Message`]]: Retrieves all messages from a channel as mapping.
+        """Optional[Mapping[:class:`str`, :class:`Message`]]: Retrieves all messages from a channel as mapping.
 
         Parameters
         ----------
         channel_id: :class:`str`
             The channel's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2429,9 +2439,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        message: :class:`.Message`
+        message: :class:`Message`
             The message to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2446,7 +2456,7 @@ class Cache(ABC):
             The channel's ID.
         message_id: :class:`str`
             The message's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2459,7 +2469,7 @@ class Cache(ABC):
         ----------
         channel_id: :class:`str`
             The channel's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2469,34 +2479,34 @@ class Cache(ABC):
     ###############
     @abstractmethod
     def get_read_state(self, channel_id: str, ctx: BaseCacheContext, /) -> typing.Optional[ReadState]:
-        """Optional[:class:`.ReadState`]: Retrieves a read state using channel ID.
+        """Optional[:class:`ReadState`]: Retrieves a read state using channel ID.
 
         Parameters
         ----------
         channel_id: :class:`str`
             The channel's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
 
     def get_all_read_states(self, ctx: BaseCacheContext, /) -> Sequence[ReadState]:
-        """Sequence[:class:`.ReadState`]: Retrieves all available read states as sequence.
+        """Sequence[:class:`ReadState`]: Retrieves all available read states as sequence.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         return list(self.get_read_states_mapping(ctx).values())
 
     @abstractmethod
     def get_read_states_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, ReadState]:
-        """Mapping[:class:`str`, :class:`.ReadState`]: Retrieves all available read states as mapping.
+        """Mapping[:class:`str`, :class:`ReadState`]: Retrieves all available read states as mapping.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2507,9 +2517,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        channel: :class:`.Channel`
+        channel: :class:`Channel`
             The channel to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2522,7 +2532,7 @@ class Cache(ABC):
         ----------
         channel_id: :class:`str`
             The channel's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2533,34 +2543,34 @@ class Cache(ABC):
 
     @abstractmethod
     def get_emoji(self, emoji_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Emoji]:
-        """Optional[:class:`.Emoji`]: Retrieves an emoji using ID.
+        """Optional[:class:`Emoji`]: Retrieves an emoji using ID.
 
         Parameters
         ----------
         emoji_id: :class:`str`
             The emoji's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
 
     def get_all_emojis(self, ctx: BaseCacheContext, /) -> Sequence[Emoji]:
-        """Sequence[:class:`.Emoji`]: Retrieves all available emojis as sequence.
+        """Sequence[:class:`Emoji`]: Retrieves all available emojis as sequence.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         return list(self.get_emojis_mapping(ctx).values())
 
     @abstractmethod
     def get_emojis_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Emoji]:
-        """Mapping[:class:`str`, :class:`.Emoji`]: Retrieves all available emojis as mapping.
+        """Mapping[:class:`str`, :class:`Emoji`]: Retrieves all available emojis as mapping.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2569,20 +2579,20 @@ class Cache(ABC):
     def get_server_emojis_mapping(
         self,
     ) -> Mapping[str, Mapping[str, ServerEmoji]]:
-        """Mapping[:class:`str`, Mapping[:class:`str`, :class:`.ServerEmoji`]]: Retrieves all available server emojis as mapping of server ID to mapping of emoji IDs."""
+        """Mapping[:class:`str`, Mapping[:class:`str`, :class:`ServerEmoji`]]: Retrieves all available server emojis as mapping of server ID to mapping of emoji IDs."""
         ...
 
     @abstractmethod
     def get_server_emojis_mapping_of(
         self, server_id: str, ctx: BaseCacheContext, /
     ) -> typing.Optional[Mapping[str, ServerEmoji]]:
-        """Optional[Mapping[:class:`str`, :class:`.ServerEmoji`]]: Retrieves all emojis from a server as mapping.
+        """Optional[Mapping[:class:`str`, :class:`ServerEmoji`]]: Retrieves all emojis from a server as mapping.
 
         Parameters
         ----------
         server_id: :class:`str`
             The server's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2595,7 +2605,7 @@ class Cache(ABC):
         ----------
         server_id: :class:`str`
             The server's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2606,9 +2616,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        emoji: :class:`.Emoji`
+        emoji: :class:`Emoji`
             The emoji to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2623,7 +2633,7 @@ class Cache(ABC):
             The emoji's ID.
         server_id: Optional[:class:`str`]
             The server's ID. ``None`` if server ID is unavailable.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2634,34 +2644,34 @@ class Cache(ABC):
 
     @abstractmethod
     def get_server(self, server_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Server]:
-        """Optional[:class:`.Server`]: Retrieves a server using ID.
+        """Optional[:class:`Server`]: Retrieves a server using ID.
 
         Parameters
         ----------
         server_id: :class:`str`
             The server's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
 
     def get_all_servers(self, ctx: BaseCacheContext, /) -> Sequence[Server]:
-        """Sequence[:class:`.Server`]: Retrieves all available servers as sequence.
+        """Sequence[:class:`Server`]: Retrieves all available servers as sequence.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         return list(self.get_servers_mapping(ctx).values())
 
     @abstractmethod
     def get_servers_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Server]:
-        """Mapping[:class:`str`, :class:`.Server`]: Retrieves all available servers as mapping.
+        """Mapping[:class:`str`, :class:`Server`]: Retrieves all available servers as mapping.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2672,9 +2682,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        server: :class:`.Server`
+        server: :class:`Server`
             The server to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2687,12 +2697,12 @@ class Cache(ABC):
         ----------
         server_id: :class:`str`
             The server's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
 
         Returns
         -------
-        Optional[:class:`.Server`]
+        Optional[:class:`Server`]
             The server removed from the cache, if any.
         """
         ...
@@ -2702,7 +2712,7 @@ class Cache(ABC):
     ##################
     @abstractmethod
     def get_server_member(self, server_id: str, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Member]:
-        """Optional[:class:`.Member`]: Retrieves a member in server using server and user IDs.
+        """Optional[:class:`Member`]: Retrieves a member in server using server and user IDs.
 
         Parameters
         ----------
@@ -2710,19 +2720,19 @@ class Cache(ABC):
             The server's ID.
         user_id: :class:`str`
             The user's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
 
     def get_all_server_members_of(self, server_id: str, ctx: BaseCacheContext, /) -> typing.Optional[Sequence[Member]]:
-        """Optional[Sequence[:class:`.Member`]]: Retrieves all members from a server.
+        """Optional[Sequence[:class:`Member`]]: Retrieves all members from a server.
 
         Parameters
         ----------
         server_id: :class:`str`
             The server's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ms = self.get_server_members_mapping_of(server_id, ctx)
@@ -2734,13 +2744,13 @@ class Cache(ABC):
     def get_server_members_mapping_of(
         self, server_id: str, ctx: BaseCacheContext, /
     ) -> typing.Optional[Mapping[str, Member]]:
-        """Optional[Mapping[:class:`str`, :class:`.Member`]]: Retrieves all members from a server as mapping.
+        """Optional[Mapping[:class:`str`, :class:`Member`]]: Retrieves all members from a server as mapping.
 
         Parameters
         ----------
         server_id: :class:`str`
             The server's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2759,9 +2769,9 @@ class Cache(ABC):
         ----------
         server_id: :class:`str`
             The server's ID to store members in.
-        members: Dict[:class:`str`, :class:`.Member`]
+        members: Dict[:class:`str`, :class:`Member`]
             The members to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2780,9 +2790,9 @@ class Cache(ABC):
         ----------
         server_id: :class:`str`
             The server's ID to overwrite members in.
-        members: Dict[:class:`str`, :class:`.Member`]
+        members: Dict[:class:`str`, :class:`Member`]
             The member to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2793,9 +2803,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        member: :class:`.Member`
+        member: :class:`Member`
             The member to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2810,7 +2820,7 @@ class Cache(ABC):
             The channel's ID.
         member_id: :class:`str`
             The member user's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2823,18 +2833,18 @@ class Cache(ABC):
         ----------
         server_id: :class:`str`
             The server's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
 
     @abstractmethod
     def get_servers_member_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, Mapping[str, Member]]:
-        """Mapping[:class:`str`, Mapping[:class:`str`, :class:`.Member`]]: Retrieves all available server members as mapping.
+        """Mapping[:class:`str`, Mapping[:class:`str`, :class:`Member`]]: Retrieves all available server members as mapping.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2844,34 +2854,34 @@ class Cache(ABC):
     #########
     @abstractmethod
     def get_user(self, user_id: str, ctx: BaseCacheContext, /) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: Retrieves an user using ID.
+        """Optional[:class:`User`]: Retrieves an user using ID.
 
         Parameters
         ----------
         user_id: :class:`str`
             The user's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
 
     def get_all_users(self, ctx: BaseCacheContext, /) -> Sequence[User]:
-        """Sequence[:class:`.User`]: Retrieves all available users as sequence.
+        """Sequence[:class:`User`]: Retrieves all available users as sequence.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         return list(self.get_users_mapping(ctx).values())
 
     @abstractmethod
     def get_users_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, User]:
-        """Mapping[:class:`str`, :class:`.User`]: Retrieves all available users as mapping.
+        """Mapping[:class:`str`, :class:`User`]: Retrieves all available users as mapping.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2882,9 +2892,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        user: :class:`.User`
+        user: :class:`User`
             The user to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2897,12 +2907,12 @@ class Cache(ABC):
         ----------
         user_id: :class:`str`
             The ID of the user to remove from cache.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
 
         Returns
         -------
-        Optional[:class:`.User`]
+        Optional[:class:`User`]
             The removed user.
         """
         ...
@@ -2913,9 +2923,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        users: Dict[:class:`str`, :class:`.User`]
+        users: Dict[:class:`str`, :class:`User`]
             The users to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2931,7 +2941,7 @@ class Cache(ABC):
         ----------
         user_id: :class:`str`
             The user's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2941,7 +2951,7 @@ class Cache(ABC):
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         return list(self.get_private_channels_by_users_mapping(ctx).values())
@@ -2952,7 +2962,7 @@ class Cache(ABC):
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2963,9 +2973,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        channel: :class:`.DMChannel`
+        channel: :class:`DMChannel`
             The channel to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -2979,7 +2989,7 @@ class Cache(ABC):
         ----------
         user_id: :class:`str`
             The user's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
 
@@ -2994,22 +3004,22 @@ class Cache(ABC):
     ) -> typing.Optional[ChannelVoiceStateContainer]: ...
 
     def get_all_channel_voice_states(self, ctx: BaseCacheContext, /) -> Sequence[ChannelVoiceStateContainer]:
-        """Sequence[:class:`.ChannelVoiceStateContainer`]: Retrieves all available channel voice state containers as sequence.
+        """Sequence[:class:`ChannelVoiceStateContainer`]: Retrieves all available channel voice state containers as sequence.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         return list(self.get_channel_voice_states_mapping(ctx).values())
 
     @abstractmethod
     def get_channel_voice_states_mapping(self, ctx: BaseCacheContext, /) -> Mapping[str, ChannelVoiceStateContainer]:
-        """Mapping[:class:`str`, :class:`.ChannelVoiceStateContainer`]: Retrieves all available channel voice state containers as mapping of channel IDs.
+        """Mapping[:class:`str`, :class:`ChannelVoiceStateContainer`]: Retrieves all available channel voice state containers as mapping of channel IDs.
 
         Parameters
         ----------
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -3020,9 +3030,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        container: :class:`.ChannelVoiceStateContainer`
+        container: :class:`ChannelVoiceStateContainer`
             The container to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -3035,9 +3045,9 @@ class Cache(ABC):
 
         Parameters
         ----------
-        containers: Dict[:class:`str`, :class:`.ChannelVoiceStateContainer`]
+        containers: Dict[:class:`str`, :class:`ChannelVoiceStateContainer`]
             The containers to store.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -3050,7 +3060,7 @@ class Cache(ABC):
         ----------
         channel_id: :class:`str`
             The channel's ID.
-        ctx: :class:`.BaseCacheContext`
+        ctx: :class:`BaseCacheContext`
             The context.
         """
         ...
@@ -3286,7 +3296,7 @@ def _put1(d: dict[str, V], k: str, v: V, max_size: int, /) -> None:
 
 
 class MapCache(Cache):
-    """Implementation of :class:`.Cache` ABC based on :class:`dict`'s.
+    """Implementation of :class:`Cache` ABC based on :class:`dict`'s.
 
     Parameters of this class accept negative value to represent infinite count.
 
@@ -3746,6 +3756,7 @@ __all__ = (
     'ReadStateThroughGroupChannelReadStateCacheContext',
     'UserThroughGroupChannelOwnerCacheContext',
     'UserThroughGroupChannelRecipientsCacheContext',
+    'ServerThroughServerChannelCategoryCacheContext',
     'MemberThroughServerChannelMeCacheContext',
     'ServerThroughServerChannelServerCacheContext',
     'MessageThroughTextChannelLastMessageCacheContext',
@@ -3909,6 +3920,7 @@ __all__ = (
     '_USER_THROUGH_GROUP_CHANNEL_OWNER',
     '_READ_STATE_THROUGH_GROUP_CHANNEL_READ_STATE',
     '_USER_THROUGH_GROUP_CHANNEL_RECIPIENTS',
+    '_SERVER_THROUGH_SERVER_CHANNEL_CATEGORY',
     '_MEMBER_THROUGH_SERVER_CHANNEL_ME',
     '_SERVER_THROUGH_SERVER_CHANNEL_SERVER',
     '_MESSAGE_THROUGH_TEXT_CHANNEL_LAST_MESSAGE',

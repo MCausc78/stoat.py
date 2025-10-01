@@ -16,7 +16,7 @@ class BaseServer(typing.TypedDict):
     name: str
     description: typing_extensions.NotRequired[str]
     # channels: list[C]
-    categories: typing_extensions.NotRequired[list[Category]]
+    categories: typing_extensions.NotRequired[typing.Union[list[Category], dict[str, Category]]]
     system_messages: typing_extensions.NotRequired[SystemMessageChannels]
     roles: typing_extensions.NotRequired[dict[str, Role]]
     default_permissions: int
@@ -37,7 +37,7 @@ class PartialServer(typing.TypedDict):
     name: typing_extensions.NotRequired[str]
     description: typing_extensions.NotRequired[str]
     channels: typing_extensions.NotRequired[list[str]]
-    categories: typing_extensions.NotRequired[list[Category]]
+    categories: typing_extensions.NotRequired[typing.Union[list[Category], dict[str, Category]]]
     system_messages: typing_extensions.NotRequired[SystemMessageChannels]
     default_permissions: typing_extensions.NotRequired[int]
     icon: typing_extensions.NotRequired[File]
@@ -70,7 +70,28 @@ FieldsRole = typing.Literal['Colour']
 class Category(typing.TypedDict):
     id: str
     title: str
+    default_permissions: typing_extensions.NotRequired[OverrideField]
+    role_permissions: typing_extensions.NotRequired[dict[str, OverrideField]]
     channels: list[str]
+
+
+class DataCreateCategory(typing.TypedDict):
+    title: str
+    channels: typing.Optional[list[str]]
+
+
+class DataEditCategory(typing.TypedDict):
+    # These fields do not have skip_serializing_if on backend, but for consistency they must be NotRequired
+    title: typing_extensions.NotRequired[str]
+    channels: typing_extensions.NotRequired[list[str]]
+    remove: typing_extensions.NotRequired[list[FieldsCategory]]
+
+
+FieldsCategory = typing.Literal['DefaultPermissions']
+
+
+class DataDefaultCategoryPermissions(typing.TypedDict):
+    permissions: Override
 
 
 class SystemMessageChannels(typing.TypedDict):

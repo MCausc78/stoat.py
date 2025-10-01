@@ -94,7 +94,7 @@ class EventHandler(ABC):
 
         Parameters
         ----------
-        socket: :class:`.HTTPWebSocket`
+        socket: :class:`HTTPWebSocket`
             The connected WebSocket.
         """
         ...
@@ -129,13 +129,13 @@ class Shard(ABC):
     @property
     @abstractmethod
     def format(self) -> ShardFormat:
-        """:class:`.ShardFormat`: The message format to use when communicating with Revolt WebSocket."""
+        """:class:`ShardFormat`: The message format to use when communicating with Revolt WebSocket."""
         ...
 
     @property
     @abstractmethod
     def handler(self) -> typing.Optional[EventHandler]:
-        """Optional[:class:`.EventHandler`]: The handler that receives events. Defaults to ``None`` if not provided."""
+        """Optional[:class:`EventHandler`]: The handler that receives events. Defaults to ``None`` if not provided."""
         ...
 
     @property
@@ -174,7 +174,7 @@ class Shard(ABC):
     @property
     @abstractmethod
     def socket(self) -> HTTPWebSocket:
-        """:class:`.HTTPWebSocket`: The current WebSocket connection."""
+        """:class:`HTTPWebSocket`: The current WebSocket connection."""
         ...
 
     @abstractmethod
@@ -227,7 +227,7 @@ class Shard(ABC):
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel to end typing in.
         """
         ...
@@ -237,7 +237,7 @@ class Shard(ABC):
         """|coro|
 
         Subscribes user to a server. After calling this method, you will begin
-        receiving :class:`.UserUpdateEvent`'s for members of the subscribed server.
+        receiving :class:`UserUpdateEvent`'s for members of the subscribed server.
 
         .. note::
 
@@ -249,7 +249,7 @@ class Shard(ABC):
 
         Parameters
         ----------
-        server: ULIDOr[:class:`.BaseServer`]
+        server: ULIDOr[:class:`BaseServer`]
             The server to subscribe to.
         """
         ...
@@ -262,9 +262,9 @@ class Shard(ABC):
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel the message was sent in.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message to begin editing.
         """
         ...
@@ -277,9 +277,9 @@ class Shard(ABC):
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`.TextableChannel`]
+        channel: ULIDOr[:class:`TextableChannel`]
             The channel the message was sent in.
-        message: ULIDOr[:class:`.BaseMessage`]
+        message: ULIDOr[:class:`BaseMessage`]
             The message to stop editing.
         """
         ...
@@ -302,7 +302,7 @@ class ShardImpl(Shard):
         The duration in seconds to sleep when reconnecting to WebSocket due to aiohttp errors. Defaults to 2.
     format: :class:`ShardFormat`
         The message format to use when communicating with Revolt WebSocket.
-    handler: Optional[:class:`.EventHandler`]
+    handler: Optional[:class:`EventHandler`]
         The handler that receives events. Defaults to ``None`` if not provided.
     last_ping_at: Optional[:class:`~datetime.datetime`]
         When the shard sent ping.

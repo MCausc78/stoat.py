@@ -48,7 +48,7 @@ _new_bot_flags = BotFlags.__new__
 class BaseBot(Base):
     """Represents a base bot on Revolt.
 
-    This inherits from :class:`.Base`.
+    This inherits from :class:`Base`.
     """
 
     def __eq__(self, other: object, /) -> bool:
@@ -59,14 +59,14 @@ class BaseBot(Base):
 
         Deletes the bot.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
+        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>_` to bot user.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -115,11 +115,11 @@ class BaseBot(Base):
 
         Edits the bot.
 
-        Fires :class:`.UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
+        Fires :class:`UserUpdateEvent` for all users who `are subscribed <server_subscriptions>`_ to bot user.
 
         Parameters
         ----------
-        http_overrides: Optional[:class:`.HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new bot name. Must be between 2 and 32 characters and not contain whitespace characters.
@@ -175,7 +175,7 @@ class BaseBot(Base):
 
         Returns
         -------
-        :class:`.Bot`
+        :class:`Bot`
             The updated bot.
         """
         return await self.state.http.edit_bot(
@@ -195,7 +195,7 @@ class BaseBot(Base):
 class Bot(BaseBot):
     """Represents a bot on Revolt.
 
-    This inherits from :class:`.BaseBot`.
+    This inherits from :class:`BaseBot`.
     """
 
     owner_id: str = field(repr=True, kw_only=True)
@@ -233,10 +233,10 @@ class Bot(BaseBot):
     """:class:`int`: The bot's flags raw value."""
 
     user: User = field(repr=True, kw_only=True)
-    """:class:`.User`: The user associated with this bot."""
+    """:class:`User`: The user associated with this bot."""
 
     def get_owner(self) -> typing.Optional[User]:
-        """Optional[:class:`.User`]: The user who owns this bot."""
+        """Optional[:class:`User`]: The user who owns this bot."""
         state = self.state
         cache = state.cache
 
@@ -256,14 +256,14 @@ class Bot(BaseBot):
 
     @property
     def flags(self) -> BotFlags:
-        """:class:`.BotFlags`: The bot's flags."""
+        """:class:`BotFlags`: The bot's flags."""
         ret = _new_bot_flags(BotFlags)
         ret.value = self.raw_flags
         return ret
 
     @property
     def owner(self) -> User:
-        """:class:`.User`: The user who owns this bot."""
+        """:class:`User`: The user who owns this bot."""
         owner = self.get_owner()
         if owner is None:
             raise NoData(what=self.owner_id, type='Bot.owner')
@@ -296,7 +296,7 @@ class Bot(BaseBot):
 class PublicBot(BaseBot):
     """Represents public bot on Revolt.
 
-    This inherits from :class:`.BaseBot`.
+    This inherits from :class:`BaseBot`.
     """
 
     name: str = field(repr=True, kw_only=True)
