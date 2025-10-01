@@ -173,6 +173,13 @@ INVITES_INVITE_DELETE: typing.Final[Route] = Route(DELETE, '/invites/{invite_cod
 INVITES_INVITE_FETCH: typing.Final[Route] = Route(GET, '/invites/{invite_code}')
 INVITES_INVITE_JOIN: typing.Final[Route] = Route(POST, '/invites/{invite_code}')
 
+# OAuth2 control
+OAUTH2_AUTHORIZED_BOTS: typing.Final[Route] = Route(GET, '/oauth2/authorized_bots')
+OAUTH2_AUTHORIZE_AUTH: typing.Final[Route] = Route(POST, '/oauth2/authorize')
+OAUTH2_AUTHORIZE_INFO: typing.Final[Route] = Route(GET, '/oauth2/authorize')
+OAUTH2_REVOKE: typing.Final[Route] = Route(POST, '/oauth2/revoke')
+OAUTH2_TOKEN: typing.Final[Route] = Route(POST, '/oauth2/token')
+
 # Onboarding control
 ONBOARD_COMPLETE: typing.Final[Route] = Route(POST, '/onboard/complete')
 ONBOARD_HELLO: typing.Final[Route] = Route(GET, '/onboard/hello')
@@ -226,6 +233,7 @@ USERS_EDIT_USER: typing.Final[Route] = Route(PATCH, '/users/{user_id}', ratelimi
 USERS_FETCH_DMS: typing.Final[Route] = Route(GET, '/users/dms')
 USERS_FETCH_PROFILE: typing.Final[Route] = Route(GET, '/users/{user_id}/profile')
 USERS_FETCH_SELF: typing.Final[Route] = Route(GET, '/users/@me')
+USERS_FETCH_SELF_SERVERS: typing.Final[Route] = Route(GET, '/users/@me/servers')
 USERS_FETCH_USER: typing.Final[Route] = Route(GET, '/users/{user_id}')
 USERS_FETCH_USER_FLAGS: typing.Final[Route] = Route(GET, '/users/{user_id}/flags')
 USERS_FIND_MUTUAL: typing.Final[Route] = Route(GET, '/users/{user_id}/mutual')
@@ -327,6 +335,11 @@ __all__ = (
     'INVITES_INVITE_DELETE',
     'INVITES_INVITE_FETCH',
     'INVITES_INVITE_JOIN',
+    'OAUTH2_AUTHORIZED_BOTS',
+    'OAUTH2_AUTHORIZE_AUTH',
+    'OAUTH2_AUTHORIZE_INFO',
+    'OAUTH2_REVOKE',
+    'OAUTH2_TOKEN',
     'ONBOARD_COMPLETE',
     'ONBOARD_HELLO',
     'POLICY_ACKNOWLEDGE_POLICY_CHANGES',
@@ -367,6 +380,7 @@ __all__ = (
     'USERS_FETCH_DMS',
     'USERS_FETCH_PROFILE',
     'USERS_FETCH_SELF',
+    'USERS_FETCH_SELF_SERVERS',
     'USERS_FETCH_USER',
     'USERS_FETCH_USER_FLAGS',
     'USERS_FIND_MUTUAL',

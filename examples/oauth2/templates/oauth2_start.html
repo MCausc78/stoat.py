@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>OAuth2 with pyvolt</title>
+    </head>
+    <body>
+        Oops! It appears Revolt have not implemented OAuth2 client-side yet. Good news, though,
+        you still can try it by entering following snippet in console!
+        <pre>
+            const api = controllers.client.getReadyClient().api;
+            const body = new FormData();
+            
+            body.set('client_id', {{ client_id }});
+            body.set('scope', 'identify');
+            body.set('redirect_uri', {{ redirect_uri }});
+            body.set('response_type', 'code');
+            
+            const data = await fetch(api.baseURL + "/oauth2/authorize", {
+                method: "POST",
+                headers: {
+                    ...api.auth.headers,
+                },
+                body,
+            }).then((response) => {
+                const isJson = response.headers.get("content-type")?.startsWith("application/json");
+                const data = await response[isJson ? "json" : "text"]();
+                
+                if (!response.ok) {
+                    throw data;
+                }
+
+                return data;
+            });
+
+            window.location = data.redirect_uri;
+        </pre>
+    </body>
+</html>

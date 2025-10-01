@@ -42,6 +42,7 @@ from .http import *
 from .instance import *
 from .invite import *
 from .message import *
+from .oauth2 import *
 from .parser import *
 from .permissions import *
 from .read_state import *

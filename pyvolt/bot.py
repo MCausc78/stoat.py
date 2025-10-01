@@ -36,7 +36,9 @@ from .flags import BotFlags
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .enums import OAuth2Scope
     from .http import HTTPOverrideOptions
+    from .oauth2 import OAuth2ScopeReasoning
     from .user import User
 
 _new_bot_flags = BotFlags.__new__
@@ -105,6 +107,8 @@ class BaseBot(Base):
         public: UndefinedOr[bool] = UNDEFINED,
         analytics: UndefinedOr[bool] = UNDEFINED,
         interactions_url: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        oauth2: UndefinedOr[typing.Optional[BotOAuth2Edit]] = UNDEFINED,
+        reset_oauth2_client_secret: bool = False,
         reset_token: bool = False,
     ) -> Bot:
         """|coro|
@@ -125,6 +129,10 @@ class BaseBot(Base):
             Whether to allow Revolt collect analytics about the bot.
         interactions_url: UndefinedOr[Optional[:class:`str`]]
             The new bot interactions URL. For now, this parameter is reserved and does not do anything.
+        oauth2: UndefinedOr[Optional[:class:`BotOAuth2Edit`]]
+            The new bot's OAuth2 settings.
+        reset_oauth2_client_secret: :class:`bool`
+            Whether to reset bot's OAuth2 client secret. The new client secret can be accessed via :attr:`BotOAuth2.secret`.
         reset_token: :class:`bool`
             Whether to reset bot token. The new token can be accessed via ``bot.token``.
 
@@ -177,7 +185,9 @@ class BaseBot(Base):
             public=public,
             analytics=analytics,
             interactions_url=interactions_url,
+            oauth2=oauth2,
             reset_token=reset_token,
+            reset_oauth2_client_secret=reset_oauth2_client_secret,
         )
 
 
@@ -215,6 +225,9 @@ class Bot(BaseBot):
 
     privacy_policy_url: typing.Optional[str] = field(repr=True, kw_only=True)
     """Optional[:class:`str`]: The privacy policy URL."""
+
+    oauth2: typing.Optional[BotOAuth2] = field(repr=True, kw_only=True)
+    """Optional[:class:`BotOAuth2`]: The bot's OAuth2 settings."""
 
     raw_flags: int = field(repr=True, kw_only=True)
     """:class:`int`: The bot's flags raw value."""
@@ -308,4 +321,75 @@ class PublicBot(BaseBot):
         return payload
 
 
-__all__ = ('BaseBot', 'Bot', 'PublicBot')
+@define(slots=True)
+class BotOAuth2:
+    """Represents how the bot does use OAuth2."""
+
+    public: bool = field(repr=True, kw_only=True, eq=True)
+    """:class:`bool`: Whether bot users do not need to invoke server to exchange code."""
+
+    secret: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
+    """Optional[:class:`str`]: The client secret, only available if :attr:`public` is ``False``."""
+
+    redirect_uris: list[str] = field(repr=True, kw_only=True, eq=True)
+    """List[:class:`str`]: The whitelisted URIs for redirecting to during OAuth2 authorization."""
+
+    allowed_scopes: dict[str, OAuth2ScopeReasoning] = field(repr=True, kw_only=True, eq=True)
+    """Dict[:class:`str`, :class:`OAuth2ScopeReasoning`]: A mapping of OAuth2 scopes to reasoning why would it be requested."""
+
+
+class BotOAuth2Edit:
+    """Represents new bot's OAuth2 settings.
+
+    Attributes
+    ----------
+    public: UndefinedOr[:class:`bool`
+        Whether the bot is a public client.
+    redirect_uris: UndefinedOr[List[:class:`str`]]
+        The whitelisted URIs for redirecting to during OAuth2 authorization. Must be between 1 and 10 items.
+    allowed_scopes: UndefinedOr[Dict[Union[:class:`OAuth2Scope`, :class:`str`], :class:`OAuth2ScopeReasoning`]]
+        A mapping of OAuth2 scopes to reasoning why would it be requested.
+    """
+
+    __slots__ = (
+        'public',
+        'redirect_uris',
+        'allowed_scopes',
+    )
+
+    def __init__(
+        self,
+        *,
+        public: UndefinedOr[bool] = UNDEFINED,
+        redirect_uris: UndefinedOr[list[str]] = UNDEFINED,
+        allowed_scopes: UndefinedOr[dict[typing.Union[OAuth2Scope, str], OAuth2ScopeReasoning]] = UNDEFINED,
+    ) -> None:
+        self.public: UndefinedOr[bool] = public
+        self.redirect_uris: UndefinedOr[list[str]] = redirect_uris
+        self.allowed_scopes: UndefinedOr[dict[typing.Union[OAuth2Scope, str], OAuth2ScopeReasoning]] = allowed_scopes
+
+    @property
+    def remove(self) -> list[raw.FieldsBot]:
+        return []
+
+    def to_dict(self) -> raw.DataEditBotOauth2:
+        payload: raw.DataEditBotOauth2 = {}
+        if self.public is not UNDEFINED:
+            payload['public'] = self.public
+        if self.redirect_uris is not UNDEFINED:
+            payload['redirects'] = self.redirect_uris
+        if self.allowed_scopes is not UNDEFINED:
+            payload['allowed_scopes'] = {  # type: ignore
+                k.value if isinstance(k, OAuth2Scope) else k: v.to_dict() for k, v in self.allowed_scopes.items()
+            }
+
+        return payload
+
+
+__all__ = (
+    'BaseBot',
+    'Bot',
+    'PublicBot',
+    'BotOAuth2',
+    'BotOAuth2Edit',
+)

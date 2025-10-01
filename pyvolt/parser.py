@@ -41,7 +41,7 @@ from .authentication import (
     MFAStatus,
     LoginResult,
 )
-from .bot import Bot, PublicBot
+from .bot import Bot, PublicBot, BotOAuth2
 from .cdn import (
     AssetMetadata,
     StatelessAsset,
@@ -196,6 +196,12 @@ from .message import (
     StatelessCallStartedSystemEvent,
     StatelessSystemEvent,
     Message,
+)
+from .oauth2 import (
+    OAuth2ScopeReasoning,
+    PossibleOAuth2Authorization,
+    OAuth2AccessToken,
+    OAuth2Authorization,
 )
 from .permissions import PermissionOverride
 from .read_state import ReadState
@@ -564,6 +570,8 @@ class Parser:
         :class:`Bot`
             The parsed bot object.
         """
+        oauth2 = payload.get('oauth2')
+
         return Bot(
             state=self.state,
             id=payload['_id'],
@@ -575,6 +583,7 @@ class Parser:
             interactions_url=payload.get('interactions_url'),
             terms_of_service_url=payload.get('terms_of_service_url'),
             privacy_policy_url=payload.get('privacy_policy_url'),
+            oauth2=None if oauth2 is None else self.parse_bot_oauth2(oauth2),
             raw_flags=payload.get('flags', 0),
             user=user,
         )
@@ -595,6 +604,28 @@ class Parser:
             The parsed bot object.
         """
         return self._parse_bot(payload, self.parse_user(user))
+
+    def parse_bot_oauth2(self, payload: raw.BotOauth2, /) -> BotOAuth2:
+        """Parses a bot OAuth2 settings object.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The bot OAuth2 settings payload to parse.
+
+        Returns
+        -------
+        :class:`BotOAuth2`
+            The parsed bot OAuth2 settings object.
+        """
+        return BotOAuth2(
+            public=payload['public'],
+            secret=payload.get('secret'),
+            redirect_uris=payload['redirects'],
+            allowed_scopes={k: self.parse_oauth2_scope_reasoning(v) for k, v in payload['allowed_scopes'].items()},
+        )
 
     def parse_bot_user_metadata(self, payload: raw.BotInformation, /) -> BotUserMetadata:
         """Parses a bot user metadata.
@@ -2770,6 +2801,91 @@ class Parser:
         """
         return _NONE_EMBED_SPECIAL
 
+    def parse_oauth2_access_token(self, payload: raw.OAuth2TokenExchangeResponse, /) -> OAuth2AccessToken:
+        """Parses an OAuth2 access token object.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The OAuth2 access token payload to parse.
+
+        Returns
+        -------
+        :class:`OAuth2AccessToken`
+            The parsed OAuth2 access token.
+        """
+        return OAuth2AccessToken(
+            state=self.state,
+            access_token=payload['access_token'],
+            refresh_token=payload.get('refresh_token'),
+            token_type=payload['token_type'],
+            scopes=payload['scope'].split(' '),
+        )
+
+    def parse_oauth2_authorization(
+        self,
+        payload: typing.Union[
+            raw.AuthorizedBot,
+            raw.AuthorizedBotsResponse,
+        ],
+        /,
+    ) -> OAuth2Authorization:
+        """Parses an OAuth2 authorization object.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The OAuth2 authorization payload to parse.
+
+        Returns
+        -------
+        :class:`OAuth2Authorization`
+            The parsed OAuth2 authorization.
+        """
+
+        if 'authorized_bot' in payload:
+            bot = self.parse_public_bot(payload['public_bot'])
+            payload = payload['authorized_bot']
+        else:
+            bot = None
+
+        id = payload['_id']
+        deauthorized_at = payload.get('deauthorized_at')
+
+        return OAuth2Authorization(
+            state=self.state,
+            bot_id=id['bot'],
+            bot=bot,
+            user_id=id['user'],
+            created_at=_parse_dt(payload['created_at']),
+            deauthorized_at=None if deauthorized_at is None else _parse_dt(deauthorized_at),
+            scopes=payload['scope'].split(' '),
+        )
+
+    def parse_oauth2_scope_reasoning(self, payload: raw.OAuth2ScopeReasoning, /) -> OAuth2ScopeReasoning:
+        """Parses an OAuth2 scope reasoning object.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The OAuth2 scope reasoning payload to parse.
+
+        Returns
+        -------
+        :class:`OAuth2ScopeReasoning`
+            The parsed OAuth2 scope reasoning.
+        """
+        return OAuth2ScopeReasoning(
+            allow=payload['allow'],
+            deny=payload['deny'],
+        )
+
     def parse_own_user(self, payload: raw.User, /) -> OwnUser:
         """Parses an own user object.
 
@@ -2924,6 +3040,29 @@ class Parser:
             effective_at=_parse_dt(payload['effective_time']),
             description=payload['description'],
             url=payload['url'],
+        )
+
+    def parse_possible_oauth2_authorization(
+        self, payload: raw.OAuth2AuthorizeInfoResponse, /
+    ) -> PossibleOAuth2Authorization:
+        """Parses a possible OAuth2 authorization object.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The possible OAuth2 authorization payload to parse.
+
+        Returns
+        -------
+        :class:`PossibleOAuth2Authorization`
+            The parsed possible OAuth2 authorization.
+        """
+        return PossibleOAuth2Authorization(
+            bot=self.parse_public_bot(payload['bot']),
+            user=self.parse_user(payload['user']),
+            allowed_scopes={k: self.parse_oauth2_scope_reasoning(v) for k, v in payload['allowed_scopes'].items()},
         )
 
     def parse_public_bot(self, payload: raw.PublicBot, /) -> PublicBot:

@@ -84,10 +84,11 @@ bot = commands.Bot(
     # First argument is Client
     parser=lambda _, state, /: MyParser(state=state),
     # Second argument is State
-    shard=lambda client, _, /: pyvolt.ShardImpl(
+    shard=lambda client, state, /: pyvolt.ShardImpl(
         token=client.token,
         bot=client.bot,
         handler=MyClientEventHandler(client),
+        state=state,
     ),
 )
 
