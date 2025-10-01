@@ -85,7 +85,7 @@ class OAuth2ScopeReasoning:
 @define(slots=True)
 class PossibleOAuth2Authorization:
     """Represents a possible OAuth2 authorization.
-    
+
     .. versionadded:: 1.2
     """
 
@@ -102,7 +102,7 @@ class PossibleOAuth2Authorization:
 @define(slots=True)
 class OAuth2AccessToken:
     """Represents result of exchanging OAuth2 code, or refreshing token.
-    
+
     .. versionadded:: 1.2
     """
 
@@ -173,7 +173,7 @@ class OAuth2AccessToken:
 @define(slots=True)
 class OAuth2Authorization:
     """Represents OAuth2 bot authorization.
-    
+
     .. versionadded:: 1.2
     """
 

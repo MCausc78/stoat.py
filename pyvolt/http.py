@@ -4558,7 +4558,7 @@ class HTTPClient:
             This can only be used by non-bot accounts.
 
         .. versionadded:: 1.2
-        
+
         Parameters
         ----------
         client: ULIDOr[:class:`BaseBot`]
@@ -8288,10 +8288,13 @@ class HTTPClient:
             http_overrides=http_overrides,
             params=params,
         )
-        return [self.state.parser.parse_server(
-            d,  # type: ignore
-            (not populate_channels, d['channels']),  # type: ignore
-        ) for d in resp]
+        return [
+            self.state.parser.parse_server(
+                d,  # type: ignore
+                (not populate_channels, d['channels']),  # type: ignore
+            )
+            for d in resp
+        ]
 
     async def get_user(
         self, user: ULIDOr[BaseUser], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
