@@ -1,7 +1,7 @@
 import asyncio
 
 import json
-import pyvolt
+import stoat
 
 import revolt
 import revolt.http
@@ -22,11 +22,11 @@ async def bench_members():
     with open('./tests/data/users/user.json', 'r') as fp:
         user_payload = json.load(fp)
 
-    state = pyvolt.State()
-    parser = pyvolt.Parser(state=state)
+    state = stoat.State()
+    parser = stoat.Parser(state=state)
     state.setup(parser=parser)
 
-    def using_pyvolt():
+    def using_stoatpy():
         return parser.parse_member(payload)
 
     import aiohttp
@@ -62,11 +62,11 @@ async def bench_members():
     def using_voltage():
         return voltage.Member(data=payload, server=vpy_server, cache=vpy_cache)
 
-    time_pyvolt = timeit.timeit(using_pyvolt,     number=100000)
+    time_stoatpy = timeit.timeit(using_stoatpy,     number=100000)
     time_revoltpy = timeit.timeit(using_revoltpy, number=100000)
     time_voltage = timeit.timeit(using_voltage,   number=100000)
 
-    print(f"[Member] Time using pyvolt ----: {time_pyvolt:.6f} seconds")
+    print(f"[Member] Time using stoat.py --: {time_stoatpy:.6f} seconds")
     print(f"[Member] Time using revolt.py -: {time_revoltpy:.6f} seconds")
     print(f"[Member] Time using voltage ---: {time_voltage:.6f} seconds")
 

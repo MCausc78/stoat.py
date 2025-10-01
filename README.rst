@@ -26,27 +26,27 @@ To install the library, you can just run the following command:
 .. code:: sh
 
     # Linux/macOS
-    python3 -m pip install -U pyvolt-re
+    python3 -m pip install -U stoat.py
 
     # Windows
-    py -3 -m pip install -U pyvolt-re
+    py -3 -m pip install -U stoat.py
 
 Or to install alpha master (with all new features):
 
 .. code:: sh
 
     # Linux/macOS
-    python3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+    python3 -m pip install -U git+https://github.com/MCausc78/stoat.py@master
 
     # Windows
-    py -3 -m pip install -U git+https://github.com/MCausc78/pyvolt@master
+    py -3 -m pip install -U git+https://github.com/MCausc78/stoat.py@master
 
 Quick Example
 -------------
 
 .. code:: py
 
-    from pyvolt import Client
+    from stoat import Client
 
     class MyClient(Client):
         async def on_ready(self, _, /):
@@ -69,7 +69,7 @@ Bot Example
 
 .. code:: py
 
-    from pyvolt.ext import commands
+    from stoat.ext import commands
 
     # Pass `self_bot=True` to make your bot listen only to you
     bot = commands.Bot(command_prefix='!')
@@ -86,9 +86,9 @@ Bot Example
 Links
 ------
 
-- `Documentation <https://pyvolt.readthedocs.io/en/latest/index.html>`_
-- `Official Revolt Server <https://rvlt.gg/ZZQb4sxx>`_
-- `Revolt API <https://rvlt.gg/API>`_
+- `Documentation <https://stoatpy.readthedocs.io/en/latest/index.html>`_
+- `Official Stoat Server <https://stt.gg/ZZQb4sxx>`_
+- `Stoat API <https://stoat.gg/API>`_
 
 Why Not
 -------

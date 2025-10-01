@@ -1,11 +1,11 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 Discovery
 =========
 
 The following section documents everything related to Discovery.
 
-Discovery is a feature on Revolt, that allows users to advertise their servers.
+Discovery is a feature on Stoat, that allows users to advertise their servers.
 
 Clients
 -------

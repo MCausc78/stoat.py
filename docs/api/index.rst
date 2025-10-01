@@ -1,9 +1,9 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 API Reference
 =============
 
-The following section outlines the API of pyvolt.
+The following section outlines the API of stoat.py.
 
 .. note::
 
@@ -11,12 +11,12 @@ The following section outlines the API of pyvolt.
     in an output independent way.  If the logging module is not configured,
     these logs will not be output anywhere.  See :ref:`logging_setup` for
     more information on how to set up and use the logging module with
-    pyvolt.
+    stoat.py.
 
 Version Related Info
 --------------------
 
-There are two main ways to query version information about the library. There is no currently guarantees as Revolt API is still in beta.
+There are two main ways to query version information about the library. There is no currently guarantees as Stoat API is still in beta.
 
 .. For guarantees, check :ref:`version_guarantees`.
 
@@ -162,7 +162,7 @@ Parser
 .. autoclass:: Parser
     :members:
 
-.. _revolt-api-permissions-calculator:
+.. _stoat-api-permissions-calculator:
 
 Permissions Calculator
 ----------------------
@@ -179,7 +179,7 @@ Permissions Calculator
 
 .. autofunction:: calculate_user_permissions
 
-.. _revolt-api-utils:
+.. _stoat-api-utils:
 
 Utility Functions
 -----------------
@@ -206,24 +206,24 @@ Abstract Base Classes
 Messageable
 ~~~~~~~~~~~
 
-.. attributetable:: pyvolt.abc.Messageable
+.. attributetable:: stoat.abc.Messageable
 
-.. autoclass:: pyvolt.abc.Messageable()
+.. autoclass:: stoat.abc.Messageable()
     :members:
     :exclude-members: typing
 
-    .. automethod:: pyvolt.abc.Messageable.typing
+    .. automethod:: stoat.abc.Messageable.typing
         :async-with:
 
 Connectable
 ~~~~~~~~~~~
 
-.. attributetable:: pyvolt.abc.Connectable
+.. attributetable:: stoat.abc.Connectable
 
-.. autoclass:: pyvolt.abc.Connectable
+.. autoclass:: stoat.abc.Connectable
     :members:
 
-.. _revolt-api-models:
+.. _stoat-api-models:
 
 Models
 ------
@@ -336,7 +336,7 @@ PolicyChange
 .. autoclass:: PolicyChange
     :members:
 
-.. _revolt-api-exceptions:
+.. _stoat-api-exceptions:
 
 Exceptions
 ----------

@@ -1,7 +1,7 @@
 import asyncio
 
 import json
-import pyvolt
+import stoat
 
 import revolt
 import revolt.http
@@ -16,11 +16,11 @@ async def bench_users():
     with open('./tests/data/users/user.json', 'r') as fp:
         payload = json.load(fp)
 
-    state = pyvolt.State()
-    parser = pyvolt.Parser(state=state)
+    state = stoat.State()
+    parser = stoat.Parser(state=state)
     state.setup(parser=parser)
 
-    def using_pyvolt():
+    def using_stoatpy():
         return parser.parse_user(payload)
 
     import aiohttp
@@ -29,7 +29,7 @@ async def bench_users():
     api_info: typing.Any = {
         'features': {
             'autumn': {
-                'url': 'https://autumn.revolt.chat/'
+                'url': 'https://cdn.stoatusercontent.com/'
             }
         }
     }
@@ -50,11 +50,11 @@ async def bench_users():
     def using_voltage():
         return voltage.User(data=payload, cache=vpy_cache)
 
-    time_pyvolt = timeit.timeit(using_pyvolt,     number=100_000)
+    time_stoatpy = timeit.timeit(using_stoatpy,     number=100_000)
     time_revoltpy = timeit.timeit(using_revoltpy, number=100_000)
     time_voltage = timeit.timeit(using_voltage,   number=100_000)
 
-    print(f"[User] Time using pyvolt ----: {time_pyvolt:.6f} seconds")
+    print(f"[User] Time using stoat.py --: {time_stoatpy:.6f} seconds")
     print(f"[User] Time using revolt.py -: {time_revoltpy:.6f} seconds")
     print(f"[User] Time using voltage ---: {time_voltage:.6f} seconds")
 

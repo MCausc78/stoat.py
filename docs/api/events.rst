@@ -1,4 +1,4 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 Events
 ======
@@ -8,7 +8,7 @@ The following section documents everything related to events.
 Models
 ------
 
-.. _revolt-api-events:
+.. _stoat-api-events:
 
 Events
 ------

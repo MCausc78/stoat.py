@@ -1,4 +1,4 @@
-## Contributing to pyvolt
+## Contributing to stoat.py
 
 First off, thanks for taking the time to contribute. It makes the library muuuuch better.
 

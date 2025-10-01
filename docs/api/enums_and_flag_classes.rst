@@ -1,11 +1,11 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 Enums and Flag Classes
 ======================
 
 The following section documents everything related to enums and flags.
 
-.. _revolt-api-enums:
+.. _stoat-api-enums:
 
 Enumerations
 ------------
@@ -242,7 +242,7 @@ OAuth2
         The token can be used to connect to Gateway on user's behalf.
     .. attribute:: full
 
-        The token can be used to access entire Revolt HTTP API.
+        The token can be used to access entire Stoat HTTP API.
 
 Reporting
 ~~~~~~~~~
@@ -571,28 +571,28 @@ Settings
 
 .. class:: AndroidTheme
 
-    Specifies client theme for Revolt Android.
+    Specifies client theme for Stoat Android.
 
     .. attribute:: revolt
         
-        Use Revolt colors.
+        Use Stoat colors.
     .. attribute:: light
         
-        Represents the Light theme on Revolt Android.
+        Represents the Light theme on Stoat Android.
     .. attribute:: pure_black
         
-        Represents the AMOLED theme on Revolt Android.
+        Represents the AMOLED theme on Stoat Android.
     .. attribute:: system
         
         Use system theme.
     .. attribute:: material_you
         
-        Represents the Material You theme on Revolt Android.
+        Represents the Material You theme on Stoat Android.
 
 .. class:: AndroidProfilePictureShape
 
     Specifies rounding grade for profile pictures, including in chat and profiles.
-    This applies to all users on Revolt Android.
+    This applies to all users on Stoat Android.
 
     .. attribute:: sharp
     
@@ -606,7 +606,7 @@ Settings
 
 .. class:: AndroidMessageReplyStyle
 
-    Specifies a way to quickly reply on Revolt Android.
+    Specifies a way to quickly reply on Stoat Android.
 
     .. attribute:: long_press_to_reply
 
@@ -680,10 +680,10 @@ Settings
 
     .. attribute:: light
         
-        Represents the Light theme on Revolt.
+        Represents the Light theme on Stoat.
     .. attribute:: dark
         
-        Represents the Dark theme on Revolt.
+        Represents the Dark theme on Stoat.
 
 .. class:: ReviteFont
     
@@ -850,7 +850,7 @@ Users
 
         User is not of minimum age to use the platform.
 
-.. _revolt-api-flags:
+.. _stoat-api-flags:
 
 Flag Classes
 ------------

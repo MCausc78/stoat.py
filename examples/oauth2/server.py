@@ -5,7 +5,7 @@ from collections import Counter
 import json
 
 from quart import Quart, make_response, redirect, render_template, request
-import pyvolt
+import stoat
 
 app = Quart(__name__, template_folder='examples/oauth2/templates')
 
@@ -17,11 +17,11 @@ async def index():
 
 @app.while_serving
 async def lifespan():
-    state = pyvolt.State()
+    state = stoat.State()
 
-    async with pyvolt.HTTPClient(state=state).attach() as http:
+    async with stoat.HTTPClient(state=state).attach() as http:
         app.config.from_object('examples.oauth2.config.Config')
-        app.revolt_http = http  # type: ignore
+        app.stoat_http = http  # type: ignore
         yield
 
 
@@ -36,8 +36,8 @@ async def start_oauth2_flow():
 
 @app.get('/oauth2/complete')
 async def complete_oauth2_flow():
-    http = app.revolt_http  # type: ignore
-    assert isinstance(http, pyvolt.HTTPClient)
+    http = app.stoat_http  # type: ignore
+    assert isinstance(http, stoat.HTTPClient)
 
     if 'code' in request.args:
         code = request.args['code']
@@ -46,7 +46,7 @@ async def complete_oauth2_flow():
             code=code,
             client=client_id,
             client_secret=app.config['CLIENT_SECRET'],
-            grant_type=pyvolt.OAuth2GrantType.authorization_code,
+            grant_type=stoat.OAuth2GrantType.authorization_code,
         )
         token = result.access_token
     else:
@@ -54,17 +54,17 @@ async def complete_oauth2_flow():
         if not token:
             return redirect('/oauth2/start')
 
-    user = await http.get_me(http_overrides=pyvolt.HTTPOverrideOptions(bot=False, oauth2=True, token=token))
+    user = await http.get_me(http_overrides=stoat.HTTPOverrideOptions(bot=False, oauth2=True, token=token))
 
     relationship_status_to_count = Counter([r.status for r in user.relations.values()])
     payload = {
         'id': user.id,
         'name': user.name,
         'discriminator': user.discriminator,
-        'blocked_count': relationship_status_to_count.get(pyvolt.RelationshipStatus.blocked, 0),
-        'friend_count': relationship_status_to_count.get(pyvolt.RelationshipStatus.friend, 0),
-        'incoming_friend_count': relationship_status_to_count.get(pyvolt.RelationshipStatus.incoming, 0),
-        'outgoing_friend_count': relationship_status_to_count.get(pyvolt.RelationshipStatus.outgoing, 0),
+        'blocked_count': relationship_status_to_count.get(stoat.RelationshipStatus.blocked, 0),
+        'friend_count': relationship_status_to_count.get(stoat.RelationshipStatus.friend, 0),
+        'incoming_friend_count': relationship_status_to_count.get(stoat.RelationshipStatus.incoming, 0),
+        'outgoing_friend_count': relationship_status_to_count.get(stoat.RelationshipStatus.outgoing, 0),
     }
 
     response = await make_response(

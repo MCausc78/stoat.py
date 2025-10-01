@@ -3,19 +3,19 @@ from __future__ import annotations
 import json
 
 import pyotp
-import pyvolt
+import stoat
 
-bot = pyvolt.Client()
+bot = stoat.Client()
 
 token = 'token'
 password = 'password'
 
 
-@bot.on(pyvolt.MessageCreateEvent)
-async def on_message(event: pyvolt.MessageCreateEvent) -> None:
+@bot.on(stoat.MessageCreateEvent)
+async def on_message(event: stoat.MessageCreateEvent) -> None:
     message = event.message
 
-    if message.author.relationship is not pyvolt.RelationshipStatus.user:
+    if message.author.relationship is not stoat.RelationshipStatus.user:
         return
 
     if message.content == 'disable mfa':
@@ -37,7 +37,7 @@ async def on_message(event: pyvolt.MessageCreateEvent) -> None:
         totp = pyotp.TOTP(secret)
         await message.reply(f'MFA secret: {secret}')
         code = totp.now()
-        await bot.http.enable_totp_mfa(pyvolt.ByTOTP(code))
+        await bot.http.enable_totp_mfa(stoat.ByTOTP(code))
         await message.reply('Turned on MFA.')
 
 

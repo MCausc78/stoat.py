@@ -1,13 +1,13 @@
 :orphan:
 
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 .. _faq:
 
 Frequently Asked Questions
 ==========================
 
-This is a list of Frequently Asked Questions regarding using ``pyvolt`` and its extension modules. Feel free to suggest a
+This is a list of Frequently Asked Questions regarding using ``stoat.py`` and its extension modules. Feel free to suggest a
 new question or submit one via pull requests.
 
 .. contents:: Questions
@@ -39,13 +39,13 @@ General
 
 General questions regarding library usage belong here.
 
-Why my :attr:`pyvolt.Server.members` is empty/does not match reality?
+Why my :attr:`stoat.Server.members` is empty/does not match reality?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You either disabled member cache, or did not setup chunking. See `this page <ext/chunking/index>` for how to do this.
 
-Why :attr:`pyvolt.Client.servers` is empty when I access it through :class:`~pyvolt.ReadyEvent`?
+Why :attr:`stoat.Client.servers` is empty when I access it through :class:`~stoat.ReadyEvent`?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Unlike discord.py, this library does not populate cache during dispatching an event. Consider using
-:attr:`pyvolt.ReadyEvent.servers` to retrieve servers in :class:`~pyvolt.ReadyEvent`.
+:attr:`stoat.ReadyEvent.servers` to retrieve servers in :class:`~stoat.ReadyEvent`.

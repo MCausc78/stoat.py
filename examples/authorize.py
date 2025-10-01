@@ -4,17 +4,17 @@ from base64 import urlsafe_b64encode
 from hashlib import sha256
 from os import urandom
 
-import pyvolt
+import stoat
 import yarl
 
-client = pyvolt.Client(token='token', bot=False)
+client = stoat.Client(token='token', bot=False)
 
 client_id = '01JNEQ9R0YZAQKT8JJTKMCJ8H3'
 redirect_uri = 'http://127.0.0.1:5000/oauth2/complete'
 
 
-@client.on(pyvolt.ReadyEvent)
-async def on_ready(event: pyvolt.ReadyEvent) -> None:
+@client.on(stoat.ReadyEvent)
+async def on_ready(event: stoat.ReadyEvent) -> None:
     event.process()
     event.cancel()
 
@@ -25,15 +25,15 @@ async def on_ready(event: pyvolt.ReadyEvent) -> None:
 async def authorize_non_public_client() -> None:
     raw_url = await client.http.authorize(
         client_id,
-        scopes=[pyvolt.OAuth2Scope.identify],
+        scopes=[stoat.OAuth2Scope.identify],
         redirect_uri=redirect_uri,
-        response_type=pyvolt.OAuth2ResponseType.token,
+        response_type=stoat.OAuth2ResponseType.token,
     )
     url = yarl.URL(raw_url)
     token = url.query['code']
 
     print(f'Authorized bot (ID: {client_id}, non public client) and received a token: {token}')
-    await client.http.get_me(http_overrides=pyvolt.HTTPOverrideOptions(bot=False, oauth2=True, token=token))
+    await client.http.get_me(http_overrides=stoat.HTTPOverrideOptions(bot=False, oauth2=True, token=token))
 
 
 async def authorize_public_client() -> None:
@@ -42,21 +42,24 @@ async def authorize_public_client() -> None:
 
     raw_url = await client.http.authorize(
         client_id,
-        scopes=[pyvolt.OAuth2Scope.identify],
+        scopes=[stoat.OAuth2Scope.identify],
         redirect_uri=redirect_uri,
-        response_type=pyvolt.OAuth2ResponseType.code,
+        response_type=stoat.OAuth2ResponseType.code,
         code_challenge=code_challenge,
-        code_challenge_method=pyvolt.OAuth2CodeChallengeMethod.s256,
+        code_challenge_method=stoat.OAuth2CodeChallengeMethod.s256,
     )
     url = yarl.URL(raw_url)
     code = url.query['code']
     result = await client.http.exchange_token(
-        code, client=client_id, grant_type=pyvolt.OAuth2GrantType.authorization_code, code_verifier=code_verifier
+        code=code,
+        client=client_id,
+        grant_type=stoat.OAuth2GrantType.authorization_code,
+        code_verifier=code_verifier,
     )
     token = result.access_token
 
     print(f'Authorized bot (ID: {client_id}, public client) and received a token: {token}')
-    await client.http.get_me(http_overrides=pyvolt.HTTPOverrideOptions(bot=False, oauth2=True, token=token))
+    await client.http.get_me(http_overrides=stoat.HTTPOverrideOptions(bot=False, oauth2=True, token=token))
 
 
 client.run()

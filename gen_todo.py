@@ -36,7 +36,7 @@ def main() -> None:
     RE_TODO = re.compile(r"TODO: (.*)")
 
     todos = {}
-    for filename in glob("./pyvolt/**.py", recursive=True):
+    for filename in glob("./stoat/**.py", recursive=True):
         with open(filename, "r") as fp:
             todos.setdefault(filename, [])
             for i, line in enumerate(fp):
@@ -54,12 +54,12 @@ def main() -> None:
                 continue
 
             for item in items:
-                file = file[file.find("pyvolt") :].replace("\\", "/")
+                file = file[file.find("stoat") :].replace("\\", "/")
                 span = item[1]
                 fragment = f"L{item[0]}C{span[0]}-L{item[0]}C{span[1]}"
                 todo_md.write(
                     f"* {item[2]}\n\n"
-                    f"  Source: https://github.com/MCausc78/pyvolt/blob/{commit}/{file}#{fragment}\n\n"
+                    f"  Source: https://github.com/MCausc78/stoat.py/blob/{commit}/{file}#{fragment}\n\n"
                 )
 
 

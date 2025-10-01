@@ -2,33 +2,33 @@
 
 * TODO: Remove when backend will tell us to update all channels. (ServerUpdate event)
 
-  Source: https://github.com/MCausc78/pyvolt/blob/64cf1130297fd15aef8dffe07962a5f17bb2e80d/pyvolt/events.py#L501C11-L501C94
+  Source: https://github.com/MCausc78/stoat.py/blob/d9c14ba90d5d1772f2c7ecd95653959e25d44849/stoat/events.py#L511C11-L511C94
 
 * TODO: Maybe ignore @everyone and @online pings in DM and groups?
 
-  Source: https://github.com/MCausc78/pyvolt/blob/64cf1130297fd15aef8dffe07962a5f17bb2e80d/pyvolt/events.py#L817C15-L817C79
+  Source: https://github.com/MCausc78/stoat.py/blob/d9c14ba90d5d1772f2c7ecd95653959e25d44849/stoat/events.py#L827C15-L827C79
 
 * TODO: A Cache function to remove role from all members
 
-  Source: https://github.com/MCausc78/pyvolt/blob/64cf1130297fd15aef8dffe07962a5f17bb2e80d/pyvolt/events.py#L1864C11-L1864C65
+  Source: https://github.com/MCausc78/stoat.py/blob/d9c14ba90d5d1772f2c7ecd95653959e25d44849/stoat/events.py#L1874C11-L1874C65
 
 * TODO: Handle 10053?
 
-  Source: https://github.com/MCausc78/pyvolt/blob/64cf1130297fd15aef8dffe07962a5f17bb2e80d/pyvolt/http.py#L970C19-L970C38
+  Source: https://github.com/MCausc78/stoat.py/blob/d9c14ba90d5d1772f2c7ecd95653959e25d44849/stoat/http.py#L1007C19-L1007C38
 
-* TODO: Remove when Revolt will fix this
+* TODO: Remove when Stoat will fix this
 
-  Source: https://github.com/MCausc78/pyvolt/blob/64cf1130297fd15aef8dffe07962a5f17bb2e80d/pyvolt/http.py#L1231C11-L1231C49
+  Source: https://github.com/MCausc78/stoat.py/blob/d9c14ba90d5d1772f2c7ecd95653959e25d44849/stoat/http.py#L1273C11-L1273C48
 
-* TODO: Remove when Revolt will fix this
+* TODO: Remove when Stoat will fix this
 
-  Source: https://github.com/MCausc78/pyvolt/blob/64cf1130297fd15aef8dffe07962a5f17bb2e80d/pyvolt/http.py#L1384C11-L1384C49
+  Source: https://github.com/MCausc78/stoat.py/blob/d9c14ba90d5d1772f2c7ecd95653959e25d44849/stoat/http.py#L1440C11-L1440C48
 
 * TODO: Document OperationFailed better above
 
-  Source: https://github.com/MCausc78/pyvolt/blob/64cf1130297fd15aef8dffe07962a5f17bb2e80d/pyvolt/http.py#L9727C11-L9727C54
+  Source: https://github.com/MCausc78/stoat.py/blob/d9c14ba90d5d1772f2c7ecd95653959e25d44849/stoat/http.py#L10935C11-L10935C54
 
 * TODO: Maybe add internal_content: Optional[str] and a property for backwards compatibilty?
 
-  Source: https://github.com/MCausc78/pyvolt/blob/64cf1130297fd15aef8dffe07962a5f17bb2e80d/pyvolt/message.py#L4186C11-L4186C101
+  Source: https://github.com/MCausc78/stoat.py/blob/d9c14ba90d5d1772f2c7ecd95653959e25d44849/stoat/message.py#L4186C11-L4186C101
 

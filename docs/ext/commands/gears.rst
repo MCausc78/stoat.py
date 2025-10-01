@@ -1,4 +1,4 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 .. _ext_commands_gears:
 
@@ -20,7 +20,7 @@ It should be noted that gears are typically used alongside with :ref:`ext_comman
 Quick Example
 -------------
 
-This example gear defines a ``Greetings`` category for your commands, with a single :ref:`command <ext_commands_commands>` named ``hello`` as well as a listener to listen to an :ref:`Event <revolt-api-events>`.
+This example gear defines a ``Greetings`` category for your commands, with a single :ref:`command <ext_commands_commands>` named ``hello`` as well as a listener to listen to an :ref:`Event <stoat-api-events>`.
 
 .. code-block:: python3
 
@@ -30,7 +30,7 @@ This example gear defines a ``Greetings`` category for your commands, with a sin
             self._last_member = None
 
         @commands.Gear.listener()
-        async def on_member_join(self, event: pyvolt.ServerMemberJoinEvent):
+        async def on_member_join(self, event: stoat.ServerMemberJoinEvent):
             member = event.member
             server = member.server
 
@@ -45,7 +45,7 @@ This example gear defines a ``Greetings`` category for your commands, with a sin
             await member.state.http.send_message(channel, f'Welcome {member.mention}.')
 
         @commands.command()
-        async def hello(self, ctx, *, member: typing.Optional[pyvolt.Member] = None):
+        async def hello(self, ctx, *, member: typing.Optional[stoat.Member] = None):
             """Says hello"""
             member = member or ctx.author
             if self._last_member is None or self._last_member.id != member.id:

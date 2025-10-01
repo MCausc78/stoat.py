@@ -3,15 +3,15 @@ from __future__ import annotations
 import typing
 
 from attrs import define, field
-import pyvolt
-from pyvolt.ext import commands
+import stoat
+from stoat.ext import commands
 
-# Of course, that's just a joke and that event (and route) doesn't actually exist. It's here only to illustrate capabilities of pyvolt
+# Of course, that's just a joke and that event (and route) doesn't actually exist. It's here only to illustrate capabilities of stoat.py
 # how customizable it is :)
 
 
 @define(slots=True)
-class ReleaseBeesEvent(pyvolt.ShardEvent):
+class ReleaseBeesEvent(stoat.ShardEvent):
     """Dispatched when bees are released to an user."""
 
     by_id: str = field(repr=True, kw_only=True)
@@ -27,14 +27,14 @@ class ClientReleaseBeesEvent(typing.TypedDict):
     user: str
 
 
-class MyClientEventHandler(pyvolt.ClientEventHandler):
+class MyClientEventHandler(stoat.ClientEventHandler):
     __slots__ = ()
 
-    def __init__(self, client: pyvolt.Client) -> None:
+    def __init__(self, client: stoat.Client) -> None:
         super().__init__(client)
         self.handlers['ReleaseBees'] = self.handle_release_bees
 
-    def handle_release_bees(self, shard: pyvolt.Shard, payload: ClientReleaseBeesEvent, /) -> None:
+    def handle_release_bees(self, shard: stoat.Shard, payload: ClientReleaseBeesEvent, /) -> None:
         """Handle ``ReleaseBees`` WebSocket event.
 
         Parameters
@@ -50,10 +50,10 @@ class MyClientEventHandler(pyvolt.ClientEventHandler):
             self.dispatch(event)
 
 
-class MyParser(pyvolt.Parser):
+class MyParser(stoat.Parser):
     __slots__ = ()
 
-    def parse_release_bees_event(self, shard: pyvolt.Shard, payload: ClientReleaseBeesEvent, /) -> ReleaseBeesEvent:
+    def parse_release_bees_event(self, shard: stoat.Shard, payload: ClientReleaseBeesEvent, /) -> ReleaseBeesEvent:
         """Parses a ReleaseBees event.
 
         Parameters
@@ -75,16 +75,16 @@ class MyParser(pyvolt.Parser):
         )
 
 
-# A pyvolt.routes.Route is a template; when you compile it, {user_id} will be replaced by user ID in actual API request
-USERS_RELEASE_BEES: typing.Final[pyvolt.routes.Route] = pyvolt.routes.Route('POST', '/users/{user_id}/release_bees')
+# A stoat.routes.Route is a template; when you compile it, {user_id} will be replaced by user ID in actual API request
+USERS_RELEASE_BEES: typing.Final[stoat.routes.Route] = stoat.routes.Route('POST', '/users/{user_id}/release_bees')
 
-# If you are going to use pyvolt.Client, the only difference is removal of ``command_prefix``
+# If you are going to use stoat.Client, the only difference is removal of ``command_prefix``
 bot = commands.Bot(
     command_prefix='!',
     # First argument is Client
     parser=lambda _, state, /: MyParser(state=state),
     # Second argument is State
-    shard=lambda client, state, /: pyvolt.ShardImpl(
+    shard=lambda client, state, /: stoat.ShardImpl(
         token=client.token,
         bot=client.bot,
         handler=MyClientEventHandler(client),
@@ -99,7 +99,7 @@ async def on_release_bees(event: ReleaseBeesEvent) -> None:
 
 
 @bot.command(name='release-bees')
-async def release_bees(ctx: commands.Context[commands.Bot], user: pyvolt.User) -> None:
+async def release_bees(ctx: commands.Context[commands.Bot], user: stoat.User) -> None:
     """Release bees at specified user as bot."""
 
     # To call a route you must compile it.

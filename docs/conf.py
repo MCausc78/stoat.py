@@ -22,13 +22,13 @@ import typing
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.append(os.path.abspath('extensions'))
 
-project = 'pyvolt'
+project = 'stoat'
 copyright = '2024, MCausc78'
 author = 'MCausc78'
 
 
 version = ''
-with open('../pyvolt/__init__.py', 'r') as fp:
+with open('../stoat/__init__.py', 'r') as fp:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fp.read(), re.MULTILINE).group(1)  # type: ignore
 
 def get_latest_commit():
@@ -79,10 +79,10 @@ autodoc_typehints = 'none'
 napoleon_custom_sections = [('Raises', 'returns_style')]
 
 extlinks = {
-    'issue': ('https://github.com/MCausc78/pyvolt/issues/%s', 'GH-%s'),
+    'issue': ('https://github.com/MCausc78/stoat.py/issues/%s', 'GH-%s'),
 }
 
-spec = find_spec('pyvolt')
+spec = find_spec('stoat')
 
 if spec is None or spec.origin is None:
     raise RuntimeError("Unable to find module spec")
@@ -114,7 +114,7 @@ def linkcode_resolve(domain: str, info: dict[str, typing.Any]) -> typing.Optiona
         return None
 
     path = f'{path}#L{lineno}-L{lineno + len(src) - 1}'
-    return f'https://github.com/MCausc78/pyvolt/blob/' + git_commit + '/pyvolt/' + path
+    return f'https://github.com/MCausc78/stoat/blob/' + git_commit + '/stoat/' + path
 
 
 # Links used for cross-referencing stuff in other documentation
@@ -147,17 +147,17 @@ html_static_path = ['_static']
 
 
 html_context = {
-    'revolt_invite': 'https://rvlt.gg/ZZQb4sxx',
-    'pyvolt_extensions': [
-        ('pyvolt.ext.commands', 'ext/commands'),
+    'stoat_invite': 'https://rvlt.gg/ZZQb4sxx',
+    'stoat_extensions': [
+        ('stoat.ext.commands', 'ext/commands'),
     ],
 }
 
 resource_links = {
-    'revolt': 'https://rvlt.gg/ZZQb4sxx',
-    'issues': 'https://github.com/MCausc78/pyvolt/issues',
-    'discussions': 'https://github.com/MCausc78/pyvolt/discussions',
-    'examples': f'https://github.com/MCausc78/pyvolt/tree/{branch}/examples',
+    'stoat': 'https://rvlt.gg/ZZQb4sxx',
+    'issues': 'https://github.com/MCausc78/stoat.py/issues',
+    'discussions': 'https://github.com/MCausc78/stoat.py/discussions',
+    'examples': f'https://github.com/MCausc78/stoat.py/tree/{branch}/examples',
 }
 
 def setup(app):

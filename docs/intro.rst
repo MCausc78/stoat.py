@@ -1,19 +1,19 @@
 :orphan:
 
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 .. _intro:
 
 Introduction
 ============
 
-This is the documentation for pyvolt, a library for Python to aid
-in creating bots that utilize the Revolt API.
+This is the documentation for stoat.py, a library for Python to aid
+in creating bots that utilize the Stoat API.
 
 Prerequisites
 -------------
 
-pyvolt works with Python 3.10 or higher. Support for earlier versions of Python
+stoat.py works with Python 3.10 or higher. Support for earlier versions of Python
 is not provided. Python 2.7 or lower is not supported. Python 3.9 or lower is not supported.
 
 
@@ -24,16 +24,16 @@ Installing
 
 You can get the library directly from PyPI: ::
 
-    python3 -m pip install -U pyvolt-re
+    python3 -m pip install -U stoat.py
 
 If you are using Windows, then the following should be used instead: ::
 
-    py -3 -m pip install -U pyvolt-re
+    py -3 -m pip install -U stoat.py
 
 
-To get voice support, you should use ``pyvolt-re[voice]`` instead of ``pyvolt-re``, e.g. ::
+To get voice support, you should use ``stoat.py[voice]`` instead of ``stoat.py``, e.g. ::
 
-    python3 -m pip install -U pyvolt-re[voice,speed]
+    python3 -m pip install -U stoat.py[voice,speed]
 
 Remember to check your permissions!
 
@@ -72,7 +72,7 @@ However, for the quick and dirty:
 
     .. code-block:: shell
 
-        $ pip install -U pyvolt-re
+        $ pip install -U stoat.py
 
 Congratulations. You now have a virtual environment all set up.
 
@@ -84,7 +84,7 @@ Congratulations. You now have a virtual environment all set up.
 Basic Concepts
 --------------
 
-pyvolt revolves around the concept of :ref:`events <revolt-api-events>`.
+stoat.py revolves around the concept of :ref:`events <stoat-api-events>`.
 An event is something you listen to and then respond to. For example, when a message
 happens, you will receive an event about it that you can respond to.
 
@@ -92,9 +92,9 @@ A quick example to showcase how events work:
 
 .. code-block:: python3
 
-    import pyvolt
+    import stoat
 
-    class MyClient(pyvolt.Client):
+    class MyClient(stoat.Client):
         __slots__ = ()
         
         async def on_ready(self, event, /):

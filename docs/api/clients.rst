@@ -1,9 +1,9 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 Clients
 =======
 
-The following section documents everything related to clients. Clients in this library are primary way to make bots and interact with Revolt API.
+The following section documents everything related to clients. Clients in this library are primary way to make bots and interact with Stoat API.
 
 Clients
 -------
@@ -114,17 +114,17 @@ HTTPWebSocket
 Route
 ~~~~~
 
-.. attributetable:: pyvolt.routes.Route
+.. attributetable:: stoat.routes.Route
 
-.. autoclass:: pyvolt.routes.Route
+.. autoclass:: stoat.routes.Route
     :members:
 
 CompiledRoute
 ~~~~~~~~~~~~~
 
-.. attributetable:: pyvolt.routes.CompiledRoute
+.. attributetable:: stoat.routes.CompiledRoute
 
-.. autoclass:: pyvolt.routes.CompiledRoute
+.. autoclass:: stoat.routes.CompiledRoute
     :members:
 
 RateLimit

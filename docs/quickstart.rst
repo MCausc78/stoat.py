@@ -2,7 +2,7 @@
 
 .. _quickstart:
 
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 Quickstart
 ==========
@@ -19,19 +19,19 @@ It looks something like this:
 
 .. code-block:: python3
 
-    import pyvolt
+    import stoat
 
-    client = pyvolt.Client()
+    client = stoat.Client()
 
-    @client.on(pyvolt.ReadyEvent)
+    @client.on(stoat.ReadyEvent)
     async def on_ready(event, /):
         print(f'We have logged in as {event.me.tag}')
 
-    @client.on(pyvolt.MessageCreateEvent)
+    @client.on(stoat.MessageCreateEvent)
     async def on_message(event, /):
         message = event.message
 
-        if message.author.relationship is pyvolt.RelationshipStatus.user:
+        if message.author.relationship is stoat.RelationshipStatus.user:
             return
 
         if message.content.startswith('$hello'):
@@ -39,14 +39,14 @@ It looks something like this:
 
     client.run('your token here')
 
-Let's name this file ``example_bot.py``. Make sure not to name it ``pyvolt.py`` as that'll conflict
+Let's name this file ``example_bot.py``. Make sure not to name it ``stoat.py`` as that'll conflict
 with the library.
 
 There's a lot going on here, so let's walk you through it step by step.
 
 1. The first line just imports the library, if this raises a :exc:`ModuleNotFoundError` or :exc:`ImportError`
    then head on over to :ref:`installing` section to properly install.
-2. Next, we create an instance of a :class:`Client`. This client is our connection to Revolt.
+2. Next, we create an instance of a :class:`Client`. This client is our connection to Stoat.
 3. We then use the :meth:`Client.on` decorator to register an event. This library has many events.
    Since this library is asynchronous, we do things in a "callback" style manner.
 
@@ -60,7 +60,7 @@ There's a lot going on here, so let's walk you through it step by step.
    then we send a message in the channel it was used in with ``'Hello!'``. This is a basic way of 
    handling commands, which can be later automated with the :doc:`./ext/commands/index` framework.
 6. Finally, we run the bot with our login token. If you need help getting your token or creating a bot,
-   look in the :ref:`revolt-intro` section.
+   look in the :ref:`stoat-intro` section.
 
 
 Now that we've made a bot, we have to *run* the bot. Luckily, this is simple since this is just a
