@@ -1,4 +1,4 @@
-.. stoat_ext_commands:
+.. _stoat_ext_commands:
 
 ``stoat.ext.commands`` -- Bot commands framework
 =================================================
