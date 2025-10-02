@@ -37,6 +37,14 @@ class StoatException(Exception):
     """Base exception class for stoat.py
 
     Ideally speaking, this could be caught to handle any exceptions raised from this library.
+
+    .. versionchanged:: 1.2
+
+        Renamed from ``PyvoltException`` to ``StoatException``.
+
+    .. deprecated:: 1.2
+
+        The ``PyvoltException`` alias is a deprecated alias.
     """
 
     __slots__ = ()
@@ -45,10 +53,10 @@ class StoatException(Exception):
 PyvoltException = StoatException
 
 
-class HTTPException(PyvoltException):
+class HTTPException(StoatException):
     """Exception that's raised when a HTTP request operation fails.
 
-    This inherits from :class:`.PyvoltException`.
+    This inherits from :class:`StoatException`.
 
     Attributes
     ----------
@@ -171,12 +179,12 @@ class HTTPException(PyvoltException):
         super().__init__(f'{self.type} (raw={data})')
 
 
-class NoEffect(PyvoltException):
+class NoEffect(StoatException):
     """HTTP exception that corresponds to HTTP 200 status code.
 
     This exists because Stoat API returns 200 with error body for some reason.
 
-    This inherits from :class:`.PyvoltException`.
+    This inherits from :class:`.StoatException`.
     """
 
     __slots__ = ('data',)
@@ -252,11 +260,11 @@ class BadGateway(HTTPException):
     __slots__ = ()
 
 
-class ShardError(PyvoltException):
+class ShardError(StoatException):
     """Exception that's raised when any shard-related
     error happens.
 
-    This inherits from :class:`.PyvoltException`.
+    This inherits from :class:`StoatException`.
     """
 
     __slots__ = ()
@@ -266,7 +274,7 @@ class ShardClosedError(ShardError):
     """Exception that's raised when shard
     was already closed.
 
-    This inherits from :class:`.ShardError`.
+    This inherits from :class:`ShardError`.
     """
 
     __slots__ = ()
@@ -276,7 +284,7 @@ class AuthenticationError(ShardError):
     """Exception that's raised when WebSocket
     authentication fails.
 
-    This inherits from :class:`.ShardError`.
+    This inherits from :class:`ShardError`.
 
     Attributes
     ----------
@@ -295,7 +303,7 @@ class ConnectError(ShardError):
     """Exception that's raised when the library fails
     to connect to Stoat WebSocket.
 
-    This inherits from :class:`.ShardError`.
+    This inherits from :class:`ShardError`.
 
     Attributes
     ----------
@@ -310,10 +318,10 @@ class ConnectError(ShardError):
         super().__init__(f'Giving up, after {tries} tries, last 3 errors: {errors[-3:]}')
 
 
-class DiscoverError(PyvoltException):
+class DiscoverError(StoatException):
     """Exception that's raised when a HTTP request operation fails.
 
-    This inherits from :class:`.PyvoltException`.
+    This inherits from :class:`StoatException`.
 
     Attributes
     ----------
@@ -340,11 +348,11 @@ class DiscoverError(PyvoltException):
         super().__init__(status, data)
 
 
-class InvalidData(PyvoltException):
+class InvalidData(StoatException):
     """Exception that's raised when the library encounters unknown
     or invalid data from Stoat.
 
-    This inherits from :class:`.PyvoltException`.
+    This inherits from :class:`StoatException`.
     """
 
     __slots__ = ('reason',)
@@ -354,11 +362,11 @@ class InvalidData(PyvoltException):
         super().__init__(reason)
 
 
-class NoData(PyvoltException):
+class NoData(StoatException):
     """Exception that's raised when the library did not found
     data requested from cache.
 
-    This is different from :exc:`.NotFound`, and inherits from :class:`.PyvoltException`.
+    This is different from :exc:`NotFound`, and inherits from :class:`StoatException`.
     """
 
     __slots__ = ('what', 'type')

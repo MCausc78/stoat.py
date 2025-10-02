@@ -227,7 +227,10 @@ class Bot(BaseBot):
     """Optional[:class:`str`]: The privacy policy URL."""
 
     oauth2: typing.Optional[BotOAuth2] = field(repr=True, kw_only=True)
-    """Optional[:class:`BotOAuth2`]: The bot's OAuth2 settings."""
+    """Optional[:class:`BotOAuth2`]: The bot's OAuth2 settings.
+    
+    .. versionadded:: 1.2
+    """
 
     raw_flags: int = field(repr=True, kw_only=True)
     """:class:`int`: The bot's flags raw value."""
@@ -287,6 +290,8 @@ class Bot(BaseBot):
             payload['terms_of_service_url'] = self.terms_of_service_url
         if self.privacy_policy_url is not None:
             payload['privacy_policy_url'] = self.privacy_policy_url
+        if self.oauth2 is not None:
+            payload['oauth2'] = self.oauth2.to_dict()
         if self.raw_flags != 0:
             payload['flags'] = self.raw_flags
         return payload
@@ -323,7 +328,10 @@ class PublicBot(BaseBot):
 
 @define(slots=True)
 class BotOAuth2:
-    """Represents how the bot does use OAuth2."""
+    """Represents how the bot does use OAuth2.
+
+    .. versionadded:: 1.2
+    """
 
     public: bool = field(repr=True, kw_only=True, eq=True)
     """:class:`bool`: Whether bot users do not need to invoke server to exchange code."""
@@ -337,9 +345,19 @@ class BotOAuth2:
     allowed_scopes: dict[str, OAuth2ScopeReasoning] = field(repr=True, kw_only=True, eq=True)
     """Dict[:class:`str`, :class:`OAuth2ScopeReasoning`]: A mapping of OAuth2 scopes to reasoning why would it be requested."""
 
+    def to_dict(self) -> raw.BotOauth2:
+        return {
+            'public': self.public,
+            'secret': self.secret,
+            'redirects': self.redirect_uris,
+            'allowed_scopes': {k: v.to_dict() for k, v in self.allowed_scopes.items()},  # type: ignore
+        }
+
 
 class BotOAuth2Edit:
     """Represents new bot's OAuth2 settings.
+
+    .. versionadded:: 1.2
 
     Attributes
     ----------

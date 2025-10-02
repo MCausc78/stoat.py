@@ -225,17 +225,26 @@ class Session(PartialSession):
     """:class:`str`: The session token."""
 
     internal_last_seen: typing.Optional[datetime] = field(repr=True, kw_only=True)
-    """Optional[:class:`~datetime.datetime`]: When the session was seen last time. If ``None``, defaults to :attr:`created_at`."""
+    """Optional[:class:`~datetime.datetime`]: When the session was seen last time. If ``None``, defaults to :attr:`created_at`.
+    
+    .. versionadded:: 1.2
+    """
 
     origin: typing.Optional[str] = field(repr=True, kw_only=True)
-    """Optional[:class:`str`]: The session's origin."""
+    """Optional[:class:`str`]: The session's origin.
+    
+    .. versionadded:: 1.2
+    """
 
     subscription: typing.Optional[WebPushSubscription] = field(repr=True, kw_only=True)
-    """Optional[:class:`.WebPushSubscription`]: The Web Push subscription associated with this session."""
+    """Optional[:class:`WebPushSubscription`]: The Web Push subscription associated with this session."""
 
     @property
     def last_seen(self) -> datetime:
-        """class:`~datetime.datetime`: When the session was seen last time."""
+        """class:`~datetime.datetime`: When the session was seen last time.
+
+        .. versionadded:: 1.2
+        """
 
         if self.internal_last_seen is None:
             return self.created_at

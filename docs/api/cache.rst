@@ -136,7 +136,9 @@ CacheContextType
         The context relates to :class:`ServerRoleDeleteEvent` event.
     .. attribute:: server_role_ranks_update_event
         
-        The context relates to :class:`ServerRoleRanksUpdateEvent`
+        The context relates to :class:`ServerRoleRanksUpdateEvent` event.
+
+        .. versionadded:: 1.2
     .. attribute:: report_create_event
 
         The context relates to :class:`ReportCreateEvent` event.
@@ -224,6 +226,8 @@ CacheContextType
     .. attribute:: server_through_server_channel_category
 
         The context comes from :attr:`BaseServerChannel.category`.
+
+        .. versionadded:: 1.2
     .. attribute:: member_through_server_channel_me
 
         The context comes from :attr:`BaseServerChannel.me`.
@@ -860,6 +864,16 @@ ServerRoleDeleteEventCacheContext
 .. attributetable:: ServerRoleDeleteEventCacheContext
 
 .. autoclass:: ServerRoleDeleteEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerRoleRanksUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerRoleRanksUpdateEventCacheContext
+
+.. autoclass:: ServerRoleRanksUpdateEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

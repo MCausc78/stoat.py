@@ -3042,6 +3042,8 @@ def calculate_server_permissions(
     category: Optional[:class:`Category`]
         The category to calculate permissions with.
 
+        .. versionadded:: 1.2
+
     Returns
     -------
     :class:`Permissions`

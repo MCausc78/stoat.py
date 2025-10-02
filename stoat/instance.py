@@ -198,6 +198,8 @@ class PolicyChange:
     """Represents a platform policy change.
 
     To acknowledge the policy changes, call :meth:`HTTPClient.acknowledge_policy_changes`.
+
+    .. versionadded:: 1.2
     """
 
     created_at: datetime = field(repr=True, kw_only=True)

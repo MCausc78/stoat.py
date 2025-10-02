@@ -122,6 +122,8 @@ class Bot(Client, GroupMixin[None]):
     ----------
     case_insensitive: :class:`bool`
         Whether the commands should be case insensitive. Defaults to ``False``.
+
+        .. versionadded:: 1.2
     command_prefix: Union[MaybeAwaitableFunc[[:class:`.Context`], List[:class:`str`]], List[:class:`str`], :class:`str`]
         The command's prefix.
     description: Optional[:class:`str`]

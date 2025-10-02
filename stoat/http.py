@@ -5181,6 +5181,8 @@ class HTTPClient:
 
         Acknowledges pending policy changes.
 
+        .. versionadded:: 1.2
+
         .. note::
             This is not supposed to be used by bot accounts.
 
@@ -8815,6 +8817,8 @@ class HTTPClient:
         """|coro|
 
         Retrieves the list of :class:`Server`\\'s the user is in.
+
+        .. versionadded:: 1.2
 
         Parameters
         ----------

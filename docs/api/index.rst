@@ -343,7 +343,7 @@ Exceptions
 
 The following exceptions are thrown by the library.
 
-.. autoexception:: PyvoltException
+.. autoexception:: StoatException
     :show-inheritance:
     :members:
     :inherited-members:

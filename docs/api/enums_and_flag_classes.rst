@@ -195,6 +195,8 @@ OAuth2
 
     Specifies what ``code`` querystring parameter in resulting OAuth2 redirect URL will contain.
 
+    .. versionadded:: 1.2
+
     .. attribute:: code
 
         The parameter will contain code that should be exchanged.
@@ -206,6 +208,8 @@ OAuth2
 
     Specifies the grant type of OAuth2 flow.
 
+    .. versionadded:: 1.2
+
     .. attribute:: authorization_code
 
         The client will have to ask server to exchange code.
@@ -216,6 +220,8 @@ OAuth2
 .. class:: OAuth2CodeChallengeMethod
 
     Specifies the method of generating OAuth2 code challenge.
+
+    .. versionadded:: 1.2
     
     .. attribute:: plain
 
@@ -227,6 +233,8 @@ OAuth2
 .. class:: OAuth2Scope
 
     Specifies the scope(s) of OAuth2 token.
+
+    .. versionadded:: 1.2
     
     .. attribute:: identify
 

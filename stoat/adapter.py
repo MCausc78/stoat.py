@@ -163,6 +163,8 @@ class HTTPForm:
 
     This is constructed by the library and meant
     to be converted to form consumable by underlying HTTP backend.
+
+    .. versionadded:: 1.2
     """
 
     __slots__ = (
@@ -479,7 +481,10 @@ class AIOHTTPAdapter(HTTPAdapter[aiohttp.WSMessage]):
         return frame.data
 
     def convert_form(self, form: HTTPForm, /) -> aiohttp.FormData:
-        """Converts agnostic :class:`HTTPForm` to :class:`aiohttp.FormData`."""
+        """Converts agnostic :class:`HTTPForm` to :class:`aiohttp.FormData`.
+
+        .. versionadded:: 1.2
+        """
         res = aiohttp.FormData(
             form.fields,
             quote_fields=form.quote_fields,

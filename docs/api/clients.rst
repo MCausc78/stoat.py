@@ -111,6 +111,14 @@ HTTPWebSocket
 .. autoclass:: HTTPWebSocket
     :members:
 
+HTTPForm
+~~~~~~~~
+
+.. attributetable:: HTTPForm
+
+.. autoclass:: HTTPForm
+    :members:
+
 Route
 ~~~~~
 

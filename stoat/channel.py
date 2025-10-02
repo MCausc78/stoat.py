@@ -1485,6 +1485,8 @@ class GroupChannel(BaseChannel, Connectable, Messageable):
 
         Retrieves all recipients who are part of this group.
 
+        .. versionadded:: 1.2
+
         Parameters
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]

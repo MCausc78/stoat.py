@@ -1889,9 +1889,11 @@ class ServerRoleDeleteEvent(ShardEvent):
 
 @define(slots=True)
 class ServerRoleRanksUpdateEvent(ShardEvent):
-    """Dispatched when the role got deleted from server.
+    """Dispatched when the server role ranks are updated.
 
     This inherits from :class:`ShardEvent`.
+
+    .. versionadded:: 1.2
     """
 
     event_name: typing.ClassVar[typing.Literal['server_role_ranks_update']] = 'server_role_ranks_update'
