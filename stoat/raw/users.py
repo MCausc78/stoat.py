@@ -115,6 +115,7 @@ class DataOnboard(typing.TypedDict):
 
 class UserVoiceState(typing.TypedDict):
     id: str
+    joined_at: str
     can_receive: bool
     can_publish: bool
     screensharing: bool

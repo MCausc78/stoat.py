@@ -1886,7 +1886,7 @@ class HTTPClient:
         icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         nsfw: UndefinedOr[bool] = UNDEFINED,
         archived: UndefinedOr[bool] = UNDEFINED,
-        voice: UndefinedOr[ChannelVoiceMetadata] = UNDEFINED,
+        voice: UndefinedOr[typing.Optional[ChannelVoiceMetadata]] = UNDEFINED,
         default_permissions: UndefinedOr[None] = UNDEFINED,
     ) -> Channel:
         """|coro|
@@ -1917,7 +1917,7 @@ class HTTPClient:
             To mark the channel as NSFW or not. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         archived: UndefinedOr[:class:`bool`]
             To mark the channel as archived or not.
-        voice: UndefinedOr[:class:`ChannelVoiceMetadata`]
+        voice: UndefinedOr[Optional[:class:`ChannelVoiceMetadata`]]
             The new voice-specific metadata for this channel.
 
             .. versionadded:: 1.2
@@ -2002,7 +2002,10 @@ class HTTPClient:
         if default_permissions is not UNDEFINED:
             remove.append('DefaultPermissions')
         if voice is not UNDEFINED:
-            payload['voice'] = voice.to_dict()
+            if voice is None:
+                remove.append('Voice')
+            else:
+                payload['voice'] = voice.to_dict()
         if len(remove) > 0:
             payload['remove'] = remove
 
@@ -3839,6 +3842,8 @@ class HTTPClient:
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         node: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        force_disconnect: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
+        recipients: UndefinedOr[typing.Optional[list[ULIDOr[BaseUser]]]] = UNDEFINED,
     ) -> tuple[str, str]:
         """|coro|
 
@@ -3864,6 +3869,18 @@ class HTTPClient:
             The node's name to use for starting a call.
 
             Can be ``None`` to tell server choose the node automatically.
+
+            .. versionadded:: 1.2
+        force_disconnect: UndefinedOr[Optional[:class:`bool`]]
+            Whether to force disconnect any other existing voice connections.
+            Useful for disconnecting on another device and joining on a new.
+
+            .. versionadded:: 1.2
+        recipients: UndefinedOr[Optional[List[ULIDOr[:class:`BaseUser`]]]]
+            A list of users which should be notified of the call starting.
+            Only used when the user is the first one connected.
+
+            .. versionadded:: 1.2
 
         Raises
         ------
@@ -3931,15 +3948,91 @@ class HTTPClient:
         resp: raw.CreateVoiceUserResponse
         route = routes.CHANNELS_VOICE_JOIN.compile(channel_id=resolve_id(channel))
 
-        if node is UNDEFINED:
+        if node is UNDEFINED and force_disconnect is UNDEFINED and recipients is UNDEFINED:
             resp = await self.request(route, http_overrides=http_overrides)
         else:
             payload: raw.DataJoinCall = {
-                'node': node,
+                'node': None if node is UNDEFINED else node,
+                'force_disconnect': None if force_disconnect is UNDEFINED else force_disconnect,
+                'recipients': None
+                if recipients is None or recipients is UNDEFINED
+                else list(map(resolve_id, recipients)),
             }
             resp = await self.request(route, http_overrides=http_overrides, json=payload)
 
         return resp['token'], resp.get('url', '')
+
+    async def stop_ringing(
+        self,
+        channel: ULIDOr[typing.Union[DMChannel, GroupChannel]],
+        user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> None:
+        """|coro|
+
+        Stops ringing a specific user in a private call.
+
+        The channel must be a DM or group.
+
+        .. versionadded:: 1.2
+
+        Parameters
+        ----------
+        channel: ULIDOr[Union[:class:`DMChannel`, :class:`GroupChannel`]]
+            The channel the call is in.
+        user: ULIDOr[:class:`BaseUser`]
+            The user to stop ringing.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------------+-----------------------------------------------------------------------------------------+
+            | Value                     | Reason                                                                                  |
+            +---------------------------+-----------------------------------------------------------------------------------------+
+            | ``InvalidOperation``      | The channel was not type of :attr:`~ChannelType.private` or :attr:`~ChannelType.group`. |
+            +---------------------------+-----------------------------------------------------------------------------------------+
+            | ``LivekitUnavailable``    | The voice server is unavailable.                                                        |
+            +---------------------------+-----------------------------------------------------------------------------------------+
+            | ``NotConnected``          | The user wasn't connected to voice channel.                                             |
+            +---------------------------+-----------------------------------------------------------------------------------------+
+        :class:`NoEffect`
+            The channel was a server channel.
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------+
+            | Value        | Reason                          |
+            +--------------+---------------------------------+
+            | ``NotFound`` | The channel/user was not found. |
+            +--------------+---------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                                | Populated attributes                                                |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.        | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during stopping ringing. |                                                                     |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------+
+        """
+        await self.request(
+            routes.CHANNELS_VOICE_STOP_RING.compile(channel_id=resolve_id(channel), user_id=resolve_id(user)),
+            http_overrides=http_overrides,
+        )
 
     async def create_webhook(
         self,

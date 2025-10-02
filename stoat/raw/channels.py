@@ -70,7 +70,7 @@ Channel = typing.Union[PrivateChannel, ServerChannel]
 
 
 class VoiceInformation(typing.TypedDict):
-    max_users: typing.Optional[int]
+    max_users: typing_extensions.NotRequired[typing.Optional[int]]
 
 
 class PartialChannel(typing.TypedDict):
@@ -88,7 +88,7 @@ class PartialChannel(typing.TypedDict):
     voice: typing_extensions.NotRequired[VoiceInformation]
 
 
-FieldsChannel = typing.Literal['Description', 'Icon', 'DefaultPermissions']
+FieldsChannel = typing.Literal['Description', 'Icon', 'DefaultPermissions', 'Voice']
 
 
 class DataEditChannel(typing.TypedDict):
@@ -146,3 +146,5 @@ class ChannelVoiceState(typing.TypedDict):
 
 class DataJoinCall(typing.TypedDict):
     node: typing.Optional[str]
+    force_disconnect: typing.Optional[bool]
+    recipients: typing.Optional[list[str]]

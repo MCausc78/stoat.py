@@ -159,6 +159,7 @@ CHANNELS_MESSAGE_UNREACT: typing.Final[Route] = Route(
 CHANNELS_PERMISSIONS_SET: typing.Final[Route] = Route(PUT, '/channels/{channel_id}/permissions/{role_id}')
 CHANNELS_PERMISSIONS_SET_DEFAULT: typing.Final[Route] = Route(PUT, '/channels/{channel_id}/permissions/default')
 CHANNELS_VOICE_JOIN: typing.Final[Route] = Route(POST, '/channels/{channel_id}/join_call')
+CHANNELS_VOICE_STOP_RING: typing.Final[Route] = Route(PUT, '/channels/{channel_id}/end_ring/{user_id}')
 CHANNELS_WEBHOOK_CREATE: typing.Final[Route] = Route(POST, '/channels/{channel_id}/webhooks')
 CHANNELS_WEBHOOK_FETCH_ALL: typing.Final[Route] = Route(GET, '/channels/{channel_id}/webhooks')
 
@@ -336,6 +337,7 @@ __all__ = (
     'CHANNELS_PERMISSIONS_SET',
     'CHANNELS_PERMISSIONS_SET_DEFAULT',
     'CHANNELS_VOICE_JOIN',
+    'CHANNELS_VOICE_STOP_RING',
     'CHANNELS_WEBHOOK_CREATE',
     'CHANNELS_WEBHOOK_FETCH_ALL',
     'CUSTOMISATION_EMOJI_CREATE',

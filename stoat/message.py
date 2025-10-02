@@ -3517,7 +3517,13 @@ class StatelessCallStartedSystemEvent(BaseSystemEvent):
     """
 
     internal_by: typing.Union[User, str] = field(repr=False, kw_only=True)
-    """Union[:class:`User`, :class:`str`]: The ID of the user that started a cal, or full user instance."""
+    """Union[:class:`User`, :class:`str`]: The ID of the user that started a call, or full user instance."""
+
+    finished_at: typing.Optional[datetime] = field(repr=False, kw_only=True)
+    """Optional[:class:`~datetime.datetime`]: When the call was finished.
+    
+    .. versionadded:: 1.2
+    """
 
     def __eq__(self, other: object, /) -> bool:
         return self is other or isinstance(other, StatelessCallStartedSystemEvent) and self.by_id == other.by_id
@@ -3566,6 +3572,7 @@ class StatelessCallStartedSystemEvent(BaseSystemEvent):
         return CallStartedSystemEvent(
             message=message,
             internal_by=self.internal_by,
+            finished_at=self.finished_at,
         )
 
     def to_dict(self) -> raw.CallStartedSystemMessage:
@@ -3573,6 +3580,7 @@ class StatelessCallStartedSystemEvent(BaseSystemEvent):
         return {
             'type': 'call_started',
             'by': self.by_id,
+            'finished_at': None if self.finished_at is None else self.finished_at.isoformat(),
         }
 
 

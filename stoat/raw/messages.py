@@ -125,6 +125,7 @@ class MessageUnpinnedSystemMessage(typing.TypedDict):
 class CallStartedSystemMessage(typing.TypedDict):
     type: typing.Literal['call_started']
     by: str
+    finished_at: typing.Optional[str]
 
 
 SystemMessage = typing.Union[

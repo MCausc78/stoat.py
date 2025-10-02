@@ -50,6 +50,8 @@ from .enums import UserReportReason, Presence, RelationshipStatus
 from .errors import NoData
 
 if typing.TYPE_CHECKING:
+    from datetime import datetime
+
     from . import raw
     from .channel import SavedMessagesChannel, DMChannel
     from .http import HTTPOverrideOptions
@@ -284,6 +286,12 @@ class Mutuals:
 
     server_ids: list[str] = field(repr=True, kw_only=True)
     """List[:class:`str`]: The server's IDs that both users are in."""
+
+    channel_ids: list[str] = field(repr=True, kw_only=True)
+    """List[:class:`str`]: The private channel's IDs that both users are in.
+    
+    .. versionadded:: 1.2
+    """
 
 
 @define(slots=True)
@@ -1817,6 +1825,12 @@ class UserVoiceState:
 
     user_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID this voice state belongs to."""
+
+    joined_at: datetime = field(repr=True, kw_only=True)
+    """:class:`~datetime.datetime`: When the voice state was created.
+    
+    .. versionadded:: 1.2
+    """
 
     can_publish: bool = field(repr=True, kw_only=True)
     """:class:`bool`: Whether the user can send voice data."""

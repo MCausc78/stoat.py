@@ -51,6 +51,7 @@ if typing.TYPE_CHECKING:
     from .http import HTTPOverrideOptions
     from .message import Reply, MessageInteractions, MessageMasquerade, SendableEmbed, BaseMessage, Message
     from .state import State
+    from .user import BaseUser
 
 
 class Messageable:
@@ -714,6 +715,8 @@ class Connectable:
         channel_http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         node: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        force_disconnect: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
+        recipients: UndefinedOr[typing.Optional[list[ULIDOr[BaseUser]]]] = UNDEFINED,
     ) -> tuple[str, str]:
         """|coro|
 
@@ -734,6 +737,16 @@ class Connectable:
             The node's name to use for starting a call.
 
             Can be ``None`` to tell server choose the node automatically.
+        force_disconnect: UndefinedOr[Optional[:class:`bool`]]
+            Whether to force disconnect any other existing voice connections.
+            Useful for disconnecting on another device and joining on a new.
+
+            .. versionadded:: 1.2
+        recipients: UndefinedOr[Optional[List[ULIDOr[:class:`BaseUser`]]]]
+            A list of users which should be notified of the call starting.
+            Only used when the user is the first one connected.
+
+            .. versionadded:: 1.2
 
         Raises
         ------
@@ -801,7 +814,13 @@ class Connectable:
         channel_id = await self.fetch_channel_id(http_overrides=channel_http_overrides)
         state = self.state
 
-        return await state.http.join_call(channel_id, http_overrides=http_overrides, node=node)
+        return await state.http.join_call(
+            channel_id,
+            http_overrides=http_overrides,
+            node=node,
+            force_disconnect=force_disconnect,
+            recipients=recipients,
+        )
 
     async def connect(
         self,

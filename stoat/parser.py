@@ -1989,8 +1989,12 @@ class Parser:
         """
 
         by_id = payload['by']
+        finished_at = payload.get('finished_at')
 
-        return StatelessCallStartedSystemEvent(internal_by=users.get(by_id, by_id))
+        return StatelessCallStartedSystemEvent(
+            internal_by=users.get(by_id, by_id),
+            finished_at=None if finished_at is None else _parse_dt(finished_at),
+        )
 
     def parse_message_channel_description_changed_system_event(
         self,
@@ -2770,6 +2774,7 @@ class Parser:
         return Mutuals(
             user_ids=payload['users'],
             server_ids=payload['servers'],
+            channel_ids=payload.get('channels', []),
         )
 
     def parse_none_embed(self, _: raw.NoneEmbed, /) -> NoneEmbed:
@@ -4419,6 +4424,7 @@ class Parser:
         """
         return UserVoiceState(
             user_id=payload['id'],
+            joined_at=_parse_dt(payload['joined_at']),
             can_publish=payload['can_publish'],
             can_receive=payload['can_receive'],
             screensharing=payload['screensharing'],
