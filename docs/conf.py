@@ -22,7 +22,7 @@ import typing
 sys.path.insert(0, os.path.abspath('..'))
 sys.path.append(os.path.abspath('extensions'))
 
-project = 'stoat'
+project = 'stoat.py'
 copyright = '2024, MCausc78'
 author = 'MCausc78'
 
