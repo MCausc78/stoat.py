@@ -116,8 +116,12 @@ class DataOnboard(typing.TypedDict):
 class UserVoiceState(typing.TypedDict):
     id: str
     joined_at: str
+
+    # is_x is preferred over can_x
     can_receive: bool
+    is_receiving: bool
     can_publish: bool
+    is_publishing: bool
     screensharing: bool
     camera: bool
 

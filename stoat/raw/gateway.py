@@ -386,11 +386,16 @@ class ClientUserVoiceStateUpdateEvent(typing.TypedDict):
     data: PartialUserVoiceState
 
 
-class ClientUserMoveVoiceChannelEvent(typing.TypedDict):
-    type: typing.Literal['UserMoveVoiceChannel']
-    node: str
-    token: str
-
+ClientUserMoveVoiceChannelEvent = typing.TypedDict(
+    'ClientUserMoveVoiceChannelEvent',
+    {
+        'type': typing.Literal['UserMoveVoiceChannel'],
+        'node': str,
+        'from': str,
+        'to': str,
+        'token': str,
+    },
+)
 
 ClientEvent = typing.Union[
     ClientBulkEvent,

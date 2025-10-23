@@ -4170,6 +4170,8 @@ class Parser:
         return UserMoveVoiceChannelEvent(
             shard=shard,
             node=payload['node'],
+            from_id=payload.get('from', ''),
+            to_id=payload.get('to', ''),
             token=payload['token'],
         )
 
@@ -4425,8 +4427,8 @@ class Parser:
         return UserVoiceState(
             user_id=payload['id'],
             joined_at=_parse_dt(payload['joined_at']),
-            can_publish=payload['can_publish'],
-            can_receive=payload['can_receive'],
+            can_publish=payload.get('is_publishing', payload.get('can_publish', False)),
+            can_receive=payload.get('is_receiving', payload.get('can_receive', False)),
             screensharing=payload['screensharing'],
             camera=payload['camera'],
         )

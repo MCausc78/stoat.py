@@ -15,7 +15,7 @@ def show_version() -> None:
     entries = []
 
     entries.append('- Python v{0.major}.{0.minor}.{0.micro}-{0.releaselevel}'.format(sys.version_info))
-    entries.append('- stoat v{}'.format(stoat.__version__))
+    entries.append('- stoat.py v{}'.format(stoat.__version__))
 
     entries.append(f'- aiohttp v{aiohttp.__version__}')
     uname = platform.uname()

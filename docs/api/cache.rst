@@ -184,6 +184,9 @@ CacheContextType
     .. attribute:: user_voice_state_update_event
 
         The context relates to :class:`UserVoiceStateUpdateEvent` event.
+    .. attribute:: user_move_voice_channel_event
+
+        The context relates to :class:`UserMoveVoiceChannelEvent` event.
     .. attribute:: authenticated_event
 
         The context relates to :class:`AuthenticatedEvent` event.
@@ -1024,6 +1027,16 @@ UserVoiceStateUpdateEventCacheContext
 .. attributetable:: UserVoiceStateUpdateEventCacheContext
 
 .. autoclass:: UserVoiceStateUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserMoveVoiceChannelEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserMoveVoiceChannelEventCacheContext
+
+.. autoclass:: UserMoveVoiceChannelEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

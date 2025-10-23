@@ -2476,7 +2476,7 @@ class VoiceChannelMoveEvent(ShardEvent):
             lambda self: _cast(
                 'typing.Any',
                 caching.VoiceChannelMoveEventCacheContext(
-                    type=caching.CacheContextType.user_voice_state_update_event,
+                    type=caching.CacheContextType.voice_channel_move_event,
                     event=self,
                 )
                 if self.shard.state.provide_cache_context('VoiceChannelMoveEvent')
@@ -2600,7 +2600,7 @@ class UserVoiceStateUpdateEvent(ShardEvent):
 
 @define(slots=True)
 class UserMoveVoiceChannelEvent(ShardEvent):
-    """Dispatched when the current user was moved from voice channel and needs to reconnect to another node.
+    """Dispatched when the current user was moved between voice channels and might have potentially reconnect to another node.
 
     This inherits from :class:`ShardEvent`.
     """
@@ -2610,8 +2610,40 @@ class UserMoveVoiceChannelEvent(ShardEvent):
     node: str = field(repr=True, kw_only=True)
     """The node's name to connect to."""
 
+    from_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The channel's ID the user's voice state was in."""
+
+    to_id: str = field(repr=True, kw_only=True)
+    """:class:`str`: The channel's ID the user's voice state is in."""
+
+    # old_container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
+    # """Optional[:class:`ChannelVoiceStateContainer`]: The voice state container for the previous voice channel the user was in."""
+
+    # new_container: typing.Optional[ChannelVoiceStateContainer] = field(repr=True, kw_only=True)
+    # """Optional[:class:`ChannelVoiceStateContainer`]: The voice state container for the voice channel the user is in."""
+
     token: str = field(repr=True, kw_only=True)
     """The token for this node."""
+
+    cache_context: typing.Union[caching.UndefinedCacheContext, caching.UserMoveVoiceChannelEventCacheContext] = field(
+        default=Factory(
+            lambda self: _cast(
+                'typing.Any',
+                caching.UserMoveVoiceChannelEventCacheContext(
+                    type=caching.CacheContextType.user_move_voice_channel_event,
+                    event=self,
+                )
+                if self.shard.state.provide_cache_context('UserMoveVoiceChannelEvent')
+                else caching._USER_MOVE_VOICE_CHANNEL_EVENT,
+            ),
+            takes_self=True,
+        ),
+        repr=False,
+        hash=False,
+        init=False,
+        eq=False,
+    )
+    """Union[:class:`UndefinedCacheContext`, :class:`UserVoiceStateUpdateEventCacheContext`]: The cache context used."""
 
 
 @define(slots=True)
