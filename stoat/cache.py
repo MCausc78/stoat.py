@@ -94,6 +94,7 @@ if typing.TYPE_CHECKING:
         VoiceChannelLeaveEvent,
         VoiceChannelMoveEvent,
         UserVoiceStateUpdateEvent,
+        UserMoveVoiceChannelEvent,
         AuthenticatedEvent,
     )
     from .invite import (
@@ -175,6 +176,7 @@ class CacheContextType(Enum):
     voice_channel_leave_event = 'VoiceChannelLeaveEvent'
     voice_channel_move_event = 'VoiceChannelMoveEvent'
     user_voice_state_update_event = 'UserVoiceStateUpdateEvent'
+    user_move_voice_channel_event = 'UserMoveVoiceChannelEvent'
     authenticated_event = 'AuthenticatedEvent'
 
     # Relationships
@@ -685,6 +687,14 @@ class UserVoiceStateUpdateEventCacheContext(EventCacheContext):
 
     event: UserVoiceStateUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
     """:class:`UserVoiceStateUpdateEvent`: The event involved."""
+
+
+@define(slots=True)
+class UserMoveVoiceChannelEventCacheContext(EventCacheContext):
+    """Represents a cache context that involves a :class:`UserMoveVoiceChannelEvent`."""
+
+    event: UserMoveVoiceChannelEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    """:class:`UserMoveVoiceChannelEvent`: The event involved."""
 
 
 @define(slots=True)
@@ -1715,6 +1725,9 @@ _VOICE_CHANNEL_MOVE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheC
 )
 _USER_VOICE_STATE_UPDATE_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.user_voice_state_update_event,
+)
+_USER_MOVE_VOICE_CHANNEL_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_move_voice_channel_event,
 )
 _AUTHENTICATED_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.authenticated_event,
@@ -3719,6 +3732,7 @@ __all__ = (
     'VoiceChannelLeaveEventCacheContext',
     'VoiceChannelMoveEventCacheContext',
     'UserVoiceStateUpdateEventCacheContext',
+    'UserMoveVoiceChannelEventCacheContext',
     'AuthenticatedEventCacheContext',
     'EntityCacheContext',
     'MessageableCacheContext',
@@ -3905,6 +3919,7 @@ __all__ = (
     '_VOICE_CHANNEL_LEAVE_EVENT',
     '_VOICE_CHANNEL_MOVE_EVENT',
     '_USER_VOICE_STATE_UPDATE_EVENT',
+    '_USER_MOVE_VOICE_CHANNEL_EVENT',
     '_AUTHENTICATED_EVENT',
     '_MESSAGE_THROUGH_MESSAGEABLE_GETTER',
     '_MESSAGES_THROUGH_MESSAGEABLE_GETTER',
