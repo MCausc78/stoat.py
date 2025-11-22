@@ -451,8 +451,13 @@ class Permissions(BaseFlags, support_kwargs=True):
 
     @flag()
     def manage_customization(cls) -> int:
-        """:class:`bool`: Whether the user can manage server customization (includes emoji)."""
+        """:class:`bool`: Whether the user can manage server customization (currently only emojis)."""
         return 1 << 4
+
+    @flag()
+    def view_audit_logs(cls) -> int:
+        """:class:`bool`: Whether the user can view server's audit logs."""
+        return 1 << 39
 
     @classmethod
     def generic(cls) -> Self:
