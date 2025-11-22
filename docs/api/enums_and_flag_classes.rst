@@ -583,7 +583,7 @@ Settings
 
     .. attribute:: revolt
         
-        Use Stoat colors.
+        Use legacy colors (used prior to rebranding).
     .. attribute:: light
         
         Represents the Light theme on Stoat Android.
@@ -596,6 +596,9 @@ Settings
     .. attribute:: material_you
         
         Represents the Material You theme on Stoat Android.
+    .. attribute:: stoat
+
+        Use Stoat colors.
 
 .. class:: AndroidProfilePictureShape
 

@@ -363,6 +363,7 @@ class AndroidTheme(Enum):
     pure_black = 'Amoled'
     system = 'None'
     material_you = 'M3Dynamic'
+    stoat = 'Stoat'
 
 
 class AndroidProfilePictureShape(Enum):
