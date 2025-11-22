@@ -277,6 +277,27 @@ class ReportedContentType(Enum):
     user = 'User'
 
 
+class AuditLogEntryActionType(Enum):
+    message_delete = 'MessageDelete'
+    message_bulk_delete = 'MessageBulkDelete'
+    ban = 'BanCreate'
+    unban = 'BanDelete'
+    channel_create = 'ChannelCreate'
+    channel_update = 'ChannelEdit'
+    channel_role_permissions_update = 'ChannelRolePermissionsEdit'
+    channel_delete = 'ChannelDelete'
+    member_update = 'MemberEdit'
+    member_remove = 'MemberKick'
+    server_update = 'ServerEdit'
+    role_update = 'RoleEdit'
+    role_create = 'RoleCreate'
+    role_delete = 'RoleDelete'
+    roles_reorder = 'RolesReorder'
+    invite_delete = 'InviteDelete'
+    webhook_create = 'WebhookCreate'
+    emoji_delete = 'EmojiDelete'
+
+
 class MemberRemovalIntention(Enum):
     leave = 'Leave'
     kick = 'Kick'
@@ -538,6 +559,7 @@ __all__ = (
     'ReportStatus',
     'ReportedContentType',
     # Servers
+    'AuditLogEntryActionType',
     'MemberRemovalIntention',
     # Settings
     'Language',

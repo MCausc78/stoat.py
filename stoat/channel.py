@@ -386,6 +386,49 @@ class PartialChannel(BaseChannel):
         ret.value = self.raw_permissions
         return ret
 
+    def get_clear_fields(self) -> list[raw.FieldsChannel]:
+        """List[:class:`str`]: The fields that were set to ``None``."""
+
+        fields: list[raw.FieldsChannel] = []
+        if self.description is None:
+            fields.append('Description')
+        if self.internal_icon is None:
+            fields.append('Icon')
+        if self.default_permissions is None:
+            fields.append('DefaultPermissions')
+        if self.voice is None:
+            fields.append('Voice')
+        return fields
+
+    def to_dict(self) -> raw.PartialChannel:
+        """:class:`dict`: Convert channel to raw data."""
+        payload: raw.PartialChannel = {}
+        if self.name is not UNDEFINED:
+            payload['name'] = self.name
+        if self.owner_id is not UNDEFINED:
+            payload['owner'] = self.owner_id
+        if self.description is not UNDEFINED and self.description is not None:
+            payload['description'] = self.description
+        if self.internal_icon is not UNDEFINED and self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.nsfw is not UNDEFINED:
+            payload['nsfw'] = self.nsfw
+        if self.active is not UNDEFINED:
+            payload['active'] = self.active
+        if self.raw_permissions is not UNDEFINED:
+            payload['permissions'] = self.raw_permissions
+        if self.role_permissions is not UNDEFINED:
+            payload['role_permissions'] = {k: v.to_field_dict() for k, v in self.role_permissions.items()}
+        if self.default_permissions is not UNDEFINED and self.default_permissions is not None:
+            payload['default_permissions'] = self.default_permissions.to_field_dict()
+        if self.last_message_id is not UNDEFINED:
+            payload['last_message_id'] = self.last_message_id
+        if self.category_id is not UNDEFINED:
+            payload['parent'] = self.category_id
+        if self.voice is not UNDEFINED:
+            payload['voice'] = self.voice.to_dict()
+        return payload
+
 
 def calculate_saved_messages_channel_permissions(perspective_id: str, user_id: str, /) -> Permissions:
     """Calculates the permissions in :class:`SavedMessagesChannel` scope.

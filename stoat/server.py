@@ -638,6 +638,29 @@ class PartialRole(BaseRole):
                 rank=self.rank,
             )
 
+    def get_clear_fields(self) -> list[raw.FieldsRole]:
+        """List[:class:`str`]: The fields that were set to ``None``."""
+
+        fields: list[raw.FieldsRole] = []
+        if self.color is None:
+            fields.append('Colour')
+        return fields
+
+    def to_dict(self) -> raw.PartialRole:
+        """:class:`dict`: Convert role to raw data."""
+        payload: raw.PartialRole = {}
+        if self.name is not UNDEFINED:
+            payload['name'] = self.name
+        if self.permissions is not UNDEFINED:
+            payload['permissions'] = self.permissions.to_field_dict()
+        if self.color is not UNDEFINED and self.color is not None:
+            payload['colour'] = self.color
+        if self.hoist is not UNDEFINED:
+            payload['hoist'] = self.hoist
+        if self.rank is not UNDEFINED:
+            payload['rank'] = self.rank
+        return payload
+
 
 @define(slots=True)
 class Role(BaseRole):
@@ -3028,6 +3051,55 @@ class PartialServer(BaseServer):
         """UndefinedOr[Optional[:class:`Asset`]]: The stateful server banner."""
         return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
 
+    def get_clear_fields(self) -> list[raw.FieldsServer]:
+        """List[:class:`str`]: The fields that were set to ``None``."""
+
+        fields: list[raw.FieldsServer] = []
+        if self.description is None:
+            fields.append('Description')
+        if self.internal_categories is None:
+            fields.append('Categories')
+        if self.system_messages is not None:
+            fields.append('SystemMessages')
+        if self.internal_icon is None:
+            fields.append('Icon')
+        if self.internal_banner is None:
+            fields.append('Banner')
+        return fields
+
+    def to_dict(self) -> raw.PartialServer:
+        """:class:`dict`: Convert server to raw data."""
+        payload: raw.PartialServer = {}
+        if self.owner_id is not UNDEFINED:
+            payload['owner'] = self.owner_id
+        if self.name is not UNDEFINED:
+            payload['name'] = self.name
+        if self.description is not UNDEFINED and self.description is not None:
+            payload['description'] = self.description
+        if self.channel_ids is not UNDEFINED:
+            payload['channels'] = self.channel_ids
+        if self.internal_categories is not UNDEFINED and self.internal_categories is not None:
+            if isinstance(self.internal_categories, dict):
+                if self.internal_categories:
+                    payload['categories'] = {k: v.to_dict() for k, v in self.internal_categories.items()}
+            else:
+                payload['categories'] = [c.to_dict() for c in self.internal_categories]
+        if self.system_messages is not UNDEFINED and self.system_messages is not None:
+            payload['system_messages'] = self.system_messages.to_dict()
+        if self.raw_default_permissions is not UNDEFINED:
+            payload['default_permissions'] = self.raw_default_permissions
+        if self.internal_icon is not UNDEFINED and self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.internal_banner is not UNDEFINED and self.internal_banner is not None:
+            payload['banner'] = self.internal_banner.to_dict('banners')
+        if self.raw_flags is not UNDEFINED:
+            payload['flags'] = self.raw_flags
+        if self.discoverable is not UNDEFINED:
+            payload['discoverable'] = self.discoverable
+        if self.analytics is not UNDEFINED:
+            payload['analytics'] = self.analytics
+        return payload
+
 
 def sort_member_roles(
     target_role_ids: list[str],
@@ -5207,6 +5279,41 @@ class PartialMember(BaseMember):
     def server_avatar(self) -> UndefinedOr[typing.Optional[Asset]]:
         """UndefinedOr[Optional[:class:`Asset`]]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
+
+    def get_clear_fields(self) -> list[raw.FieldsMember]:
+        """List[:class:`str`]: The fields that were set to ``None``."""
+
+        fields: list[raw.FieldsMember] = []
+        if self.nick is None:
+            fields.append('Nickname')
+        if self.internal_server_avatar is None:
+            fields.append('Avatar')
+        if self.role_ids is None:
+            fields.append('Roles')
+        if self.timed_out_until is None:
+            fields.append('Timeout')
+        if self.can_receive is None:
+            fields.append('CanReceive')
+        if self.can_publish is None:
+            fields.append('CanPublish')
+        return fields
+
+    def to_dict(self) -> raw.PartialMember:
+        """:class:`dict`: Convert member to raw data."""
+        payload: raw.PartialMember = {}
+        if self.nick is not UNDEFINED and self.nick is not None:
+            payload['nickname'] = self.nick
+        if self.internal_server_avatar is not UNDEFINED and self.internal_server_avatar is not None:
+            payload['avatar'] = self.internal_server_avatar.to_dict('avatars')
+        if self.role_ids is not UNDEFINED:
+            payload['roles'] = self.role_ids
+        if self.timed_out_until is not UNDEFINED and self.timed_out_until is not None:
+            payload['timeout'] = self.timed_out_until.isoformat()
+        if self.can_publish is not UNDEFINED and self.can_publish is not None:
+            payload['can_publish'] = self.can_publish
+        if self.can_receive is not UNDEFINED and self.can_receive is not None:
+            payload['can_receive'] = self.can_receive
+        return payload
 
 
 @define(slots=True)
