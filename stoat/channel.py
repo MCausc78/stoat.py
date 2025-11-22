@@ -121,7 +121,11 @@ class BaseChannel(Base):
         return f'<#{self.id}>'
 
     async def close(
-        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, silent: typing.Optional[bool] = None
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
+        silent: typing.Optional[bool] = None,
     ) -> None:
         """|coro|
 
@@ -139,6 +143,8 @@ class BaseChannel(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
 
@@ -178,12 +184,13 @@ class BaseChannel(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.close_channel(self.id, http_overrides=http_overrides, silent=silent)
+        return await self.state.http.close_channel(self.id, http_overrides=http_overrides, reason=reason, silent=silent)
 
     async def edit(
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         owner: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
@@ -207,6 +214,8 @@ class BaseChannel(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -283,6 +292,7 @@ class BaseChannel(Base):
         return await self.state.http.edit_channel(
             self.id,
             http_overrides=http_overrides,
+            reason=reason,
             name=name,
             description=description,
             owner=owner,
@@ -1952,7 +1962,9 @@ class BaseServerChannel(BaseChannel):
 
         return await self.state.http.create_channel_invite(self.id, http_overrides=http_overrides)
 
-    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
+    async def delete(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, reason: typing.Optional[str] = None
+    ) -> None:
         """|coro|
 
         Deletes a server channel.
@@ -1965,6 +1977,8 @@ class BaseServerChannel(BaseChannel):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -2002,7 +2016,7 @@ class BaseServerChannel(BaseChannel):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.close(http_overrides=http_overrides)
+        return await self.close(http_overrides=http_overrides, reason=reason)
 
     async def fetch_webhooks(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[Webhook]:
         """|coro|
@@ -2063,6 +2077,7 @@ class BaseServerChannel(BaseChannel):
         role: ULIDOr[BaseRole],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> ServerChannel:
@@ -2082,6 +2097,8 @@ class BaseServerChannel(BaseChannel):
             The role.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         allow: :class:`Permissions`
             The permissions to allow for role in channel.
         deny: :class:`Permissions`
@@ -2132,12 +2149,21 @@ class BaseServerChannel(BaseChannel):
             The updated server channel with new permissions.
         """
         result = await self.state.http.set_channel_permissions_for_role(
-            self.id, role, http_overrides=http_overrides, allow=allow, deny=deny
+            self.id,
+            role,
+            http_overrides=http_overrides,
+            reason=reason,
+            allow=allow,
+            deny=deny,
         )
         return result
 
     async def set_default_permissions(
-        self, permissions: PermissionOverride, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self,
+        permissions: PermissionOverride,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> ServerChannel:
         """|coro|
 
@@ -2155,6 +2181,8 @@ class BaseServerChannel(BaseChannel):
             The new permissions.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -2200,7 +2228,10 @@ class BaseServerChannel(BaseChannel):
         """
 
         result = await self.state.http.set_default_channel_permissions(
-            self.id, permissions, http_overrides=http_overrides
+            self.id,
+            permissions,
+            http_overrides=http_overrides,
+            reason=reason,
         )
         return result  # type: ignore
 

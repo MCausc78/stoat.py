@@ -241,7 +241,9 @@ class ServerEmoji(BaseEmoji):
             )
         return server
 
-    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
+    async def delete(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, reason: typing.Optional[str] = None
+    ) -> None:
         """|coro|
 
         Deletes the emoji.
@@ -261,6 +263,8 @@ class ServerEmoji(BaseEmoji):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -305,7 +309,7 @@ class ServerEmoji(BaseEmoji):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_emoji(self.id, http_overrides=http_overrides)
+        return await self.state.http.delete_emoji(self.id, http_overrides=http_overrides, reason=reason)
 
     def to_dict(self) -> raw.ServerEmoji:
         """:class:`dict`: Convert server emoji to raw data."""

@@ -587,7 +587,9 @@ class BaseMessage(Base):
         """
         return await self.state.http.clear_reactions(self.channel_id, self.id, http_overrides=http_overrides)
 
-    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
+    async def delete(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, reason: typing.Optional[str] = None
+    ) -> None:
         """|coro|
 
         Deletes the message in a channel.
@@ -600,6 +602,8 @@ class BaseMessage(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -636,7 +640,9 @@ class BaseMessage(Base):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_message(self.channel_id, self.id, http_overrides=http_overrides)
+        return await self.state.http.delete_message(
+            self.channel_id, self.id, http_overrides=http_overrides, reason=reason
+        )
 
     async def edit(
         self,

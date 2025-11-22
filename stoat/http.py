@@ -487,6 +487,8 @@ class HTTPOverrideOptions:
         The MFA ticket to pass in headers.
     oauth2: :class:`bool`
         Whether the authentication token is an OAuth2 access token. Defaults to :attr:`HTTPClient.oauth2`.
+    reason: Optional[:class:`str`]
+        The reason for action which will be stored in audit logs.
     token: UndefinedOr[Optional[:class:`str`]]
         The token to use when requesting the route.
     user_agent: UndefinedOr[:class:`str`]
@@ -506,6 +508,7 @@ class HTTPOverrideOptions:
         json: UndefinedOr[typing.Any]
         mfa_ticket: typing.Optional[str]
         oauth2: UndefinedOr[bool]
+        reason: typing.Optional[str]
         token: UndefinedOr[typing.Optional[str]]
         user_agent: UndefinedOr[str]
 
@@ -725,6 +728,7 @@ class HTTPClient:
         mfa_ticket: typing.Optional[str] = None,
         oauth2: UndefinedOr[bool] = UNDEFINED,
         overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> utils.MaybeAwaitable[None]:
@@ -752,6 +756,8 @@ class HTTPClient:
             Whether the token is an OAuth2 access token. Defaults to :attr:`oauth2`.
         overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
@@ -805,6 +811,9 @@ class HTTPClient:
 
         if mfa_ticket is not None:
             headers['X-Mfa-Ticket'] = mfa_ticket
+
+        if reason is not None:
+            headers['X-Audit-Log-Reason'] = reason
 
     async def send_request(
         self,
@@ -860,6 +869,7 @@ class HTTPClient:
         idempotency_key: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         mfa_ticket: typing.Optional[str] = None,
+        reason: typing.Optional[str] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
@@ -886,6 +896,8 @@ class HTTPClient:
             The JSON payload to pass in.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
@@ -922,6 +934,7 @@ class HTTPClient:
                 idempotency_key=idempotency_key,
                 json=json,
                 mfa_ticket=mfa_ticket,
+                reason=reason,
                 token=token,
                 user_agent=user_agent,
                 kwargs=kwargs,
@@ -944,6 +957,8 @@ class HTTPClient:
                 json = http_overrides.json
             if hasattr(tmp, 'mfa_ticket'):
                 mfa_ticket = http_overrides.mfa_ticket
+            if hasattr(tmp, 'reason'):
+                reason = http_overrides.reason
             if hasattr(tmp, 'token'):
                 token = http_overrides.token
             if hasattr(tmp, 'user_agent'):
@@ -959,6 +974,7 @@ class HTTPClient:
             json_body=json is not UNDEFINED,
             mfa_ticket=mfa_ticket,
             overrides=http_overrides,
+            reason=reason,
             token=token,
             user_agent=user_agent,
         )
@@ -1097,6 +1113,7 @@ class HTTPClient:
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
         mfa_ticket: typing.Optional[str] = None,
+        reason: typing.Optional[str] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
@@ -1124,6 +1141,8 @@ class HTTPClient:
             by routes like ``GET /servers/{server_id}/members``. Defaults to ``True``.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
@@ -1149,6 +1168,7 @@ class HTTPClient:
             idempotency_key=idempotency_key,
             json=json,
             mfa_ticket=mfa_ticket,
+            reason=reason,
             token=token,
             user_agent=user_agent,
             **kwargs,
@@ -1807,6 +1827,7 @@ class HTTPClient:
         silent: typing.Optional[bool] = None,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -1828,6 +1849,8 @@ class HTTPClient:
             Whether to not send message when leaving.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -1873,6 +1896,7 @@ class HTTPClient:
             routes.CHANNELS_CHANNEL_DELETE.compile(channel_id=resolve_id(channel)),
             http_overrides=http_overrides,
             params=params,
+            reason=reason,
         )
 
     async def edit_channel(
@@ -1880,6 +1904,7 @@ class HTTPClient:
         channel: ULIDOr[BaseChannel],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         owner: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
@@ -1905,6 +1930,8 @@ class HTTPClient:
             The channel.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -2013,6 +2040,7 @@ class HTTPClient:
             routes.CHANNELS_CHANNEL_EDIT.compile(channel_id=resolve_id(channel)),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
         return self.state.parser.parse_channel(resp)
 
@@ -2501,6 +2529,7 @@ class HTTPClient:
         messages: Sequence[ULIDOr[BaseMessage]],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -2518,6 +2547,8 @@ class HTTPClient:
             The messages to delete.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -2568,6 +2599,7 @@ class HTTPClient:
             routes.CHANNELS_MESSAGE_DELETE_BULK.compile(channel_id=resolve_id(channel)),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
 
     async def clear_reactions(
@@ -2643,6 +2675,7 @@ class HTTPClient:
         message: ULIDOr[BaseMessage],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -2660,6 +2693,8 @@ class HTTPClient:
             The message.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -2702,6 +2737,7 @@ class HTTPClient:
                 message_id=resolve_id(message),
             ),
             http_overrides=http_overrides,
+            reason=reason,
         )
 
     async def edit_message(
@@ -3633,6 +3669,7 @@ class HTTPClient:
         role: ULIDOr[BaseRole],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> ServerChannel:
@@ -3656,6 +3693,8 @@ class HTTPClient:
             The role.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         allow: :class:`Permissions`
             The permissions to allow for role in channel.
         deny: :class:`Permissions`
@@ -3721,6 +3760,7 @@ class HTTPClient:
             ),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
         ret = self.state.parser.parse_channel(resp)
         return ret
@@ -3732,6 +3772,7 @@ class HTTPClient:
         permissions: Permissions,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> GroupChannel: ...
 
     @typing.overload
@@ -3741,6 +3782,7 @@ class HTTPClient:
         permissions: PermissionOverride,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> ServerChannel: ...
 
     async def set_default_channel_permissions(
@@ -3749,6 +3791,7 @@ class HTTPClient:
         permissions: typing.Union[Permissions, PermissionOverride],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> typing.Union[GroupChannel, ServerChannel]:
         """|coro|
 
@@ -3770,6 +3813,8 @@ class HTTPClient:
             The new permissions. Must be :class:`Permissions` for groups and :class:`PermissionOverride` for server channels.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -3832,6 +3877,7 @@ class HTTPClient:
             routes.CHANNELS_PERMISSIONS_SET_DEFAULT.compile(channel_id=resolve_id(channel)),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
         r = self.state.parser.parse_channel(resp)
         return r  # type: ignore
@@ -4288,7 +4334,11 @@ class HTTPClient:
         return self.state.parser.parse_server_emoji(resp)
 
     async def delete_emoji(
-        self, emoji: ULIDOr[ServerEmoji], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self,
+        emoji: ULIDOr[ServerEmoji],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -4311,6 +4361,8 @@ class HTTPClient:
             The emoji to delete.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -4356,7 +4408,9 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
-            routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=resolve_id(emoji)), http_overrides=http_overrides
+            routes.CUSTOMISATION_EMOJI_DELETE.compile(emoji_id=resolve_id(emoji)),
+            http_overrides=http_overrides,
+            reason=reason,
         )
 
     async def get_emoji(
@@ -4398,7 +4452,12 @@ class HTTPClient:
 
     # Invites control
     async def delete_invite(
-        self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self,
+        code: typing.Union[str, BaseInvite],
+        /,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -4412,6 +4471,8 @@ class HTTPClient:
             The invite code.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -4449,7 +4510,9 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         invite_code = code.code if isinstance(code, BaseInvite) else code
-        await self.request(routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code), http_overrides=http_overrides)
+        await self.request(
+            routes.INVITES_INVITE_DELETE.compile(invite_code=invite_code), http_overrides=http_overrides, reason=reason
+        )
 
     async def get_invite(
         self, code: typing.Union[str, BaseInvite], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
@@ -5701,6 +5764,7 @@ class HTTPClient:
         user: ULIDOr[BaseUser],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -5716,6 +5780,8 @@ class HTTPClient:
             The user to unban from the server.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -5755,6 +5821,7 @@ class HTTPClient:
         await self.request(
             routes.SERVERS_BAN_REMOVE.compile(server_id=resolve_id(server), user_id=resolve_id(user)),
             http_overrides=http_overrides,
+            reason=reason,
         )
 
     async def create_server_category(
@@ -6213,6 +6280,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: typing.Literal[ChannelType.text] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -6226,6 +6294,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: None = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -6239,6 +6308,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: typing.Literal[ChannelType.voice] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -6252,6 +6322,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: ChannelType = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -6264,6 +6335,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: typing.Optional[ChannelType] = None,
         name: str,
         description: typing.Optional[str] = None,
@@ -6284,6 +6356,8 @@ class HTTPClient:
             The server to create channel in.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         type: Optional[:class:`ChannelType`]
             The channel type. Defaults to :attr:`~.ChannelType.text` if not provided.
         name: :class:`str`
@@ -6364,6 +6438,7 @@ class HTTPClient:
             routes.SERVERS_CHANNEL_CREATE.compile(server_id=resolve_id(server)),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
         return self.state.parser.parse_channel(resp)
 
@@ -6487,6 +6562,7 @@ class HTTPClient:
         member: typing.Union[str, BaseUser, BaseMember],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         nick: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         roles: UndefinedOr[typing.Optional[list[ULIDOr[BaseRole]]]] = UNDEFINED,
@@ -6516,6 +6592,8 @@ class HTTPClient:
             The member.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
 
@@ -6666,6 +6744,7 @@ class HTTPClient:
             ),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
         return self.state.parser.parse_member(resp)
 
@@ -6924,6 +7003,7 @@ class HTTPClient:
         member: typing.Union[str, BaseUser, BaseMember],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -6939,6 +7019,8 @@ class HTTPClient:
             The member to kick.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -6990,6 +7072,7 @@ class HTTPClient:
         await self.request(
             routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_member_id(member)),
             http_overrides=http_overrides,
+            reason=reason,
         )
 
     async def set_server_permissions_for_role(
@@ -6998,6 +7081,7 @@ class HTTPClient:
         role: ULIDOr[BaseRole],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> Server:
@@ -7017,6 +7101,8 @@ class HTTPClient:
             The role.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         allow: :class:`Permissions`
             The permissions to allow for the specified role.
         deny: :class:`Permissions`
@@ -7072,6 +7158,7 @@ class HTTPClient:
             routes.SERVERS_PERMISSIONS_SET.compile(server_id=resolve_id(server), role_id=resolve_id(role)),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
 
         return self.state.parser.parse_server(resp, (True, resp['channels']))
@@ -7082,6 +7169,7 @@ class HTTPClient:
         permissions: Permissions,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> Server:
         """|coro|
 
@@ -7099,6 +7187,8 @@ class HTTPClient:
             The new permissions.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -7147,6 +7237,7 @@ class HTTPClient:
             routes.SERVERS_PERMISSIONS_SET_DEFAULT.compile(server_id=resolve_id(server)),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
         return self.state.parser.parse_server(
             data,
@@ -7158,6 +7249,7 @@ class HTTPClient:
         server: ULIDOr[BaseServer],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: str,
         rank: typing.Optional[int] = None,
     ) -> Role:
@@ -7175,6 +7267,8 @@ class HTTPClient:
             The server to create role in.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
         rank: Optional[:class:`int`]
@@ -7238,6 +7332,7 @@ class HTTPClient:
             routes.SERVERS_ROLES_CREATE.compile(server_id=server_id),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
         return self.state.parser.parse_role(data['role'], data['id'], server_id)
 
@@ -7247,6 +7342,7 @@ class HTTPClient:
         role: ULIDOr[BaseRole],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -7264,6 +7360,8 @@ class HTTPClient:
             The role to delete.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -7305,6 +7403,7 @@ class HTTPClient:
         await self.request(
             routes.SERVERS_ROLES_DELETE.compile(server_id=resolve_id(server), role_id=resolve_id(role)),
             http_overrides=http_overrides,
+            reason=reason,
         )
 
     async def edit_role(
@@ -7313,6 +7412,7 @@ class HTTPClient:
         role: ULIDOr[BaseRole],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         color: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         hoist: UndefinedOr[bool] = UNDEFINED,
@@ -7334,6 +7434,8 @@ class HTTPClient:
             The role to edit.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
         color: UndefinedOr[Optional[:class:`str`]]
@@ -7429,6 +7531,7 @@ class HTTPClient:
         ranks: list[ULIDOr[BaseRole]],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> Server:
         """|coro|
 
@@ -7463,6 +7566,8 @@ class HTTPClient:
             Must contain all roles.
         http_overrides: Optional[:class:`.HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         -------
@@ -7520,6 +7625,7 @@ class HTTPClient:
             routes.SERVERS_ROLES_EDIT_POSITIONS.compile(server_id=resolve_id(server)),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
 
         return self.state.parser.parse_server(
@@ -7832,6 +7938,7 @@ class HTTPClient:
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: typing.Optional[str] = None,
+        reason: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -7859,6 +7966,8 @@ class HTTPClient:
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         name: UndefinedOr[:class:`str`]
             The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -8013,8 +8122,9 @@ class HTTPClient:
         d: raw.Server = await self.request(
             routes.SERVERS_SERVER_EDIT.compile(server_id=resolve_id(server)),
             http_overrides=http_overrides,
-            mfa_ticket=mfa_ticket,
             json=payload,
+            mfa_ticket=mfa_ticket,
+            reason=reason,
         )
         return self.state.parser.parse_server(
             d,

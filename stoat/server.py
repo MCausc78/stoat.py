@@ -361,7 +361,9 @@ class BaseRole(Base):
             )
         return server
 
-    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
+    async def delete(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, reason: typing.Optional[str] = None
+    ) -> None:
         """|coro|
 
         Deletes the role.
@@ -374,6 +376,8 @@ class BaseRole(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -413,12 +417,13 @@ class BaseRole(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.delete_role(self.server_id, self.id, http_overrides=http_overrides)
+        return await self.state.http.delete_role(self.server_id, self.id, http_overrides=http_overrides, reason=reason)
 
     async def edit(
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         color: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         hoist: UndefinedOr[bool] = UNDEFINED,
@@ -436,6 +441,8 @@ class BaseRole(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
         color: UndefinedOr[Optional[:class:`str`]]
@@ -498,6 +505,7 @@ class BaseRole(Base):
             self.server_id,
             self.id,
             http_overrides=http_overrides,
+            reason=reason,
             name=name,
             color=color,
             hoist=hoist,
@@ -508,6 +516,7 @@ class BaseRole(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> Server:
@@ -523,6 +532,8 @@ class BaseRole(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         allow: :class:`Permissions`
             The permissions to allow.
         deny: :class:`Permissions`
@@ -574,7 +585,12 @@ class BaseRole(Base):
         """
 
         return await self.state.http.set_server_permissions_for_role(
-            self.server_id, self.id, http_overrides=http_overrides, allow=allow, deny=deny
+            self.server_id,
+            self.id,
+            http_overrides=http_overrides,
+            reason=reason,
+            allow=allow,
+            deny=deny,
         )
 
 
@@ -962,7 +978,11 @@ class BaseServer(Base):
         return await self.state.http.ban(self.id, user, http_overrides=http_overrides, reason=reason)
 
     async def bulk_edit_role_ranks(
-        self, ranks: list[ULIDOr[BaseRole]], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self,
+        ranks: list[ULIDOr[BaseRole]],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> Server:
         """|coro|
 
@@ -995,6 +1015,8 @@ class BaseServer(Base):
             Must contain all roles.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         -------
@@ -1046,7 +1068,7 @@ class BaseServer(Base):
         :class:`Server`
             The server with updated role ranks.
         """
-        return await self.state.http.bulk_edit_role_ranks(self.id, ranks, http_overrides=http_overrides)
+        return await self.state.http.bulk_edit_role_ranks(self.id, ranks, http_overrides=http_overrides, reason=reason)
 
     async def create_category(
         self,
@@ -1124,6 +1146,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: None = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -1135,6 +1158,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: typing.Literal[ChannelType.text] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -1147,6 +1171,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: typing.Literal[ChannelType.voice] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -1158,6 +1183,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: typing.Optional[ChannelType] = None,
         name: str,
         description: typing.Optional[str] = None,
@@ -1176,6 +1202,8 @@ class BaseServer(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         type: Optional[:class:`ChannelType`]
             The channel type. Defaults to :attr:`.ChannelType.text` if not provided.
         name: :class:`str`
@@ -1241,6 +1269,7 @@ class BaseServer(Base):
         return await self.state.http.create_server_channel(
             self.id,
             http_overrides=http_overrides,
+            reason=reason,
             type=type,
             name=name,
             description=description,
@@ -1343,6 +1372,7 @@ class BaseServer(Base):
         name: str,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
         voice: typing.Optional[ChannelVoiceMetadata] = None,
@@ -1361,6 +1391,8 @@ class BaseServer(Base):
             The channel name. Must be between 1 and 32 characters.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         description: Optional[:class:`str`]
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
@@ -1420,6 +1452,7 @@ class BaseServer(Base):
         """
         channel = await self.create_channel(
             http_overrides=http_overrides,
+            reason=reason,
             type=ChannelType.text,
             name=name,
             description=description,
@@ -1433,6 +1466,7 @@ class BaseServer(Base):
         name: str,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
         voice: typing.Optional[ChannelVoiceMetadata] = None,
@@ -1451,6 +1485,8 @@ class BaseServer(Base):
             The channel name. Must be between 1 and 32 characters.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         description: Optional[:class:`str`]
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
@@ -1511,6 +1547,7 @@ class BaseServer(Base):
         channel = await self.create_channel(
             type=ChannelType.voice,
             http_overrides=http_overrides,
+            reason=reason,
             name=name,
             description=description,
             nsfw=nsfw,
@@ -1522,6 +1559,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: str,
         rank: typing.Optional[int] = None,
     ) -> Role:
@@ -1537,6 +1575,8 @@ class BaseServer(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
         rank: Optional[:class:`int`]
@@ -1595,7 +1635,9 @@ class BaseServer(Base):
             The role created in server.
         """
 
-        return await self.state.http.create_role(self.id, http_overrides=http_overrides, name=name, rank=rank)
+        return await self.state.http.create_role(
+            self.id, http_overrides=http_overrides, reason=reason, name=name, rank=rank
+        )
 
     async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
@@ -1717,6 +1759,7 @@ class BaseServer(Base):
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: typing.Optional[str] = None,
+        reason: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -1742,6 +1785,8 @@ class BaseServer(Base):
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         name: UndefinedOr[:class:`str`]
             The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -1846,6 +1891,7 @@ class BaseServer(Base):
             self.id,
             http_overrides=http_overrides,
             mfa_ticket=mfa_ticket,
+            reason=reason,
             name=name,
             description=description,
             icon=icon,
@@ -2770,7 +2816,11 @@ class BaseServer(Base):
         )
 
     async def set_default_permissions(
-        self, permissions: Permissions, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self,
+        permissions: Permissions,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> Server:
         """|coro|
 
@@ -2786,6 +2836,8 @@ class BaseServer(Base):
             The new permissions.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -2830,7 +2882,9 @@ class BaseServer(Base):
             The newly updated server.
         """
 
-        return await self.state.http.set_default_server_permissions(self.id, permissions, http_overrides=http_overrides)
+        return await self.state.http.set_default_server_permissions(
+            self.id, permissions, http_overrides=http_overrides, reason=reason
+        )
 
     async def subscribe(self) -> None:
         """|coro|
@@ -2840,7 +2894,11 @@ class BaseServer(Base):
         await self.state.shard.subscribe_to(self.id)
 
     async def unban(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self,
+        user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -2854,6 +2912,8 @@ class BaseServer(Base):
             The user to unban from the server.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -2883,7 +2943,7 @@ class BaseServer(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.unban(self.id, user, http_overrides=http_overrides)
+        return await self.state.http.unban(self.id, user, http_overrides=http_overrides, reason=reason)
 
 
 @define(slots=True)
@@ -4391,6 +4451,7 @@ class BaseMember(Connectable, Messageable):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         nick: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         roles: UndefinedOr[typing.Optional[list[ULIDOr[BaseRole]]]] = UNDEFINED,
@@ -4416,6 +4477,8 @@ class BaseMember(Connectable, Messageable):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
 
@@ -4514,6 +4577,7 @@ class BaseMember(Connectable, Messageable):
             self.server_id,
             self.id,
             http_overrides=http_overrides,
+            reason=reason,
             nick=nick,
             avatar=avatar,
             roles=roles,
@@ -4523,7 +4587,9 @@ class BaseMember(Connectable, Messageable):
             voice=voice,
         )
 
-    async def kick(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
+    async def kick(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, reason: typing.Optional[str] = None
+    ) -> None:
         """|coro|
 
         Kicks the member from the server.
@@ -4534,6 +4600,8 @@ class BaseMember(Connectable, Messageable):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -4582,7 +4650,7 @@ class BaseMember(Connectable, Messageable):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.kick_member(self.server_id, self.id, http_overrides=http_overrides)
+        return await self.state.http.kick_member(self.server_id, self.id, http_overrides=http_overrides, reason=reason)
 
     async def mutual_friend_ids(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[str]:
         """|coro|
@@ -4975,6 +5043,7 @@ class BaseMember(Connectable, Messageable):
         length: typing.Optional[typing.Union[datetime, timedelta, float, int]],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> Member:
         """|coro|
 
@@ -4992,6 +5061,8 @@ class BaseMember(Connectable, Messageable):
             This must be a timezone-aware datetime object. Consider using :func:`stoat.utils.utcnow()`.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         ------
@@ -5043,7 +5114,9 @@ class BaseMember(Connectable, Messageable):
         :class:`Member`
             The newly updated member.
         """
-        return await self.state.http.edit_member(self.server_id, self.id, http_overrides=http_overrides, timeout=length)
+        return await self.state.http.edit_member(
+            self.server_id, self.id, http_overrides=http_overrides, reason=reason, timeout=length
+        )
 
     async def unblock(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
