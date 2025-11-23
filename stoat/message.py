@@ -1288,19 +1288,19 @@ class PartialMessage(BaseMessage):
     This inherits from :class:`BaseMessage`.
     """
 
-    content: UndefinedOr[str] = field(repr=True, kw_only=True)
+    content: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new message's content."""
 
-    edited_at: UndefinedOr[datetime] = field(repr=True, kw_only=True)
+    edited_at: UndefinedOr[datetime] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`~datetime.datetime`]: When the message was edited."""
 
-    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, kw_only=True)
+    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[List[:class:`StatelessEmbed`]]: The new message embeds."""
 
-    pinned: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    pinned: UndefinedOr[bool] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether the message was just pinned."""
 
-    reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, kw_only=True)
+    reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Dict[:class:`str`, Tuple[:class:`str`, ...]]]: The new message's reactions."""
 
     @property

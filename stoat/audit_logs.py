@@ -30,6 +30,8 @@ from attrs import define, field
 
 from .base import Base
 from .enums import AuditLogEntryActionType
+from .server import Member
+from .user import User
 
 if typing.TYPE_CHECKING:
     from . import raw
@@ -81,9 +83,6 @@ class AuditLogEntryAction:
     type: AuditLogEntryActionType = field(repr=True, kw_only=True, eq=True)
     """:class:`AuditLogEntryActionType`: The type of the action."""
 
-    author_id: str = field(default='', repr=True, kw_only=True, eq=True)
-    """:class:`str`: The ID of the message author."""
-
     channel_id: str = field(default='', repr=True, kw_only=True, eq=True)
     """:class:`str`: The ID of the channel."""
 
@@ -96,13 +95,22 @@ class AuditLogEntryAction:
     emoji_id: str = field(default='', repr=True, kw_only=True, eq=True)
     """:class:`str`: The ID of the emoji."""
 
+    internal_user: typing.Union[Member, User, str] = field(
+        default='',
+        repr=False,
+        kw_only=True,
+        # In case of hydration, the ID always should be used for comparsion
+        eq=lambda target: target.id if isinstance(target, (Member, User)) else target,
+    )
+    """Union[:class:`Member`, :class:`User`, :class:`str`]: The ID of the user, or full member/user instance."""
+
     invite_code: str = field(default='', repr=True, kw_only=True, eq=True)
     """:class:`str`: The ID of the invite."""
 
     member_update: PartialMember = field(repr=True, kw_only=True, eq=True)
     """:class:`PartialMember`: The updated member as it was updated."""
 
-    name: str = field(repr=True, kw_only=True, eq=True)
+    name: str = field(default='', repr=True, kw_only=True, eq=True)
     """:class:`str`: The name of the affected entity."""
 
     permissions: PermissionOverride = field(repr=True, kw_only=True, eq=True)
@@ -120,11 +128,15 @@ class AuditLogEntryAction:
     server_update: PartialServer = field(repr=True, kw_only=True, eq=True)
     """:class:`PartialServer`: The updated server as it was updated."""
 
-    user_id: str = field(default='', repr=True, kw_only=True, eq=True)
-    """:class:`str`: The ID of the user."""
-
     webhook_id: str = field(default='', repr=True, kw_only=True, eq=True)
     """:class:`str`: The ID of the webhook."""
+
+    @property
+    def user_id(self) -> str:
+        """:class:`str`: The ID of the user."""
+        if isinstance(self.internal_user, (Member, User)):
+            return self.internal_user.id
+        return self.internal_user
 
     def to_dict(self) -> raw.AuditLogEntryAction:
         """:class:`dict`: Convert audit log entry action to raw data."""
@@ -132,7 +144,7 @@ class AuditLogEntryAction:
         if self.type is AuditLogEntryActionType.message_delete:
             return {
                 'type': 'MessageDelete',
-                'author': self.author_id,
+                'author': self.user_id,
                 'channel': self.channel_id,
             }
         elif self.type is AuditLogEntryActionType.message_bulk_delete:

@@ -603,19 +603,19 @@ class PartialRole(BaseRole):
     This inherits from :class:`BaseRole`.
     """
 
-    name: UndefinedOr[str] = field(repr=True, kw_only=True)
+    name: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new role's name."""
 
-    permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
+    permissions: UndefinedOr[PermissionOverride] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`PermissionOverride`]: The new role's permissions."""
 
-    color: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
+    color: UndefinedOr[typing.Optional[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`str`]]: The new role's color. This can be any valid CSS color."""
 
-    hoist: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    hoist: UndefinedOr[bool] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether this role should be shown separately on the member sidebar."""
 
-    rank: UndefinedOr[int] = field(repr=True, kw_only=True)
+    rank: UndefinedOr[int] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The new role's rank."""
 
     def into_full(self) -> typing.Optional[Role]:
@@ -2978,42 +2978,46 @@ class PartialServer(BaseServer):
     This inherits from :class:`BaseServer`.
     """
 
-    name: UndefinedOr[str] = field(repr=True, kw_only=True)
+    name: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new server's name."""
 
-    owner_id: UndefinedOr[str] = field(repr=True, kw_only=True)
+    owner_id: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new user's ID who owns this server."""
 
-    description: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
+    description: UndefinedOr[typing.Optional[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`str`]]: The new server's description."""
 
-    channel_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    channel_ids: UndefinedOr[list[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[List[:class:`str`]]: The server's channels now."""
 
     internal_categories: UndefinedOr[typing.Optional[typing.Union[list[Category], dict[str, Category]]]] = field(
-        repr=True, kw_only=True
+        default=UNDEFINED,
+        repr=True,
+        kw_only=True,
     )
     """UndefinedOr[Optional[Union[List[:class:`Category`], Dict[:class:`str`, :class:`Category`]]]]: The server's categories now."""
 
-    system_messages: UndefinedOr[typing.Optional[SystemMessageChannels]] = field(repr=True, kw_only=True)
+    system_messages: UndefinedOr[typing.Optional[SystemMessageChannels]] = field(
+        default=UNDEFINED, repr=True, kw_only=True
+    )
     """UndefinedOr[Optional[:class:`SystemMessageChannels`]]: The new server's system message assignments."""
 
-    raw_default_permissions: UndefinedOr[int] = field(repr=True, kw_only=True)
+    raw_default_permissions: UndefinedOr[int] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The raw value of new default permissions for everyone."""
 
-    internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
+    internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new server's icon, if any."""
 
-    internal_banner: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
+    internal_banner: UndefinedOr[typing.Optional[StatelessAsset]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new server's banner, if any."""
 
-    raw_flags: UndefinedOr[int] = field(repr=True, kw_only=True)
+    raw_flags: UndefinedOr[int] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The new server's flags raw value."""
 
-    discoverable: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    discoverable: UndefinedOr[bool] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether the server is publicly discoverable."""
 
-    analytics: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    analytics: UndefinedOr[bool] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether the server activity is being analyzed in real-time."""
 
     @property
@@ -5257,22 +5261,24 @@ class PartialMember(BaseMember):
     This inherits from :class:`BaseMember`.
     """
 
-    nick: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
+    nick: UndefinedOr[typing.Optional[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`str`]]: The new member's nick."""
 
-    internal_server_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
+    internal_server_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(
+        default=UNDEFINED, repr=True, kw_only=True
+    )
     """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new member's avatar."""
 
-    role_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    role_ids: UndefinedOr[list[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[List[:class:`str`]]: The new member's roles."""
 
-    timed_out_until: UndefinedOr[typing.Optional[datetime]] = field(repr=True, kw_only=True)
+    timed_out_until: UndefinedOr[typing.Optional[datetime]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`~datetime.datetime`]]: When member's time out expires now."""
 
-    can_publish: UndefinedOr[typing.Optional[bool]] = field(repr=True, kw_only=True)
+    can_publish: UndefinedOr[typing.Optional[bool]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`bool`]]: Whether the member can send voice data now."""
 
-    can_receive: UndefinedOr[typing.Optional[bool]] = field(repr=True, kw_only=True)
+    can_receive: UndefinedOr[typing.Optional[bool]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`bool`]]: Whether the member can receive voice data now."""
 
     @property

@@ -909,40 +909,13 @@ class Parser:
             The parsed channel update event object.
         """
 
-        clear = payload['clear']
+        channel_id = payload['id']
         data = payload['data']
-
-        icon = data.get('icon')
-        role_permissions = data.get('role_permissions')
-        default_permissions = data.get('default_permissions')
-        voice = data.get('voice')
+        clear = payload['clear']
 
         return ChannelUpdateEvent(
             shard=shard,
-            channel=PartialChannel(
-                state=self.state,
-                id=payload['id'],
-                name=data.get('name', UNDEFINED),
-                owner_id=data.get('owner', UNDEFINED),
-                description=None if 'Description' in clear else data.get('description', UNDEFINED),
-                internal_icon=None if 'Icon' in clear else (UNDEFINED if icon is None else self.parse_asset(icon)),
-                nsfw=data.get('nsfw', UNDEFINED),
-                active=data.get('active', UNDEFINED),
-                raw_permissions=data.get('permissions', UNDEFINED),
-                role_permissions=(
-                    UNDEFINED
-                    if role_permissions is None
-                    else {k: self.parse_permission_override_field(v) for k, v in role_permissions.items()}
-                ),
-                default_permissions=(
-                    UNDEFINED
-                    if default_permissions is None
-                    else self.parse_permission_override_field(default_permissions)
-                ),
-                last_message_id=data.get('last_message_id', UNDEFINED),
-                category_id=data.get('parent', UNDEFINED),
-                voice=UNDEFINED if voice is None else self.parse_voice_information(voice),
-            ),
+            channel=self.parse_partial_channel(data, channel_id, clear),
             before=None,
             after=None,
         )
@@ -2453,26 +2426,14 @@ class Parser:
         :class:`MessageUpdateEvent`
             The parsed message update event object.
         """
+        message_id = payload['id']
+        channel_id = payload['channel']
         data = payload['data']
         clear = payload.get('clear', ())
 
-        content = data.get('content')
-        edited_at = data.get('edited')
-        embeds = data.get('embeds')
-        reactions = data.get('reactions')
-
         return MessageUpdateEvent(
             shard=shard,
-            message=PartialMessage(
-                state=self.state,
-                id=payload['id'],
-                channel_id=payload['channel'],
-                content=UNDEFINED if content is None else content,
-                edited_at=UNDEFINED if edited_at is None else _parse_dt(edited_at),
-                internal_embeds=UNDEFINED if embeds is None else list(map(self.parse_embed, embeds)),
-                pinned=False if 'Pinned' in clear else data.get('pinned', UNDEFINED),
-                reactions=UNDEFINED if reactions is None else {k: tuple(v) for k, v in reactions.items()},
-            ),
+            message=self.parse_partial_message(data, channel_id, message_id, clear),
             before=None,
             after=None,
         )
@@ -2948,6 +2909,224 @@ class Parser:
         """
         return PartialAccount(id=payload['_id'], email=payload['email'])
 
+    def parse_partial_channel(
+        self, payload: raw.PartialChannel, channel_id: str, clear: list[raw.FieldsChannel], /
+    ) -> PartialChannel:
+        """Parses a partial channel object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The partial channel payload to parse.
+        channel_id: :class:`str`
+            The ID of the channel.
+        clear: List[:class:`str`]
+            The cleared fields.
+
+        Returns
+        -------
+        :class:`PartialChannel`
+            The parsed partial channel object.
+        """
+
+        icon = payload.get('icon')
+        role_permissions = payload.get('role_permissions')
+        default_permissions = payload.get('default_permissions')
+        voice = payload.get('voice')
+
+        return PartialChannel(
+            state=self.state,
+            id=channel_id,
+            name=payload.get('name', UNDEFINED),
+            owner_id=payload.get('owner', UNDEFINED),
+            description=None if 'Description' in clear else payload.get('description', UNDEFINED),
+            internal_icon=None if 'Icon' in clear else (UNDEFINED if icon is None else self.parse_asset(icon)),
+            nsfw=payload.get('nsfw', UNDEFINED),
+            active=payload.get('active', UNDEFINED),
+            raw_permissions=payload.get('permissions', UNDEFINED),
+            role_permissions=(
+                UNDEFINED
+                if role_permissions is None
+                else {k: self.parse_permission_override_field(v) for k, v in role_permissions.items()}
+            ),
+            default_permissions=(
+                UNDEFINED if default_permissions is None else self.parse_permission_override_field(default_permissions)
+            ),
+            last_message_id=payload.get('last_message_id', UNDEFINED),
+            category_id=payload.get('parent', UNDEFINED),
+            voice=UNDEFINED if voice is None else self.parse_voice_information(voice),
+        )
+
+    def parse_partial_member(
+        self, payload: raw.PartialMember, server_id: str, user_id: str, clear: list[raw.FieldsMember], /
+    ) -> PartialMember:
+        """Parses a partial member object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The partial member payload to parse.
+        server_id: :class:`str`
+            The ID of the server the member belongs to.
+        user_id: :class:`str`
+            The ID of the user.
+        clear: List[:class:`str`]
+            The cleared fields.
+
+        Returns
+        -------
+        :class:`PartialMember`
+            The parsed partial member object.
+        """
+
+        avatar = payload.get('avatar')
+        roles = payload.get('roles')
+        timeout = payload.get('timeout')
+
+        return PartialMember(
+            state=self.state,
+            server_id=server_id,
+            internal_user=user_id,
+            nick=None if 'Nickname' in clear else payload.get('nickname', UNDEFINED),
+            internal_server_avatar=None
+            if 'Avatar' in clear
+            else (UNDEFINED if avatar is None else self.parse_asset(avatar)),
+            role_ids=[] if 'Roles' in clear else (UNDEFINED if roles is None else roles),
+            timed_out_until=None if 'Timeout' in clear else (UNDEFINED if timeout is None else _parse_dt(timeout)),
+            can_publish=payload.get('can_publish', UNDEFINED),
+            can_receive=payload.get('can_receive', UNDEFINED),
+        )
+
+    def parse_partial_message(
+        self, payload: raw.PartialMessage, channel_id: str, message_id: str, clear: list[raw.FieldsMessage], /
+    ) -> PartialMessage:
+        """Parses a partial message object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The partial message payload to parse.
+        server_id: :class:`str`
+            The ID of the server the message belongs to.
+        user_id: :class:`str`
+            The ID of the message.
+        clear: List[:class:`str`]
+            The cleared fields.
+
+        Returns
+        -------
+        :class:`PartialMessage`
+            The parsed partial message object.
+        """
+
+        content = payload.get('content')
+        edited_at = payload.get('edited')
+        embeds = payload.get('embeds')
+        reactions = payload.get('reactions')
+
+        return PartialMessage(
+            state=self.state,
+            id=message_id,
+            channel_id=channel_id,
+            content=UNDEFINED if content is None else content,
+            edited_at=UNDEFINED if edited_at is None else _parse_dt(edited_at),
+            internal_embeds=UNDEFINED if embeds is None else list(map(self.parse_embed, embeds)),
+            pinned=False if 'Pinned' in clear else payload.get('pinned', UNDEFINED),
+            reactions=UNDEFINED if reactions is None else {k: tuple(v) for k, v in reactions.items()},
+        )
+
+    def parse_partial_role(
+        self, payload: raw.PartialRole, server_id: str, role_id: str, clear: list[raw.FieldsRole], /
+    ) -> PartialRole:
+        """Parses a partial role object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The partial role payload to parse.
+        server_id: :class:`str`
+            The ID of the server the role belongs to.
+        user_id: :class:`str`
+            The ID of the role.
+        clear: List[:class:`str`]
+            The cleared fields.
+
+        Returns
+        -------
+        :class:`PartialRole`
+            The parsed partial role object.
+        """
+
+        permissions = payload.get('permissions')
+
+        return PartialRole(
+            state=self.state,
+            id=role_id,
+            server_id=server_id,
+            name=payload.get('name', UNDEFINED),
+            permissions=UNDEFINED if permissions is None else self.parse_permission_override_field(permissions),
+            color=None if 'Colour' in clear else payload.get('colour', UNDEFINED),
+            hoist=payload.get('hoist', UNDEFINED),
+            rank=payload.get('rank', UNDEFINED),
+        )
+
+    def parse_partial_server(
+        self, payload: raw.PartialServer, server_id: str, clear: list[raw.FieldsServer], /
+    ) -> PartialServer:
+        """Parses a partial server object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The partial server payload to parse.
+        server_id: :class:`str`
+            The ID of the server.
+        clear: List[:class:`str`]
+            The cleared fields.
+
+        Returns
+        -------
+        :class:`PartialServer`
+            The parsed partial server object.
+        """
+
+        description = payload.get('description')
+        system_messages = payload.get('system_messages')
+        icon = payload.get('icon')
+        banner = payload.get('banner')
+
+        if 'categories' in payload:
+            categories_payload = payload['categories']
+            if isinstance(categories_payload, dict):
+                categories = {k: self.parse_category(v) for k, v in categories_payload.items()}
+            else:
+                categories = list(map(self.parse_category, categories_payload))
+        elif 'Categories' in clear:
+            categories = None
+        else:
+            categories = UNDEFINED
+
+        return PartialServer(
+            state=self.state,
+            id=server_id,
+            owner_id=payload.get('owner', UNDEFINED),
+            name=payload.get('name', UNDEFINED),
+            description=None if 'Description' in clear else (UNDEFINED if description is None else description),
+            channel_ids=payload.get('channels', UNDEFINED),
+            internal_categories=categories,
+            system_messages=(
+                None
+                if 'SystemMessages' in clear
+                else (UNDEFINED if system_messages is None else self.parse_system_message_channels(system_messages))
+            ),
+            raw_default_permissions=payload.get('default_permissions', UNDEFINED),
+            internal_icon=None if 'Icon' in clear else (UNDEFINED if icon is None else self.parse_asset(icon)),
+            internal_banner=None if 'banner' in clear else (UNDEFINED if banner is None else self.parse_asset(banner)),
+            raw_flags=payload.get('flags', UNDEFINED),
+            discoverable=payload.get('discoverable', UNDEFINED),
+            analytics=payload.get('analytics', UNDEFINED),
+        )
+
     def parse_partial_session(self, payload: raw.a.SessionInfo, /) -> PartialSession:
         """Parses a partial session object.
 
@@ -2989,6 +3168,35 @@ class Parser:
             internal_background=None
             if 'ProfileBackground' in clear
             else (UNDEFINED if background is None else self.parse_asset(background)),
+        )
+
+    def parse_partial_webhook(
+        self, payload: raw.PartialWebhook, webhook_id: str, remove: list[raw.FieldsWebhook], /
+    ) -> PartialWebhook:
+        """Parses a partial webhook object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The partial webhook payload to parse.
+        webhook_id: :class:`str`
+            The ID of the webhook.
+        remove: List[:class:`str`]
+            The removed fields.
+
+        Returns
+        -------
+        :class:`PartialWebhook`
+            The parsed partial webhook object.
+        """
+        avatar = payload.get('avatar')
+
+        return PartialWebhook(
+            state=self.state,
+            id=webhook_id,
+            name=payload.get('name', UNDEFINED),
+            internal_avatar=None if 'Avatar' in remove else (UNDEFINED if avatar is None else self.parse_asset(avatar)),
+            raw_permissions=payload.get('permissions', UNDEFINED),
         )
 
     def parse_permission_override(self, payload: raw.Override, /) -> PermissionOverride:
@@ -3675,25 +3883,9 @@ class Parser:
         data = payload['data']
         clear = payload['clear']
 
-        avatar = data.get('avatar')
-        roles = data.get('roles')
-        timeout = data.get('timeout')
-
         return ServerMemberUpdateEvent(
             shard=shard,
-            member=PartialMember(
-                state=self.state,
-                server_id=id['server'],
-                internal_user=id['user'],
-                nick=None if 'Nickname' in clear else data.get('nickname', UNDEFINED),
-                internal_server_avatar=None
-                if 'Avatar' in clear
-                else (UNDEFINED if avatar is None else self.parse_asset(avatar)),
-                role_ids=[] if 'Roles' in clear else (UNDEFINED if roles is None else roles),
-                timed_out_until=None if 'Timeout' in clear else (UNDEFINED if timeout is None else _parse_dt(timeout)),
-                can_publish=data.get('can_publish', UNDEFINED),
-                can_receive=data.get('can_receive', UNDEFINED),
-            ),
+            member=self.parse_partial_member(data, id['server'], id['user'], clear),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
         )
@@ -3821,20 +4013,12 @@ class Parser:
         data = payload['data']
         clear = payload['clear']
 
-        permissions = data.get('permissions')
+        server_id = payload['id']
+        role_id = payload['role_id']
 
         return RawServerRoleUpdateEvent(
             shard=shard,
-            role=PartialRole(
-                state=self.state,
-                id=payload['role_id'],
-                server_id=payload['id'],
-                name=data.get('name', UNDEFINED),
-                permissions=UNDEFINED if permissions is None else self.parse_permission_override_field(permissions),
-                color=None if 'Colour' in clear else data.get('colour', UNDEFINED),
-                hoist=data.get('hoist', UNDEFINED),
-                rank=data.get('rank', UNDEFINED),
-            ),
+            role=self.parse_partial_role(data, server_id, role_id, clear),
             old_role=None,
             new_role=None,
             server=None,
@@ -3855,49 +4039,14 @@ class Parser:
         :class:`ServerUpdateEvent`
             The parsed server update event object.
         """
+
+        server_id = payload['id']
         data = payload['data']
         clear = payload['clear']
 
-        description = data.get('description')
-        system_messages = data.get('system_messages')
-        icon = data.get('icon')
-        banner = data.get('banner')
-
-        if 'categories' in payload:
-            categories_payload = payload['categories']
-            if isinstance(categories_payload, dict):
-                categories = {k: self.parse_category(v) for k, v in categories_payload.items()}
-            else:
-                categories = list(map(self.parse_category, categories_payload))
-        elif 'Categories' in clear:
-            categories = None
-        else:
-            categories = UNDEFINED
-
         return ServerUpdateEvent(
             shard=shard,
-            server=PartialServer(
-                state=self.state,
-                id=payload['id'],
-                owner_id=data.get('owner', UNDEFINED),
-                name=data.get('name', UNDEFINED),
-                description=None if 'Description' in clear else (UNDEFINED if description is None else description),
-                channel_ids=data.get('channels', UNDEFINED),
-                internal_categories=categories,
-                system_messages=(
-                    None
-                    if 'SystemMessages' in clear
-                    else (UNDEFINED if system_messages is None else self.parse_system_message_channels(system_messages))
-                ),
-                raw_default_permissions=data.get('default_permissions', UNDEFINED),
-                internal_icon=None if 'Icon' in clear else (UNDEFINED if icon is None else self.parse_asset(icon)),
-                internal_banner=None
-                if 'banner' in clear
-                else (UNDEFINED if banner is None else self.parse_asset(banner)),
-                raw_flags=data.get('flags', UNDEFINED),
-                discoverable=data.get('discoverable', UNDEFINED),
-                analytics=data.get('analytics', UNDEFINED),
-            ),
+            server=self.parse_partial_server(data, server_id, clear),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
         )
@@ -4679,22 +4828,13 @@ class Parser:
         :class:`WebhookUpdateEvent`
             The parsed webhook update event object.
         """
+        webhook_id = payload['id']
         data = payload['data']
         remove = payload['remove']
 
-        avatar = data.get('avatar')
-
         return WebhookUpdateEvent(
             shard=shard,
-            webhook=PartialWebhook(
-                state=self.state,
-                id=payload['id'],
-                name=data.get('name', UNDEFINED),
-                internal_avatar=None
-                if 'Avatar' in remove
-                else (UNDEFINED if avatar is None else self.parse_asset(avatar)),
-                raw_permissions=data.get('permissions', UNDEFINED),
-            ),
+            webhook=self.parse_partial_webhook(data, webhook_id, remove),
         )
 
     def parse_webhook_delete_event(self, shard: Shard, payload: raw.ClientWebhookDeleteEvent, /) -> WebhookDeleteEvent:

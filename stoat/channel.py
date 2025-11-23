@@ -328,43 +328,49 @@ class PartialChannel(BaseChannel):
     This inherits from :class:`BaseChannel`.
     """
 
-    name: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The new channel name, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
-    owner_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
+    owner_id: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The ID of new group owner, if applicable. Only for :class:`GroupChannel`."""
 
-    description: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True, eq=True)
+    description: UndefinedOr[typing.Optional[str]] = field(default=UNDEFINED, repr=True, kw_only=True, eq=True)
     """UndefinedOr[Optional[:class:`str`]]: The new channel's description, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
-    internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True, eq=True)
+    internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(
+        default=UNDEFINED, repr=True, kw_only=True, eq=True
+    )
     """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new channel's stateless icon, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
-    nsfw: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
+    nsfw: UndefinedOr[bool] = field(default=UNDEFINED, repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`bool`]: Whether the channel have been marked as NSFW, if applicable. Only for :class:`GroupChannel` and :class:`BaseServerChannel`'s."""
 
-    active: UndefinedOr[bool] = field(repr=True, kw_only=True, eq=True)
+    active: UndefinedOr[bool] = field(default=UNDEFINED, repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`bool`]: Whether the DM channel is active now, if applicable. Only for :class:`DMChannel`'s."""
 
-    raw_permissions: UndefinedOr[int] = field(repr=True, kw_only=True, eq=True)
+    raw_permissions: UndefinedOr[int] = field(default=UNDEFINED, repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`int`]: The new channel's permissions raw value, if applicable. Only for :class:`GroupChannel`'s."""
 
-    role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
+    role_permissions: UndefinedOr[dict[str, PermissionOverride]] = field(
+        default=UNDEFINED, repr=True, kw_only=True, eq=True
+    )
     """UndefinedOr[Dict[:class:`str`, :class:`PermissionOverride`]]: The new channel's permission overrides for roles, if applicable. Only for :class:`BaseServerChannel`'s."""
 
-    default_permissions: UndefinedOr[typing.Optional[PermissionOverride]] = field(repr=True, kw_only=True, eq=True)
+    default_permissions: UndefinedOr[typing.Optional[PermissionOverride]] = field(
+        default=UNDEFINED, repr=True, kw_only=True, eq=True
+    )
     """UndefinedOr[Optional[:class:`PermissionOverride`]]: The new channel's permission overrides for everyone, if applicable. Only for :class:`BaseServerChannel`'s."""
 
-    last_message_id: UndefinedOr[str] = field(repr=True, kw_only=True, eq=True)
+    last_message_id: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The last message ID sent in the channel."""
 
-    category_id: UndefinedOr[str] = field(repr=True, kw_only=True)
+    category_id: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new category ID the channel is in.
     
     .. versionadded:: 1.2
     """
 
-    voice: UndefinedOr[ChannelVoiceMetadata] = field(repr=True, kw_only=True, eq=True)
+    voice: UndefinedOr[ChannelVoiceMetadata] = field(default=UNDEFINED, repr=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`ChannelVoiceMetadata`]: The new voice-specific metadata for this channel.
     
     .. versionadded:: 1.2
