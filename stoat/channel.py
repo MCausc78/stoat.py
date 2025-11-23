@@ -407,7 +407,7 @@ class PartialChannel(BaseChannel):
         return fields
 
     def to_dict(self) -> raw.PartialChannel:
-        """:class:`dict`: Convert channel to raw data."""
+        """:class:`dict`: Convert partial channel to raw data."""
         payload: raw.PartialChannel = {}
         if self.name is not UNDEFINED:
             payload['name'] = self.name

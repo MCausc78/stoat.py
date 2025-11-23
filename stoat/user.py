@@ -1307,6 +1307,46 @@ class PartialUser(BaseUser):
         ret.value = self.raw_flags
         return ret
 
+    def get_clear_fields(self) -> list[raw.FieldsUser]:
+        """List[:class:`str`]: The fields that were set to ``None``."""
+
+        fields: list[raw.FieldsUser] = []
+        if self.internal_avatar is None:
+            fields.append('Avatar')
+        if self.status is not UNDEFINED:
+            if self.status.presence is None:
+                fields.append('StatusPresence')
+            if self.status.text is None:
+                fields.append('StatusText')
+        # Can't detect profile bio/background changes, as the API does not provide it
+        if self.display_name is None:
+            fields.append('DisplayName')
+        return fields
+
+    def to_dict(self) -> raw.PartialUser:
+        """:class:`dict`: Convert partial user to raw data."""
+        payload: raw.PartialUser = {}
+        if self.name is not UNDEFINED:
+            payload['username'] = self.name
+        if self.discriminator is not UNDEFINED:
+            payload['discriminator'] = self.discriminator
+        if self.display_name is not UNDEFINED and self.display_name is not None:
+            payload['display_name'] = self.display_name
+        if self.internal_avatar is not UNDEFINED and self.internal_avatar is not None:
+            payload['avatar'] = self.internal_avatar.to_dict('avatars')
+        if self.raw_badges is not UNDEFINED:
+            payload['badges'] = self.raw_badges
+        if self.status is not UNDEFINED:
+            payload['status'] = self.status.to_dict()
+        # profile
+        if self.raw_flags is not UNDEFINED:
+            payload['flags'] = self.raw_flags
+        if self.bot is not UNDEFINED:
+            payload['bot'] = self.bot.to_dict()
+        if self.online is not UNDEFINED:
+            payload['online'] = self.online
+        return payload
+
 
 @define(slots=True)
 class DisplayUser(BaseUser):
@@ -1868,7 +1908,7 @@ class UserVoiceState:
 class PartialUserVoiceState:
     """Represents a partial voice state for the user.
 
-    Unmodified fields will have :data:`.UNDEFINED` as their value.
+    Unmodified fields will have :data:`UNDEFINED` as their value.
     """
 
     user_id: str = field(repr=True, kw_only=True)
@@ -1885,6 +1925,19 @@ class PartialUserVoiceState:
 
     camera: UndefinedOr[bool] = field(repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether the user is sharing their camera."""
+
+    def to_dict(self) -> raw.PartialUserVoiceState:
+        """:class:`dict`: Convert partial user voice state to raw data."""
+        payload: raw.PartialUserVoiceState = {}
+        if self.can_receive is not UNDEFINED:
+            payload['can_receive'] = self.can_receive
+        if self.can_publish is not UNDEFINED:
+            payload['can_publish'] = self.can_publish
+        if self.screensharing is not UNDEFINED:
+            payload['screensharing'] = self.screensharing
+        if self.camera is not UNDEFINED:
+            payload['camera'] = self.camera
+        return payload
 
 
 __all__ = (

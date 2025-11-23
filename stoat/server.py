@@ -647,7 +647,7 @@ class PartialRole(BaseRole):
         return fields
 
     def to_dict(self) -> raw.PartialRole:
-        """:class:`dict`: Convert role to raw data."""
+        """:class:`dict`: Convert partial role to raw data."""
         payload: raw.PartialRole = {}
         if self.name is not UNDEFINED:
             payload['name'] = self.name
@@ -3072,7 +3072,7 @@ class PartialServer(BaseServer):
         return fields
 
     def to_dict(self) -> raw.PartialServer:
-        """:class:`dict`: Convert server to raw data."""
+        """:class:`dict`: Convert partial server to raw data."""
         payload: raw.PartialServer = {}
         if self.owner_id is not UNDEFINED:
             payload['owner'] = self.owner_id
@@ -5305,7 +5305,7 @@ class PartialMember(BaseMember):
         return fields
 
     def to_dict(self) -> raw.PartialMember:
-        """:class:`dict`: Convert member to raw data."""
+        """:class:`dict`: Convert partial member to raw data."""
         payload: raw.PartialMember = {}
         if self.nick is not UNDEFINED and self.nick is not None:
             payload['nickname'] = self.nick

@@ -262,7 +262,7 @@ class AuditLogEntryAction:
         raise TypeError(f'Cannot serialize action of type {self.type!r}')
 
 
-__slots__ = (
+__all__ = (
     'AuditLogEntry',
     'AuditLogEntryAction',
 )
