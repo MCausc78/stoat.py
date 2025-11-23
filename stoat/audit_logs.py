@@ -26,10 +26,11 @@ from __future__ import annotations
 
 import typing
 
-from attrs import define, field
+from attrs import Factory, define, field
 
 from .base import Base
 from .enums import AuditLogEntryActionType
+from .errors import NoData
 from .server import Member
 from .user import User
 
@@ -83,17 +84,29 @@ class AuditLogEntryAction:
     type: AuditLogEntryActionType = field(repr=True, kw_only=True, eq=True)
     """:class:`AuditLogEntryActionType`: The type of the action."""
 
-    channel_id: str = field(default='', repr=True, kw_only=True, eq=True)
+    channel_id: str = field(default='', repr=False, kw_only=True, eq=True)
     """:class:`str`: The ID of the channel."""
 
-    channel_update: PartialChannel = field(repr=True, kw_only=True, eq=True)
-    """:class:`PartialChannel`: The updated channel as it was updated."""
-
-    count: int = field(default=0, repr=True, kw_only=True, eq=True)
+    count: int = field(default=0, repr=False, kw_only=True, eq=True)
     """:class:`int`: The count of deleted messages."""
 
-    emoji_id: str = field(default='', repr=True, kw_only=True, eq=True)
+    emoji_id: str = field(default='', repr=False, kw_only=True, eq=True)
     """:class:`str`: The ID of the emoji."""
+
+    internal_channel_update: typing.Optional[PartialChannel] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialChannel`]: The updated channel as it was updated."""
+
+    internal_member_update: typing.Optional[PartialMember] = field(default=None, repr=False, kw_only=True, eq=True)
+    """:class:`PartialMember`: The updated member as it was updated."""
+
+    internal_payload: typing.Optional[dict[str, typing.Any]] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[Dict[:class:`str`, Any]]: The raw audit log entry action data."""
+
+    internal_role_update: typing.Optional[PartialRole] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialRole`]: The updated role as it was updated."""
+
+    internal_server_update: typing.Optional[PartialServer] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialServer`]: The updated server as it was updated."""
 
     internal_user: typing.Union[Member, User, str] = field(
         default='',
@@ -104,32 +117,70 @@ class AuditLogEntryAction:
     )
     """Union[:class:`Member`, :class:`User`, :class:`str`]: The ID of the user, or full member/user instance."""
 
-    invite_code: str = field(default='', repr=True, kw_only=True, eq=True)
+    invite_code: str = field(default='', repr=False, kw_only=True, eq=True)
     """:class:`str`: The ID of the invite."""
 
-    member_update: PartialMember = field(repr=True, kw_only=True, eq=True)
-    """:class:`PartialMember`: The updated member as it was updated."""
-
-    name: str = field(default='', repr=True, kw_only=True, eq=True)
+    name: str = field(default='', repr=False, kw_only=True, eq=True)
     """:class:`str`: The name of the affected entity."""
 
-    permissions: PermissionOverride = field(repr=True, kw_only=True, eq=True)
-    """:class:`str`: The permissions of the affected entity."""
+    permissions: PermissionOverride = field(default=Factory(PermissionOverride), repr=False, kw_only=True, eq=True)
+    """:class:`PermissionOverride`: The permissions of the affected entity."""
 
-    positions: list[str] = field(repr=True, kw_only=True, eq=True)
+    positions: list[str] = field(default=Factory(list), repr=False, kw_only=True, eq=True)
     """List[:class:`str`]: The new IDs of roles with their index in list representing their rank."""
 
-    role_id: str = field(default='', repr=True, kw_only=True, eq=True)
-    """:class:`str`: The ID of the role."""
+    role_id: str = field(default='', repr=False, kw_only=True, eq=True)
+    """:class:`str`: The ID of the affected role."""
 
-    role_update: PartialRole = field(repr=True, kw_only=True, eq=True)
-    """:class:`PartialRole`: The updated role as it was updated."""
+    server_id: str = field(default='', repr=False, kw_only=True, eq=True)
+    """:class:`str`: The ID of the affected server."""
 
-    server_update: PartialServer = field(repr=True, kw_only=True, eq=True)
-    """:class:`PartialServer`: The updated server as it was updated."""
+    webhook_id: str = field(default='', repr=False, kw_only=True, eq=True)
+    """:class:`str`: The ID of the affected webhook."""
 
-    webhook_id: str = field(default='', repr=True, kw_only=True, eq=True)
-    """:class:`str`: The ID of the webhook."""
+    @property
+    def channel_update(self) -> PartialChannel:
+        """:class:`PartialChannel`: The updated channel as it was updated."""
+        if self.internal_channel_update is None:
+            raise NoData(
+                what='',
+                type='AuditLogEntryAction.channel_update',
+                hint='the audit log entry action type is not channel_update',
+            )
+        return self.internal_channel_update
+
+    @property
+    def member_update(self) -> PartialMember:
+        """:class:`PartialMember`: The updated member as it was updated."""
+        if self.internal_member_update is None:
+            raise NoData(
+                what='',
+                type='AuditLogEntryAction.member_update',
+                hint='the audit log entry action type is not member_update',
+            )
+        return self.internal_member_update
+
+    @property
+    def role_update(self) -> PartialRole:
+        """:class:`PartialRole`: The updated role as it was updated."""
+        if self.internal_role_update is None:
+            raise NoData(
+                what='',
+                type='AuditLogEntryAction.role_update',
+                hint='the audit log entry action type is not role_update',
+            )
+        return self.internal_role_update
+
+    @property
+    def server_update(self) -> PartialServer:
+        """:class:`PartialServer`: The updated server as it was updated."""
+        if self.internal_server_update is None:
+            raise NoData(
+                what='',
+                type='AuditLogEntryAction.server_update',
+                hint='the audit log entry action type is not server_update',
+            )
+        return self.internal_server_update
 
     @property
     def user_id(self) -> str:

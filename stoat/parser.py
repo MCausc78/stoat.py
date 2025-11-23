@@ -30,6 +30,7 @@ import sys
 import typing
 
 from . import discovery
+from .audit_logs import AuditLogEntryAction
 from .authentication import (
     PartialAccount,
     MFATicket,
@@ -96,6 +97,7 @@ from .enums import (
     ImageSize,
     ContentReportReason,
     UserReportReason,
+    AuditLogEntryActionType,
     MemberRemovalIntention,
     Presence,
     RelationshipStatus,
@@ -248,6 +250,8 @@ from .utils import _UTC
 from .webhook import PartialWebhook, Webhook
 
 if typing.TYPE_CHECKING:
+    from collections.abc import Collection
+
     from . import raw
     from .shard import Shard
     from .state import State
@@ -278,6 +282,7 @@ class Parser:
 
     __slots__ = (
         'state',
+        '_audit_log_entry_action_parsers',
         '_channel_parsers',
         '_embed_parsers',
         '_embed_special_parsers',
@@ -291,6 +296,26 @@ class Parser:
 
     def __init__(self, *, state: State) -> None:
         self.state: State = state
+        self._audit_log_entry_action_parsers = {
+            'MessageDelete': self.parse_audit_log_entry_message_delete_action,
+            'MessageBulkDelete': self.parse_audit_log_entry_message_bulk_delete_action,
+            'BanCreate': self.parse_audit_log_entry_ban_create_action,
+            'BanDelete': self.parse_audit_log_entry_ban_delete_action,
+            'ChannelCreate': self.parse_audit_log_entry_channel_create_action,
+            'ChannelEdit': self.parse_audit_log_entry_channel_edit_action,
+            'ChannelRolePermissionsEdit': self.parse_audit_log_entry_channel_role_permissions_edit_action,
+            'ChannelDelete': self.parse_audit_log_entry_channel_delete_action,
+            'MemberEdit': self.parse_audit_log_entry_member_edit_action,
+            'MemberKick': self.parse_audit_log_entry_member_kick_action,
+            'ServerEdit': self.parse_audit_log_entry_server_edit_action,
+            'RoleEdit': self.parse_audit_log_entry_role_edit_action,
+            'RoleCreate': self.parse_audit_log_entry_role_create_action,
+            'RoleDelete': self.parse_audit_log_entry_role_delete_action,
+            'RolesReorder': self.parse_audit_log_entry_roles_reorder_action,
+            'InviteDelete': self.parse_audit_log_entry_invite_delete_action,
+            'WebhookCreate': self.parse_audit_log_entry_webhook_create_action,
+            'EmojiDelete': self.parse_audit_log_entry_emoji_delete_action,
+        }
         self._channel_parsers = {
             'SavedMessages': self.parse_saved_messages_channel,
             'DirectMessage': self.parse_direct_message_channel,
@@ -420,6 +445,643 @@ class Parser:
             user_id=d.get('user_id'),
             server_id=d.get('server_id'),
             object_id=d.get('object_id'),
+        )
+
+    def parse_audit_log_entry_action(
+        self,
+        payload: raw.AuditLogEntryAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            The ID of the server of audit log entry.
+        members: Dict[:class:`str`, :class:`Member`]
+            The mapping of user IDs to member objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed audit log entry action object.
+        """
+
+        type = payload['type']
+        try:
+            parser = self._audit_log_entry_action_parsers[type]
+        except KeyError:
+            return AuditLogEntryAction(
+                type=AuditLogEntryActionType.unknown,
+                internal_payload=payload,  # type: ignore
+            )
+        else:
+            return parser(payload, server_id, members, users)
+
+    def parse_audit_log_entry_ban_create_action(
+        self,
+        payload: raw.AuditLogEntryBanCreateAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.ban` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            The mapping of user IDs to member objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.ban` audit log entry action object.
+        """
+
+        user_id = payload['user']
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.ban,
+            internal_user=members.get(user_id, users.get(user_id, user_id)),
+        )
+
+    def parse_audit_log_entry_ban_delete_action(
+        self,
+        payload: raw.AuditLogEntryBanDeleteAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.unban` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            The mapping of user IDs to member objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.unban` audit log entry action object.
+        """
+
+        user_id = payload['user']
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.unban,
+            internal_user=members.get(user_id, users.get(user_id, user_id)),
+        )
+
+    def parse_audit_log_entry_channel_create_action(
+        self,
+        payload: raw.AuditLogEntryChannelCreateAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.channel_create` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.channel_create` audit log entry action object.
+        """
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.channel_create,
+            channel_id=payload['channel'],
+        )
+
+    def parse_audit_log_entry_channel_delete_action(
+        self,
+        payload: raw.AuditLogEntryChannelDeleteAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.channel_delete` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.channel_delete` audit log entry action object.
+        """
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.channel_delete,
+            channel_id=payload['channel'],
+        )
+
+    def parse_audit_log_entry_channel_edit_action(
+        self,
+        payload: raw.AuditLogEntryChannelEditAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.channel_update` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.channel_update` audit log entry action object.
+        """
+
+        channel_id = payload['channel']
+        clear = payload.get('remove', ())
+        data = payload['partial']
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.channel_update,
+            channel_id=channel_id,
+            internal_channel_update=self.parse_partial_channel(data, channel_id, clear),
+        )
+
+    def parse_audit_log_entry_channel_role_permissions_edit_action(
+        self,
+        payload: raw.AuditLogEntryChannelRolePermissionsEditAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.channel_role_permissions_update` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.channel_role_permissions_update` audit log entry action object.
+        """
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.channel_role_permissions_update,
+            channel_id=payload['channel'],
+            permissions=self.parse_permission_override(payload['permissions']),
+            role_id=payload['role'],
+        )
+
+    def parse_audit_log_entry_emoji_delete_action(
+        self,
+        payload: raw.AuditLogEntryEmojiDeleteAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.emoji_delete` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.emoji_delete` audit log entry action object.
+        """
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.emoji_delete,
+            emoji_id=payload['emoji'],
+            name=payload['name'],
+        )
+
+    def parse_audit_log_entry_invite_delete_action(
+        self,
+        payload: raw.AuditLogEntryInviteDeleteAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.invite_delete` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.invite_delete` audit log entry action object.
+        """
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.invite_delete,
+            channel_id=payload['channel'],
+            invite_code=payload['invite'],
+        )
+
+    def parse_audit_log_entry_member_edit_action(
+        self,
+        payload: raw.AuditLogEntryMemberEditAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.member_update` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            The ID of the server of audit log entry.
+        members: Dict[:class:`str`, :class:`Member`]
+            The mapping of user IDs to member objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.member_update` audit log entry action object.
+        """
+
+        user_id = payload['user']
+        clear = payload.get('remove', ())
+        data = payload['partial']
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.member_update,
+            internal_member_update=self.parse_partial_member(data, server_id, user_id, clear),
+            internal_user=members.get(user_id, users.get(user_id, user_id)),
+        )
+
+    def parse_audit_log_entry_member_kick_action(
+        self,
+        payload: raw.AuditLogEntryMemberKickAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.member_remove` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            The mapping of user IDs to member objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.member_remove` audit log entry action object.
+        """
+
+        user_id = payload['user']
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.member_remove,
+            internal_user=members.get(user_id, users.get(user_id, user_id)),
+        )
+
+    def parse_audit_log_entry_message_bulk_delete_action(
+        self,
+        payload: raw.AuditLogEntryMessageBulkDeleteAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.message_bulk_delete` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.message_bulk_delete` audit log entry action object.
+        """
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.message_bulk_delete,
+            channel_id=payload['channel'],
+            count=payload['count'],
+        )
+
+    def parse_audit_log_entry_message_delete_action(
+        self,
+        payload: raw.AuditLogEntryMessageDeleteAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.message_delete` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        members: Dict[:class:`str`, :class:`Member`]
+            The mapping of user IDs to member objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.message_delete` audit log entry action object.
+        """
+
+        author_id = payload['author']
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.message_delete,
+            channel_id=payload['channel'],
+            internal_user=members.get(author_id, users.get(author_id, author_id)),
+        )
+
+    def parse_audit_log_entry_role_create_action(
+        self,
+        payload: raw.AuditLogEntryRoleCreateAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.role_create` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.role_create` audit log entry action object.
+        """
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.role_create,
+            role_id=payload['role'],
+        )
+
+    def parse_audit_log_entry_role_delete_action(
+        self,
+        payload: raw.AuditLogEntryRoleDeleteAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.role_delete` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.role_delete` audit log entry action object.
+        """
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.role_delete,
+            name=payload['name'],
+            role_id=payload['role'],
+        )
+
+    def parse_audit_log_entry_role_edit_action(
+        self,
+        payload: raw.AuditLogEntryRoleEditAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.role_update` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            The ID of the server of audit log entry.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.role_update` audit log entry action object.
+        """
+
+        role_id = payload['role']
+        clear = payload.get('clear', ())
+        data = payload['partial']
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.role_update,
+            internal_role_update=self.parse_partial_role(data, server_id, role_id, clear),
+            role_id=role_id,
+        )
+
+    def parse_audit_log_entry_roles_reorder_action(
+        self,
+        payload: raw.AuditLogEntryRolesReorderAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.roles_reorder` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.roles_reorder` audit log entry action object.
+        """
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.roles_reorder,
+            positions=payload['positions'],
+        )
+
+    def parse_audit_log_entry_server_edit_action(
+        self,
+        payload: raw.AuditLogEntryServerEditAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.server_edit` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            The ID of the server of audit log entry.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.server_edit` audit log entry action object.
+        """
+
+        clear = payload.get('remove', ())
+        data = payload['partial']
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.server_update,
+            internal_server_update=self.parse_partial_server(data, server_id, clear),
+            server_id=server_id,
+        )
+
+    def parse_audit_log_entry_webhook_create_action(
+        self,
+        payload: raw.AuditLogEntryWebhookCreateAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.webhook_create` audit log entry action object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.webhook_create` audit log entry action object.
+        """
+
+        return AuditLogEntryAction(
+            type=AuditLogEntryActionType.webhook_create,
+            channel_id=payload['channel'],
+            webhook_id=payload['webhook'],
         )
 
     def parse_auth_event(self, shard: Shard, payload: raw.ClientAuthEvent, /) -> AuthifierEvent:
@@ -1769,7 +2431,7 @@ class Parser:
         user: Optional[:class:`User`]
             The user.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`Member.user`.
+            The mapping of user IDs to user objects. Required for :attr:`Member.user` population attempts.
 
         Returns
         -------
@@ -1851,9 +2513,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The message payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            The mapping of user IDs to member objects. Required for trying populating :attr:`Message.author`.
+            The mapping of user IDs to member objects. Required for :attr:`Message.author` population attempts.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`Message.author`.
+            The mapping of user IDs to user objects. Required for :attr:`Message.author` population attempts.
         cls: Type[:class:`Message`]
             The message class to use when constructing final object.
             The constructor of provided class must be compatible with default one.
@@ -1953,7 +2615,7 @@ class Parser:
         members: Dict[:class:`str`, :class:`Member`]
             Should be empty for :class:`StatelessCallStartedSystemEvent`.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessCallStartedSystemEvent.by`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessCallStartedSystemEvent.by` population attempts.
 
         Returns
         -------
@@ -1985,7 +2647,7 @@ class Parser:
         members: Dict[:class:`str`, :class:`Member`]
             Should be empty for :class:`StatelessChannelDescriptionChangedSystemEvent`.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessChannelDescriptionChangedSystemEvent.by`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessChannelDescriptionChangedSystemEvent.by` population attempts.
 
         Returns
         -------
@@ -2013,7 +2675,7 @@ class Parser:
         members: Dict[:class:`str`, :class:`Member`]
             Should be empty for :class:`StatelessChannelIconChangedSystemEvent`.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessChannelIconChangedSystemEvent.by`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessChannelIconChangedSystemEvent.by` population attempts.
 
         Returns
         -------
@@ -2037,7 +2699,7 @@ class Parser:
         members: Dict[:class:`str`, :class:`Member`]
             Should be empty for :class:`StatelessChannelRenamedSystemEvent`.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessChannelRenamedSystemEvent.by`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessChannelRenamedSystemEvent.by` population attempts.
 
         Returns
         -------
@@ -2068,7 +2730,7 @@ class Parser:
         members: Dict[:class:`str`, :class:`Member`]
             Should be empty for :class:`StatelessChannelOwnershipChangedSystemEvent`.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessChannelOwnershipChangedSystemEvent.from_` and :attr:`StatelessChannelOwnershipChangedSystemEvent.to`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessChannelOwnershipChangedSystemEvent.from_` population attempts.and :attr:`StatelessChannelOwnershipChangedSystemEvent.to`.
 
         Returns
         -------
@@ -2171,9 +2833,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The message system event payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            The mapping of user IDs to member objects. Required for trying populating :attr:`StatelessMessagePinnedSystemEvent.by`.
+            The mapping of user IDs to member objects. Required for :attr:`StatelessMessagePinnedSystemEvent.by` population attempts.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessMessagePinnedSystemEvent.by`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessMessagePinnedSystemEvent.by` population attempts.
 
         Returns
         -------
@@ -2198,9 +2860,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The message system event payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            The mapping of user IDs to member objects. Required for trying populating :attr:`StatelessMessageUnpinnedSystemEvent.by`.
+            The mapping of user IDs to member objects. Required for :attr:`StatelessMessageUnpinnedSystemEvent.by` population attempts.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessMessageUnpinnedSystemEvent.by`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessMessageUnpinnedSystemEvent.by` population attempts.
 
         Returns
         -------
@@ -2454,7 +3116,7 @@ class Parser:
         members: Dict[:class:`str`, :class:`Member`]
             Should be empty for :class:`StatelessUserAddedSystemEvent`.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessUserAddedSystemEvent.user` and :attr:`StatelessUserAddedSystemEvent.by`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessUserAddedSystemEvent.user` population attempts.and :attr:`StatelessUserAddedSystemEvent.by`.
 
         Returns
         -------
@@ -2484,9 +3146,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The message system event payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            The mapping of user IDs to member objects. Required for trying populating :attr:`StatelessUserBannedSystemEvent.user`.
+            The mapping of user IDs to member objects. Required for :attr:`StatelessUserBannedSystemEvent.user` population attempts.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessUserBannedSystemEvent.user`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessUserBannedSystemEvent.user` population attempts.
 
         Returns
         -------
@@ -2512,9 +3174,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The message system event payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            The mapping of user IDs to member objects. Required for trying populating :attr:`StatelessUserJoinedSystemEvent.user`.
+            The mapping of user IDs to member objects. Required for :attr:`StatelessUserJoinedSystemEvent.user` population attempts.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessUserJoinedSystemEvent.user`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessUserJoinedSystemEvent.user` population attempts.
 
         Returns
         -------
@@ -2539,9 +3201,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The message system event payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            The mapping of user IDs to member objects. Required for trying populating :attr:`StatelessUserKickedSystemEvent.user`.
+            The mapping of user IDs to member objects. Required for :attr:`StatelessUserKickedSystemEvent.user` population attempts.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessUserKickedSystemEvent.user`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessUserKickedSystemEvent.user` population attempts.
 
         Returns
         -------
@@ -2566,9 +3228,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The message system event payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            The mapping of user IDs to member objects. Required for trying populating :attr:`StatelessUserLeftSystemEvent.user`.
+            The mapping of user IDs to member objects. Required for :attr:`StatelessUserLeftSystemEvent.user` population attempts.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessUserLeftSystemEvent.user`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessUserLeftSystemEvent.user` population attempts.
 
         Returns
         -------
@@ -2595,7 +3257,7 @@ class Parser:
         members: Dict[:class:`str`, :class:`Member`]
             Should be empty for :class:`StatelessUserRemovedSystemEvent`.
         users: Dict[:class:`str`, :class:`User`]
-            The mapping of user IDs to user objects. Required for trying populating :attr:`StatelessUserRemovedSystemEvent.user` and :attr:`StatelessUserRemovedSystemEvent.by`.
+            The mapping of user IDs to user objects. Required for :attr:`StatelessUserRemovedSystemEvent.user` population attempts.and :attr:`StatelessUserRemovedSystemEvent.by`.
 
         Returns
         -------
@@ -2910,7 +3572,7 @@ class Parser:
         return PartialAccount(id=payload['_id'], email=payload['email'])
 
     def parse_partial_channel(
-        self, payload: raw.PartialChannel, channel_id: str, clear: list[raw.FieldsChannel], /
+        self, payload: raw.PartialChannel, channel_id: str, clear: Collection[raw.FieldsChannel], /
     ) -> PartialChannel:
         """Parses a partial channel object.
 
@@ -2958,7 +3620,7 @@ class Parser:
         )
 
     def parse_partial_member(
-        self, payload: raw.PartialMember, server_id: str, user_id: str, clear: list[raw.FieldsMember], /
+        self, payload: raw.PartialMember, server_id: str, user_id: str, clear: Collection[raw.FieldsMember], /
     ) -> PartialMember:
         """Parses a partial member object.
 
@@ -2998,7 +3660,7 @@ class Parser:
         )
 
     def parse_partial_message(
-        self, payload: raw.PartialMessage, channel_id: str, message_id: str, clear: list[raw.FieldsMessage], /
+        self, payload: raw.PartialMessage, channel_id: str, message_id: str, clear: Collection[raw.FieldsMessage], /
     ) -> PartialMessage:
         """Parses a partial message object.
 
@@ -3006,9 +3668,9 @@ class Parser:
         ----------
         payload: Dict[:class:`str`, Any]
             The partial message payload to parse.
-        server_id: :class:`str`
-            The ID of the server the message belongs to.
-        user_id: :class:`str`
+        channel_id: :class:`str`
+            The ID of the channel the message belongs to.
+        message_id: :class:`str`
             The ID of the message.
         clear: List[:class:`str`]
             The cleared fields.
@@ -3036,7 +3698,7 @@ class Parser:
         )
 
     def parse_partial_role(
-        self, payload: raw.PartialRole, server_id: str, role_id: str, clear: list[raw.FieldsRole], /
+        self, payload: raw.PartialRole, server_id: str, role_id: str, clear: Collection[raw.FieldsRole], /
     ) -> PartialRole:
         """Parses a partial role object.
 
@@ -3046,7 +3708,7 @@ class Parser:
             The partial role payload to parse.
         server_id: :class:`str`
             The ID of the server the role belongs to.
-        user_id: :class:`str`
+        role_id: :class:`str`
             The ID of the role.
         clear: List[:class:`str`]
             The cleared fields.
@@ -3071,7 +3733,7 @@ class Parser:
         )
 
     def parse_partial_server(
-        self, payload: raw.PartialServer, server_id: str, clear: list[raw.FieldsServer], /
+        self, payload: raw.PartialServer, server_id: str, clear: Collection[raw.FieldsServer], /
     ) -> PartialServer:
         """Parses a partial server object.
 
@@ -3143,8 +3805,47 @@ class Parser:
 
         return PartialSession(state=self.state, id=payload['_id'], name=payload['name'])
 
+    def parse_partial_user(
+        self, payload: raw.PartialUser, user_id: str, clear: Collection[raw.FieldsUser], /
+    ) -> PartialUser:
+        """Parses a partial user object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The partial user payload to parse.
+        user_id: :class:`str`
+            The ID of the user.
+        clear: List[:class:`str`]
+            The cleared fields.
+
+        Returns
+        -------
+        :class:`PartialUser`
+            The parsed partial user object.
+        """
+
+        avatar = payload.get('avatar')
+        status = payload.get('status')
+        bot = payload.get('bot')
+
+        return PartialUser(
+            state=self.state,
+            id=user_id,
+            name=payload.get('username', UNDEFINED),
+            discriminator=payload.get('discriminator', UNDEFINED),
+            display_name=None if 'DisplayName' in clear else payload.get('display_name', UNDEFINED),
+            internal_avatar=None if 'Avatar' in clear else (UNDEFINED if avatar is None else self.parse_asset(avatar)),
+            raw_badges=payload.get('badges', UNDEFINED),
+            status=UNDEFINED if status is None else self.parse_user_status_edit(status, clear),
+            # internal_profile=UNDEFINED if profile is None else self.parse_partial_user_profile(profile, clear),
+            raw_flags=payload.get('flags', UNDEFINED),
+            bot=UNDEFINED if bot is None else self.parse_bot_user_metadata(bot),
+            online=payload.get('online', UNDEFINED),
+        )
+
     def parse_partial_user_profile(
-        self, payload: raw.UserProfile, clear: list[raw.FieldsUser], /
+        self, payload: raw.UserProfile, clear: Collection[raw.FieldsUser], /
     ) -> PartialUserProfile:
         """Parses a partial user profile object.
 
@@ -3152,8 +3853,8 @@ class Parser:
         ----------
         payload: Dict[:class:`str`, Any]
             The partial user profile payload to parse.
-        clear: List[raw.FieldsUser]
-            The fields that were cleared.
+        clear: List[:class:`str`]
+            The removed fields.
 
         Returns
         -------
@@ -3170,8 +3871,34 @@ class Parser:
             else (UNDEFINED if background is None else self.parse_asset(background)),
         )
 
+    def parse_partial_user_voice_state(
+        self, payload: raw.PartialUserVoiceState, user_id: str, /
+    ) -> PartialUserVoiceState:
+        """Parses a partial user voice state object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The partial user voice state payload to parse.
+        user_id: :class:`str`
+            The ID of the user.
+
+        Returns
+        -------
+        :class:`PartialUserVoiceState`
+            The parsed partial user voice state object.
+        """
+
+        return PartialUserVoiceState(
+            user_id=user_id,
+            can_publish=payload.get('can_publish', UNDEFINED),
+            can_receive=payload.get('can_receive', UNDEFINED),
+            screensharing=payload.get('screensharing', UNDEFINED),
+            camera=payload.get('camera', UNDEFINED),
+        )
+
     def parse_partial_webhook(
-        self, payload: raw.PartialWebhook, webhook_id: str, remove: list[raw.FieldsWebhook], /
+        self, payload: raw.PartialWebhook, webhook_id: str, remove: Collection[raw.FieldsWebhook], /
     ) -> PartialWebhook:
         """Parses a partial webhook object.
 
@@ -4493,15 +5220,15 @@ class Parser:
             presence=None if presence is None else Presence(presence),
         )
 
-    def parse_user_status_edit(self, payload: raw.UserStatus, clear: list[raw.FieldsUser], /) -> UserStatusEdit:
+    def parse_user_status_edit(self, payload: raw.UserStatus, clear: Collection[raw.FieldsUser], /) -> UserStatusEdit:
         """Parses an user status edit object.
 
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
             The user status payload to parse.
-        clear: List[raw.FieldsUser]
-            The fields that were cleared.
+        clear: List[:class:`str`]
+            The removed fields.
 
         Returns
         -------
@@ -4530,32 +5257,14 @@ class Parser:
         :class:`UserUpdateEvent`
             The parsed user update event object.
         """
+
         user_id = payload['id']
         data = payload['data']
         clear = payload['clear']
 
-        avatar = data.get('avatar')
-        status = data.get('status')
-        bot = data.get('bot')
-
         return UserUpdateEvent(
             shard=shard,
-            user=PartialUser(
-                state=self.state,
-                id=user_id,
-                name=data.get('username', UNDEFINED),
-                discriminator=data.get('discriminator', UNDEFINED),
-                display_name=None if 'DisplayName' in clear else data.get('display_name', UNDEFINED),
-                internal_avatar=None
-                if 'Avatar' in clear
-                else (UNDEFINED if avatar is None else self.parse_asset(avatar)),
-                raw_badges=data.get('badges', UNDEFINED),
-                status=UNDEFINED if status is None else self.parse_user_status_edit(status, clear),
-                # internal_profile=UNDEFINED is profile is None else self.parse_partial_user_profile(profile, clear),
-                raw_flags=data.get('flags', UNDEFINED),
-                bot=UNDEFINED if bot is None else self.parse_bot_user_metadata(bot),
-                online=data.get('online', UNDEFINED),
-            ),
+            user=self.parse_partial_user(data, user_id, clear),
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
         )
@@ -4598,19 +5307,14 @@ class Parser:
             The parsed user voice state update object.
         """
 
+        user_id = payload['id']
         data = payload['data']
 
         return UserVoiceStateUpdateEvent(
             shard=shard,
             channel_id=payload['channel_id'],
             container=None,
-            state=PartialUserVoiceState(
-                user_id=payload['id'],
-                can_publish=data.get('can_publish', UNDEFINED),
-                can_receive=data.get('can_receive', UNDEFINED),
-                screensharing=data.get('screensharing', UNDEFINED),
-                camera=data.get('camera', UNDEFINED),
-            ),
+            state=self.parse_partial_user_voice_state(data, user_id),
             before=None,
             after=None,
         )
@@ -4828,6 +5532,7 @@ class Parser:
         :class:`WebhookUpdateEvent`
             The parsed webhook update event object.
         """
+
         webhook_id = payload['id']
         data = payload['data']
         remove = payload['remove']

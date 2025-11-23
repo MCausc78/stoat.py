@@ -162,6 +162,39 @@ else:
                 return value
 
 
+E = typing.TypeVar('E')
+
+
+def _create_unknown_value(cls: type[E], val: typing.Any) -> E:
+    value_cls = cls._enum_value_cls_  # type: ignore # This is narrowed below
+    name = f'unknown_{val}'
+    return value_cls(name=name, value=val)
+
+
+def try_enum(cls: type[E], val: typing.Any) -> E:
+    """A function that tries to turn the value into enum ``cls``.
+
+    If it fails it returns a proxy invalid value instead.
+
+    Parameters
+    ----------
+    cls: :class:`type`
+        The enum to try converting value into.
+    val: Any
+        The value.
+
+    Returns
+    -------
+    Any
+        The converted value, or a proxy.
+    """
+
+    try:
+        return cls._enum_value_map_[val]  # type: ignore # All errors are caught below
+    except (KeyError, TypeError, AttributeError):
+        return _create_unknown_value(cls, val)
+
+
 class MFAMethod(Enum):
     password = 'Password'
     recovery = 'Recovery'
@@ -296,6 +329,8 @@ class AuditLogEntryActionType(Enum):
     invite_delete = 'InviteDelete'
     webhook_create = 'WebhookCreate'
     emoji_delete = 'EmojiDelete'
+
+    unknown = ''
 
 
 class MemberRemovalIntention(Enum):
@@ -533,6 +568,8 @@ class UserReportReason(Enum):
 __all__ = (
     'EnumMeta',
     'Enum',
+    '_create_unknown_value',
+    'try_enum',
     # Authentication
     'MFAMethod',
     # Asset
