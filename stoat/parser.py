@@ -30,7 +30,7 @@ import sys
 import typing
 
 from . import discovery
-from .audit_logs import AuditLogEntryAction
+from .audit_logs import AuditLogEntry, AuditLogEntryAction
 from .authentication import (
     PartialAccount,
     MFATicket,
@@ -445,6 +445,42 @@ class Parser:
             user_id=d.get('user_id'),
             server_id=d.get('server_id'),
             object_id=d.get('object_id'),
+        )
+
+    def parse_audit_log_entry(
+        self,
+        payload: raw.AuditLogEntry,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntry:
+        """Parses an audit log entry object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry payload to parse.
+        members: Dict[:class:`str`, :class:`Member`]
+            The mapping of user IDs to member objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+        users: Dict[:class:`str`, :class:`User`]
+            The mapping of user IDs to user objects. Required for :attr:`AuditLogEntryAction.user` population attempts.
+
+        Returns
+        --------
+        :class:`AuditLogEntry`
+            The parsed audit log entry object.
+        """
+
+        server_id = payload['server']
+        user_id = payload['user']
+
+        return AuditLogEntry(
+            state=self.state,
+            id=payload['_id'],
+            server_id=server_id,
+            reason=payload.get('reason'),
+            internal_user=members.get(user_id, users.get(user_id, user_id)),
+            action=self.parse_audit_log_entry_action(payload['action'], server_id, members, users),
         )
 
     def parse_audit_log_entry_action(

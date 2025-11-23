@@ -54,8 +54,14 @@ class AuditLogEntry(Base):
     reason: typing.Optional[str] = field(repr=True, kw_only=True, eq=True)
     """Optional[:class:`str`]: The reason for the action."""
 
-    user_id: str = field(repr=True, kw_only=True, eq=True)
-    """:class:`str`: The ID of the user who performed the action."""
+    internal_user: typing.Union[Member, User, str] = field(
+        default='',
+        repr=False,
+        kw_only=True,
+        # In case of hydration, the ID always should be used for comparsion
+        eq=lambda target: target.id if isinstance(target, (Member, User)) else target,
+    )
+    """Union[:class:`Member`, :class:`User`, :class:`str`]: The ID of the user who performed the action, or full member/user instance."""
 
     action: AuditLogEntryAction = field(repr=True, kw_only=True, eq=True)
     """:class:`AuditLogEntryAction`: Details about the action."""
@@ -72,6 +78,13 @@ class AuditLogEntry(Base):
             'user': self.user_id,
             'action': self.action.to_dict(),
         }
+
+    @property
+    def user_id(self) -> str:
+        """:class:`str`: The ID of the user."""
+        if isinstance(self.internal_user, (Member, User)):
+            return self.internal_user.id
+        return self.internal_user
 
 
 @define(hash=True, slots=True, eq=True)
@@ -309,8 +322,10 @@ class AuditLogEntryAction:
                 'emoji': self.emoji_id,
                 'name': self.name,
             }
-
-        raise TypeError(f'Cannot serialize action of type {self.type!r}')
+        elif self.internal_payload is None:
+            raise TypeError(f'Cannot serialize action of type {self.type!r}')
+        else:
+            return self.internal_payload  # type: ignore
 
 
 __all__ = (
