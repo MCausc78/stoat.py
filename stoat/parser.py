@@ -575,6 +575,7 @@ class Parser:
         user_id = payload['user']
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.ban,
             internal_user=members.get(user_id, users.get(user_id, user_id)),
         )
@@ -609,6 +610,7 @@ class Parser:
         user_id = payload['user']
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.unban,
             internal_user=members.get(user_id, users.get(user_id, user_id)),
         )
@@ -640,6 +642,7 @@ class Parser:
             The parsed :attr:`~AuditLogEntryActionType.channel_create` audit log entry action object.
         """
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.channel_create,
             channel_id=payload['channel'],
         )
@@ -672,6 +675,7 @@ class Parser:
         """
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.channel_delete,
             channel_id=payload['channel'],
         )
@@ -708,6 +712,7 @@ class Parser:
         data = payload['partial']
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.channel_update,
             channel_id=channel_id,
             internal_channel_update=self.parse_partial_channel(data, channel_id, clear),
@@ -739,6 +744,7 @@ class Parser:
         """
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.channel_role_permissions_update,
             channel_id=payload['channel'],
             permissions=self.parse_permission_override(payload['permissions']),
@@ -773,6 +779,7 @@ class Parser:
         """
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.emoji_delete,
             emoji_id=payload['emoji'],
             name=payload['name'],
@@ -806,6 +813,7 @@ class Parser:
         """
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.invite_delete,
             channel_id=payload['channel'],
             invite_code=payload['invite'],
@@ -843,6 +851,7 @@ class Parser:
         data = payload['partial']
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.member_update,
             internal_member_update=self.parse_partial_member(data, server_id, user_id, clear),
             internal_user=members.get(user_id, users.get(user_id, user_id)),
@@ -878,6 +887,7 @@ class Parser:
         user_id = payload['user']
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.member_remove,
             internal_user=members.get(user_id, users.get(user_id, user_id)),
         )
@@ -908,6 +918,7 @@ class Parser:
         """
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.message_bulk_delete,
             channel_id=payload['channel'],
             count=payload['count'],
@@ -941,6 +952,7 @@ class Parser:
         author_id = payload['author']
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.message_delete,
             channel_id=payload['channel'],
             internal_user=members.get(author_id, users.get(author_id, author_id)),
@@ -972,6 +984,7 @@ class Parser:
         """
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.role_create,
             role_id=payload['role'],
         )
@@ -1002,6 +1015,7 @@ class Parser:
         """
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.role_delete,
             name=payload['name'],
             role_id=payload['role'],
@@ -1039,6 +1053,7 @@ class Parser:
         data = payload['partial']
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.role_update,
             internal_role_update=self.parse_partial_role(data, server_id, role_id, clear),
             role_id=role_id,
@@ -1071,6 +1086,7 @@ class Parser:
             The parsed :attr:`~AuditLogEntryActionType.roles_reorder` audit log entry action object.
         """
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.roles_reorder,
             positions=payload['positions'],
         )
@@ -1106,6 +1122,7 @@ class Parser:
         data = payload['partial']
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.server_update,
             internal_server_update=self.parse_partial_server(data, server_id, clear),
             server_id=server_id,
@@ -1139,6 +1156,7 @@ class Parser:
         """
 
         return AuditLogEntryAction(
+            state=self.state,
             type=AuditLogEntryActionType.webhook_create,
             channel_id=payload['channel'],
             webhook_id=payload['webhook'],

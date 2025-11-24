@@ -29,6 +29,21 @@ import typing
 from attrs import Factory, define, field
 
 from .base import Base
+from .cache import (
+    CacheContextType,
+    MemberOrUserThroughAuditLogEntryUserCacheContext,
+    MemberThroughAuditLogEntryUserCacheContext,
+    UserThroughAuditLogEntryUserCacheContext,
+    MemberOrUserThroughAuditLogEntryActionUserCacheContext,
+    MemberThroughAuditLogEntryActionUserCacheContext,
+    UserThroughAuditLogEntryActionUserCacheContext,
+    _MEMBER_OR_USER_THROUGH_AUDIT_LOG_ENTRY_USER,
+    _MEMBER_THROUGH_AUDIT_LOG_ENTRY_USER,
+    _USER_THROUGH_AUDIT_LOG_ENTRY_USER,
+    _MEMBER_OR_USER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER,
+    _MEMBER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER,
+    _USER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER,
+)
 from .enums import AuditLogEntryActionType
 from .errors import NoData
 from .server import Member
@@ -39,6 +54,7 @@ if typing.TYPE_CHECKING:
     from .channel import PartialChannel
     from .permissions import PermissionOverride
     from .server import PartialRole, PartialServer, PartialMember
+    from .state import State
 
 
 @define(slots=True, eq=True)
@@ -66,8 +82,125 @@ class AuditLogEntry(Base):
     action: AuditLogEntryAction = field(repr=True, kw_only=True, eq=True)
     """:class:`AuditLogEntryAction`: Details about the action."""
 
+    def get_user(self) -> typing.Optional[typing.Union[Member, User]]:
+        """Optional[Union[:class:`Member`, :class:`User`]]: The user who performed the action."""
+        if isinstance(self.internal_user, (Member, User)):
+            return self.internal_user
+
+        state = self.state
+        cache = state.cache
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughAuditLogEntryUserCacheContext(
+                type=CacheContextType.member_or_user_through_audit_log_entry_user,
+                entry=self,
+            )
+            if state.provide_cache_context('AuditLogEntry.user')
+            else _MEMBER_OR_USER_THROUGH_AUDIT_LOG_ENTRY_USER
+        )
+
+        ret = cache.get_server_member(self.server_id, self.internal_user, ctx)
+
+        if ret is None:
+            return cache.get_user(self.internal_user, ctx)
+
+        return ret
+
+    def get_user_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`Member`]: The user who performed the action."""
+        if isinstance(self.internal_user, Member):
+            return self.internal_user
+
+        if isinstance(self.internal_user, User):
+            user_id = self.internal_user.id
+        else:
+            user_id = self.internal_user
+
+        state = self.state
+        cache = state.cache
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberThroughAuditLogEntryUserCacheContext(
+                type=CacheContextType.member_through_audit_log_entry_user,
+                entry=self,
+            )
+            if state.provide_cache_context('AuditLogEntry.user_as_member')
+            else _MEMBER_THROUGH_AUDIT_LOG_ENTRY_USER
+        )
+
+        return cache.get_server_member(self.server_id, user_id, ctx)
+
+    def get_user_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`User`]: The user who performed the action."""
+        if isinstance(self.internal_user, Member):
+            if isinstance(self.internal_user.internal_user, User):
+                return self.internal_user.internal_user
+            return None
+        if isinstance(self.internal_user, User):
+            return self.internal_user
+
+        state = self.state
+        cache = state.cache
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughAuditLogEntryUserCacheContext(
+                type=CacheContextType.user_through_audit_log_entry_user,
+                entry=self,
+            )
+            if state.provide_cache_context('AuditLogEntry.user_as_user')
+            else _USER_THROUGH_AUDIT_LOG_ENTRY_USER
+        )
+
+        return cache.get_user(self.internal_user, ctx)
+
     def __hash__(self) -> int:
         return hash((self.id, self.server_id))
+
+    @property
+    def user(self) -> typing.Union[Member, User]:
+        """Union[:class:`Member`, :class:`User`]: The user who performed the action."""
+        user = self.get_user()
+        if user is None:
+            raise NoData(
+                what=self.user_id,
+                type='AuditLogEntry.user',
+            )
+        return user
+
+    @property
+    def user_id(self) -> str:
+        """:class:`str`: The ID of the user."""
+        if isinstance(self.internal_user, (Member, User)):
+            return self.internal_user.id
+        return self.internal_user
+
+    @property
+    def user_as_member(self) -> Member:
+        """:class:`Member`: The user who performed the action."""
+        user = self.get_user_as_member()
+        if user is None:
+            raise NoData(
+                what=self.user_id,
+                type='AuditLogEntry.user_as_member',
+            )
+        return user
+
+    @property
+    def user_as_user(self) -> User:
+        """:class:`User`: The user who performed the action."""
+        user = self.get_user_as_user()
+        if user is None:
+            raise NoData(
+                what=self.user_id,
+                type='AuditLogEntry.user_as_user',
+            )
+        return user
 
     def to_dict(self) -> raw.AuditLogEntry:
         """:class:`dict`: Convert audit log entry to raw data."""
@@ -79,13 +212,6 @@ class AuditLogEntry(Base):
             'action': self.action.to_dict(),
         }
 
-    @property
-    def user_id(self) -> str:
-        """:class:`str`: The ID of the user."""
-        if isinstance(self.internal_user, (Member, User)):
-            return self.internal_user.id
-        return self.internal_user
-
 
 @define(hash=True, slots=True, eq=True)
 class AuditLogEntryAction:
@@ -93,6 +219,9 @@ class AuditLogEntryAction:
 
     Most of fields will be set to their zero value (empty string, 0, empty array) if the type.
     """
+
+    state: State = field(repr=False, kw_only=True, eq=False)
+    """:class:`State`: The state that controls the parent entry."""
 
     type: AuditLogEntryActionType = field(repr=True, kw_only=True, eq=True)
     """:class:`AuditLogEntryActionType`: The type of the action."""
@@ -128,7 +257,7 @@ class AuditLogEntryAction:
         # In case of hydration, the ID always should be used for comparsion
         eq=lambda target: target.id if isinstance(target, (Member, User)) else target,
     )
-    """Union[:class:`Member`, :class:`User`, :class:`str`]: The ID of the user, or full member/user instance."""
+    """Union[:class:`Member`, :class:`User`, :class:`str`]: The ID of the affected user, or full member/user instance."""
 
     invite_code: str = field(default='', repr=False, kw_only=True, eq=True)
     """:class:`str`: The ID of the invite."""
@@ -150,6 +279,83 @@ class AuditLogEntryAction:
 
     webhook_id: str = field(default='', repr=False, kw_only=True, eq=True)
     """:class:`str`: The ID of the affected webhook."""
+
+    def get_user(self) -> typing.Optional[typing.Union[Member, User]]:
+        """Optional[Union[:class:`Member`, :class:`User`]]: The affected user."""
+        if isinstance(self.internal_user, (Member, User)):
+            return self.internal_user
+
+        state = self.state
+        cache = state.cache
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberOrUserThroughAuditLogEntryActionUserCacheContext(
+                type=CacheContextType.member_or_user_through_audit_log_entry_action_user,
+                action=self,
+            )
+            if state.provide_cache_context('AuditLogEntryAction.user')
+            else _MEMBER_OR_USER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER
+        )
+
+        ret = cache.get_server_member(self.server_id, self.internal_user, ctx)
+
+        if ret is None:
+            return cache.get_user(self.internal_user, ctx)
+
+        return ret
+
+    def get_user_as_member(self) -> typing.Optional[Member]:
+        """Optional[:class:`Member`]: The affected user."""
+        if isinstance(self.internal_user, Member):
+            return self.internal_user
+
+        if isinstance(self.internal_user, User):
+            user_id = self.internal_user.id
+        else:
+            user_id = self.internal_user
+
+        state = self.state
+        cache = state.cache
+        if cache is None:
+            return None
+
+        ctx = (
+            MemberThroughAuditLogEntryActionUserCacheContext(
+                type=CacheContextType.member_through_audit_log_entry_action_user,
+                action=self,
+            )
+            if state.provide_cache_context('AuditLogEntryAction.user_as_member')
+            else _MEMBER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER
+        )
+
+        return cache.get_server_member(self.server_id, user_id, ctx)
+
+    def get_user_as_user(self) -> typing.Optional[User]:
+        """Optional[:class:`User`]: The affected user."""
+        if isinstance(self.internal_user, Member):
+            if isinstance(self.internal_user.internal_user, User):
+                return self.internal_user.internal_user
+            return None
+        if isinstance(self.internal_user, User):
+            return self.internal_user
+
+        state = self.state
+        cache = state.cache
+        if cache is None:
+            return None
+
+        ctx = (
+            UserThroughAuditLogEntryActionUserCacheContext(
+                type=CacheContextType.user_through_audit_log_entry_action_user,
+                action=self,
+            )
+            if state.provide_cache_context('AuditLogEntryAction.user_as_user')
+            else _USER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER
+        )
+
+        return cache.get_user(self.internal_user, ctx)
 
     @property
     def channel_update(self) -> PartialChannel:
