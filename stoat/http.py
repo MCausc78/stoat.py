@@ -76,6 +76,7 @@ from .enums import (
     OAuth2GrantType,
     OAuth2CodeChallengeMethod,
     OAuth2Scope,
+    AuditLogEntryActionType,
 )
 from .errors import (
     HTTPException,
@@ -119,6 +120,7 @@ if typing.TYPE_CHECKING:
     from typing_extensions import Self
 
     from . import raw
+    from .audit_logs import AuditLogEntry
     from .bot import BaseBot, Bot, PublicBot, BotOAuth2Edit
     from .channel import TextableChannel
     from .instance import Instance
@@ -3023,7 +3025,7 @@ class HTTPClient:
             Providing this parameter will discard ``before``, ``after`` and ``sort`` parameters.
 
             It will also take half of limit rounded as the limits to each side. It also fetches the message specified.
-        populate_users: :class:`bool`
+        populate_users: Optional[:class:`bool`]
             Whether to populate user (and member, if server channel) objects.
 
         Raises
@@ -5605,6 +5607,121 @@ class HTTPClient:
         await self._report_content(payload, http_overrides=http_overrides)
 
     # Servers control
+    async def get_audit_logs(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        user: typing.Optional[ULIDOr[BaseUser]] = None,
+        type: typing.Optional[typing.Union[AuditLogEntryActionType, str]] = None,
+        before: typing.Optional[ULIDOr[AuditLogEntry]] = None,
+        after: typing.Optional[ULIDOr[AuditLogEntry]] = None,
+        limit: typing.Optional[int] = None,
+        populate_users: typing.Optional[bool] = None,
+    ) -> list[AuditLogEntry]:
+        """|coro|
+
+        Retrieve server's audit logs.
+
+        You must have :attr:`~Permissions.view_audit_logs` to do this.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server to retrieve audit log entries from.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        user: Optional[ULIDOr[:class:`BaseUser`]]
+            The user to filter audit log entries by (:attr:`AuditLogEntry.user`).
+
+            .. note::
+
+                This does not retrieve audit logs that *target* specified user.
+        type: Optional[Union[:class:`AuditLogEntryActionType`, :class:`str`]]
+            The type to filter audit logs by.
+            If a string value is passed, it is assumed to be a raw API value.
+        before: Optional[ULIDOr[:class:`AuditLogEntry`]]
+            The entry before which audit log entries should be fetched.
+        after: Optional[ULIDOr[:class:`AuditLogEntry`]]
+            The entry after which audit log entries should be fetched.
+        limit: Optional[:class:`int`]
+            The maximum number of entries to get. Must be between 1 and 100. Defaults to 50.
+        populate_users: Optional[:class:`bool`]
+            Whether to populate user and member objects.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------+
+            | Value                | Reason                   |
+            +----------------------+--------------------------+
+            | ``FailedValidation`` | The payload was invalid. |
+            +----------------------+--------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------+
+            | Value                 | Reason                                                             |
+            +-----------------------+--------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to get server's audit logs. |
+            +-----------------------+--------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AuditLogEntry`]
+            The entries retrieved, sorted in descending order by ID.
+        """
+
+        params: raw.OptionsAuditLogQuery = {}
+        if user is not None:
+            params['user'] = resolve_id(user)
+        if type is not None:
+            if isinstance(type, AuditLogEntryActionType):
+                params['type'] = type.value
+            else:
+                params['type'] = type
+        if before is not None:
+            params['before'] = resolve_id(before)
+        if after is not None:
+            params['after'] = resolve_id(after)
+        if limit is not None:
+            params['limit'] = limit
+        if populate_users is not None:
+            params['include_users'] = utils._bool(populate_users)
+
+        resp: raw.AuditLogQueryResponse = await self.request(
+            routes.SERVERS_AUDIT_LOG_QUERY.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        return self.state.parser.parse_audit_log_entries(resp)
+
     async def ban(
         self,
         server: ULIDOr[BaseServer],

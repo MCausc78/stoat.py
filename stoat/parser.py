@@ -447,6 +447,30 @@ class Parser:
             object_id=d.get('object_id'),
         )
 
+    def parse_audit_log_entries(self, payload: raw.AuditLogQueryResponse, /) -> list[AuditLogEntry]:
+        """Parses an object with audit log entries and associated users/members.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The list payload to parse.
+
+        Returns
+        -------
+        List[:class:`AuditLogEntry`]
+            The parsed audit log entries objects.
+        """
+        if isinstance(payload, list):
+            return list(map(self.parse_audit_log_entry, payload))
+
+        users = list(map(self.parse_user, payload['users']))
+        users_mapping = {u.id: u for u in users}
+
+        members = [self.parse_member(e, None, users_mapping) for e in payload['members']]
+        members_mapping = {m.id: m for m in members}
+
+        return [self.parse_audit_log_entry(e, members_mapping, users_mapping) for e in payload['audit_logs']]
+
     def parse_audit_log_entry(
         self,
         payload: raw.AuditLogEntry,
@@ -3343,15 +3367,14 @@ class Parser:
         """
         if isinstance(payload, list):
             return list(map(self.parse_message, payload))
-        elif isinstance(payload, dict):
-            users = list(map(self.parse_user, payload['users']))
-            users_mapping = {u.id: u for u in users}
 
-            members = [self.parse_member(e, None, users_mapping) for e in payload.get('members', ())]
-            members_mapping = {m.id: m for m in members}
+        users = list(map(self.parse_user, payload['users']))
+        users_mapping = {u.id: u for u in users}
 
-            return [self.parse_message(e, members_mapping, users_mapping) for e in payload['messages']]
-        raise RuntimeError('Unreachable')
+        members = [self.parse_member(e, None, users_mapping) for e in payload.get('members', ())]
+        members_mapping = {m.id: m for m in members}
+
+        return [self.parse_message(e, members_mapping, users_mapping) for e in payload['messages']]
 
     def parse_mfa_response_login(
         self, payload: raw.a.MFAResponseLogin, friendly_name: typing.Optional[str], /
