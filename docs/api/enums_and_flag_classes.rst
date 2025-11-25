@@ -333,6 +333,205 @@ Reporting
 Servers
 ~~~~~~~
 
+.. class:: AuditLogEntryActionType
+
+    Specifies the type of audit log entry action.
+    Each variant may have a table that describes what will :class:`AuditLogEntryAction` have.
+    Note that the fields in tables will be always present for these specific types.
+
+    .. attribute:: message_delete
+
+        A message was deleted in a channel.
+
+        +-----------------------------------------+------------------------------------------------+
+        | Field                                   | Description                                    |
+        +-----------------------------------------+------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id` | The ID of the channel the message was sent in. |
+        +-----------------------------------------+------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.user_id`    | The user ID of the message author.             |
+        +-----------------------------------------+------------------------------------------------+
+    .. attribute:: message_bulk_delete
+
+        Multiple messages were deleted in a channel.
+
+        +-----------------------------------------+----------------------------------------------------------+
+        | Field                                   | Description                                              |
+        +-----------------------------------------+----------------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id` | The ID of the channel the deleted messages were sent in. |
+        +-----------------------------------------+----------------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.count`      | The count of deleted messages.                           |
+        +-----------------------------------------+----------------------------------------------------------+
+    .. attribute:: ban
+
+        A server member was banned.
+
+        +--------------------------------------+-----------------------------------+
+        | Field                                | Description                       |
+        +--------------------------------------+-----------------------------------+
+        | :attr:`~AuditLogEntryAction.user_id` | The user ID of the banned member. |
+        +--------------------------------------+-----------------------------------+
+    .. attribute:: unban
+
+        A server member was unbanned.
+
+        +--------------------------------------+-------------------------------------+
+        | Field                                | Description                         |
+        +--------------------------------------+-------------------------------------+
+        | :attr:`~AuditLogEntryAction.user_id` | The user ID of the unbanned member. |
+        +--------------------------------------+-------------------------------------+
+    .. attribute:: channel_create
+
+        A role was created.
+
+        +-----------------------------------------+---------------------------+
+        | Field                                   | Description               |
+        +-----------------------------------------+---------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id` | The created channel's ID. |
+        +-----------------------------------------+---------------------------+
+    .. attribute:: channel_update
+
+        A server channel was updated.
+
+        +---------------------------------------------+--------------------------------+
+        | Field                                       | Description                    |
+        +---------------------------------------------+--------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id`     | The ID of the updated channel. |
+        +---------------------------------------------+--------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_update` | The channel's changes.         |
+        +---------------------------------------------+--------------------------------+
+    .. attribute:: channel_role_permissions_update
+
+        Permission overrides for a role were updated for a specific server channel.
+
+        +------------------------------------------+-------------------------------------------+
+        | Field                                    | Description                               |
+        +------------------------------------------+-------------------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id`  | The ID of the updated channel.            |
+        +------------------------------------------+-------------------------------------------+
+        | :attr:`~AuditLogEntryAction.role_id`     | The ID of the role the overrides are for. |
+        +------------------------------------------+-------------------------------------------+
+        | :attr:`~AuditLogEntryAction.permissions` | The permission overrides for the role.    |
+        +------------------------------------------+-------------------------------------------+
+    .. attribute:: channel_delete
+
+        A role was deleted.
+
+        +-----------------------------------------+---------------------------+
+        | Field                                   | Description               |
+        +-----------------------------------------+---------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id` | The deleted channel's ID. |
+        +-----------------------------------------+---------------------------+
+    .. attribute:: member_update
+
+        A server member was updated.
+
+        +--------------------------------------------+------------------------------------+
+        | Field                                      | Description                        |
+        +--------------------------------------------+------------------------------------+
+        | :attr:`~AuditLogEntryAction.member_update` | The member's changes.              |
+        +--------------------------------------------+------------------------------------+
+        | :attr:`~AuditLogEntryAction.user_id`       | The user ID of the updated member. |
+        +--------------------------------------------+------------------------------------+
+    .. attribute:: member_remove
+
+        A server member was removed (kicked).
+
+        +--------------------------------------+------------------------------------+
+        | Field                                | Description                        |
+        +--------------------------------------+------------------------------------+
+        | :attr:`~AuditLogEntryAction.user_id` | The user ID of the removed member. |
+        +--------------------------------------+------------------------------------+
+    .. attribute:: server_update
+
+        The server was updated.
+
+        +--------------------------------------------+-----------------------+
+        | Field                                      | Description           |
+        +--------------------------------------------+-----------------------+
+        | :attr:`~AuditLogEntryAction.server_update` | The server's changes. |
+        +--------------------------------------------+-----------------------+
+    .. attribute:: role_create
+
+        A role was created.
+
+        +--------------------------------------+------------------------+
+        | Field                                | Description            |
+        +--------------------------------------+------------------------+
+        | :attr:`~AuditLogEntryAction.role_id` | The created role's ID. |
+        +--------------------------------------+------------------------+
+    .. attribute:: role_update
+
+        A role was updated.
+
+        +------------------------------------------+------------------------+
+        | Field                                    | Description            |
+        +------------------------------------------+------------------------+
+        | :attr:`~AuditLogEntryAction.role_id`     | The updated role's ID. |
+        +------------------------------------------+------------------------+
+        | :attr:`~AuditLogEntryAction.role_update` | The role's changes.    |
+        +------------------------------------------+------------------------+
+    .. attribute:: role_delete
+
+        A role was deleted.
+
+        +--------------------------------------+--------------------------+
+        | Field                                | Description              |
+        +--------------------------------------+--------------------------+
+        | :attr:`~AuditLogEntryAction.role_id` | The deleted role's ID.   |
+        +--------------------------------------+--------------------------+
+        | :attr:`~AuditLogEntryAction.name`    | The deleted role's name. |
+        +--------------------------------------+--------------------------+
+    .. attribute:: roles_reorder
+
+        Role list was reordered.
+
+        +----------------------------------------+----------------------------------------------------------------------+
+        | Field                                  | Description                                                          |
+        +----------------------------------------+----------------------------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.positions` | A list of role IDs, with each index in list representing their rank. |
+        +----------------------------------------+----------------------------------------------------------------------+
+    .. attribute:: invite_delete
+
+        An invite was deleted in a channel.
+
+        +------------------------------------------+---------------------------------------+
+        | Field                                    | Description                           |
+        +------------------------------------------+---------------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id`  | The channel ID of the deleted invite. |
+        +------------------------------------------+---------------------------------------+
+        | :attr:`~AuditLogEntryAction.invite_code` | The deleted invite's code.            |
+        +------------------------------------------+---------------------------------------+
+    .. attribute:: webhook_create
+
+        A webhook was created in a channel.
+
+        +-----------------------------------------+---------------------------------------------------+
+        | Field                                   | Description                                       |
+        +-----------------------------------------+---------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id` | The ID of the channel the webhook was created in. |
+        +-----------------------------------------+---------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.webhook_id` | The deleted invite's code.                        |
+        +-----------------------------------------+---------------------------------------------------+
+    .. attribute:: emoji_delete
+
+        An emoji was deleted.
+
+        +---------------------------------------+---------------------------+
+        | Field                                 | Description               |
+        +---------------------------------------+---------------------------+
+        | :attr:`~AuditLogEntryAction.emoji_id` | The deleted emoji's ID.   |
+        +---------------------------------------+---------------------------+
+        | :attr:`~AuditLogEntryAction.name`     | The deleted emoji's name. |
+        +---------------------------------------+---------------------------+
+    .. attribute:: unknown
+
+        Unknown.
+
+        The following fields will be present on :class:`AuditLogEntryAction`:
+
+        - :attr:`~AuditLogEntryAction.internal_payload`: The raw audit log entry action data.
+
+
 .. class:: MemberRemovalIntention
     
     Specifies reason why member was removed from server.
