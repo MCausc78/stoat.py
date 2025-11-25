@@ -4436,6 +4436,8 @@ class BaseMember(Connectable, Messageable):
 
             This must be a timezone-aware datetime object. Consider using :func:`stoat.utils.utcnow()`.
 
+            If the member has :attr:`~Permissions.timeout_members`, this will throw a ``NonElevated`` error.
+
             You must have :attr:`~Permissions.timeout_members` to provide this.
         can_publish: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should send voice data.
@@ -4475,13 +4477,15 @@ class BaseMember(Connectable, Messageable):
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+----------------------------------------------------------------------------------+
-            | Value                 | Reason                                                                           |
-            +-----------------------+----------------------------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                      |
-            +-----------------------+----------------------------------------------------------------------------------+
-            | ``NotElevated``       | Ranking of one of roles you tried to add is lower than ranking of your top role. |
-            +-----------------------+----------------------------------------------------------------------------------+
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``IsElevated``        | The member has :attr:`~Permissions.timeout_members`, and as such cannot be timed out. |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                           |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``NotElevated``       | Ranking of one of roles you tried to add is lower than ranking of your top role.      |
+            +-----------------------+---------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -4980,6 +4984,8 @@ class BaseMember(Connectable, Messageable):
 
         Timeouts the member.
 
+        If the member has :attr:`~Permissions.timeout_members`, this will throw a ``NonElevated`` error.
+
         You must have :attr:`~Permissions.timeout_members` to do this.
 
         Fires :class:`ServerMemberUpdateEvent` for all server members.
@@ -5014,11 +5020,13 @@ class BaseMember(Connectable, Messageable):
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+-------------------------------------------------------------+
-            | Value                 | Reason                                                      |
-            +-----------------------+-------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to edit this member. |
-            +-----------------------+-------------------------------------------------------------+
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``IsElevated``        | The member has :attr:`~Permissions.timeout_members`, and as such cannot be timed out. |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                           |
+            +-----------------------+---------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
