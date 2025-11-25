@@ -20,7 +20,7 @@ DataSetSettings = dict[str, str]
 
 
 # Android User Settings
-AndroidTheme = typing.Literal['Revolt', 'Light', 'Amoled', 'None', 'M3Dynamic']
+AndroidTheme = typing.Literal['Revolt', 'Stoat', 'Light', 'Amoled', 'None', 'M3Dynamic']
 AndroidProfilePictureShape = int
 AndroidMessageReplyStyle = typing.Literal['None', 'SwipeFromEnd', 'DoubleTap']
 
