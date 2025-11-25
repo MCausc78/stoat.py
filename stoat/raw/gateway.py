@@ -164,7 +164,8 @@ class ClientServerMemberUpdateEvent(typing.TypedDict):
 class ClientServerMemberJoinEvent(typing.TypedDict):
     type: typing.Literal['ServerMemberJoin']
     id: str
-    user: str
+    user: str  # Will be removed soon upstream
+    member: Member  # Only required since API v0.8.9
 
 
 class ClientServerMemberLeaveEvent(typing.TypedDict):
