@@ -2013,7 +2013,7 @@ def has_permissions(**perms: bool) -> Check[typing.Any]:
 
     invalid = set(perms) - set(stoat.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+        raise TypeError(f'Invalid permission(s): {", ".join(invalid)}')
 
     def predicate(ctx: Context[BotT], /) -> bool:
         permissions = ctx.channel.permissions_for(ctx.author)
@@ -2037,7 +2037,7 @@ def bot_has_permissions(**perms: bool) -> Check[typing.Any]:
 
     invalid = set(perms) - set(stoat.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+        raise TypeError(f'Invalid permission(s): {", ".join(invalid)}')
 
     def predicate(ctx: Context[BotT], /) -> bool:
         permissions = ctx.channel.permissions_for(ctx.me)
@@ -2061,7 +2061,7 @@ def has_server_permissions(**perms: bool) -> Check[typing.Any]:
 
     invalid = set(perms) - set(stoat.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+        raise TypeError(f'Invalid permission(s): {", ".join(invalid)}')
 
     def predicate(ctx: Context[BotT], /) -> bool:
         if ctx.server is None:
@@ -2084,7 +2084,7 @@ def bot_has_server_permissions(**perms: bool) -> Check[typing.Any]:
 
     invalid = set(perms) - set(stoat.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError(f"Invalid permission(s): {', '.join(invalid)}")
+        raise TypeError(f'Invalid permission(s): {", ".join(invalid)}')
 
     def predicate(ctx: Context[BotT], /) -> bool:
         if ctx.server is None:
