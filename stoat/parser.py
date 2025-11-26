@@ -1435,6 +1435,8 @@ class Parser:
     def parse_gif(self, payload: raw.gb.MediaResult, /) -> GIF:
         """Parses a GIF object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -1453,6 +1455,8 @@ class Parser:
 
     def parse_gif_category(self, payload: raw.gb.CategoryResponse, /) -> GIFCategory:
         """Parses a GIF category object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -2932,6 +2936,8 @@ class Parser:
 
     def parse_other_gif(self, payload: raw.gb.MediaObject, /) -> OtherGIF:
         """Parses an other GIF object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------

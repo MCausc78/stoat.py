@@ -46,7 +46,10 @@ DEFAULT_GIFBOX_USER_AGENT = f'stoat.py (https://github.com/MCausc78/stoat.py, {_
 
 @define(slots=True, eq=True)
 class GIFCategory:
-    """Represents a GIF category."""
+    """Represents a GIF category.
+
+    .. versionadded:: 1.3
+    """
 
     title: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The category's name."""
@@ -57,7 +60,10 @@ class GIFCategory:
 
 @define(slots=True, eq=True)
 class GIF:
-    """Represents a GIF retrieved from Tenor proxy."""
+    """Represents a GIF retrieved from Tenor proxy.
+
+    .. versionadded:: 1.3
+    """
 
     id: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The ID of the GIF."""
@@ -71,7 +77,10 @@ class GIF:
 
 @define(slots=True, eq=True)
 class OtherGIF:
-    """Represents a GIF in other format."""
+    """Represents a GIF in other format.
+
+    .. versionadded:: 1.3
+    """
 
     url: str = field(repr=True, kw_only=True, eq=True)
     """:class:`str`: The URL for the GIF."""
@@ -82,6 +91,8 @@ class OtherGIF:
 
 class GIFBoxClient:
     """Represents a HTTP client sending HTTP requests to the GIFBox API.
+
+    .. versionadded:: 1.3
 
     Attributes
     ----------
