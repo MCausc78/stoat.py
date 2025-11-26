@@ -141,6 +141,7 @@ if typing.TYPE_CHECKING:
         VoiceChannelMoveEvent,
         UserVoiceStateUpdateEvent,
     )
+    from .flags import ReadyPayloadFields
     from .message import Message
     from .read_state import ReadState
     from .settings import UserSettings
@@ -1192,6 +1193,7 @@ class Client:
         http: typing.Optional[Callable[[Client, State], HTTPClient]] = None,
         parser: typing.Optional[Callable[[Client, State], Parser]] = None,
         shard: typing.Optional[Callable[[Client, State], Shard]] = None,
+        ready_payload_fields: typing.Optional[ReadyPayloadFields] = None,
         request_user_settings: typing.Optional[list[str]] = None,
         websocket_base: typing.Optional[str] = None,
     ) -> None: ...
@@ -1211,6 +1213,7 @@ class Client:
         parser: typing.Optional[Callable[[Client, State], Parser]] = None,
         shard: typing.Optional[Callable[[Client, State], Shard]] = None,
         state: typing.Optional[typing.Union[Callable[[Client], State], State, None]] = None,
+        ready_payload_fields: typing.Optional[ReadyPayloadFields] = None,
         request_user_settings: typing.Optional[list[str]] = None,
         websocket_base: typing.Optional[str] = None,
     ) -> None:
@@ -1277,6 +1280,7 @@ class Client:
                         token,
                         base_url=websocket_base,
                         handler=ClientEventHandler(self),
+                        ready_payload_fields=ready_payload_fields,
                         request_user_settings=request_user_settings,
                         state=state,
                     )

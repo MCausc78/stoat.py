@@ -503,4 +503,5 @@ class BonfireConnectionParameters(typing.TypedDict):
     version: typing.Literal['1']
     format: typing.Literal['json', 'msgpack']
     token: typing_extensions.NotRequired[str]
-    __user_settings_keys: typing_extensions.NotRequired[str]
+    # __user_settings_keys: typing_extensions.NotRequired[str] # Dead in favor of `ready`
+    ready: typing_extensions.NotRequired[list[str]]
