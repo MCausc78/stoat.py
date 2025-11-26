@@ -91,6 +91,7 @@ class Context(typing.Generic[BotT], stoat.abc.Messageable):
         'prefix',
         'server',
         'shard',
+        'state',
         'subcommand_passed',
         'view',
     )
@@ -140,11 +141,12 @@ class Context(typing.Generic[BotT], stoat.abc.Messageable):
         self.invoked_parents: list[str] = invoked_parents
         self.invoked_subcommand: typing.Optional[Command[typing.Any, ..., typing.Any]] = invoked_subcommand
         self.label: str = label
-        self.me: typing.Union[stoat.Member, stoat.OwnUser] = server.get_member(me.id) or me if server else me
+        self.me: typing.Union[stoat.Member, stoat.OwnUser] = me if server is None else (server.get_member(me.id) or me)
         self.message: stoat.Message = message
         self.prefix: str = ''
         self.server: typing.Optional[stoat.Server] = server
         self.shard: stoat.Shard = shard
+        self.state: stoat.State = message.state
         self.subcommand_passed: typing.Optional[str] = subcommand_passed
         self.view: StringView = view
 
