@@ -7349,7 +7349,7 @@ class HTTPClient:
         icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
             The new role icon.
 
-            .. versionadded:: 1.2
+            .. versionadded:: 1.3
         color: UndefinedOr[Optional[:class:`str`]]
             The new role color. Must be a valid CSS color.
         hoist: UndefinedOr[:class:`bool`]

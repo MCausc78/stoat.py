@@ -442,7 +442,7 @@ class BaseRole(Base):
         icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
             The new role icon.
 
-            .. versionadded:: 1.2
+            .. versionadded:: 1.3
         color: UndefinedOr[Optional[:class:`str`]]
             The new role color. Must be a valid CSS color.
         hoist: UndefinedOr[:class:`bool`]
@@ -599,7 +599,7 @@ class PartialRole(BaseRole):
     internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new role's icon, if any.
     
-    .. versionadded:: 1.2
+    .. versionadded:: 1.3
     """
 
     permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
@@ -638,9 +638,9 @@ class PartialRole(BaseRole):
 
     @property
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
-        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful role icon.
+        """UndefinedOr[Optional[:class:`Asset`]]: The stateful role icon.
 
-        .. versionadded:: 1.2
+        .. versionadded:: 1.3
         """
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
@@ -696,7 +696,7 @@ class Role(BaseRole):
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
         """UndefinedOr[Optional[:class:`.Asset`]]: The stateful role icon.
 
-        .. versionadded:: 1.2
+        .. versionadded:: 1.3
         """
         return self.internal_icon and self.internal_icon.attach_state(self.state, 'icons')
 
