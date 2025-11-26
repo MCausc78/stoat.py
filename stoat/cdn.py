@@ -243,17 +243,7 @@ class Resource(ABC):
         ...
 
 
-_cdn_session: typing.Optional[aiohttp.ClientSession] = None
-
 DEFAULT_CDN_USER_AGENT = f'stoat.py (https://github.com/MCausc78/stoat.py, {__version__})'
-
-
-def _get_session() -> aiohttp.ClientSession:
-    global _cdn_session
-    if _cdn_session:
-        return _cdn_session
-    _cdn_session = aiohttp.ClientSession()
-    return _cdn_session
 
 
 Content = typing.Union[bytes, str, bytearray, io.IOBase]
@@ -525,7 +515,7 @@ class CDNClient:
         """:class:`str`: The token in use. May be empty if not started."""
         return self.state.http.token
 
-    async def request(self, method: str, route: str, /, **kwargs) -> HTTPResponse:
+    async def request(self, method: str, path: str, /, **kwargs) -> HTTPResponse:
         headers: CIMultiDict[str]
 
         try:
@@ -549,9 +539,9 @@ class CDNClient:
 
         headers['User-Agent'] = self.user_agent
 
-        url = self._base + route
+        url = self._base + path
 
-        _L.debug('Sending request to %s', route)
+        _L.debug('Sending request to %s', path)
 
         adapter = await self.get_adapter()
 
@@ -626,9 +616,7 @@ __all__ = (
     'Asset',
     'Tag',
     'Resource',
-    '_cdn_session',
     'DEFAULT_CDN_USER_AGENT',
-    '_get_session',
     'Content',
     'resolve_content',
     'Upload',

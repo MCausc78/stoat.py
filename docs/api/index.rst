@@ -48,6 +48,7 @@ Documents
     emojis
     enums_and_flag_classes
     events
+    gifs
     invites
     messages
     roles

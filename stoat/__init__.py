@@ -38,6 +38,7 @@ from .enums import *
 from .errors import *
 from .events import *
 from .flags import *
+from .gifbox import *
 from .http import *
 from .instance import *
 from .invite import *

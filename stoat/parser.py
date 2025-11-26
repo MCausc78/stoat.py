@@ -153,6 +153,7 @@ from .events import (
     UserVoiceStateUpdateEvent,
     UserMoveVoiceChannelEvent,
 )
+from .gifbox import GIFCategory, GIF, OtherGIF
 from .instance import (
     InstanceCaptchaFeature,
     InstanceGenericFeature,
@@ -1429,6 +1430,43 @@ class Parser:
             emoji=None,
             server_id=None,
             emoji_id=payload['id'],
+        )
+
+    def parse_gif(self, payload: raw.gb.MediaResult, /) -> GIF:
+        """Parses a GIF object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The GIF payload to parse.
+
+        Returns
+        -------
+        :class:`GIF`
+            The parsed GIF object.
+        """
+        return GIF(
+            id=payload['id'],
+            url=payload['url'],
+            media_formats={k: self.parse_other_gif(v) for k, v in payload['media_formats'].items()},
+        )
+
+    def parse_gif_category(self, payload: raw.gb.CategoryResponse, /) -> GIFCategory:
+        """Parses a GIF category object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The GIF category payload to parse.
+
+        Returns
+        -------
+        :class:`GIFCategory`
+            The parsed GIF category object.
+        """
+        return GIFCategory(
+            title=payload['title'],
+            preview_url=payload['image'],
         )
 
     def parse_gif_embed_special(self, _: raw.GIFSpecial, /) -> GIFEmbedSpecial:
@@ -2890,6 +2928,26 @@ class Parser:
         return OAuth2ScopeReasoning(
             allow=payload['allow'],
             deny=payload['deny'],
+        )
+
+    def parse_other_gif(self, payload: raw.gb.MediaObject, /) -> OtherGIF:
+        """Parses an other GIF object.
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The other GIF payload to parse.
+
+        Returns
+        -------
+        :class:`OtherGIF`
+            The parsed other GIF object.
+        """
+        dimensions = payload['dimensions']
+
+        return OtherGIF(
+            url=payload['url'],
+            dimensions=(dimensions[0], dimensions[1]),
         )
 
     def parse_own_user(self, payload: raw.User, /) -> OwnUser:
