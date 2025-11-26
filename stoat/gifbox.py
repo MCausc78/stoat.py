@@ -228,7 +228,14 @@ class GIFBoxClient:
         return response
 
     async def request(self, method: str, path: str, /, **kwargs) -> typing.Any:
-        await self.raw_request(method, path)
+        response = await self.raw_request(method, path, **kwargs)
+        data = await utils._json_or_text(response)
+        if not response.closed:
+            tmp = response.close()
+            if isawaitable(tmp):
+                await tmp
+
+        return data
 
     async def get_trending_categories(self, *, locale: str = 'en_US') -> list[GIFCategory]:
         """|coro|
@@ -246,8 +253,10 @@ class GIFBoxClient:
             The trending GIF categories.
         """
         resp: list[raw.gb.CategoryResponse] = await self.request(
-            'GET', '/categories', params={'locale': locale}
-        )  # CategoriesResponse[]
+            'GET',
+            '/categories',
+            params={'locale': locale},
+        )
         return list(map(self.state.parser.parse_gif_category, resp))
 
     async def get_service_version(self) -> str:
@@ -306,6 +315,42 @@ class GIFBoxClient:
             params['position'] = position
 
         resp: raw.gb.PaginatedMediaResponse = await self.request('GET', '/search', params=params)
+        return (list(map(self.state.parser.parse_gif, resp['results'])), resp.get('next'))
+
+    async def trending_gifs(
+        self,
+        *,
+        locale: str = 'en_US',
+        limit: typing.Optional[int] = None,
+        position: typing.Optional[str] = None,
+    ) -> tuple[list[GIF], typing.Optional[str]]:
+        """|coro|
+
+        Retrieves trending GIFs.
+
+        Parameters
+        ----------
+        locale: :class:`str`
+            The locale the GIFs should be returned in. Defaults to ``en_US``.
+        limit: Optional[:class:`int`]
+            The maximum number of GIFs to get. Must be between 1 and 50. Defaults to 20.
+        position: Optional[:class:`str`]
+            The position to get GIFs from.
+
+        Returns
+        -------
+        Tuple[List[:class:`GIF`], Optional[:class:`str`]]
+            The GIF results returned from Tenor proxy API and the position to get next GIFs by.
+        """
+        params: raw.gb.TrendingQueryParams = {
+            'locale': locale,
+        }
+        if limit is not None:
+            params['limit'] = limit
+        if position is not None:
+            params['position'] = position
+
+        resp: raw.gb.PaginatedMediaResponse = await self.request('GET', '/featured', params=params)
         return (list(map(self.state.parser.parse_gif, resp['results'])), resp.get('next'))
 
 

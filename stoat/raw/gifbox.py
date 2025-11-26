@@ -20,6 +20,13 @@ class SearchQueryParams(typing.TypedDict):
     position: typing_extensions.NotRequired[str]
 
 
+# >> /routes/trending.rs
+class TrendingQueryParams(typing.TypedDict):
+    locale: str
+    limit: typing_extensions.NotRequired[int]
+    position: typing_extensions.NotRequired[str]
+
+
 # >> /types.rs
 class RootResponse(typing.TypedDict):
     message: str
