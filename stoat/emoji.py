@@ -266,6 +266,8 @@ class ServerEmoji(BaseEmoji):
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`HTTPException`

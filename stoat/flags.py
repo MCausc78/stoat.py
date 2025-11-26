@@ -456,13 +456,16 @@ class Permissions(BaseFlags, support_kwargs=True):
 
     @flag()
     def view_audit_logs(cls) -> int:
-        """:class:`bool`: Whether the user can view server's audit logs."""
+        """:class:`bool`: Whether the user can view server's audit logs.
+
+        .. versionadded:: 1.3
+        """
         return 1 << 39
 
     @classmethod
     def generic(cls) -> Self:
         """:class:`Permissions`: Returns generic permissions."""
-        return cls(0b00000000_00000000_00000000_00000000_00000000_00000000_00000000_00011111)
+        return cls(0b00000000_00000000_00000000_10000000_00000000_00000000_00000000_00011111)
 
     # % 1 bit reserved
 

@@ -145,6 +145,8 @@ class BaseChannel(Base):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         silent: Optional[:class:`bool`]
             Whether to not send message when leaving.
 
@@ -216,6 +218,8 @@ class BaseChannel(Base):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -393,7 +397,10 @@ class PartialChannel(BaseChannel):
         return ret
 
     def get_clear_fields(self) -> list[raw.FieldsChannel]:
-        """List[:class:`str`]: The fields that were set to ``None``."""
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
 
         fields: list[raw.FieldsChannel] = []
         if self.description is None:
@@ -407,7 +414,10 @@ class PartialChannel(BaseChannel):
         return fields
 
     def to_dict(self) -> raw.PartialChannel:
-        """:class:`dict`: Convert partial channel to raw data."""
+        """:class:`dict`: Convert partial channel to raw data.
+
+        .. versionadded:: 1.3
+        """
         payload: raw.PartialChannel = {}
         if self.name is not UNDEFINED:
             payload['name'] = self.name
@@ -2029,6 +2039,8 @@ class BaseServerChannel(BaseChannel):
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`Unauthorized`
@@ -2148,6 +2160,8 @@ class BaseServerChannel(BaseChannel):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         allow: :class:`Permissions`
             The permissions to allow for role in channel.
         deny: :class:`Permissions`
@@ -2232,6 +2246,8 @@ class BaseServerChannel(BaseChannel):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------

@@ -193,21 +193,33 @@ CacheContextType
     .. attribute:: member_or_user_through_audit_log_entry_user
     
         The context comes from :attr:`AuditLogEntry.user`.
+
+        .. versionadded:: 1.3
     .. attribute:: member_through_audit_log_entry_user
     
         The context comes from :attr:`AuditLogEntry.user_as_member`.
+
+        .. versionadded:: 1.3
     .. attribute:: user_through_audit_log_entry_user
     
         The context comes from :attr:`AuditLogEntry.user_as_user`.
+
+        .. versionadded:: 1.3
     .. attribute:: member_or_user_through_audit_log_entry_action_user
     
         The context comes from :attr:`AuditLogEntryAction.user`.
+
+        .. versionadded:: 1.3
     .. attribute:: member_through_audit_log_entry_action_user
     
         The context comes from :attr:`AuditLogEntryAction.user_as_member`.
+
+        .. versionadded:: 1.3
     .. attribute:: user_through_audit_log_entry_action_user
     
         The context comes from :attr:`AuditLogEntryAction.user_as_user`.
+
+        .. versionadded:: 1.3
     .. attribute:: message_through_messageable_getter
 
         The context comes from :meth:`Messageable.get_message`.

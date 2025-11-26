@@ -491,6 +491,8 @@ class HTTPOverrideOptions:
         Whether the authentication token is an OAuth2 access token. Defaults to :attr:`HTTPClient.oauth2`.
     reason: Optional[:class:`str`]
         The reason for action which will be stored in audit logs.
+
+        .. versionadded:: 1.3
     token: UndefinedOr[Optional[:class:`str`]]
         The token to use when requesting the route.
     user_agent: UndefinedOr[:class:`str`]
@@ -760,6 +762,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
@@ -900,6 +904,8 @@ class HTTPClient:
             The MFA ticket to pass in headers.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
@@ -1145,6 +1151,8 @@ class HTTPClient:
             The MFA ticket to pass in headers.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
@@ -1854,6 +1862,8 @@ class HTTPClient:
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`Unauthorized`
@@ -1934,6 +1944,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: UndefinedOr[:class:`str`]
             The new channel name. Only applicable when target channel is :class:`GroupChannel`, or :class:`ServerChannel`.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -2552,6 +2564,8 @@ class HTTPClient:
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`HTTPException`
@@ -2697,6 +2711,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -3697,6 +3713,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         allow: :class:`Permissions`
             The permissions to allow for role in channel.
         deny: :class:`Permissions`
@@ -3817,6 +3835,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -4366,6 +4386,8 @@ class HTTPClient:
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`HTTPException`
@@ -4475,6 +4497,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -5625,6 +5649,8 @@ class HTTPClient:
 
         You must have :attr:`~Permissions.view_audit_logs` to do this.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         server: ULIDOr[:class:`BaseServer`]
@@ -5899,6 +5925,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -6475,8 +6503,10 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         type: Optional[:class:`ChannelType`]
-            The channel type. Defaults to :attr:`~.ChannelType.text` if not provided.
+            The channel type. Defaults to :attr:`~ChannelType.text` if not provided.
         name: :class:`str`
             The channel name. Must be between 1 and 32 characters.
         description: Optional[:class:`str`]
@@ -6711,6 +6741,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
 
@@ -7139,6 +7171,8 @@ class HTTPClient:
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`HTTPException`
@@ -7220,6 +7254,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         allow: :class:`Permissions`
             The permissions to allow for the specified role.
         deny: :class:`Permissions`
@@ -7307,6 +7343,8 @@ class HTTPClient:
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`Unauthorized`
@@ -7386,6 +7424,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
         rank: Optional[:class:`int`]
@@ -7480,6 +7520,8 @@ class HTTPClient:
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`Unauthorized`
@@ -7553,6 +7595,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
         color: UndefinedOr[Optional[:class:`str`]]
@@ -7685,6 +7729,8 @@ class HTTPClient:
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         -------
@@ -8085,6 +8131,8 @@ class HTTPClient:
             The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: UndefinedOr[:class:`str`]
             The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]

@@ -479,7 +479,10 @@ class PartialWebhook(BaseWebhook):
         return ret
 
     def get_clear_fields(self) -> list[raw.FieldsWebhook]:
-        """List[:class:`str`]: The fields that were set to ``None``."""
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
 
         fields: list[raw.FieldsWebhook] = []
         if self.internal_avatar is None:
@@ -487,7 +490,10 @@ class PartialWebhook(BaseWebhook):
         return fields
 
     def to_dict(self) -> raw.PartialWebhook:
-        """:class:`dict`: Convert partial webhook to raw data."""
+        """:class:`dict`: Convert partial webhook to raw data.
+
+        .. versionadded:: 1.3
+        """
         payload: raw.PartialWebhook = {}
         if self.name is not UNDEFINED:
             payload['name'] = self.name

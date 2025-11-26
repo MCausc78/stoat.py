@@ -61,7 +61,7 @@ if typing.TYPE_CHECKING:
 class AuditLogEntry(Base):
     """Represents an audit log entry.
 
-    Most of fields will be set to their zero value (empty string, 0, empty array) if the type.
+    .. versionadded:: 1.3
     """
 
     server_id: str = field(repr=True, kw_only=True, eq=True)
@@ -217,7 +217,9 @@ class AuditLogEntry(Base):
 class AuditLogEntryAction:
     """Represents an audit log entry action.
 
-    Most of fields will be set to their zero value (empty string, 0, empty array) if the type.
+    Most of fields will be set to their zero value (empty string, 0, empty array).
+
+    .. versionadded:: 1.3
     """
 
     state: State = field(repr=False, kw_only=True, eq=False)

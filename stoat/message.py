@@ -605,6 +605,8 @@ class BaseMessage(Base):
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`Unauthorized`
@@ -1313,7 +1315,10 @@ class PartialMessage(BaseMessage):
         )
 
     def get_clear_fields(self) -> list[raw.FieldsMessage]:
-        """List[:class:`str`]: The fields that were set to ``None``."""
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
 
         fields: list[raw.FieldsMessage] = []
         if self.pinned is None:
@@ -1321,7 +1326,10 @@ class PartialMessage(BaseMessage):
         return fields
 
     def to_dict(self) -> raw.PartialMessage:
-        """:class:`dict`: Convert partial message to raw data."""
+        """:class:`dict`: Convert partial message to raw data.
+
+        .. versionadded:: 1.3
+        """
         payload: raw.PartialMessage = {}
         if self.content is not UNDEFINED:
             payload['content'] = self.content

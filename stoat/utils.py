@@ -580,7 +580,7 @@ async def aget(iterable: AsyncIterable[T], compiled: bool = False, /, **kwargs: 
             predicate = eval(
                 'lambda _stoat_utils_get_item, /, {}: {}'.format(
                     ', '.join(key),
-                    ' and '.join(f"_stoat_utils_get_item.{a.replace('__', '.')} == {a}" for a in key),
+                    ' and '.join(f'_stoat_utils_get_item.{a.replace("__", ".")} == {a}' for a in key),
                 )
             )
             _get_functions[key] = predicate
@@ -679,7 +679,7 @@ def get(iterable: Iterable[T], compiled: bool = False, /, **kwargs: typing.Any) 
             predicate = eval(
                 'lambda _stoat_utils_get_item, /, {}: {}'.format(
                     ', '.join(key),
-                    ' and '.join(f"_stoat_utils_get_item.{a.replace('__', '.')} == {a}" for a in key),
+                    ' and '.join(f'_stoat_utils_get_item.{a.replace("__", ".")} == {a}' for a in key),
                 )
             )
             _get_functions[key] = predicate

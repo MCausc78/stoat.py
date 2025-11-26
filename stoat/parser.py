@@ -450,6 +450,8 @@ class Parser:
     def parse_audit_log_entries(self, payload: raw.AuditLogQueryResponse, /) -> list[AuditLogEntry]:
         """Parses an object with audit log entries and associated users/members.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -479,6 +481,8 @@ class Parser:
         /,
     ) -> AuditLogEntry:
         """Parses an audit log entry object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -516,6 +520,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -555,6 +561,8 @@ class Parser:
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.ban` audit log entry action object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -589,6 +597,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.unban` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -625,6 +635,8 @@ class Parser:
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.channel_create` audit log entry action object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -656,6 +668,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.channel_delete` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -689,6 +703,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.channel_update` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -728,6 +744,8 @@ class Parser:
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.channel_role_permissions_update` audit log entry action object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -760,6 +778,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.emoji_delete` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -795,6 +815,8 @@ class Parser:
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.invite_delete` audit log entry action object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -828,6 +850,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.member_update` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -867,6 +891,8 @@ class Parser:
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.member_remove` audit log entry action object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -902,6 +928,8 @@ class Parser:
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.message_bulk_delete` audit log entry action object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -933,6 +961,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.message_delete` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -968,6 +998,8 @@ class Parser:
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.role_create` audit log entry action object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -998,6 +1030,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.role_delete` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -1030,6 +1064,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.role_update` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -1069,6 +1105,8 @@ class Parser:
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.roles_reorder` audit log entry action object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -1100,6 +1138,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.server_edit` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -1137,6 +1177,8 @@ class Parser:
         /,
     ) -> AuditLogEntryAction:
         """Parses an :attr:`~AuditLogEntryActionType.webhook_create` audit log entry action object.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -3653,13 +3695,15 @@ class Parser:
     ) -> PartialChannel:
         """Parses a partial channel object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
             The partial channel payload to parse.
         channel_id: :class:`str`
             The ID of the channel.
-        clear: List[:class:`str`]
+        clear: Collection[:class:`str`]
             The cleared fields.
 
         Returns
@@ -3701,6 +3745,8 @@ class Parser:
     ) -> PartialMember:
         """Parses a partial member object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -3709,7 +3755,7 @@ class Parser:
             The ID of the server the member belongs to.
         user_id: :class:`str`
             The ID of the user.
-        clear: List[:class:`str`]
+        clear: Collection[:class:`str`]
             The cleared fields.
 
         Returns
@@ -3741,6 +3787,8 @@ class Parser:
     ) -> PartialMessage:
         """Parses a partial message object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -3749,7 +3797,7 @@ class Parser:
             The ID of the channel the message belongs to.
         message_id: :class:`str`
             The ID of the message.
-        clear: List[:class:`str`]
+        clear: Collection[:class:`str`]
             The cleared fields.
 
         Returns
@@ -3779,6 +3827,8 @@ class Parser:
     ) -> PartialRole:
         """Parses a partial role object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -3787,7 +3837,7 @@ class Parser:
             The ID of the server the role belongs to.
         role_id: :class:`str`
             The ID of the role.
-        clear: List[:class:`str`]
+        clear: Collection[:class:`str`]
             The cleared fields.
 
         Returns
@@ -3814,13 +3864,15 @@ class Parser:
     ) -> PartialServer:
         """Parses a partial server object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
             The partial server payload to parse.
         server_id: :class:`str`
             The ID of the server.
-        clear: List[:class:`str`]
+        clear: Collection[:class:`str`]
             The cleared fields.
 
         Returns
@@ -3887,13 +3939,15 @@ class Parser:
     ) -> PartialUser:
         """Parses a partial user object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
             The partial user payload to parse.
         user_id: :class:`str`
             The ID of the user.
-        clear: List[:class:`str`]
+        clear: Collection[:class:`str`]
             The cleared fields.
 
         Returns
@@ -3953,6 +4007,8 @@ class Parser:
     ) -> PartialUserVoiceState:
         """Parses a partial user voice state object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -3979,13 +4035,15 @@ class Parser:
     ) -> PartialWebhook:
         """Parses a partial webhook object.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
             The partial webhook payload to parse.
         webhook_id: :class:`str`
             The ID of the webhook.
-        remove: List[:class:`str`]
+        remove: Collection[:class:`str`]
             The removed fields.
 
         Returns

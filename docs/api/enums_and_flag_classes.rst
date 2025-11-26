@@ -339,6 +339,8 @@ Servers
     Each variant may have a table that describes what will :class:`AuditLogEntryAction` have.
     Note that the fields in tables will be always present for these specific types.
 
+    .. versionadded:: 1.3
+
     .. attribute:: message_delete
 
         A message was deleted in a channel.

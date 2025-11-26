@@ -1308,7 +1308,10 @@ class PartialUser(BaseUser):
         return ret
 
     def get_clear_fields(self) -> list[raw.FieldsUser]:
-        """List[:class:`str`]: The fields that were set to ``None``."""
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
 
         fields: list[raw.FieldsUser] = []
         if self.internal_avatar is None:
@@ -1324,7 +1327,10 @@ class PartialUser(BaseUser):
         return fields
 
     def to_dict(self) -> raw.PartialUser:
-        """:class:`dict`: Convert partial user to raw data."""
+        """:class:`dict`: Convert partial user to raw data.
+
+        .. versionadded:: 1.3
+        """
         payload: raw.PartialUser = {}
         if self.name is not UNDEFINED:
             payload['username'] = self.name

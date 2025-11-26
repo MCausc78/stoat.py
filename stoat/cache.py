@@ -719,14 +719,19 @@ class EntityCacheContext(BaseCacheContext):
 
 @define(slots=True)
 class AuditLogEntryCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`AuditLogEntry` entity."""
+    """Represents a cache context that involves an :class:`AuditLogEntry` entity.
+
+    .. versionadded:: 1.3
+    """
 
     entry: AuditLogEntry = field(repr=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class AuditLogEntryActionCacheContext(EntityCacheContext):
-    """Represents a cache context that involves an :class:`AuditLogEntryAction` entity."""
+    """Represents a cache context that involves an :class:`AuditLogEntryAction` entity.
+
+    .. versionadded:: 1.3"""
 
     action: AuditLogEntryAction = field(repr=True, kw_only=True, eq=True)
 
@@ -938,42 +943,50 @@ class WebhookCacheContext(EntityCacheContext):
     """:class:`Webhook`: The webhook involved."""
 
 
-# member_or_user_through_audit_log_entry = 'AuditLogEntry.user: Union[Member, User]'
-# member_through_audit_log_entry = 'AuditLogEntry.user_as_member: Member'
-# user_through_audit_log_entry = 'AuditLogEntry.user_as_user: User'
-# member_or_user_through_audit_log_entry_action = 'AuditLogEntryAction.user: Union[Member, User]'
-# member_through_audit_log_entry_action = 'AuditLogEntryAction.user_as_member: Member'
-# user_through_audit_log_entry_action = 'AuditLogEntryAction.user_as_user: User'
-
-
 @define(slots=True)
 class MemberOrUserThroughAuditLogEntryUserCacheContext(AuditLogEntryCacheContext):
-    """Represents a cache context that involves an :class:`AuditLogEntry`, wishing to retrieve audit log entry's user."""
+    """Represents a cache context that involves an :class:`AuditLogEntry`, wishing to retrieve audit log entry's user.
+
+    .. versionadded:: 1.3
+    """
 
 
 @define(slots=True)
 class MemberThroughAuditLogEntryUserCacheContext(AuditLogEntryCacheContext):
-    """Represents a cache context that involves an :class:`AuditLogEntry`, wishing to retrieve audit log entry's user as :class:`Member` instance."""
+    """Represents a cache context that involves an :class:`AuditLogEntry`, wishing to retrieve audit log entry's user as :class:`Member` instance.
+
+    .. versionadded:: 1.3
+    """
 
 
 @define(slots=True)
 class UserThroughAuditLogEntryUserCacheContext(AuditLogEntryCacheContext):
-    """Represents a cache context that involves an :class:`AuditLogEntry`, wishing to retrieve audit log entry's user as :class:`User` instance."""
+    """Represents a cache context that involves an :class:`AuditLogEntry`, wishing to retrieve audit log entry's user as :class:`User` instance.
+
+    .. versionadded:: 1.3
+    """
 
 
 @define(slots=True)
 class MemberOrUserThroughAuditLogEntryActionUserCacheContext(AuditLogEntryActionCacheContext):
-    """Represents a cache context that involves an :class:`AuditLogEntryAction`, wishing to retrieve audit log entry's user."""
+    """Represents a cache context that involves an :class:`AuditLogEntryAction`, wishing to retrieve audit log entry's user.
+
+    .. versionadded:: 1.3
+    """
 
 
 @define(slots=True)
 class MemberThroughAuditLogEntryActionUserCacheContext(AuditLogEntryActionCacheContext):
-    """Represents a cache context that involves an :class:`AuditLogEntryAction`, wishing to retrieve audit log entry's user as :class:`Member` instance."""
+    """Represents a cache context that involves an :class:`AuditLogEntryAction`, wishing to retrieve audit log entry's user as :class:`Member` instance.
+
+    .. versionadded:: 1.3"""
 
 
 @define(slots=True)
 class UserThroughAuditLogEntryActionUserCacheContext(AuditLogEntryActionCacheContext):
-    """Represents a cache context that involves an :class:`AuditLogEntryAction`, wishing to retrieve audit log entry's user as :class:`User` instance."""
+    """Represents a cache context that involves an :class:`AuditLogEntryAction`, wishing to retrieve audit log entry's user as :class:`User` instance.
+
+    .. versionadded:: 1.3"""
 
 
 @define(slots=True)

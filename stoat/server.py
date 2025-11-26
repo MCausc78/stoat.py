@@ -380,6 +380,8 @@ class BaseRole(Base):
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`Unauthorized`
@@ -444,6 +446,8 @@ class BaseRole(Base):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
         color: UndefinedOr[Optional[:class:`str`]]
@@ -535,6 +539,8 @@ class BaseRole(Base):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         allow: :class:`Permissions`
             The permissions to allow.
         deny: :class:`Permissions`
@@ -640,7 +646,10 @@ class PartialRole(BaseRole):
             )
 
     def get_clear_fields(self) -> list[raw.FieldsRole]:
-        """List[:class:`str`]: The fields that were set to ``None``."""
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
 
         fields: list[raw.FieldsRole] = []
         if self.color is None:
@@ -648,7 +657,10 @@ class PartialRole(BaseRole):
         return fields
 
     def to_dict(self) -> raw.PartialRole:
-        """:class:`dict`: Convert partial role to raw data."""
+        """:class:`dict`: Convert partial role to raw data.
+
+        .. versionadded:: 1.3
+        """
         payload: raw.PartialRole = {}
         if self.name is not UNDEFINED:
             payload['name'] = self.name
@@ -1228,8 +1240,10 @@ class BaseServer(Base):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         type: Optional[:class:`ChannelType`]
-            The channel type. Defaults to :attr:`.ChannelType.text` if not provided.
+            The channel type. Defaults to :attr:`ChannelType.text` if not provided.
         name: :class:`str`
             The channel name. Must be between 1 and 32 characters.
         description: Optional[:class:`str`]
@@ -1417,6 +1431,8 @@ class BaseServer(Base):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         description: Optional[:class:`str`]
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
@@ -1511,6 +1527,8 @@ class BaseServer(Base):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         description: Optional[:class:`str`]
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
@@ -1601,6 +1619,8 @@ class BaseServer(Base):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
         rank: Optional[:class:`int`]
@@ -1811,6 +1831,8 @@ class BaseServer(Base):
             The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: UndefinedOr[:class:`str`]
             The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -2962,6 +2984,8 @@ class BaseServer(Base):
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`Unauthorized`
@@ -3037,6 +3061,8 @@ class BaseServer(Base):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -3156,7 +3182,10 @@ class PartialServer(BaseServer):
         return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
 
     def get_clear_fields(self) -> list[raw.FieldsServer]:
-        """List[:class:`str`]: The fields that were set to ``None``."""
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
 
         fields: list[raw.FieldsServer] = []
         if self.description is None:
@@ -3172,7 +3201,10 @@ class PartialServer(BaseServer):
         return fields
 
     def to_dict(self) -> raw.PartialServer:
-        """:class:`dict`: Convert partial server to raw data."""
+        """:class:`dict`: Convert partial server to raw data.
+
+        .. versionadded:: 1.3
+        """
         payload: raw.PartialServer = {}
         if self.owner_id is not UNDEFINED:
             payload['owner'] = self.owner_id
@@ -4655,6 +4687,8 @@ class BaseMember(Connectable, Messageable):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
 
@@ -4778,6 +4812,8 @@ class BaseMember(Connectable, Messageable):
             The HTTP request overrides.
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -5240,6 +5276,8 @@ class BaseMember(Connectable, Messageable):
         reason: Optional[:class:`str`]
             The reason for action which will be stored in audit logs.
 
+            .. versionadded:: 1.3
+
         Raises
         ------
         :class:`HTTPException`
@@ -5387,7 +5425,10 @@ class PartialMember(BaseMember):
         return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
 
     def get_clear_fields(self) -> list[raw.FieldsMember]:
-        """List[:class:`str`]: The fields that were set to ``None``."""
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
 
         fields: list[raw.FieldsMember] = []
         if self.nick is None:
@@ -5405,7 +5446,10 @@ class PartialMember(BaseMember):
         return fields
 
     def to_dict(self) -> raw.PartialMember:
-        """:class:`dict`: Convert partial member to raw data."""
+        """:class:`dict`: Convert partial member to raw data.
+
+        .. versionadded:: 1.3
+        """
         payload: raw.PartialMember = {}
         if self.nick is not UNDEFINED and self.nick is not None:
             payload['nickname'] = self.nick
