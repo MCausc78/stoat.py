@@ -736,7 +736,12 @@ class Connectable:
         node: UndefinedOr[Optional[:class:`str`]]
             The node's name to use for starting a call.
 
-            Can be ``None`` to tell server choose the node automatically.
+            If ``None`` or ``UNDEFINED``, the currently assigned channel node will be used.
+
+            If channel has no node assigned, you should discover existing voice nodes via :meth:`query_node`
+            (on official instances, you generally currently should use ``worldwide``). Otherwise, this will throw an ``UnknownNode`` error.
+
+            .. versionadded:: 1.2
         force_disconnect: UndefinedOr[Optional[:class:`bool`]]
             Whether to force disconnect any other existing voice connections.
             Useful for disconnecting on another device and joining on a new.
@@ -766,7 +771,9 @@ class Connectable:
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
             | ``NotConnected``       | The current user was already connected to other voice channel.                                                                    |
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotAVoiceChannel``   | ???. Only applicable to instances using Livekit                                                                                   |
+            | ``NotAVoiceChannel``   | The channel was not a voice channel. Only applicable to instances using Livekit.                                                  |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``UnknownNode``        | The server could not discover a voice node.                                                                                       |
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
             | ``VosoUnavailable``    | The voice server is unavailable. Not applicable to instances using Livekit.                                                       |
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
@@ -840,7 +847,12 @@ class Connectable:
         node: Optional[:class:`str`]
             The node's name to use for starting a call.
 
-            Defaults to ``None``, which tells server choose the node automatically.
+            If ``None``, the currently assigned channel node will be used.
+
+            If channel has no node assigned, you should discover existing voice nodes via :meth:`query_node`
+            (on official instances, you generally currently should use ``worldwide``). Otherwise, this will throw an ``UnknownNode`` error.
+
+            .. versionadded:: 1.2
 
         Raises
         ------
@@ -860,7 +872,9 @@ class Connectable:
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
             | ``NotConnected``       | The current user was already connected to other voice channel.                                                                    |
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotAVoiceChannel``   | ???. Only applicable to instances using Livekit                                                                                   |
+            | ``NotAVoiceChannel``   | The channel was not a voice channel. Only applicable to instances using Livekit.                                                  |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``UnknownNode``        | The server could not discover a voice node.                                                                                       |
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
             | ``VosoUnavailable``    | The voice server is unavailable. Not applicable to instances using Livekit.                                                       |
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
