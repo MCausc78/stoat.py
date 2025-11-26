@@ -13,7 +13,7 @@ __title__ = 'stoat.py'
 __author__ = 'MCausc78'
 __license__ = 'MIT'
 __copyright__ = 'Copyright 2024-present MCausc78'
-__version__ = '1.3.0a'
+__version__ = '1.2.1'
 
 from . import (
     abc as abc,
@@ -70,9 +70,9 @@ class _VersionInfo(typing.NamedTuple):
 
 version_info: typing.Final[_VersionInfo] = _VersionInfo(
     major=1,
-    minor=3,
-    micro=0,
-    releaselevel='alpha',
+    minor=2,
+    micro=1,
+    releaselevel='final',
     serial=0,
 )
 
