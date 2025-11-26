@@ -1,7 +1,7 @@
 import asyncio
 
 import json
-import pyvolt
+import stoat
 
 import revolt
 import revolt.http
@@ -16,11 +16,11 @@ async def bench_dm_channels():
     with open('./tests/data/channels/dm.json', 'r') as fp:
         payload = json.load(fp)
     
-    state = pyvolt.State()
-    parser = pyvolt.Parser(state=state)
+    state = stoat.State()
+    parser = stoat.Parser(state=state)
     state.setup(parser=parser)
 
-    def using_pyvolt():
+    def using_stoatpy():
         return parser.parse_direct_message_channel(payload)
 
     import aiohttp
@@ -50,11 +50,11 @@ async def bench_dm_channels():
     def using_voltage():
         return voltage.DMChannel(data=payload, cache=vpy_cache)
 
-    time_pyvolt = timeit.timeit(using_pyvolt,     number=100_000)
+    time_stoatpy = timeit.timeit(using_stoatpy,     number=100_000)
     time_revoltpy = timeit.timeit(using_revoltpy, number=100_000)
     time_voltage = timeit.timeit(using_voltage,   number=100_000)
 
-    print(f"[DMChannel] Time using pyvolt ----: {time_pyvolt:.6f} seconds")
+    print(f"[DMChannel] Time using stoat.py --: {time_stoatpy:.6f} seconds")
     print(f"[DMChannel] Time using revolt.py -: {time_revoltpy:.6f} seconds")
     print(f"[DMChannel] Time using voltage ---: {time_voltage:.6f} seconds")
 
@@ -64,11 +64,11 @@ async def bench_group_channels():
     with open('./tests/data/channels/group.json', 'r') as fp:
         payload = json.load(fp)
     
-    state = pyvolt.State()
-    parser = pyvolt.Parser(state=state)
+    state = stoat.State()
+    parser = stoat.Parser(state=state)
     state.setup(parser=parser)
 
-    def using_pyvolt():
+    def using_stoatpy():
         return parser.parse_group_channel(payload, (True, payload['recipients']))
 
     import aiohttp
@@ -107,11 +107,11 @@ async def bench_group_channels():
     def using_voltage():
         return voltage.GroupDMChannel(data=payload, cache=vpy_cache)
 
-    time_pyvolt = timeit.timeit(using_pyvolt,     number=100_000)
+    time_stoatpy = timeit.timeit(using_stoatpy,     number=100_000)
     time_revoltpy = timeit.timeit(using_revoltpy, number=100_000)
     time_voltage = timeit.timeit(using_voltage,   number=100_000)
 
-    print(f"[GroupChannel] Time using pyvolt ----: {time_pyvolt:.6f} seconds")
+    print(f"[GroupChannel] Time using stoat.py --: {time_stoatpy:.6f} seconds")
     print(f"[GroupChannel] Time using revolt.py -: {time_revoltpy:.6f} seconds")
     print(f"[GroupChannel] Time using voltage ---: {time_voltage:.6f} seconds")
 
@@ -124,11 +124,11 @@ async def bench_text_channels():
     with open('./tests/data/servers/server.json', 'r') as fp:
         server_payload = json.load(fp)
     
-    state = pyvolt.State()
-    parser = pyvolt.Parser(state=state)
+    state = stoat.State()
+    parser = stoat.Parser(state=state)
     state.setup(parser=parser)
 
-    def using_pyvolt():
+    def using_stoatpy():
         return parser.parse_text_channel(payload)
 
     import aiohttp
@@ -161,11 +161,11 @@ async def bench_text_channels():
     def using_voltage():
         return voltage.TextChannel(data=payload, cache=vpy_cache, server_id=server_id)
 
-    time_pyvolt = timeit.timeit(using_pyvolt,     number=100_000)
+    time_stoatpy = timeit.timeit(using_stoatpy,     number=100_000)
     time_revoltpy = timeit.timeit(using_revoltpy, number=100_000)
     time_voltage = timeit.timeit(using_voltage,   number=100_000)
 
-    print(f"[TextChannel] Time using pyvolt ----: {time_pyvolt:.6f} seconds")
+    print(f"[TextChannel] Time using stoat.py --: {time_stoatpy:.6f} seconds")
     print(f"[TextChannel] Time using revolt.py -: {time_revoltpy:.6f} seconds")
     print(f"[TextChannel] Time using voltage ---: {time_voltage:.6f} seconds")
 

@@ -1,7 +1,7 @@
 from aiohttp import web
 import json
 import pytest
-import pyvolt
+import stoat
 
 with open('./tests/data/discovery/bots.json', 'r') as fp:
     bots = json.load(fp)
@@ -71,9 +71,9 @@ async def run_discovery_site(port: int) -> web.TCPSite:
 async def test_bots():
     site = await run_discovery_site(5101)
 
-    state = pyvolt.State()
-    state.setup(parser=pyvolt.Parser(state=state))
-    client = pyvolt.DiscoveryClient(base_url='http://127.0.0.1:5103/', state=state)
+    state = stoat.State()
+    state.setup(parser=stoat.Parser(state=state))
+    client = stoat.DiscoveryClient(base_url='http://127.0.0.1:5103/', state=state)
 
     page = await client.bots()
     assert len(page.bots) == 21
@@ -97,7 +97,7 @@ async def test_bots():
     assert not bot.profile.background
     assert bot.tags == []
     assert bot.server_count == 318
-    assert bot.usage is pyvolt.BotUsage.high
+    assert bot.usage is stoat.BotUsage.high
 
     bot = page.bots[1]
     assert bot.id == '01FHGJ3NPP7XANQQH8C2BE44ZY'
@@ -107,7 +107,7 @@ async def test_bots():
     assert avatar.id == 'pYjK-QyMv92hy8GUM-b4IK1DMzYILys9s114khzzKY'
     assert avatar.filename == 'cut-automod-gay.png'
     metadata = avatar.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 512
     assert metadata.height == 512
     assert avatar.content_type == 'image/png'
@@ -118,14 +118,14 @@ async def test_bots():
     assert background.id == 'AoRvVsvP1Y8X_A4cEqJ_R7B29wDZI5lNrbiu0A5pJI'
     assert background.filename == 'banner.png'
     metadata = background.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 1366
     assert metadata.height == 768
     assert background.content_type == 'image/png'
     assert background.size == 151802
     assert bot.tags == []
     assert bot.server_count == 3287
-    assert bot.usage is pyvolt.BotUsage.high
+    assert bot.usage is stoat.BotUsage.high
 
     await site.stop()
 
@@ -134,9 +134,9 @@ async def test_bots():
 async def test_servers():
     site = await run_discovery_site(5102)
 
-    state = pyvolt.State()
-    state.setup(parser=pyvolt.Parser(state=state))
-    client = pyvolt.DiscoveryClient(base_url='http://127.0.0.1:5103/', state=state)
+    state = stoat.State()
+    state.setup(parser=stoat.Parser(state=state))
+    client = stoat.DiscoveryClient(base_url='http://127.0.0.1:5103/', state=state)
 
     page = await client.servers()
 
@@ -163,7 +163,7 @@ async def test_servers():
     assert icon.id == 'JTnWjuOrDZw6-A0ey94dvfVtDIvydD7bisr_aU82v_'
     assert icon.filename == 'GSKz91QUnRHWnO92E697pRpDl7BBkHnBCVvQVHTppK.jpeg'
     metadata = icon.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 768
     assert metadata.height == 768
     assert icon.content_type == 'image/jpeg'
@@ -173,7 +173,7 @@ async def test_servers():
     assert banner.id == 'ZDeq632SkOHK26Arq7j4uX0V_bbyD10g8NWd8l1eH_'
     assert banner.filename == 'il_fullxfull.2923896440_644n.jpg'
     metadata = banner.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 2750
     assert metadata.height == 2125
     assert banner.content_type == 'image/jpeg'
@@ -181,7 +181,7 @@ async def test_servers():
     assert server.flags.value == 0
     assert server.tags == []
     assert server.member_count == 71
-    assert server.activity is pyvolt.ServerActivity.high
+    assert server.activity is stoat.ServerActivity.high
 
     server = page.servers[1]
     assert server.id == '01F80118K1F2EYD9XAMCPQ0BCT'
@@ -193,7 +193,7 @@ async def test_servers():
     assert icon.id == 'XIwQosw_3USL_XIvzZDyIKSi9LlMryrOPJNKsTrqts'
     assert icon.filename == 'gaysex.png'
     metadata = icon.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 500
     assert metadata.height == 500
     assert icon.content_type == 'image/png'
@@ -203,7 +203,7 @@ async def test_servers():
     assert banner.id == 'ZTPUKiZ6OP1Yqox2PNOBVx_q1U3u9hXBbn84tLJXzK'
     assert banner.filename == '20230626_221308-2.jpg'
     metadata = banner.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 5120
     assert metadata.height == 2880
     assert banner.content_type == 'image/jpeg'
@@ -211,7 +211,7 @@ async def test_servers():
     assert server.flags.value == 2
     assert server.tags == []
     assert server.member_count == 6804
-    assert server.activity is pyvolt.ServerActivity.high
+    assert server.activity is stoat.ServerActivity.high
 
     server = page.servers[2]
     assert server.id == '01HVKQBBQ3DQVVNK3M8DHXV30D'
@@ -225,7 +225,7 @@ async def test_servers():
     assert icon.id == '1tTV6RqTik3qntjw2tFXg-HfCW_Dtmp4cYBA385BzO'
     assert icon.filename == 'femdom logo small.png'
     metadata = icon.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 2500
     assert metadata.height == 2500
     assert icon.content_type == 'image/png'
@@ -235,7 +235,7 @@ async def test_servers():
     assert banner.id == 'LoBAfzfxv-0bObWR4pYpByG2joAQ_o1LeqZByOrLSY'
     assert banner.filename == 'Hyrule_Castlesmallimagesize.png'
     metadata = banner.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 3840
     assert metadata.height == 2160
     assert banner.content_type == 'image/png'
@@ -243,7 +243,7 @@ async def test_servers():
     assert server.flags.value == 0
     assert server.tags == []
     assert server.member_count == 225
-    assert server.activity is pyvolt.ServerActivity.high
+    assert server.activity is stoat.ServerActivity.high
 
     server = page.servers[3]
     assert server.id == '01F7ZSBSFHQ8TA81725KQCSDDP'
@@ -257,7 +257,7 @@ async def test_servers():
     assert icon.id == 'gtc0gJE2S3RvuDhrl2-JeakvgbqEGr2acvBnRTTh6k'
     assert icon.filename == 'logo_round.png'
     metadata = icon.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 500
     assert metadata.height == 500
     assert icon.content_type == 'image/png'
@@ -267,7 +267,7 @@ async def test_servers():
     assert banner.id == 'G_Q-6Y8KiGFVBNY2qVtDS25bX9Dh14CK2Py3TmLN_P'
     assert banner.filename == 'Lounge_Banner_Old.png'
     metadata = banner.metadata
-    assert metadata.type is pyvolt.AssetMetadataType.image
+    assert metadata.type is stoat.AssetMetadataType.image
     assert metadata.width == 1920
     assert metadata.height == 1080
     assert banner.content_type == 'image/png'
@@ -275,7 +275,7 @@ async def test_servers():
     assert server.flags.value == 1
     assert server.tags == ['revolt']
     assert server.member_count == 39737
-    assert server.activity is pyvolt.ServerActivity.medium
+    assert server.activity is stoat.ServerActivity.medium
 
     await site.stop()
 
@@ -284,9 +284,9 @@ async def test_servers():
 async def test_themes():
     site = await run_discovery_site(5103)
 
-    state = pyvolt.State()
-    state.setup(parser=pyvolt.Parser(state=state))
-    client = pyvolt.DiscoveryClient(base_url='http://127.0.0.1:5103/', state=state)
+    state = stoat.State()
+    state.setup(parser=stoat.Parser(state=state))
+    client = stoat.DiscoveryClient(base_url='http://127.0.0.1:5103/', state=state)
 
     page = await client.themes()
     assert page.popular_tags == [

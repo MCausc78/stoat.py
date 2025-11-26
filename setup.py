@@ -5,7 +5,7 @@ import re
 
 
 def derive_version() -> str:
-    with open('pyvolt/__init__.py') as f:
+    with open('stoat/__init__.py') as f:
         match = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', f.read(), re.MULTILINE)
         if match is None:
             raise RuntimeError('Version was not found')

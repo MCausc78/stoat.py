@@ -1,8 +1,8 @@
-import pyvolt
+import stoat
 
 
 def test_flags():
-    permissions = pyvolt.Permissions()
+    permissions = stoat.Permissions()
     assert permissions.value == 0
 
     permissions.manage_webhooks = True
@@ -13,7 +13,7 @@ def test_flags():
     assert permissions.manage_webhooks is False
     assert permissions.value == 0
 
-    permissions = pyvolt.Permissions(manage_webhooks=True)
+    permissions = stoat.Permissions(manage_webhooks=True)
     assert permissions.manage_webhooks is True
     assert permissions.value == 16777216
 

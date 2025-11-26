@@ -1,9 +1,9 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 Messages
 ========
 
-The following section documents everything related to messages. Messages are core part of Revolt and they are way
+The following section documents everything related to messages. Messages are core part of Stoat and they are way
 for users to communicate.
 
 Models

@@ -1,25 +1,25 @@
 from __future__ import annotations
 
-import pyvolt
+import stoat
 
 
 # Whether the example should be ran as a user account or not
 self_bot = False
 
-client = pyvolt.Client(token='token', bot=not self_bot)
+client = stoat.Client(token='token', bot=not self_bot)
 
 
-@client.on(pyvolt.ReadyEvent)
+@client.on(stoat.ReadyEvent)
 async def on_ready(_, /) -> None:
     print('Logged on as', client.me)
 
 
-@client.on(pyvolt.MessageCreateEvent)
-async def on_message(event: pyvolt.MessageCreateEvent) -> None:
+@client.on(stoat.MessageCreateEvent)
+async def on_message(event: stoat.MessageCreateEvent) -> None:
     message = event.message
 
     # Don't respond to ourselves/others
-    if (message.author.relationship is pyvolt.RelationshipStatus.user) ^ self_bot:
+    if (message.author.relationship is stoat.RelationshipStatus.user) ^ self_bot:
         return
 
     if message.content == 'ping':

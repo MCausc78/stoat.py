@@ -1,4 +1,4 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 Cache
 =====
@@ -136,7 +136,9 @@ CacheContextType
         The context relates to :class:`ServerRoleDeleteEvent` event.
     .. attribute:: server_role_ranks_update_event
         
-        The context relates to :class:`ServerRoleRanksUpdateEvent`
+        The context relates to :class:`ServerRoleRanksUpdateEvent` event.
+
+        .. versionadded:: 1.2
     .. attribute:: report_create_event
 
         The context relates to :class:`ReportCreateEvent` event.
@@ -182,6 +184,9 @@ CacheContextType
     .. attribute:: user_voice_state_update_event
 
         The context relates to :class:`UserVoiceStateUpdateEvent` event.
+    .. attribute:: user_move_voice_channel_event
+
+        The context relates to :class:`UserMoveVoiceChannelEvent` event.
     .. attribute:: authenticated_event
 
         The context relates to :class:`AuthenticatedEvent` event.
@@ -221,6 +226,11 @@ CacheContextType
     .. attribute:: user_through_group_channel_recipients
 
         The context comes from :attr:`GroupChannel.recipients`.
+    .. attribute:: server_through_server_channel_category
+
+        The context comes from :attr:`BaseServerChannel.category`.
+
+        .. versionadded:: 1.2
     .. attribute:: member_through_server_channel_me
 
         The context comes from :attr:`BaseServerChannel.me`.
@@ -861,6 +871,16 @@ ServerRoleDeleteEventCacheContext
     :members:
     :inherited-members:
 
+ServerRoleRanksUpdateEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerRoleRanksUpdateEventCacheContext
+
+.. autoclass:: ServerRoleRanksUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 ReportCreateEventCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1007,6 +1027,16 @@ UserVoiceStateUpdateEventCacheContext
 .. attributetable:: UserVoiceStateUpdateEventCacheContext
 
 .. autoclass:: UserVoiceStateUpdateEventCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserMoveVoiceChannelEventCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserMoveVoiceChannelEventCacheContext
+
+.. autoclass:: UserMoveVoiceChannelEventCacheContext
     :show-inheritance:
     :members:
     :inherited-members:
@@ -1367,6 +1397,16 @@ UserThroughGroupChannelRecipientsCacheContext
 .. attributetable:: UserThroughGroupChannelRecipientsCacheContext
 
 .. autoclass:: UserThroughGroupChannelRecipientsCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+ServerThroughServerChannelCategoryCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ServerThroughServerChannelCategoryCacheContext
+
+.. autoclass:: ServerThroughServerChannelCategoryCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

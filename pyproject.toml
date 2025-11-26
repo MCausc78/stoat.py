@@ -3,8 +3,8 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pyvolt-re"
-description = "A Python wrapper for the Revolt API"
+name = "stoat.py"
+description = "A Python wrapper for the Stoat API"
 readme = { file = "README.rst", content-type = "text/x-rst" }
 license = { file = "LICENSE" }
 requires-python = ">=3.10"
@@ -27,8 +27,8 @@ classifiers = [
 dynamic = ["version", "dependencies"]
 
 [project.urls]
-Documentation = "https://pyvolt.readthedocs.io/en/latest/"
-"Issue tracker" = "https://github.com/MCausc78/pyvolt/issues"
+Documentation = "https://stoatpy.readthedocs.io/en/latest/"
+"Issue tracker" = "https://github.com/MCausc78/stoat.py/issues"
 
 [tool.setuptools.dynamic]
 dependencies = { file = "requirements.txt" }
@@ -60,6 +60,10 @@ docs = [
     "typing-extensions>=4.3,<5",
     "sphinx-inline-tabs==2023.4.21",
     "furo==2024.8.6"
+]
+dev = [
+    "pyright==1.1.407",
+    "ruff==0.14.6"
 ]
 
 [tool.pyright]
@@ -100,10 +104,10 @@ keep-runtime-typing = false
 
 [tool.setuptools]
 packages = [
-    "pyvolt",
-    "pyvolt.raw",
-    "pyvolt.ext",
-    "pyvolt.ext.chunking",
-    "pyvolt.ext.commands",
+    "stoat",
+    "stoat.raw",
+    "stoat.ext",
+    "stoat.ext.chunking",
+    "stoat.ext.commands",
 ]
 include-package-data = true

@@ -1,9 +1,9 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 Users
 =====
 
-The following section documents everything related to users. Users are generally considered base entity on Revolt.
+The following section documents everything related to users. Users are generally considered base entity on Stoat.
 
 Models
 ------

@@ -3,17 +3,17 @@ from __future__ import annotations
 from attrs import define, field
 import asyncio
 import pytest
-import pyvolt
+import stoat
 
 
 @define(slots=True)
-class AddEvent(pyvolt.BaseEvent):
+class AddEvent(stoat.BaseEvent):
     a: int = field(repr=True, kw_only=True)
     b: int = field(repr=True, kw_only=True)
 
 
 @define(slots=True)
-class SubtractEvent(pyvolt.BaseEvent):
+class SubtractEvent(stoat.BaseEvent):
     a: int = field(repr=True, kw_only=True)
     b: int = field(repr=True, kw_only=True)
 
@@ -22,7 +22,7 @@ class SubtractEvent(pyvolt.BaseEvent):
 async def test_events():
     queue: asyncio.Queue[int] = asyncio.Queue()
 
-    client = pyvolt.Client()
+    client = stoat.Client()
 
     async def on_add(event: AddEvent, /) -> None:
         await queue.put(event.a + event.b)

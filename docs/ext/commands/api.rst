@@ -1,9 +1,9 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 API Reference
 =============
 
-The following section outlines the API of pyvolt's command extension module.
+The following section outlines the API of stoat.py's command extension module.
 
 .. _ext_commands_api_bot:
 
@@ -13,9 +13,9 @@ Bots
 Bot
 ~~~
 
-.. attributetable:: pyvolt.ext.commands.Bot
+.. attributetable:: stoat.ext.commands.Bot
 
-.. autoclass:: pyvolt.ext.commands.Bot
+.. autoclass:: stoat.ext.commands.Bot
     :members:
     :inherited-members:
     :exclude-members: after_invoke, before_invoke, check, check_once, command, group, listen, on
@@ -48,9 +48,9 @@ Bot
 Prefix Helpers
 --------------
 
-.. autofunction:: pyvolt.ext.commands.when_mentioned
+.. autofunction:: stoat.ext.commands.when_mentioned
 
-.. autofunction:: pyvolt.ext.commands.when_mentioned_or
+.. autofunction:: stoat.ext.commands.when_mentioned_or
 
 .. _ext_commands_api_events:
 
@@ -60,27 +60,27 @@ Event Reference
 CommandErrorEvent
 ~~~~~~~~~~~~~~~~~
 
-.. attributetable:: pyvolt.ext.commands.CommandErrorEvent
+.. attributetable:: stoat.ext.commands.CommandErrorEvent
 
-.. autoclass:: pyvolt.ext.commands.CommandErrorEvent
+.. autoclass:: stoat.ext.commands.CommandErrorEvent
     :members:
     :inherited-members:
 
 CommandEvent
 ~~~~~~~~~~~~
 
-.. attributetable:: pyvolt.ext.commands.CommandEvent
+.. attributetable:: stoat.ext.commands.CommandEvent
 
-.. autoclass:: pyvolt.ext.commands.CommandEvent
+.. autoclass:: stoat.ext.commands.CommandEvent
     :members:
     :inherited-members:
 
 CommandCompletionEvent
 ~~~~~~~~~~~~~~~~~~~~~~
 
-.. attributetable:: pyvolt.ext.commands.CommandCompletionEvent
+.. attributetable:: stoat.ext.commands.CommandCompletionEvent
 
-.. autoclass:: pyvolt.ext.commands.CommandCompletionEvent
+.. autoclass:: stoat.ext.commands.CommandCompletionEvent
     :members:
     :inherited-members:
 
@@ -92,18 +92,18 @@ Commands
 Decorators
 ~~~~~~~~~~
 
-.. autofunction:: pyvolt.ext.commands.command
+.. autofunction:: stoat.ext.commands.command
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.group
+.. autofunction:: stoat.ext.commands.group
     :decorator:
 
 Command
 ~~~~~~~
 
-.. attributetable:: pyvolt.ext.commands.Command
+.. attributetable:: stoat.ext.commands.Command
 
-.. autoclass:: pyvolt.ext.commands.Command
+.. autoclass:: stoat.ext.commands.Command
     :members:
     :special-members: __call__
     :exclude-members: after_invoke, before_invoke, error
@@ -120,9 +120,9 @@ Command
 Group
 ~~~~~
 
-.. attributetable:: pyvolt.ext.commands.Group
+.. attributetable:: stoat.ext.commands.Group
 
-.. autoclass:: pyvolt.ext.commands.Group
+.. autoclass:: stoat.ext.commands.Group
     :members:
     :inherited-members:
     :exclude-members: after_invoke, before_invoke, command, error, group
@@ -145,9 +145,9 @@ Group
 GroupMixin
 ~~~~~~~~~~
 
-.. attributetable:: pyvolt.ext.commands.GroupMixin
+.. attributetable:: stoat.ext.commands.GroupMixin
 
-.. autoclass:: pyvolt.ext.commands.GroupMixin
+.. autoclass:: stoat.ext.commands.GroupMixin
     :members:
     :exclude-members: command, group
 
@@ -165,24 +165,24 @@ Gears
 Gear
 ~~~~
 
-.. attributetable:: pyvolt.ext.commands.Gear
+.. attributetable:: stoat.ext.commands.Gear
 
-.. autoclass:: pyvolt.ext.commands.Gear
+.. autoclass:: stoat.ext.commands.Gear
     :members:
 
 GearMeta
 ~~~~~~~~
 
-.. attributetable:: pyvolt.ext.commands.GearMeta
+.. attributetable:: stoat.ext.commands.GearMeta
 
-.. autoclass:: pyvolt.ext.commands.GearMeta
+.. autoclass:: stoat.ext.commands.GearMeta
     :members:
 
 Enums
 -----
 
 .. class:: BucketType
-    :module: pyvolt.ext.commands
+    :module: stoat.ext.commands
 
     Specifies a type of bucket for, e.g. a cooldown.
 
@@ -213,61 +213,61 @@ Enums
 Checks
 ------
 
-.. autofunction:: pyvolt.ext.commands.check(predicate)
+.. autofunction:: stoat.ext.commands.check(predicate)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.check_any(*checks)
+.. autofunction:: stoat.ext.commands.check_any(*checks)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.has_role(item)
+.. autofunction:: stoat.ext.commands.has_role(item)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.has_permissions(**perms)
+.. autofunction:: stoat.ext.commands.has_permissions(**perms)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.has_server_permissions(**perms)
+.. autofunction:: stoat.ext.commands.has_server_permissions(**perms)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.has_any_role(*items)
+.. autofunction:: stoat.ext.commands.has_any_role(*items)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.bot_has_role(item)
+.. autofunction:: stoat.ext.commands.bot_has_role(item)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.bot_has_permissions(**perms)
+.. autofunction:: stoat.ext.commands.bot_has_permissions(**perms)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.bot_has_server_permissions(**perms)
+.. autofunction:: stoat.ext.commands.bot_has_server_permissions(**perms)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.bot_has_any_role(*items)
+.. autofunction:: stoat.ext.commands.bot_has_any_role(*items)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.cooldown(rate, per, type=pyvolt.ext.commands.BucketType.default)
+.. autofunction:: stoat.ext.commands.cooldown(rate, per, type=stoat.ext.commands.BucketType.default)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.dynamic_cooldown(cooldown, type)
+.. autofunction:: stoat.ext.commands.dynamic_cooldown(cooldown, type)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.max_concurrency(number, per=pyvolt.ext.commands.BucketType.default, *, wait=False)
+.. autofunction:: stoat.ext.commands.max_concurrency(number, per=stoat.ext.commands.BucketType.default, *, wait=False)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.before_invoke(coro)
+.. autofunction:: stoat.ext.commands.before_invoke(coro)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.after_invoke(coro)
+.. autofunction:: stoat.ext.commands.after_invoke(coro)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.server_only(,)
+.. autofunction:: stoat.ext.commands.server_only(,)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.dm_only(,)
+.. autofunction:: stoat.ext.commands.dm_only(,)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.is_owner(,)
+.. autofunction:: stoat.ext.commands.is_owner(,)
     :decorator:
 
-.. autofunction:: pyvolt.ext.commands.is_nsfw(,)
+.. autofunction:: stoat.ext.commands.is_nsfw(,)
     :decorator:
 
 .. _ext_commands_api_context:
@@ -275,14 +275,14 @@ Checks
 Context
 -------
 
-.. attributetable:: pyvolt.ext.commands.Context
+.. attributetable:: stoat.ext.commands.Context
 
-.. autoclass:: pyvolt.ext.commands.Context
+.. autoclass:: stoat.ext.commands.Context
     :members:
     :inherited-members:
     :exclude-members: typing
 
-    .. automethod:: pyvolt.ext.commands.Context.typing
+    .. automethod:: stoat.ext.commands.Context.typing
         :async-with:
 
 .. _ext_commands_api_converters:
@@ -290,105 +290,105 @@ Context
 Converters
 ----------
 
-.. attributetable:: pyvolt.ext.commands.Converter
+.. attributetable:: stoat.ext.commands.Converter
 
-.. autoclass:: pyvolt.ext.commands.Converter
+.. autoclass:: stoat.ext.commands.Converter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.BaseConverter
+.. attributetable:: stoat.ext.commands.BaseConverter
 
-.. autoclass:: pyvolt.ext.commands.BaseConverter
+.. autoclass:: stoat.ext.commands.BaseConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.MemberConverter
+.. attributetable:: stoat.ext.commands.MemberConverter
 
-.. autoclass:: pyvolt.ext.commands.MemberConverter
+.. autoclass:: stoat.ext.commands.MemberConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.UserConverter
+.. attributetable:: stoat.ext.commands.UserConverter
 
-.. autoclass:: pyvolt.ext.commands.UserConverter
+.. autoclass:: stoat.ext.commands.UserConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.MessageConverter
+.. attributetable:: stoat.ext.commands.MessageConverter
 
-.. autoclass:: pyvolt.ext.commands.MessageConverter
+.. autoclass:: stoat.ext.commands.MessageConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.BaseMessageConverter
+.. attributetable:: stoat.ext.commands.BaseMessageConverter
 
-.. autoclass:: pyvolt.ext.commands.BaseMessageConverter
+.. autoclass:: stoat.ext.commands.BaseMessageConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.ServerChannelConverter
+.. attributetable:: stoat.ext.commands.ServerChannelConverter
 
-.. autoclass:: pyvolt.ext.commands.ServerChannelConverter
+.. autoclass:: stoat.ext.commands.ServerChannelConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.TextChannelConverter
+.. attributetable:: stoat.ext.commands.TextChannelConverter
 
-.. autoclass:: pyvolt.ext.commands.TextChannelConverter
+.. autoclass:: stoat.ext.commands.TextChannelConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.VoiceChannelConverter
+.. attributetable:: stoat.ext.commands.VoiceChannelConverter
 
-.. autoclass:: pyvolt.ext.commands.VoiceChannelConverter
+.. autoclass:: stoat.ext.commands.VoiceChannelConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.CategoryConverter
+.. attributetable:: stoat.ext.commands.CategoryConverter
 
-.. autoclass:: pyvolt.ext.commands.CategoryConverter
+.. autoclass:: stoat.ext.commands.CategoryConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.InviteConverter
+.. attributetable:: stoat.ext.commands.InviteConverter
 
-.. autoclass:: pyvolt.ext.commands.InviteConverter
+.. autoclass:: stoat.ext.commands.InviteConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.ServerConverter
+.. attributetable:: stoat.ext.commands.ServerConverter
 
-.. autoclass:: pyvolt.ext.commands.ServerConverter
+.. autoclass:: stoat.ext.commands.ServerConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.RoleConverter
+.. attributetable:: stoat.ext.commands.RoleConverter
 
-.. autoclass:: pyvolt.ext.commands.RoleConverter
+.. autoclass:: stoat.ext.commands.RoleConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.EmojiConverter
+.. attributetable:: stoat.ext.commands.EmojiConverter
 
-.. autoclass:: pyvolt.ext.commands.EmojiConverter
+.. autoclass:: stoat.ext.commands.EmojiConverter
     :members:
 
-.. attributetable:: pyvolt.ext.commands.Greedy
+.. attributetable:: stoat.ext.commands.Greedy
 
-.. autoclass:: pyvolt.ext.commands.Greedy()
+.. autoclass:: stoat.ext.commands.Greedy()
 
-.. autofunction:: pyvolt.ext.commands.run_converters
+.. autofunction:: stoat.ext.commands.run_converters
 
 Defaults
 --------
 
-.. attributetable:: pyvolt.ext.commands.Parameter
+.. attributetable:: stoat.ext.commands.Parameter
 
-.. autoclass:: pyvolt.ext.commands.Parameter()
+.. autoclass:: stoat.ext.commands.Parameter()
     :members:
 
-.. autofunction:: pyvolt.ext.commands.parameter
+.. autofunction:: stoat.ext.commands.parameter
 
-.. autofunction:: pyvolt.ext.commands.param
+.. autofunction:: stoat.ext.commands.param
 
-.. data:: pyvolt.ext.commands.Author
+.. data:: stoat.ext.commands.Author
 
     A default :class:`Parameter` which returns the :attr:`~.Context.author` for this context.
 
-.. data:: pyvolt.ext.commands.CurrentChannel
+.. data:: stoat.ext.commands.CurrentChannel
 
     A default :class:`Parameter` which returns the :attr:`~.Context.channel` for this context.
 
-.. data:: pyvolt.ext.commands.CurrentServer
+.. data:: stoat.ext.commands.CurrentServer
 
-    A default :class:`Parameter` which returns the :attr:`~.Context.server` for this context. This will never be ``None``. If the command is called in a DM context then :exc:`~pyvolt.ext.commands.NoPrivateMessage` is raised to the error handlers.
+    A default :class:`Parameter` which returns the :attr:`~.Context.server` for this context. This will never be ``None``. If the command is called in a DM context then :exc:`~stoat.ext.commands.NoPrivateMessage` is raised to the error handlers.
 
 
 .. _ext_commands_api_cooldowns:
@@ -396,14 +396,14 @@ Defaults
 Cooldowns
 ---------
 
-.. attributetable:: pyvolt.ext.commands.MaxConcurrency
+.. attributetable:: stoat.ext.commands.MaxConcurrency
 
-.. autoclass:: pyvolt.ext.commands.MaxConcurrency
+.. autoclass:: stoat.ext.commands.MaxConcurrency
     :members:
 
-.. attributetable:: pyvolt.ext.commands.Cooldown
+.. attributetable:: stoat.ext.commands.Cooldown
 
-.. autoclass:: pyvolt.ext.commands.Cooldown
+.. autoclass:: stoat.ext.commands.Cooldown
     :members:
 
 .. _ext_commands_api_errors:
@@ -411,148 +411,148 @@ Cooldowns
 Exceptions
 ----------
 
-.. autoexception:: pyvolt.ext.commands.CommandError
+.. autoexception:: stoat.ext.commands.CommandError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ConversionError
+.. autoexception:: stoat.ext.commands.ConversionError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.MissingRequiredArgument
+.. autoexception:: stoat.ext.commands.MissingRequiredArgument
     :members:
 
-.. autoexception:: pyvolt.ext.commands.MissingRequiredAttachment
+.. autoexception:: stoat.ext.commands.MissingRequiredAttachment
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ArgumentParsingError
+.. autoexception:: stoat.ext.commands.ArgumentParsingError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.UnexpectedQuoteError
+.. autoexception:: stoat.ext.commands.UnexpectedQuoteError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.InvalidEndOfQuotedStringError
+.. autoexception:: stoat.ext.commands.InvalidEndOfQuotedStringError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ExpectedClosingQuoteError
+.. autoexception:: stoat.ext.commands.ExpectedClosingQuoteError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.BadArgument
+.. autoexception:: stoat.ext.commands.BadArgument
     :members:
 
-.. autoexception:: pyvolt.ext.commands.BadUnionArgument
+.. autoexception:: stoat.ext.commands.BadUnionArgument
     :members:
 
-.. autoexception:: pyvolt.ext.commands.BadLiteralArgument
+.. autoexception:: stoat.ext.commands.BadLiteralArgument
     :members:
 
-.. autoexception:: pyvolt.ext.commands.PrivateMessageOnly
+.. autoexception:: stoat.ext.commands.PrivateMessageOnly
     :members:
 
-.. autoexception:: pyvolt.ext.commands.NoPrivateMessage
+.. autoexception:: stoat.ext.commands.NoPrivateMessage
     :members:
 
-.. autoexception:: pyvolt.ext.commands.CheckFailure
+.. autoexception:: stoat.ext.commands.CheckFailure
     :members:
 
-.. autoexception:: pyvolt.ext.commands.CheckAnyFailure
+.. autoexception:: stoat.ext.commands.CheckAnyFailure
     :members:
 
-.. autoexception:: pyvolt.ext.commands.CommandNotFound
+.. autoexception:: stoat.ext.commands.CommandNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.DisabledCommand
+.. autoexception:: stoat.ext.commands.DisabledCommand
     :members:
 
-.. autoexception:: pyvolt.ext.commands.CommandInvokeError
+.. autoexception:: stoat.ext.commands.CommandInvokeError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.TooManyArguments
+.. autoexception:: stoat.ext.commands.TooManyArguments
     :members:
 
-.. autoexception:: pyvolt.ext.commands.UserInputError
+.. autoexception:: stoat.ext.commands.UserInputError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.CommandOnCooldown
+.. autoexception:: stoat.ext.commands.CommandOnCooldown
     :members:
 
-.. autoexception:: pyvolt.ext.commands.MaxConcurrencyReached
+.. autoexception:: stoat.ext.commands.MaxConcurrencyReached
     :members:
 
-.. autoexception:: pyvolt.ext.commands.NotOwner
+.. autoexception:: stoat.ext.commands.NotOwner
     :members:
 
-.. autoexception:: pyvolt.ext.commands.MessageNotFound
+.. autoexception:: stoat.ext.commands.MessageNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.MemberNotFound
+.. autoexception:: stoat.ext.commands.MemberNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ServerNotFound
+.. autoexception:: stoat.ext.commands.ServerNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.UserNotFound
+.. autoexception:: stoat.ext.commands.UserNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ChannelNotFound
+.. autoexception:: stoat.ext.commands.ChannelNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ChannelNotReadable
+.. autoexception:: stoat.ext.commands.ChannelNotReadable
     :members:
 
-.. autoexception:: pyvolt.ext.commands.RoleNotFound
+.. autoexception:: stoat.ext.commands.RoleNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.BadInviteArgument
+.. autoexception:: stoat.ext.commands.BadInviteArgument
     :members:
 
-.. autoexception:: pyvolt.ext.commands.EmojiNotFound
+.. autoexception:: stoat.ext.commands.EmojiNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.BadBoolArgument
+.. autoexception:: stoat.ext.commands.BadBoolArgument
     :members:
 
-.. autoexception:: pyvolt.ext.commands.RangeError
+.. autoexception:: stoat.ext.commands.RangeError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.MissingPermissions
+.. autoexception:: stoat.ext.commands.MissingPermissions
     :members:
 
-.. autoexception:: pyvolt.ext.commands.BotMissingPermissions
+.. autoexception:: stoat.ext.commands.BotMissingPermissions
     :members:
 
-.. autoexception:: pyvolt.ext.commands.MissingRole
+.. autoexception:: stoat.ext.commands.MissingRole
     :members:
 
-.. autoexception:: pyvolt.ext.commands.BotMissingRole
+.. autoexception:: stoat.ext.commands.BotMissingRole
     :members:
 
-.. autoexception:: pyvolt.ext.commands.MissingAnyRole
+.. autoexception:: stoat.ext.commands.MissingAnyRole
     :members:
 
-.. autoexception:: pyvolt.ext.commands.BotMissingAnyRole
+.. autoexception:: stoat.ext.commands.BotMissingAnyRole
     :members:
 
-.. autoexception:: pyvolt.ext.commands.NSFWChannelRequired
+.. autoexception:: stoat.ext.commands.NSFWChannelRequired
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ExtensionError
+.. autoexception:: stoat.ext.commands.ExtensionError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ExtensionAlreadyLoaded
+.. autoexception:: stoat.ext.commands.ExtensionAlreadyLoaded
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ExtensionNotLoaded
+.. autoexception:: stoat.ext.commands.ExtensionNotLoaded
     :members:
 
-.. autoexception:: pyvolt.ext.commands.NoEntryPointError
+.. autoexception:: stoat.ext.commands.NoEntryPointError
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ExtensionFailed
+.. autoexception:: stoat.ext.commands.ExtensionFailed
     :members:
 
-.. autoexception:: pyvolt.ext.commands.ExtensionNotFound
+.. autoexception:: stoat.ext.commands.ExtensionNotFound
     :members:
 
-.. autoexception:: pyvolt.ext.commands.CommandRegistrationError
+.. autoexception:: stoat.ext.commands.CommandRegistrationError
     :members:
 
 Exception Hierarchy

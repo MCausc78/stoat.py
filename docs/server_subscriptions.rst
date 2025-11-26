@@ -1,6 +1,6 @@
 :orphan:
 
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 .. _server_subscriptions:
 
@@ -13,19 +13,19 @@ Server Subscriptions
 .. note::
     Subscriptions have no effect on bot accounts.
 
-Server subscriptions were added and announced on `19 Jun 2024 because of official Revolt API instance kept going down <https://app.revolt.chat/server/01F7ZSBSFHQ8TA81725KQCSDDP/channel/01F9KATFHCAWGYG1NQ13MFDRAT/01J0RVAD25A56P65WPCH35B68Y>`_.
+Server subscriptions were added and announced on `19 Jun 2024 because of official Stoat API instance kept going down <https://app.revolt.chat/server/01F7ZSBSFHQ8TA81725KQCSDDP/channel/01F9KATFHCAWGYG1NQ13MFDRAT/01J0RVAD25A56P65WPCH35B68Y>`_.
 
-Server subscriptions is way to limit :class:`pyvolt.UserUpdateEvent`'s from users that do not have relationship or have open DM with the connected user.
+Server subscriptions is way to limit :class:`stoat.UserUpdateEvent`'s from users that do not have relationship or have open DM with the connected user.
 
 Since they don't appear to be changed, this page documents them in detail.
 
-In essence, since library does not provide an automatic way to manage subscriptions, you'll need to do it manually through :meth:`~pyvolt.Server.subscribe` method.
+In essence, since library does not provide an automatic way to manage subscriptions, you'll need to do it manually through :meth:`~stoat.Server.subscribe` method.
 
 Users are automatically subscribed to all users they have relationship or open DM with, and all recipients from all groups the user in.
 
 Subscriptions are automatically expired within 15 minutes.
 
-An single WebSocket connection can have only up to 5 active subscriptions.
+A single WebSocket connection can have only up to 5 active subscriptions.
 
 .. note::
     This note is relevant only to client developers.

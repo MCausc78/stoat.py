@@ -5,7 +5,7 @@
 Tokens
 ======
 
-Tokens are how we authenticate with Revolt.
+Tokens are how we authenticate with Stoat.
 
 Regular (and bot) tokens are exactly 64 characters long and generated with `nanoid <https://docs.rs/nanoid/latest/nanoid/>`_
 and contain only ``_-0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`` characters.
@@ -15,7 +15,7 @@ How do I obtain mine?
 
 Although the library does support authenticating traditionally, it's fairly easier to obtain your token manually.
 
-To obtain your token from the Revolt client, the easiest way is pasting this into the developer console (CTRL+SHIFT+I):
+To obtain your token from the Stoat client, the easiest way is pasting this into the developer console (CTRL+SHIFT+I):
 
 .. code:: js
 
@@ -32,7 +32,7 @@ Or, you can do it manually:
 Traditional Authentication
 --------------------------
 
-To manually authenticate via having email and password, you'll need to call :meth:`pyvolt.HTTPClient.login_with_email` method.
+To manually authenticate via having email and password, you'll need to call :meth:`stoat.HTTPClient.login_with_email` method.
 
 Example:
 
@@ -42,25 +42,25 @@ Example:
         result = await http.login_with_email(
             email='mcausc78@gmail.com',
             password='myverysecretpassword',
-            friendly_name='My Revolt client (for testing)',
+            friendly_name='My Stoat client (for testing)',
         )
-    except pyvolt.Unauthorized as exc:
+    except stoat.Unauthorized as exc:
         if exc.type == 'InvalidCredentials':
             raise IncorrectPassword()
         raise exc from None
-    except pyvolt.Forbidden as exc:
+    except stoat.Forbidden as exc:
         if exc.type == 'LockedOut':
             raise AccountIsLockedOut()
         raise exc from None
 
-    if isinstance(result, pyvolt.MFARequired):
+    if isinstance(result, stoat.MFARequired):
         # The user has 2FA enabled.
         
         # You can use ``use_totp`` for usual ``123456`` 2FA codes, or ``use_recovery_code`` for recovery ones (``xxxx-yyyy``).
         # If you have MFA secret key and you wish to skip asking TOTP/recovery code from user, you might want to use pyotp here.
         result = await result.use_totp('123456')
     
-    if isinstance(result, pyvolt.AccountDisabled):
+    if isinstance(result, stoat.AccountDisabled):
         raise AccountIsDisabled()
 
     # result is Session here

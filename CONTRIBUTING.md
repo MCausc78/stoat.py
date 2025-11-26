@@ -1,4 +1,4 @@
-## Contributing to pyvolt
+## Contributing to stoat.py
 
 First off, thanks for taking the time to contribute. It makes the library muuuuch better.
 
@@ -21,6 +21,7 @@ If you do not meet any of these guidelines, don't fret. Chances are they will be
 ### Code Style
 
 Use following order in models:
+
 ```py
 @define(slots=True)
 class Foo(Base):
@@ -31,4 +32,14 @@ class Foo(Base):
     # ... properties
     # ... async methods, in alphabet order
     # ... methods
+```
+
+### Before Actually Submitting Pull Request
+
+Run these commands (assuming you have activated virtual Python environment, and have done `python -m pip install .[dev]` once in the virtual environment):
+
+```py
+python -m ruff check stoat
+python -m ruff format stoat
+python -m pyright stoat
 ```

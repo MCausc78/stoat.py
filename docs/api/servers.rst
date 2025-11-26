@@ -1,4 +1,4 @@
-.. currentmodule:: pyvolt
+.. currentmodule:: stoat
 
 Servers
 =======
