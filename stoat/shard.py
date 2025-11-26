@@ -347,6 +347,8 @@ class ShardImpl(Shard):
         Whether to reconnect when received pong nonce is not equal to current ping nonce. Defaults to ``True``.
     ready_payload_fields: Optional[:class:`ReadyPayloadFields`]
         The fields to receive in :class:`ReadyEvent`.
+
+        .. versionadded:: 1.3
     request_user_settings: Optional[List[:class:`str`]]
         The list of user setting keys to request.
     state: :class:`State`
