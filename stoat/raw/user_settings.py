@@ -21,6 +21,7 @@ DataSetSettings = dict[str, str]
 
 # Android User Settings
 AndroidTheme = typing.Literal['Revolt', 'Stoat', 'Light', 'Amoled', 'None', 'M3Dynamic']
+AndroidFont = typing.Literal['Default', 'GoogleSansFlex']
 AndroidProfilePictureShape = int
 AndroidMessageReplyStyle = typing.Literal['None', 'SwipeFromEnd', 'DoubleTap']
 
@@ -32,6 +33,7 @@ class AndroidUserSettingsSpecialEmbedSettings(typing.TypedDict):
 
 class AndroidUserSettings(typing.TypedDict):
     theme: typing_extensions.NotRequired[AndroidTheme]
+    font: typing_extensions.NotRequired[AndroidFont]
     colourOverrides: typing_extensions.NotRequired[dict[str, int]]
     # If not provided, defaults to SwipeFromEnd
     messageReplyStyle: typing_extensions.NotRequired[AndroidMessageReplyStyle]

@@ -33,6 +33,7 @@ from .core import UNDEFINED, UndefinedOr, ULIDOr, resolve_id
 from .enums import (
     Language,
     AndroidTheme,
+    AndroidFont,
     AndroidMessageReplyStyle,
     AndroidProfilePictureShape,
     ReviteNotificationState,
@@ -249,6 +250,7 @@ class AndroidUserSettings:
         '_payload',
         '_special_embed_settings_payload',
         '_theme',
+        '_font',
         '_color_overrides',
         '_reply_style',
         '_avatar_radius',
@@ -274,15 +276,21 @@ class AndroidUserSettings:
         """
         theme = payload.get('theme')
 
-        if theme:
+        if theme is not None:
             self._theme: typing.Optional[AndroidTheme] = AndroidTheme(theme)
         else:
             self._theme = None
 
+        font = payload.get('font')
+        if font is not None:
+            self._font: typing.Optional[AndroidFont] = AndroidFont(font)
+        else:
+            self._font = None
+
         self._color_overrides: typing.Optional[dict[str, int]] = payload.get('colourOverrides')
         reply_style = payload.get('messageReplyStyle')
 
-        if reply_style:
+        if reply_style is not None:
             self._reply_style: typing.Optional[AndroidMessageReplyStyle] = AndroidMessageReplyStyle(reply_style)
         else:
             self._reply_style = None
@@ -301,7 +309,12 @@ class AndroidUserSettings:
     @property
     def theme(self) -> AndroidTheme:
         """:class:`AndroidTheme`: The current theme."""
-        return self._theme or AndroidTheme.system
+        return AndroidTheme.system if self._theme is None else self._theme
+
+    @property
+    def font(self) -> AndroidFont:
+        """:class:`AndroidFont`: The current font."""
+        return AndroidFont.default if self._font is None else self._font
 
     @property
     def color_overrides(self) -> dict[str, int]:
@@ -311,12 +324,12 @@ class AndroidUserSettings:
     @property
     def reply_style(self) -> AndroidMessageReplyStyle:
         """:class:`AndroidMessageReplyStyle`: The current theme."""
-        return self._reply_style or AndroidMessageReplyStyle.swipe_to_reply
+        return AndroidMessageReplyStyle.swipe_to_reply if self._reply_style is None else self._reply_style
 
     @property
     def profile_picture_shape(self) -> int:
         """:class:`int`: The current profile picture shape."""
-        return self._avatar_radius or 50
+        return 50 if self._avatar_radius is None else self._avatar_radius
 
     @property
     def embed_youtube(self) -> bool:
@@ -324,7 +337,7 @@ class AndroidUserSettings:
 
         if self._special_embed_settings_payload is None:
             return True
-        return self._special_embed_settings_payload['embedYouTube']
+        return self._special_embed_settings_payload.get('embedYouTube', True)
 
     @property
     def embed_apple_music(self) -> bool:
@@ -332,7 +345,7 @@ class AndroidUserSettings:
 
         if self._special_embed_settings_payload is None:
             return True
-        return self._special_embed_settings_payload['embedAppleMusic']
+        return self._special_embed_settings_payload.get('embedAppleMusic', True)
 
     def __repr__(self) -> str:
         return f'<{self.__class__.__name__} theme={self.theme!r} color_overrides={self.color_overrides!r} reply_style={self.reply_style!r} profile_picture_shape={self.profile_picture_shape!r}>'
@@ -342,6 +355,7 @@ class AndroidUserSettings:
         *,
         initial_payload: UndefinedOr[raw.AndroidUserSettings] = UNDEFINED,
         theme: UndefinedOr[typing.Optional[AndroidTheme]] = UNDEFINED,
+        font: UndefinedOr[typing.Optional[AndroidFont]] = UNDEFINED,
         color_overrides: UndefinedOr[typing.Optional[dict[str, int]]] = UNDEFINED,
         reply_style: UndefinedOr[typing.Optional[AndroidMessageReplyStyle]] = UNDEFINED,
         avatar_radius: UndefinedOr[typing.Optional[typing.Union[AndroidProfilePictureShape, int]]] = UNDEFINED,
@@ -363,7 +377,9 @@ class AndroidUserSettings:
         initial_payload: UndefinedOr[raw.AndroidUserSettings]
             The initial payload.
         theme: UndefinedOr[Optional[:class:`AndroidTheme`]]
-            The new theme.  Could be ``None`` to remove it from internal object.
+            The new theme. Could be ``None`` to remove it from internal object.
+        font: UndefinedOr[Optional[:class:`AndroidFont`]]
+            The new font. Could be ``None`` to remove it from internal object.
         color_overrides: UndefinedOr[Optional[Dict[:class:`str`, :class:`int`]]]
             The new color overrides. Passing ``None`` denotes ``colourOverrides`` removal in internal object.
         reply_style: UndefinedOr[Optional[:class:`AndroidMessageReplyStyle`]]
@@ -388,6 +404,12 @@ class AndroidUserSettings:
                 payload.pop('theme', None)
             else:
                 payload['theme'] = theme.value
+
+        if font is not UNDEFINED:
+            if font is None:
+                payload.pop('font', None)
+            else:
+                payload['font'] = font.value
 
         if color_overrides is not UNDEFINED:
             if color_overrides is None:
@@ -441,6 +463,7 @@ class AndroidUserSettings:
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         edited_at: typing.Optional[typing.Union[datetime, int]] = None,
         theme: UndefinedOr[typing.Optional[AndroidTheme]] = UNDEFINED,
+        font: UndefinedOr[typing.Optional[AndroidFont]] = UNDEFINED,
         color_overrides: UndefinedOr[typing.Optional[dict[str, int]]] = UNDEFINED,
         reply_style: UndefinedOr[typing.Optional[AndroidMessageReplyStyle]] = UNDEFINED,
         avatar_radius: UndefinedOr[typing.Optional[typing.Union[AndroidProfilePictureShape, int]]] = UNDEFINED,
@@ -461,9 +484,11 @@ class AndroidUserSettings:
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         edited_at: Optional[Union[:class:`~datetime.datetime`, :class:`int`]]
-            External parameter to pass in :meth:`.HTTPClient.edit_user_settings`.
+            External parameter to pass in :meth:`HTTPClient.edit_user_settings`.
         theme: UndefinedOr[Optional[:class:`AndroidTheme`]]
-            The new theme.  Could be ``None`` to remove it from internal object.
+            The new theme. Could be ``None`` to remove it from internal object.
+        font: UndefinedOr[Optional[:class:`AndroidFont`]]
+            The new font. Could be ``None`` to remove it from internal object.
         color_overrides: UndefinedOr[Optional[Dict[:class:`str`, :class:`int`]]]
             The new color overrides. Passing ``None`` denotes ``colourOverrides`` removal in internal object.
         reply_style: UndefinedOr[Optional[:class:`AndroidMessageReplyStyle`]]
@@ -498,6 +523,7 @@ class AndroidUserSettings:
         """
         payload = self.payload_for(
             theme=theme,
+            font=font,
             color_overrides=color_overrides,
             reply_style=reply_style,
             avatar_radius=avatar_radius,
