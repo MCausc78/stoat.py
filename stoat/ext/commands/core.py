@@ -2145,18 +2145,17 @@ def is_owner() -> Check[typing.Any]:
     async def predicate(ctx: Context[BotT], /) -> bool:
         me = ctx.bot.me
 
-        passed = False
         if me is None:
-            return passed
+            return False
 
-        if ctx.author_id in ctx.bot.owner_ids:
-            passed = True
-        elif me.bot is None:
-            passed = me.id == ctx.author_id or ctx.author_id in ctx.bot.owner_ids
-        else:
-            passed = me.bot.owner_id == ctx.author_id
+        author_id = ctx.author_id
+        owner_ids = ctx.bot.owner_ids
 
-        if passed:
+        if owner_ids is None:
+            owner_ids = {me.id if me.bot is None else me.bot.owner_id}
+
+        bot_id = me.id if me.bot is None else me.bot.owner_id
+        if author_id in owner_ids or author_id == bot_id:
             return True
 
         raise NotOwner('You do not own this bot.')

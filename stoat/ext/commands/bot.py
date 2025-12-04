@@ -124,7 +124,7 @@ class Bot(Client, GroupMixin[None]):
         Whether the commands should be case insensitive. Defaults to ``False``.
 
         .. versionadded:: 1.2
-    command_prefix: Union[MaybeAwaitableFunc[[:class:`.Context`], List[:class:`str`]], List[:class:`str`], :class:`str`]
+    command_prefix: Union[MaybeAwaitableFunc[[:class:`Context`], List[:class:`str`]], List[:class:`str`], :class:`str`]
         The command's prefix.
     description: Optional[:class:`str`]
         The bot's description.
@@ -151,7 +151,6 @@ class Bot(Client, GroupMixin[None]):
         'all_commands',
         'command_prefix',
         'description',
-        'owner_id',
         'owner_ids',
         'skip_check',
         'strip_after_prefix',
@@ -192,13 +191,15 @@ class Bot(Client, GroupMixin[None]):
         )
         self.description: str = cleandoc(description) if description else ''
 
-        self.owner_ids: set[str]
+        self.owner_ids: typing.Optional[set[str]]
         if 'owner_ids' in options:
-            self.owner_ids = options.pop('owner_ids')
+            self.owner_ids = set(options.pop('owner_ids'))
             if 'owner_id' in options:
                 self.owner_ids.add(options.pop('owner_id'))
         elif 'owner_id' in options:
             self.owner_ids = {options.pop('owner_id')}
+        else:
+            self.owner_ids = set()
 
         self.skip_check: utils.MaybeAwaitableFunc[[Context[Self]], bool] = skip_check
         self.strip_after_prefix: bool = strip_after_prefix
