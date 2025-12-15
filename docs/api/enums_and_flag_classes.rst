@@ -456,11 +456,13 @@ Servers
 
         A role was created.
 
-        +--------------------------------------+------------------------+
-        | Field                                | Description            |
-        +--------------------------------------+------------------------+
-        | :attr:`~AuditLogEntryAction.role_id` | The created role's ID. |
-        +--------------------------------------+------------------------+
+        +--------------------------------------+--------------------------+
+        | Field                                | Description              |
+        +--------------------------------------+--------------------------+
+        | :attr:`~AuditLogEntryAction.role_id` | The created role's ID.   |
+        +--------------------------------------+--------------------------+
+        | :attr:`~AuditLogEntryAction.name`    | The created role's name. |
+        +--------------------------------------+--------------------------+
     .. attribute:: role_update
 
         A role was updated.
@@ -512,8 +514,24 @@ Servers
         +-----------------------------------------+---------------------------------------------------+
         | :attr:`~AuditLogEntryAction.channel_id` | The ID of the channel the webhook was created in. |
         +-----------------------------------------+---------------------------------------------------+
-        | :attr:`~AuditLogEntryAction.webhook_id` | The deleted invite's code.                        |
+        | :attr:`~AuditLogEntryAction.name`       | The created webhook's name.                       |
         +-----------------------------------------+---------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.webhook_id` | The created webhook's ID.                         |
+        +-----------------------------------------+---------------------------------------------------+
+    .. attribute:: webhook_delete
+
+        A webhook was deleted in a channel.
+
+        +-----------------------------------------+---------------------------------------------------+
+        | Field                                   | Description                                       |
+        +-----------------------------------------+---------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id` | The ID of the channel the webhook was deleted in. |
+        +-----------------------------------------+---------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.name`       | The deleted webhook's name.                       |
+        +-----------------------------------------+---------------------------------------------------+
+        | :attr:`~AuditLogEntryAction.webhook_id` | The deleted webhook's ID.                         |
+        +-----------------------------------------+---------------------------------------------------+
+
     .. attribute:: emoji_delete
 
         An emoji was deleted.

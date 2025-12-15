@@ -2628,6 +2628,7 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: str,
         avatar: typing.Optional[ResolvableResource] = None,
     ) -> Webhook:
@@ -2643,6 +2644,10 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
         avatar: Optional[:class:`ResolvableResource`]
@@ -2696,7 +2701,9 @@ class TextChannel(BaseServerChannel, Connectable, Messageable):
         :class:`Webhook`
             The created webhook.
         """
-        return await self.state.http.create_webhook(self.id, http_overrides=http_overrides, name=name, avatar=avatar)
+        return await self.state.http.create_webhook(
+            self.id, http_overrides=http_overrides, reason=reason, name=name, avatar=avatar
+        )
 
     def to_dict(self) -> raw.TextChannel:
         """:class:`dict`: Convert channel to raw data."""

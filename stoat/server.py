@@ -123,7 +123,7 @@ from .user import (
 
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Collection, Mapping
 
     from . import raw
     from .audit_logs import AuditLogEntry
@@ -2091,7 +2091,9 @@ class BaseServer(Base):
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         user: typing.Optional[ULIDOr[BaseUser]] = None,
-        type: typing.Optional[typing.Union[AuditLogEntryActionType, str]] = None,
+        type: typing.Optional[
+            typing.Union[AuditLogEntryActionType, str, Collection[typing.Union[AuditLogEntryActionType, str]]]
+        ] = None,
         before: typing.Optional[ULIDOr[AuditLogEntry]] = None,
         after: typing.Optional[ULIDOr[AuditLogEntry]] = None,
         limit: typing.Optional[int] = None,
@@ -2113,9 +2115,9 @@ class BaseServer(Base):
             .. note::
 
                 This does not retrieve audit logs that *target* specified user.
-        type: Optional[Union[:class:`AuditLogEntryActionType`, :class:`str`]]
-            The type to filter audit logs by.
-            If a string value is passed, it is assumed to be a raw API value.
+        type: Optional[Union[:class:`AuditLogEntryActionType`, :class:`str`, Collection[Union[:class:`AuditLogEntryActionType`, :class:`str`]]]]
+            The type(s) to filter audit logs by.
+            If a string value(s) is passed, it is assumed to be a raw API value.
         before: Optional[ULIDOr[:class:`AuditLogEntry`]]
             The entry before which audit log entries should be fetched.
         after: Optional[ULIDOr[:class:`AuditLogEntry`]]

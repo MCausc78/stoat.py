@@ -314,6 +314,7 @@ class Parser:
             'RolesReorder': self.parse_audit_log_entry_roles_reorder_action,
             'InviteDelete': self.parse_audit_log_entry_invite_delete_action,
             'WebhookCreate': self.parse_audit_log_entry_webhook_create_action,
+            'WebhookDelete': self.parse_audit_log_entry_webhook_delete_action,
             'EmojiDelete': self.parse_audit_log_entry_emoji_delete_action,
         }
         self._channel_parsers = {
@@ -657,6 +658,7 @@ class Parser:
             state=self.state,
             type=AuditLogEntryActionType.channel_create,
             channel_id=payload['channel'],
+            name=payload['name'],
         )
 
     def parse_audit_log_entry_channel_delete_action(
@@ -1019,6 +1021,7 @@ class Parser:
             state=self.state,
             type=AuditLogEntryActionType.role_create,
             role_id=payload['role'],
+            name=payload['name'],
         )
 
     def parse_audit_log_entry_role_delete_action(
@@ -1201,6 +1204,44 @@ class Parser:
             state=self.state,
             type=AuditLogEntryActionType.webhook_create,
             channel_id=payload['channel'],
+            name=payload['name'],
+            webhook_id=payload['webhook'],
+        )
+
+    def parse_audit_log_entry_webhook_delete_action(
+        self,
+        payload: raw.AuditLogEntryWebhookDeleteAction,
+        server_id: str,
+        members: dict[str, Member] = {},
+        users: dict[str, User] = {},
+        /,
+    ) -> AuditLogEntryAction:
+        """Parses an :attr:`~AuditLogEntryActionType.webhook_delete` audit log entry action object.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The audit log entry action payload to parse.
+        server_id: :class:`str`
+            Should be empty for this method.
+        members: Dict[:class:`str`, :class:`Member`]
+            Should be empty.
+        users: Dict[:class:`str`, :class:`User`]
+            Should be empty.
+
+        Returns
+        --------
+        :class:`AuditLogEntryAction`
+            The parsed :attr:`~AuditLogEntryActionType.webhook_delete` audit log entry action object.
+        """
+
+        return AuditLogEntryAction(
+            state=self.state,
+            type=AuditLogEntryActionType.webhook_delete,
+            channel_id=payload['channel'],
+            name=payload['name'],
             webhook_id=payload['webhook'],
         )
 

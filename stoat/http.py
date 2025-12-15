@@ -116,7 +116,7 @@ from .server import (
 
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Callable, Sequence
+    from collections.abc import Callable, Collection, Sequence
     from typing_extensions import Self
 
     from . import raw
@@ -456,6 +456,7 @@ _HTTP_OVERRIDE_PARAMETER_KEYS: tuple[str, ...] = (
     'mfa_ticket',
     'token',
     'rate_limiter',
+    'reason',
     'user_agent',
 )
 
@@ -891,7 +892,7 @@ class HTTPClient:
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
         bot: UndefinedOr[:class:`bool`]
-            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+            Whether the authentication token belongs to bot account. Defaults to :attr:`bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
@@ -909,7 +910,7 @@ class HTTPClient:
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
         user_agent: UndefinedOr[:class:`str`]
-            The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
+            The user agent to use for HTTP request. Defaults to :attr:`user_agent`.
         \\*\\*kwargs
             The keyword arguments to pass to :meth:`send_request`.
 
@@ -4107,6 +4108,7 @@ class HTTPClient:
         channel: ULIDOr[typing.Union[GroupChannel, TextChannel]],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: str,
         avatar: typing.Optional[ResolvableResource] = None,
     ) -> Webhook:
@@ -4124,6 +4126,10 @@ class HTTPClient:
             The channel to create webhook in.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: :class:`str`
             The webhook name. Must be between 1 and 32 chars long.
         avatar: Optional[:class:`ResolvableResource`]
@@ -4184,6 +4190,7 @@ class HTTPClient:
             routes.CHANNELS_WEBHOOK_CREATE.compile(channel_id=resolve_id(channel)),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
         return self.state.parser.parse_webhook(resp)
 
@@ -5637,7 +5644,9 @@ class HTTPClient:
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         user: typing.Optional[ULIDOr[BaseUser]] = None,
-        type: typing.Optional[typing.Union[AuditLogEntryActionType, str]] = None,
+        type: typing.Optional[
+            typing.Union[AuditLogEntryActionType, str, Collection[typing.Union[AuditLogEntryActionType, str]]]
+        ] = None,
         before: typing.Optional[ULIDOr[AuditLogEntry]] = None,
         after: typing.Optional[ULIDOr[AuditLogEntry]] = None,
         limit: typing.Optional[int] = None,
@@ -5663,9 +5672,9 @@ class HTTPClient:
             .. note::
 
                 This does not retrieve audit logs that *target* specified user.
-        type: Optional[Union[:class:`AuditLogEntryActionType`, :class:`str`]]
-            The type to filter audit logs by.
-            If a string value is passed, it is assumed to be a raw API value.
+        type: Optional[Union[:class:`AuditLogEntryActionType`, :class:`str`, Collection[Union[:class:`AuditLogEntryActionType`, :class:`str`]]]]
+            The type(s) to filter audit logs by.
+            If a string value(s) is passed, it is assumed to be a raw API value.
         before: Optional[ULIDOr[:class:`AuditLogEntry`]]
             The entry before which audit log entries should be fetched.
         after: Optional[ULIDOr[:class:`AuditLogEntry`]]
@@ -5728,10 +5737,12 @@ class HTTPClient:
         if user is not None:
             params['user'] = resolve_id(user)
         if type is not None:
-            if isinstance(type, AuditLogEntryActionType):
-                params['type'] = type.value
+            if isinstance(type, str):
+                params['type'] = [type]
+            elif isinstance(type, AuditLogEntryActionType):
+                params['type'] = [type.value]
             else:
-                params['type'] = type
+                params['type'] = [x.value if isinstance(x, AuditLogEntryActionType) else x for x in type]
         if before is not None:
             params['before'] = resolve_id(before)
         if after is not None:
@@ -5834,6 +5845,7 @@ class HTTPClient:
             routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=_resolve_member_id(user)),
             http_overrides=http_overrides,
             json=payload,
+            reason=reason,
         )
         return self.state.parser.parse_ban(
             response,

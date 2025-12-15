@@ -328,6 +328,7 @@ class AuditLogEntryActionType(Enum):
     roles_reorder = 'RolesReorder'
     invite_delete = 'InviteDelete'
     webhook_create = 'WebhookCreate'
+    webhook_delete = 'WebhookDelete'
     emoji_delete = 'EmojiDelete'
 
     unknown = ''

@@ -44,6 +44,7 @@ class AuditLogEntryBanDeleteAction(typing.TypedDict):
 class AuditLogEntryChannelCreateAction(typing.TypedDict):
     type: typing.Literal['ChannelCreate']
     channel: str
+    name: str
 
 
 class AuditLogEntryChannelEditAction(typing.TypedDict):
@@ -93,6 +94,7 @@ class AuditLogEntryRoleEditAction(typing.TypedDict):
 class AuditLogEntryRoleCreateAction(typing.TypedDict):
     type: typing.Literal['RoleCreate']
     role: str
+    name: str
 
 
 class AuditLogEntryRoleDeleteAction(typing.TypedDict):
@@ -115,6 +117,14 @@ class AuditLogEntryInviteDeleteAction(typing.TypedDict):
 class AuditLogEntryWebhookCreateAction(typing.TypedDict):
     type: typing.Literal['WebhookCreate']
     webhook: str
+    name: str
+    channel: str
+
+
+class AuditLogEntryWebhookDeleteAction(typing.TypedDict):
+    type: typing.Literal['WebhookDelete']
+    webhook: str
+    name: str
     channel: str
 
 
@@ -142,13 +152,14 @@ AuditLogEntryAction = typing.Union[
     AuditLogEntryRolesReorderAction,
     AuditLogEntryInviteDeleteAction,
     AuditLogEntryWebhookCreateAction,
+    AuditLogEntryWebhookDeleteAction,
     AuditLogEntryEmojiDeleteAction,
 ]
 
 
 class OptionsAuditLogQuery(typing.TypedDict):
     user: typing_extensions.NotRequired[str]
-    type: typing_extensions.NotRequired[str]
+    type: typing_extensions.NotRequired[list[str]]
     before: typing_extensions.NotRequired[str]
     after: typing_extensions.NotRequired[str]
     limit: typing_extensions.NotRequired[int]

@@ -439,6 +439,7 @@ class AuditLogEntryAction:
             return {
                 'type': 'ChannelCreate',
                 'channel': self.channel_id,
+                'name': self.name,
             }
         elif self.type is AuditLogEntryActionType.channel_update:
             payload: dict[str, typing.Any] = {
@@ -500,6 +501,7 @@ class AuditLogEntryAction:
             return {
                 'type': 'RoleCreate',
                 'role': self.role_id,
+                'name': self.name,
             }
         elif self.type is AuditLogEntryActionType.role_delete:
             return {
@@ -522,8 +524,17 @@ class AuditLogEntryAction:
             return {
                 'type': 'WebhookCreate',
                 'webhook': self.webhook_id,
+                'name': self.name,
                 'channel': self.channel_id,
             }
+        elif self.type is AuditLogEntryActionType.webhook_delete:
+            return {
+                'type': 'WebhookDelete',
+                'webhook': self.webhook_id,
+                'name': self.name,
+                'channel': self.channel_id,
+            }
+
         elif self.type is AuditLogEntryActionType.emoji_delete:
             return {
                 'type': 'EmojiDelete',
