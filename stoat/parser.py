@@ -4562,8 +4562,11 @@ class Parser:
         roles = {}
         if 'roles' in payload:
             for id, role_data in payload['roles'].items():
-                role_id = id
-                roles[role_id] = self.parse_role(role_data, role_id, server_id)
+                roles[id] = self.parse_role(
+                    role_data,
+                    role_data['id'] if 'id' in role_data else id,
+                    server_id,
+                )
 
         icon = payload.get('icon')
         banner = payload.get('banner')
@@ -4917,7 +4920,7 @@ class Parser:
         clear = payload['clear']
 
         server_id = payload['id']
-        role_id = payload['role_id']
+        role_id = data['id'] if 'id' in data else payload['role_id']
 
         return RawServerRoleUpdateEvent(
             shard=shard,

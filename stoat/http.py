@@ -7497,13 +7497,20 @@ class HTTPClient:
         """
         server_id = resolve_id(server)
         payload: raw.DataCreateRole = {'name': name, 'rank': rank}
-        data: raw.NewRoleResponse = await self.request(
+
+        # May be NewRoleResponse on old API versions, Role on newer ones
+        data: typing.Union[raw.NewRoleResponse, raw.Role] = await self.request(
             routes.SERVERS_ROLES_CREATE.compile(server_id=server_id),
             http_overrides=http_overrides,
             json=payload,
             reason=reason,
         )
-        return self.state.parser.parse_role(data['role'], data['id'], server_id)
+
+        role_id = data['id']  # pyright: ignore[reportTypedDictNotRequiredAccess]
+        if 'role' in data:
+            return self.state.parser.parse_role(data['role'], role_id, server_id)
+        else:
+            return self.state.parser.parse_role(data, role_id, server_id)
 
     async def delete_role(
         self,
