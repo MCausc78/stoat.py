@@ -291,9 +291,14 @@ AUTH_MFA_TOTP_GENERATE_SECRET: typing.Final[Route] = Route(POST, '/auth/mfa/totp
 AUTH_SESSION_EDIT: typing.Final[Route] = Route(PATCH, '/auth/session/{session_id}')
 AUTH_SESSION_FETCH_ALL: typing.Final[Route] = Route(GET, '/auth/session/all')
 AUTH_SESSION_LOGIN: typing.Final[Route] = Route(POST, '/auth/session/login')
+AUTH_SESSION_TOKEN_LOGIN: typing.Final[Route] = Route(GET, '/auth/session/login')
 AUTH_SESSION_LOGOUT: typing.Final[Route] = Route(POST, '/auth/session/logout')
 AUTH_SESSION_REVOKE: typing.Final[Route] = Route(DELETE, '/auth/session/{session_id}')
 AUTH_SESSION_REVOKE_ALL: typing.Final[Route] = Route(DELETE, '/auth/session/all')
+
+# SSO Authentication
+AUTH_SSO_AUTHORIZE: typing.Final[Route] = Route(GET, '/auth/sso/authorize/{idp_id}')
+AUTH_SSO_CALLBACK: typing.Final[Route] = Route(GET, '/auth/sso/callback')
 
 __all__ = (
     'HTTPMethod',
@@ -434,7 +439,10 @@ __all__ = (
     'AUTH_SESSION_EDIT',
     'AUTH_SESSION_FETCH_ALL',
     'AUTH_SESSION_LOGIN',
+    'AUTH_SESSION_TOKEN_LOGIN',
     'AUTH_SESSION_LOGOUT',
     'AUTH_SESSION_REVOKE',
     'AUTH_SESSION_REVOKE_ALL',
+    'AUTH_SSO_AUTHORIZE',
+    'AUTH_SSO_CALLBACK',
 )

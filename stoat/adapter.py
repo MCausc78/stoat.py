@@ -31,6 +31,7 @@ import typing
 import aiohttp
 
 if typing.TYPE_CHECKING:
+    from http.cookies import BaseCookie
     from typing_extensions import Self
 
     from multidict import MultiMapping, CIMultiDict
@@ -80,6 +81,11 @@ class HTTPResponse(typing.Protocol):
         """:class:`yarl.URL`: The request URL."""
         ...
 
+    @property
+    def cookies(self) -> BaseCookie:
+        """:class:`http.cookies.BaseCookie`: The cookies set by request."""
+        ...
+
     def close(self) -> MaybeAwaitable[None]:
         """Release request resources."""
         ...
@@ -125,6 +131,11 @@ class AIOHTTPResponseWrapper:
     def url(self) -> URL:
         """:class:`yarl.URL`: The request URL."""
         return self.underlying.url
+
+    @property
+    def cookies(self) -> BaseCookie:
+        """:class:`http.cookies.BaseCookie`: The cookies set by request."""
+        return self.underlying.cookies
 
     def close(self) -> MaybeAwaitable[None]:
         """Release request resources."""
@@ -244,8 +255,9 @@ class HTTPAdapter(ABC, typing.Generic[F]):
         \\*\\*kwargs
             The keyword arguments to pass to requester function.
 
-            Usually these are passed:
+            Usually these might be passed:
 
+            - ``allow_redirects``
             - ``form``
             - ``json``
             - ``params``

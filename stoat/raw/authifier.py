@@ -256,6 +256,10 @@ class MFADataLogin(typing.TypedDict):
 DataLogin = typing.Union[EmailDataLogin, MFADataLogin]
 
 
+class DataToken(typing.TypedDict):
+    login_token: str
+
+
 class SuccessResponseLogin(Session):
     result: typing.Literal['Success']
 
@@ -272,3 +276,9 @@ class DisabledResponseLogin(typing.TypedDict):
 
 
 ResponseLogin = typing.Union[SuccessResponseLogin, MFAResponseLogin, DisabledResponseLogin]
+
+
+class DataCallback(typing.TypedDict):
+    code: typing_extensions.NotRequired[str]
+    access_token: typing_extensions.NotRequired[str]
+    id_token: typing_extensions.NotRequired[str]
