@@ -31,7 +31,7 @@ class MemberCompositeKey(typing.TypedDict):
     user: str
 
 
-FieldsMember = typing.Literal['Nickname', 'Avatar', 'Roles', 'Timeout', 'CanReceive', 'CanPublish']
+FieldsMember = typing.Literal['Nickname', 'Avatar', 'Roles', 'Timeout', 'CanReceive', 'CanPublish', 'VoiceChannel']
 RemovalIntention = typing.Literal['Leave', 'Kick', 'Ban']
 
 
