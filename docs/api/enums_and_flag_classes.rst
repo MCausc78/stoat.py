@@ -988,6 +988,15 @@ BaseFlags
 
 .. autofunction:: doc_flags
 
+AdminUserPermissions
+~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: AdminUserPermissions
+
+.. autoclass:: AdminUserPermissions
+    :members:
+    :inherited-members:
+
 BotFlags
 ~~~~~~~~
 
