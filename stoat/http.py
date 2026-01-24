@@ -68,6 +68,7 @@ from .core import (
 )
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
 from .enums import (
+    TokenType,
     ChannelType,
     MessageSort,
     ContentReportReason,
@@ -454,6 +455,7 @@ _HTTP_OVERRIDE_PARAMETER_KEYS: tuple[str, ...] = (
     'mfa_ticket',
     'token',
     'rate_limiter',
+    'token_type',
     'user_agent',
 )
 
@@ -475,6 +477,10 @@ class HTTPOverrideOptions:
         The base API url to use when sending a HTTP request.
     bot: UndefinedOr[:class:`bool`]
         Whether the authentication token belongs to bot account. Defaults to :attr:`HTTPClient.bot`.
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
     cookie: UndefinedOr[:class:`str`]
         The cookies to use when performing a request.
     headers: MultiMapping[:class:`str`]
@@ -487,8 +493,23 @@ class HTTPOverrideOptions:
         The MFA ticket to pass in headers.
     oauth2: :class:`bool`
         Whether the authentication token is an OAuth2 access token. Defaults to :attr:`HTTPClient.oauth2`.
+
+        .. versionadded:: 1.2
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
+    on_behalf_of: UndefinedOr[Optional[:class:`str`]]
+        The admin user the machine is acting on behalf of.
+        This can be either ID or email of the admin user's account.
+
+        .. versionadded:: 1.3
     token: UndefinedOr[Optional[:class:`str`]]
         The token to use when requesting the route.
+    token_type: UndefinedOr[:class:`TokenType`]
+        The token's type.
+
+        .. versionadded:: 1.3
     user_agent: UndefinedOr[:class:`str`]
         The user agent to use for HTTP request. Defaults to :attr:`HTTPClient.user_agent`.
     """
@@ -506,7 +527,9 @@ class HTTPOverrideOptions:
         json: UndefinedOr[typing.Any]
         mfa_ticket: typing.Optional[str]
         oauth2: UndefinedOr[bool]
+        on_behalf_of: UndefinedOr[typing.Optional[str]]
         token: UndefinedOr[typing.Optional[str]]
+        token_type: UndefinedOr[TokenType]
         user_agent: UndefinedOr[str]
 
     def __init__(self, /, **kwargs) -> None:
@@ -546,20 +569,25 @@ class HTTPClient:
 
     Attributes
     ----------
-    bot: :class:`bool`
-        Whether the token belongs to bot account.
     cookie: :class:`str`
         The cookie used to make requests. If ``cf_clearance`` cookie is present, then it's used to prevent HTML pages when service is down.
     max_retries: :class:`int`
         How many times to retry requests that received 429 or 502 HTTP status code.
-    oauth2: :class:`bool`
-        Whether the token is an OAuth2 access token.
+    on_behalf_of: Optional[:class:`str`]
+        The other admin user the admin machine should act on behalf of.
+        This can be either ID or email of the admin user.
+
+        .. versionadded:: 1.3
     rate_limiter: Optional[:class:`RateLimiter`]
         The rate limiter in use.
     state: :class:`State`
         The state.
     token: :class:`str`
         The token in use. May be empty if not started.
+    token_type: :class:`TokenType`
+        The token's type.
+
+        .. versionadded:: 1.3
     user_agent: :class:`str`
         The HTTP user agent used when making requests.
     """
@@ -569,13 +597,13 @@ class HTTPClient:
     __slots__ = (
         '_adapter',
         '_base',
-        'bot',
         'cookie',
         'max_retries',
-        'oauth2',
+        'on_behalf_of',
         'rate_limiter',
         'state',
         'token',
+        'token_type',
         'user_agent',
     )
 
@@ -589,10 +617,12 @@ class HTTPClient:
         cookie: typing.Optional[str] = None,
         max_retries: typing.Optional[int] = None,
         oauth2: bool = False,
+        on_behalf_of: typing.Optional[str] = None,
         rate_limiter: UndefinedOr[
             typing.Optional[typing.Union[Callable[[HTTPClient], typing.Optional[RateLimiter]], RateLimiter]]
         ] = UNDEFINED,
         state: State,
+        token_type: typing.Optional[TokenType] = None,
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if base is None:
@@ -602,10 +632,9 @@ class HTTPClient:
             typing.Union[utils.MaybeAwaitableFunc[[HTTPClient], HTTPAdapter], HTTPAdapter]
         ] = adapter
         self._base: str = base.rstrip('/')
-        self.bot: bool = bot
         self.cookie: typing.Optional[str] = cookie
         self.max_retries: int = max_retries or 3
-        self.oauth2: bool = oauth2
+        self.on_behalf_of: typing.Optional[str] = on_behalf_of
 
         if rate_limiter is UNDEFINED:
             self.rate_limiter: typing.Optional[RateLimiter] = DefaultRateLimiter()
@@ -614,8 +643,17 @@ class HTTPClient:
         else:
             self.rate_limiter = rate_limiter
 
+        if token_type is None:
+            if bot:
+                token_type = TokenType.bot
+            elif oauth2:
+                token_type = TokenType.oauth2
+            else:
+                token_type = TokenType.user
+
         self.state: State = state
         self.token: str = token or ''
+        self.token_type: TokenType = token_type
         self.user_agent: str = user_agent or DEFAULT_HTTP_USER_AGENT
 
     async def __aenter__(self) -> Self:
@@ -654,6 +692,38 @@ class HTTPClient:
         """:class:`str`: The base URL used for API requests."""
         return self._base
 
+    @property
+    def bot(self) -> bool:
+        """:class:`bool`: Whether the token belongs to bot account.
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
+        """
+        return self.token_type is TokenType.bot
+
+    @bot.setter
+    def bot(self, value: bool, /) -> None:
+        if value:
+            self.token_type = TokenType.bot
+
+    @property
+    def oauth2(self) -> bool:
+        """:class:`bool`: Whether the token is an OAuth2 access token.
+
+        .. versionadded:: 1.2
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
+        """
+        return self.token_type is TokenType.oauth2
+
+    @oauth2.setter
+    def oauth2(self, value: bool, /) -> None:
+        if value:
+            self.token_type = TokenType.oauth2
+
     def url_for(self, route: routes.CompiledRoute, /) -> str:
         """Returns URL for route.
 
@@ -669,7 +739,14 @@ class HTTPClient:
         """
         return self._base + route.build()
 
-    def with_credentials(self, token: str, *, bot: bool = True, oauth2: bool = False) -> None:
+    def with_credentials(
+        self,
+        token: str,
+        *,
+        bot: bool = True,
+        oauth2: bool = False,
+        token_type: typing.Optional[TokenType] = None,
+    ) -> None:
         """Modifies HTTP client credentials.
 
         Parameters
@@ -678,12 +755,33 @@ class HTTPClient:
             The authentication token.
         bot: :class:`bool`
             Whether the token belongs to bot account or not. Defaults to ``True``.
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
         oauth2: :class:`bool`
             Whether the token is an OAuth2 access token. Defaults to ``False``.
+
+            .. versionadded:: 1.2
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
+        token_type: Optional[:class:`TokenType`]
+            The token's type.
+
+            .. versionadded:: 1.3
         """
+        if token_type is None:
+            if bot:
+                token_type = TokenType.bot
+            elif oauth2:
+                token_type = TokenType.oauth2
+            else:
+                token_type = TokenType.user
+
         self.token = token
-        self.bot = bot
-        self.oauth2 = oauth2
+        self.token_type = token_type
 
     async def get_adapter(self) -> HTTPAdapter:
         if self._adapter is None:
@@ -724,8 +822,10 @@ class HTTPClient:
         json_body: bool = False,
         mfa_ticket: typing.Optional[str] = None,
         oauth2: UndefinedOr[bool] = UNDEFINED,
+        on_behalf_of: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        token_type: UndefinedOr[TokenType] = UNDEFINED,
         user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> utils.MaybeAwaitable[None]:
         """Populate headers.
@@ -738,8 +838,14 @@ class HTTPClient:
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
+        admin_auth: UndefinedOr[Optional[:class:`AdminAuthentication`]]
+            The authentication for the platform administration API.
         bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`bot`.
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
         idempotency_key: Optional[:class:`str`]
@@ -750,10 +856,25 @@ class HTTPClient:
             The MFA ticket to pass in headers.
         oauth2: UndefinedOr[:class:`bool`]
             Whether the token is an OAuth2 access token. Defaults to :attr:`oauth2`.
+
+            .. versionadded:: 1.2
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
+        on_behalf_of: UndefinedOr[Optional[:class:`str`]]
+            The other admin user the admin machine should act on behalf of.
+            This can be either ID or email of the admin user.
+
+            .. versionadded:: 1.3
         overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
+        token_type: UndefinedOr[:class:`TokenType`]
+            The token's type to use.
+
+            .. versionadded:: 1.3
         user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`user_agent`.
 
@@ -775,24 +896,37 @@ class HTTPClient:
         elif cookie is not None:
             headers['Cookie'] = cookie
 
-        if bot is UNDEFINED:
-            bot = self.bot
-
-        if oauth2 is UNDEFINED:
-            oauth2 = self.oauth2
-
-        if bot:
-            th = 'X-Bot-Token'
-        elif oauth2:
-            th = 'X-OAuth2-Token'
-        else:
-            th = 'X-Session-Token'
-
         if token is UNDEFINED:
             token = self.token
 
-        if token:
-            headers[th] = token
+        if token_type is UNDEFINED:
+            if bot is not UNDEFINED or oauth2 is not UNDEFINED:
+                if bot is UNDEFINED:
+                    bot = self.bot
+                if oauth2 is UNDEFINED:
+                    oauth2 = self.oauth2
+
+                if bot:
+                    token_type = TokenType.bot
+                elif oauth2:
+                    token_type = TokenType.oauth2
+                else:
+                    token_type = TokenType.user
+            else:
+                token_type = self.token_type
+
+        if token_type is TokenType.admin:
+            if on_behalf_of is UNDEFINED:
+                on_behalf_of = self.on_behalf_of
+
+            if on_behalf_of is None:
+                headers['X-Admin-User'] = token
+            else:
+                headers['X-Admin-Machine'] = token
+                headers['X-Admin-On-Behalf-Of'] = on_behalf_of
+        else:
+            if token:
+                headers[token_type.value] = token
 
         if user_agent is UNDEFINED:
             user_agent = self.user_agent
@@ -860,7 +994,10 @@ class HTTPClient:
         idempotency_key: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         mfa_ticket: typing.Optional[str] = None,
+        oauth2: UndefinedOr[bool] = UNDEFINED,
+        on_behalf_of: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        token_type: UndefinedOr[TokenType] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> HTTPResponse:
@@ -875,7 +1012,7 @@ class HTTPClient:
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
         bot: UndefinedOr[:class:`bool`]
-            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+            Whether the authentication token belongs to bot account. Defaults to :attr:`bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
@@ -886,8 +1023,25 @@ class HTTPClient:
             The JSON payload to pass in.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        oauth2: UndefinedOr[:class:`bool`]
+            Whether the token is an OAuth2 access token. Defaults to :attr:`oauth2`.
+
+            .. versionadded:: 1.3
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
+        on_behalf_of: UndefinedOr[Optional[:class:`str`]]
+            The other admin user the admin machine should act on behalf of.
+            This can be either ID or email of the admin user.
+
+            .. versionadded:: 1.3
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
+        token_type: UndefinedOr[:class:`TokenType`]
+            The token's type.
+
+            .. versionadded:: 1.3
         user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
         \\*\\*kwargs
@@ -922,7 +1076,10 @@ class HTTPClient:
                 idempotency_key=idempotency_key,
                 json=json,
                 mfa_ticket=mfa_ticket,
+                oauth2=oauth2,
+                on_behalf_of=on_behalf_of,
                 token=token,
+                token_type=token_type,
                 user_agent=user_agent,
                 kwargs=kwargs,
             )
@@ -944,8 +1101,14 @@ class HTTPClient:
                 json = http_overrides.json
             if hasattr(tmp, 'mfa_ticket'):
                 mfa_ticket = http_overrides.mfa_ticket
+            if hasattr(tmp, 'oauth2'):
+                oauth2 = http_overrides.oauth2
+            if hasattr(tmp, 'on_behalf_of'):
+                on_behalf_of = http_overrides.on_behalf_of
             if hasattr(tmp, 'token'):
                 token = http_overrides.token
+            if hasattr(tmp, 'token_type'):
+                token_type = http_overrides.token_type
             if hasattr(tmp, 'user_agent'):
                 user_agent = http_overrides.user_agent
 
@@ -958,8 +1121,11 @@ class HTTPClient:
             idempotency_key=idempotency_key,
             json_body=json is not UNDEFINED,
             mfa_ticket=mfa_ticket,
+            oauth2=oauth2,
+            on_behalf_of=on_behalf_of,
             overrides=http_overrides,
             token=token,
+            token_type=token_type,
             user_agent=user_agent,
         )
         if isawaitable(tmp):
@@ -1097,7 +1263,10 @@ class HTTPClient:
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
         mfa_ticket: typing.Optional[str] = None,
+        oauth2: UndefinedOr[bool] = UNDEFINED,
+        on_behalf_of: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        token_type: UndefinedOr[TokenType] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> typing.Any:
@@ -1124,8 +1293,25 @@ class HTTPClient:
             by routes like ``GET /servers/{server_id}/members``. Defaults to ``True``.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        oauth2: :class:`bool`
+            Whether the authentication token is an OAuth2 access token. Defaults to :attr:`HTTPClient.oauth2`.
+
+            .. versionadded:: 1.2
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
+        on_behalf_of: UndefinedOr[Optional[:class:`str`]]
+            The admin user the machine is acting on behalf of.
+            This can be either ID or email of the admin user's account.
+
+            .. versionadded:: 1.3
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
+        token_type: UndefinedOr[:class:`TokenType`]
+            The token's type.
+
+            .. versionadded:: 1.3
         user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`user_agent`.
         \\*\\*kwargs
@@ -1149,7 +1335,10 @@ class HTTPClient:
             idempotency_key=idempotency_key,
             json=json,
             mfa_ticket=mfa_ticket,
+            oauth2=oauth2,
+            on_behalf_of=on_behalf_of,
             token=token,
+            token_type=token_type,
             user_agent=user_agent,
             **kwargs,
         )

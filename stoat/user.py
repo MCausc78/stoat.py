@@ -1625,6 +1625,10 @@ class User(DisplayUser):
         """:class:`bool`: Whether this user was marked as spam and removed from platform."""
         return self.flags.spam
 
+    def is_global_moderator(self) -> bool:
+        """:class:`bool`: Whether this user is a global moderator."""
+        return self.flags.global_moderator
+
     # badges
     def is_developer(self) -> bool:
         """:class:`bool`: Whether this user is Stoat developer."""

@@ -24,6 +24,84 @@ Enum
 .. autoclass:: Enum
     :members:
 
+Administration
+~~~~~~~~~~~~~~
+
+.. class:: AdminAuditItemActionType
+
+    Specifies the type of administrative audit log item.
+
+    .. versionadded:: 1.3
+
+    .. attribute:: admin_user_create
+
+        The administrator created another administrator user account.
+    .. attribute:: admin_user_update
+
+        The administrator updated administrator's user account.
+    .. attribute:: token_create
+
+        The administrator created token for an admin user account.
+    .. attribute:: token_revoke
+
+        The administrator revoked token belonging to an admin user account.
+    .. attribute:: comment_create
+
+        The administrator commented on a case or object.
+    .. attribute:: comment_update
+
+        The administrator updated their comment on a case or object.
+    .. attribute:: object_comments_fetch
+
+        The administrator retrieved comments belonging to an object.
+    .. attribute:: server_fetch
+
+        The administrator retrieved a server.
+    .. attribute:: server_participants_fetch
+
+        The administrator retrieved server's participants.
+
+        Participants include authors of all existing messages ever sent in the server.
+    .. attribute:: server_members_fetch
+
+        The administrator retrieved server's members.
+    .. attribute:: server_member_add
+
+        The administrator forcefully added a member to the server.
+    .. attribute:: server_owner_update
+
+        The administrator updated the server's owner.
+    .. attribute:: server_invite_create
+
+        The administrator created an invite to the server.
+    .. attribute:: server_invite_delete
+
+        The administrator deleted server's invite.
+    .. attribute:: server_invite_delete_all
+
+        The administrator deleted all of server's invites.
+    .. attribute:: server_delete
+
+        The administrator deleted the server.
+    .. attribute:: server_update
+
+        The administrator updated the server.
+    .. attribute:: server_member_remove
+
+        The administrator kicked a server member.
+    .. attribute:: server_flags_update
+
+        The administrator updated server's flags.
+    .. attribute:: server_member_ban_all
+
+        The administrator suspended user accounts of all server members.
+    .. attribute:: server_member_ban
+
+        The administrator banned a server member.
+    .. attribute:: server_member_unban
+
+        The administrator unbanned a server member.
+
 Authentication
 ~~~~~~~~~~~~~~
 
@@ -40,6 +118,27 @@ Authentication
     .. attribute:: totp
 
         The MFA is being done using TOTP code.
+
+.. class:: TokenType
+
+    Specifies the type of token.
+
+    .. versionadded:: 1.3
+
+    .. attribute:: user
+
+        The token belongs to an user account.
+    .. attribute:: bot
+
+        The token belongs to a bot account.
+    .. attribute:: oauth2
+
+        The token belongs to OAuth2 user token.
+    .. attribute:: admin
+
+        The token belongs to admin.
+        If :attr:`HTTPClient.on_behalf_of` is truthy, indicates admin machine token.
+        Else, indicates an admin user token.
 
 Asset
 ~~~~~

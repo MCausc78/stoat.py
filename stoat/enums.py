@@ -162,10 +162,44 @@ else:
                 return value
 
 
+class AdminAuditItemActionType(Enum):
+    admin_user_create = 'CreateAdminUser'
+    admin_user_update = 'EditAdminUser'
+    token_create = 'CreateToken'
+    token_revoke = 'RevokeToken'
+    comment_create = 'CommentCreate'
+    comment_update = 'CommentEdit'
+    object_comments_fetch = 'CommentFetchForObject'
+    server_fetch = 'ServerFetch'
+    server_participants_fetch = 'ServerFetchParticipants'
+    server_members_fetch = 'ServerFetchMembers'
+    server_member_add = 'ServerAddMember'
+    server_owner_update = 'ServerChangeOwner'
+    server_invite_create = 'ServerCreateInvite'
+    server_invite_delete = 'ServerDeleteInvite'
+    server_invite_delete_all = 'ServerDeleteAllInvites'
+    server_delete = 'ServerDelete'
+    server_update = 'ServerEdit'
+    server_member_remove = 'ServerRemoveMember'
+    server_flags_update = 'ServerSetFlags'
+
+    # "instance" doesn't seem to make sense here
+    server_member_ban_all = 'ServerInstanceBanAllMembers'
+    server_member_ban = 'ServerBanMember'
+    server_member_unban = 'ServerUnbanMember'
+
+
 class MFAMethod(Enum):
     password = 'Password'
     recovery = 'Recovery'
     totp = 'Totp'
+
+
+class TokenType(Enum):
+    user = 'X-Session-Token'
+    bot = 'X-Bot-Token'
+    oauth2 = 'X-OAuth2-Token'
+    admin = '__admin__'  # Since it's context-dependent, this is a special case
 
 
 class AssetMetadataType(Enum):
@@ -517,8 +551,11 @@ class UserReportReason(Enum):
 __all__ = (
     'EnumMeta',
     'Enum',
+    # Admin
+    'AdminAuditItemActionType',
     # Authentication
     'MFAMethod',
+    'TokenType',
     # Asset
     'AssetMetadataType',
     # Channel
