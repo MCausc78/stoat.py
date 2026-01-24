@@ -29,7 +29,7 @@ class AdminAuditItem(typing.TypedDict):
 
 class AdminCommentCreate(typing.TypedDict):
     case: typing.Optional[str]
-    object: typing.Optional[str]
+    object: str
     content: str
 
 

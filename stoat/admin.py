@@ -83,7 +83,15 @@ class AdminAuditItem(Base):
 
 
 @define(slots=True, eq=True)
-class AdminComment(Base):
+class BaseAdminComment(Base):
+    """Represents a base comment on an object (user / server), visible and created by platform moderators.
+
+    .. versionadded:: 1.3
+    """
+
+
+@define(slots=True, eq=True)
+class AdminComment(BaseAdminComment):
     """Represents a comment on an object (user / server), visible and created by platform moderators.
 
     .. versionadded:: 1.3
@@ -132,7 +140,15 @@ class AdminComment(Base):
 
 
 @define(slots=True, eq=True)
-class AdminCase(Base):
+class BaseAdminCase(Base):
+    """Represents a base case that is being investigated by platform moderators. Includes relevant reports.
+
+    .. versionadded:: 1.3
+    """
+
+
+@define(slots=True, eq=True)
+class AdminCase(BaseAdminCase):
     """Represents a case that is being investigated by platform moderators. Includes relevant reports.
 
     .. versionadded:: 1.3
@@ -222,7 +238,15 @@ class AdminStrike(Base):
 
 
 @define(slots=True, eq=True)
-class AdminToken(Base):
+class BaseAdminToken(Base):
+    """Represents a base admin user account's token.
+
+    .. versionadded:: 1.3
+    """
+
+
+@define(slots=True, eq=True)
+class AdminToken(BaseAdminToken):
     """Represents an admin user account's token.
 
     .. versionadded:: 1.3
@@ -248,7 +272,15 @@ class AdminToken(Base):
 
 
 @define(slots=True, eq=True)
-class AdminUser(Base):
+class BaseAdminUser(Base):
+    """Represents a base admin user.
+
+    .. versionadded:: 1.3
+    """
+
+
+@define(slots=True, eq=True)
+class AdminUser(BaseAdminUser):
     """Represents an admin user.
 
     .. versionadded:: 1.3
@@ -258,7 +290,7 @@ class AdminUser(Base):
     """:class:`str`: The ID of the platform user the admin user belongs to."""
 
     email: str = field(repr=True, kw_only=True)
-    """:class:`str`: The admin user's email."""
+    """:class:`str`: The internal admin user's email."""
 
     active: bool = field(repr=True, kw_only=True)
     """:class:`str`: Whether the admin user can use the API."""
@@ -267,7 +299,7 @@ class AdminUser(Base):
     """:class:`int`: The raw admin user's permissions."""
 
     platform_user: typing.Optional[User] = field(repr=True, kw_only=True)
-    """Optional[:class:`User`]: The platform user."""
+    """Optional[:class:`User`]: The platform user. Only filled if retrieved from :meth:`HTTPClient.get_admin_users`."""
 
     def to_dict(self) -> raw.AdminUser:
         """:class:`dict`: Convert admin user to raw data."""
@@ -285,9 +317,13 @@ class AdminUser(Base):
 
 __all__ = (
     'AdminAuditItem',
+    'BaseAdminComment',
     'AdminComment',
+    'BaseAdminCase',
     'AdminCase',
     'AdminStrike',
+    'BaseAdminToken',
     'AdminToken',
+    'BaseAdminUser',
     'AdminUser',
 )

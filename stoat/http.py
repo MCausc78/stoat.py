@@ -35,6 +35,16 @@ from multidict import CIMultiDict, MultiMapping
 
 from . import __version__, routes, utils
 from .adapter import HTTPResponse, HTTPForm, HTTPAdapter, AIOHTTPAdapter
+from .admin import (
+    BaseAdminComment,
+    AdminComment,
+    BaseAdminCase,
+    AdminCase,
+    BaseAdminToken,
+    AdminToken,
+    BaseAdminUser,
+    AdminUser,
+)
 from .authentication import (
     PartialAccount,
     MFATicket,
@@ -89,7 +99,14 @@ from .errors import (
     InternalServerError,
     BadGateway,
 )
-from .flags import MessageFlags, Permissions, ServerFlags, UserBadges, UserFlags
+from .flags import (
+    AdminUserPermissions,
+    MessageFlags,
+    Permissions,
+    ServerFlags,
+    UserBadges,
+    UserFlags,
+)
 from .invite import BaseInvite, PublicInvite, ServerInvite, Invite
 from .message import (
     Reply,
@@ -559,8 +576,13 @@ class HTTPOverrideOptions:
         ...
 
 
-def _resolve_member_id(target: typing.Union[str, BaseUser, BaseMember], /) -> str:
+def _resolve_member_id(target: typing.Union[str, BaseServer, BaseUser, BaseMember], /) -> str:
     ret: str = getattr(target, 'id', target)  # type: ignore
+    return ret
+
+
+def _resolve_short_case_id(target: typing.Union[str, AdminCase], /) -> str:
+    ret: str = getattr(target, 'short_id', target)  # type: ignore
     return ret
 
 
@@ -1391,6 +1413,584 @@ class HTTPClient:
         """
         resp: raw.StoatConfig = await self.request(routes.ROOT.compile(), http_overrides=http_overrides, token=None)
         return self.state.parser.parse_instance(resp)
+
+    # Administration
+    async def create_admin_comment(
+        self,
+        object: typing.Union[str, BaseServer, BaseUser, BaseMember],
+        content: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case_id: typing.Optional[ULIDOr[BaseAdminCase]] = None,
+    ) -> AdminComment:
+        """|coro|
+
+        Creates an admin comment on the object.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        Parameters
+        ----------
+        object: Union[:class:`str`, :class:`BaseServer`, :class:`BaseUser`, :class:`BaseMember`]
+            The object to comment on.
+        content: :class:`str`
+            The comment's contents. Must be between 1 and 2000 characters.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case_id: Optional[ULIDOr[:class:`BaseAdminCase`]]
+            The case's ID this comment is related to.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create comments.   |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminComment`
+            The created comment.
+        """
+
+        payload: raw.AdminCommentCreate = {
+            'case': None if case_id is None else resolve_id(case_id),
+            'object': _resolve_member_id(object),
+            'content': content,
+        }
+        resp: raw.AdminComment = await self.request(
+            routes.ADMIN_COMMENTS_COMMENT_CREATE.compile(), http_overrides=http_overrides, json=payload
+        )
+        return self.state.parser.parse_admin_comment(resp)
+
+    async def edit_admin_comment(
+        self,
+        comment: ULIDOr[BaseAdminComment],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        content: str,
+    ) -> AdminComment:
+        """|coro|
+
+        Edits an admin comment.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        Parameters
+        ----------
+        comment: ULIDOr[:class:`BaseAdminComment`]
+            The comment to edit.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        content: :class:`str`
+            The new comment's contents. Must be between 1 and 2000 characters.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                               |
+            +-----------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit comments, or the comment isn't yours. |
+            +-----------------------+--------------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminComment`
+            The edited comment.
+        """
+        payload: raw.AdminCommentEdit = {'content': content}
+        resp: raw.AdminComment = await self.request(
+            routes.ADMIN_COMMENTS_COMMENT_EDIT.compile(comment_id=resolve_id(comment)),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_admin_comment(resp)
+
+    async def get_admin_case_comments(
+        self, case: typing.Union[str, AdminCase], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[AdminComment]:
+        """|coro|
+
+        Retrieve a list of comments for an admin case.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        Parameters
+        ----------
+        case: Union[:class:`str`, :class:`AdminCase`]
+            The case to retrieve comments for.
+            Must be a short ID if string.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve comments. |
+            +-----------------------+--------------------------------------------------------------|
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AdminComment`]
+            The comments.
+        """
+        resp: list[raw.AdminComment] = await self.request(
+            routes.ADMIN_COMMENTS_COMMENT_FETCH_CASE.compile(case_id=_resolve_short_case_id(case)),
+            http_overrides=http_overrides,
+        )
+        return list(map(self.state.parser.parse_admin_comment, resp))
+
+    async def get_admin_object_comments(
+        self,
+        object: typing.Union[str, BaseServer, BaseUser, BaseMember],
+        /,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> list[AdminComment]:
+        """|coro|
+
+        Retrieve a list of comments for an object.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        Parameters
+        ----------
+        object: Union[:class:`str`, :class:`BaseServer`, :class:`BaseUser`, :class:`BaseMember`]
+            The object to retrieve comments for.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve comments. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AdminComment`]
+            The comments.
+        """
+        resp: list[raw.AdminComment] = await self.request(
+            routes.ADMIN_COMMENTS_COMMENT_FETCH_OBJECT.compile(object_id=_resolve_member_id(object)),
+            http_overrides=http_overrides,
+        )
+        return list(map(self.state.parser.parse_admin_comment, resp))
+
+    async def create_admin_token(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        expires_at: datetime,
+    ) -> AdminToken:
+        """|coro|
+
+        Creates a token for the admin user.
+
+        You must use an admin machine token, and the user you're acting on behalf of
+        must have :attr:`~AdminUserPermissions.create_tokens` permission to do that.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        expires_at: :class:`~datetime.datetime`
+            When the token should expire.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------+
+            | Value                 | Reason                                                |
+            +-----------------------+-------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions create tokens. |
+            +-----------------------+-------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminToken`
+            The created token.
+        """
+        payload: raw.AdminTokenCreate = {'expiry': expires_at.isoformat()}
+        resp: raw.AdminToken = await self.request(
+            routes.ADMIN_META_CREATE_TOKEN.compile(),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_admin_token(resp)
+
+    async def create_admin_user(
+        self,
+        platform_user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        email: str,
+        active: bool = True,
+        permissions: AdminUserPermissions,
+    ) -> AdminUser:
+        """|coro|
+
+        Creates an admin user account.
+
+        You must use an admin machine token, and the user you're acting on behalf of
+        must have :attr:`~AdminUserPermissions.manage_admin_users` permission to do that.
+
+        Parameters
+        ----------
+        platform_user: ULIDOr[:class:`BaseUser`]
+            The platform user the admin user account should be associated with.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        email: :class:`str`
+            The internal admin user's email.
+        active: :class:`bool`
+            Whether the admin user can use the admin API.
+            If this is ``False``, the user will always receive a :class:`Forbidden` and ``LockedOut`` error code
+            upon using the admin APIs.
+        permissions: :class:`AdminUserPermissions`
+            The admin user's permissions.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                         |
+            +-----------------------+--------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create administrative user accounts. |
+            +-----------------------+--------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminUser`
+            The created user.
+        """
+        payload: raw.AdminUserCreate = {
+            'platform_user_id': resolve_id(platform_user),
+            'email': email,
+            'active': active,
+            'permissions': permissions.value,
+        }
+        resp: raw.AdminUser = await self.request(
+            routes.ADMIN_META_CREATE_USER.compile(),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_admin_user(resp)
+
+    async def edit_admin_user(
+        self,
+        admin_user: ULIDOr[BaseAdminUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        platform_user: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
+        email: UndefinedOr[str] = UNDEFINED,
+        active: UndefinedOr[bool] = UNDEFINED,
+        permissions: UndefinedOr[AdminUserPermissions] = UNDEFINED,
+    ) -> AdminUser:
+        """|coro|
+
+        Creates an admin user account.
+
+        You must use an admin machine token, and the user you're acting on behalf of
+        must have :attr:`~AdminUserPermissions.manage_admin_users` permission to do that.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        platform_user: UndefinedOr[ULIDOr[:class:`BaseUser`]]
+            The platform user the admin user account should be associated with.
+        email: UndefinedOr[:class:`str`]
+            The internal admin user's email.
+        active: UndefinedOr[:class:`bool`]
+            Whether the admin user should be able to use the admin API.
+            If this is ``False``, the user will always receive a :class:`Forbidden` and ``LockedOut`` error code
+            upon using the admin APIs.
+        permissions: UndefinedOr[:class:`AdminUserPermissions`]
+            The new admin user's permissions.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                         |
+            +-----------------------+--------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create administrative user accounts. |
+            +-----------------------+--------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------------------------------------------------------------------------+
+            | Value        | Reason                                                                                             |
+            +--------------+----------------------------------------------------------------------------------------------------+
+            | ``NotFound`` | The admin user account was not found. Only applicable if the instance is using reference database. |
+            +--------------+----------------------------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminUser`
+            The created user.
+        """
+        payload: raw.AdminUserEdit = {}
+        if platform_user is not UNDEFINED:
+            payload['platform_user_id'] = resolve_id(platform_user)
+        if email is not UNDEFINED:
+            payload['email'] = email
+        if active is not UNDEFINED:
+            payload['active'] = active
+        if permissions is not UNDEFINED:
+            payload['permissions'] = permissions.value
+
+        resp: raw.AdminUser = await self.request(
+            routes.ADMIN_META_EDIT_USER.compile(admin_user_id=resolve_id(admin_user)),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_admin_user(resp)
+
+    async def get_admin_users(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[AdminUser]:
+        """|coro|
+
+        Retrieves admin users.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                           |
+            +-----------------------+----------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve administrative user accounts. |
+            +-----------------------+----------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AdminUser`]
+            The admin users.
+        """
+        resp: list[raw.AdminUser] = await self.request(
+            routes.ADMIN_META_FETCH_USERS.compile(), http_overrides=http_overrides
+        )
+        return list(map(self.state.parser.parse_admin_user, resp))
+
+    async def revoke_admin_token(
+        self, admin_token: ULIDOr[BaseAdminToken], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
+        """|coro|
+
+        Revokes an admin token.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------+
+            | Value                 | Reason                                                         |
+            +-----------------------+----------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to revoke admin tokens. |
+            +-----------------------+----------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        await self.request(
+            routes.ADMIN_META_REVOKE_TOKEN.compile(admin_token_id=resolve_id(admin_token)),
+            http_overrides=http_overrides,
+        )
 
     # Bots control
     async def create_bot(self, name: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Bot:
