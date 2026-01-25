@@ -134,11 +134,9 @@ ADMIN_SERVERS_ACTIONS_SERVER_DELETE_INVITES: typing.Final[Route] = Route(DELETE,
 ADMIN_SERVERS_ACTIONS_SERVER_EDIT: typing.Final[Route] = Route(PATCH, '/admin/servers/{server_id}')
 ADMIN_SERVERS_ACTIONS_SERVER_REMOVE_MEMBERS: typing.Final[Route] = Route(POST, '/admin/servers/{server_id}/remove')
 ADMIN_SERVERS_ACTIONS_SERVER_UNBAN_MEMBERS: typing.Final[Route] = Route(POST, '/admin/servers/{server_id}/unban')
-ADMIN_SERVERS_ACTIONS_SERVER_GET: typing.Final[Route] = Route(GET, '/admin/servers/{server_id}')
-ADMIN_SERVERS_ACTIONS_SERVER_GET_ALL_MEMBERS: typing.Final[Route] = Route(GET, '/admin/servers/{server_id}/members')
-ADMIN_SERVERS_ACTIONS_SERVER_GET_PARTICIPANTS: typing.Final[Route] = Route(
-    GET, '/admin/servers/{server_id}/participants'
-)
+ADMIN_SERVERS_FETCH_SERVER_GET: typing.Final[Route] = Route(GET, '/admin/servers/{server_id}')
+ADMIN_SERVERS_FETCH_SERVER_GET_ALL_MEMBERS: typing.Final[Route] = Route(GET, '/admin/servers/{server_id}/members')
+ADMIN_SERVERS_FETCH_SERVER_GET_PARTICIPANTS: typing.Final[Route] = Route(GET, '/admin/servers/{server_id}/participants')
 
 # Bots control
 BOTS_CREATE: typing.Final[Route] = Route(POST, '/bots/create')
@@ -348,9 +346,9 @@ __all__ = (
     'ADMIN_SERVERS_ACTIONS_SERVER_EDIT',
     'ADMIN_SERVERS_ACTIONS_SERVER_REMOVE_MEMBERS',
     'ADMIN_SERVERS_ACTIONS_SERVER_UNBAN_MEMBERS',
-    'ADMIN_SERVERS_ACTIONS_SERVER_GET',
-    'ADMIN_SERVERS_ACTIONS_SERVER_GET_ALL_MEMBERS',
-    'ADMIN_SERVERS_ACTIONS_SERVER_GET_PARTICIPANTS',
+    'ADMIN_SERVERS_FETCH_SERVER_GET',
+    'ADMIN_SERVERS_FETCH_SERVER_GET_ALL_MEMBERS',
+    'ADMIN_SERVERS_FETCH_SERVER_GET_PARTICIPANTS',
     'BOTS_CREATE',
     'BOTS_DELETE',
     'BOTS_EDIT',

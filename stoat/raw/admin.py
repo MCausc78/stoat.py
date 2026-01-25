@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing
 import typing_extensions
 
+from .basic import Bool
 from .safety_reports import Report
 from .server_members import Member, MemberWithUserResponse
 from .servers import Server
@@ -176,3 +177,36 @@ class AdminServerParticipantsResponse(typing.TypedDict):
 class AdminMemberWithUserAndOffsetResponse(typing.TypedDict):
     after: typing.Optional[int]
     users: list[MemberWithUserResponse]
+
+
+# Not real structures, just for typing
+class OptionsAdminServerMemberAdd(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+    user_id: str
+    suppress_alerts: Bool
+
+
+class OptionsAdminServerMemberBan(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+    user_id: str
+    suppress_alerts: Bool
+
+
+class OptionsAdminServerChangeOwner(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+    user_id: str
+
+
+class OptionsAdminServerCreateInvite(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+    slug: typing_extensions.NotRequired[str]
+    channel_id: str
+
+
+class OptionsAdminServerDelete(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+
+
+class OptionsAdminServerDeleteInvites(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+    slug: typing_extensions.NotRequired[str]
