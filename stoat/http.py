@@ -6498,7 +6498,7 @@ class HTTPClient:
         timeout: UndefinedOr[typing.Optional[typing.Union[datetime, timedelta, float, int]]] = UNDEFINED,
         can_publish: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
         can_receive: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
-        voice: UndefinedOr[ULIDOr[typing.Union[TextChannel, VoiceChannel]]] = UNDEFINED,
+        voice: UndefinedOr[typing.Optional[ULIDOr[typing.Union[TextChannel, VoiceChannel]]]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -6552,10 +6552,14 @@ class HTTPClient:
             Whether the member should receive voice data.
 
             You must have :attr:`~Permissions.deafen_members` to provide this.
-        voice: UndefinedOr[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]
+        voice: UndefinedOr[Optional[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]]
             The voice channel to move the member to.
 
             You must have :attr:`~Permissions.move_members` to provide this.
+
+            .. versionchanged:: 1.3
+
+                Members can be kicked from the current voice channel.
 
         Raises
         ------
@@ -6663,7 +6667,11 @@ class HTTPClient:
                 payload['can_receive'] = can_receive
 
         if voice is not UNDEFINED:
-            payload['voice_channel'] = resolve_id(voice)
+            # While specifying both remove and voice channel can cause an InvalidOperation error, this should be not possible
+            if voice is None:
+                remove.append('VoiceChannel')
+            else:
+                payload['voice_channel'] = resolve_id(voice)
 
         if len(remove) > 0:
             payload['remove'] = remove

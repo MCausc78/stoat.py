@@ -4397,7 +4397,7 @@ class BaseMember(Connectable, Messageable):
         timeout: UndefinedOr[typing.Optional[typing.Union[datetime, timedelta, float, int]]] = UNDEFINED,
         can_publish: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
         can_receive: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
-        voice: UndefinedOr[ULIDOr[typing.Union[TextChannel, VoiceChannel]]] = UNDEFINED,
+        voice: UndefinedOr[typing.Optional[ULIDOr[typing.Union[TextChannel, VoiceChannel]]]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -4447,10 +4447,14 @@ class BaseMember(Connectable, Messageable):
             Whether the member should receive voice data.
 
             You must have :attr:`~Permissions.deafen_members` to provide this.
-        voice: UndefinedOr[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]
+        voice: UndefinedOr[Optional[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]]
             The voice channel to move the member to.
 
             You must have :attr:`~Permissions.move_members` to provide this.
+
+            .. versionchanged:: 1.3
+
+                Members can be kicked from the current voice channel.
 
         Raises
         ------
