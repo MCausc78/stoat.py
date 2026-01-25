@@ -6557,7 +6557,7 @@ class HTTPClient:
 
             You must have :attr:`~Permissions.move_members` to provide this.
 
-            .. versionchanged:: 1.2
+            .. versionchanged:: 1.3
 
                 Members can be kicked from the current voice channel.
 
