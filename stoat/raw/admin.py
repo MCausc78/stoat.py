@@ -210,3 +210,19 @@ class OptionsAdminServerDelete(typing.TypedDict):
 class OptionsAdminServerDeleteInvites(typing.TypedDict):
     case: typing_extensions.NotRequired[str]
     slug: typing_extensions.NotRequired[str]
+
+
+class OptionsAdminServerRemoveMembers(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+    user_id: str
+    suppress_alerts: Bool
+
+
+class OptionsAdminServerUnbanMember(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+    user_id: str
+    suppress_alerts: Bool
+
+
+class OptionsAdminServerGet(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
