@@ -29,16 +29,17 @@ import typing
 from attrs import define, field
 
 from .base import Base
-
-# from .core import UNDEFINED, UndefinedOr
+from .core import UNDEFINED, UndefinedOr, ULIDOr
 from .enums import AdminAuditItemActionType
 
 if typing.TYPE_CHECKING:
     from datetime import datetime
 
     from . import raw
+    from .flags import AdminUserPermissions
+    from .http import HTTPOverrideOptions
     from .safety_reports import Report
-    from .user import User
+    from .user import BaseUser, User
 
 
 @define(slots=True, eq=True)
@@ -88,6 +89,67 @@ class BaseAdminComment(Base):
 
     .. versionadded:: 1.3
     """
+
+    async def edit(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        content: str,
+    ) -> AdminComment:
+        """|coro|
+
+        Edits the admin comment.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        content: :class:`str`
+            The new comment's contents. Must be between 1 and 2000 characters.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                               |
+            +-----------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit comments, or the comment isn't yours. |
+            +-----------------------+--------------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminComment`
+            The newly updated comment.
+        """
+        return await self.state.http.edit_admin_comment(self.id, http_overrides=http_overrides, content=content)
 
 
 @define(slots=True, eq=True)
@@ -176,6 +238,64 @@ class AdminCase(BaseAdminCase):
     reports: list[Report] = field(repr=True, kw_only=True)
     """List[:class:`Report`]: The reports assigned to the case."""
 
+    async def fetch_comments(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> list[AdminComment]:
+        """|coro|
+
+        Retrieves the comments for the admin case.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve comments. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AdminComment`]
+            The comments.
+        """
+        return await self.state.http.get_admin_case_comments(self.short_id, http_overrides=http_overrides)
+
     def to_dict(self) -> raw.AdminCase:
         """:class:`dict`: Convert case to raw data."""
         return {
@@ -244,6 +364,56 @@ class BaseAdminToken(Base):
     .. versionadded:: 1.3
     """
 
+    async def revoke(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
+        """|coro|
+
+        Revokes the admin token.
+
+        You must use an admin machine token, and if the token isn't yours, then
+        the user you're acting on behalf of must have :attr:`~AdminUserPermissions.create_tokens` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin machines.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------+
+            | Value                 | Reason                                                         |
+            +-----------------------+----------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to revoke admin tokens. |
+            +-----------------------+----------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        await self.state.http.revoke_admin_token(self.id, http_overrides=http_overrides)
+
 
 @define(slots=True, eq=True)
 class AdminToken(BaseAdminToken):
@@ -277,6 +447,93 @@ class BaseAdminUser(Base):
 
     .. versionadded:: 1.3
     """
+
+    async def edit(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        platform_user: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
+        email: UndefinedOr[str] = UNDEFINED,
+        active: UndefinedOr[bool] = UNDEFINED,
+        permissions: UndefinedOr[AdminUserPermissions] = UNDEFINED,
+    ) -> AdminUser:
+        """|coro|
+
+        Edits the admin user account.
+
+        You must have :attr:`~AdminUserPermissions.manage_admin_users` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        platform_user: UndefinedOr[ULIDOr[:class:`BaseUser`]]
+            The platform user the admin user account should be associated with.
+        email: UndefinedOr[:class:`str`]
+            The internal admin user's email.
+        active: UndefinedOr[:class:`bool`]
+            Whether the admin user should be able to use the admin API.
+            If this is ``False``, the user will always receive a :class:`Forbidden` and ``LockedOut`` error code
+            upon using the admin APIs.
+        permissions: UndefinedOr[:class:`AdminUserPermissions`]
+            The new admin user's permissions.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                         |
+            +-----------------------+--------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create administrative user accounts. |
+            +-----------------------+--------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------------------------------------------------------------------------+
+            | Value        | Reason                                                                                             |
+            +--------------+----------------------------------------------------------------------------------------------------+
+            | ``NotFound`` | The admin user account was not found. Only applicable if the instance is using reference database. |
+            +--------------+----------------------------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminUser`
+            The newly updated user.
+        """
+        return await self.state.http.edit_admin_user(
+            self.id,
+            http_overrides=http_overrides,
+            platform_user=platform_user,
+            email=email,
+            active=active,
+            permissions=permissions,
+        )
 
 
 @define(slots=True, eq=True)

@@ -183,8 +183,7 @@ class AdminAuditItemActionType(Enum):
     server_member_remove = 'ServerRemoveMember'
     server_flags_update = 'ServerSetFlags'
 
-    # "instance" doesn't seem to make sense here
-    server_member_ban_all = 'ServerInstanceBanAllMembers'
+    server_member_suspend_all = 'ServerInstanceBanAllMembers'
     server_member_ban = 'ServerBanMember'
     server_member_unban = 'ServerUnbanMember'
 

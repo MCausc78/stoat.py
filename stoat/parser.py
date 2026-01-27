@@ -436,6 +436,8 @@ class Parser:
     def parse_admin_audit_item(self, payload: raw.AdminAuditItem, /) -> AdminAuditItem:
         """Parses an admin audit item.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -459,6 +461,8 @@ class Parser:
 
     def parse_admin_comment(self, payload: raw.AdminComment, /) -> AdminComment:
         """Parses an admin comment.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -489,6 +493,8 @@ class Parser:
     def parse_admin_case(self, payload: raw.AdminCase, /) -> AdminCase:
         """Parses an admin case.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -516,6 +522,8 @@ class Parser:
     def parse_admin_strike(self, payload: raw.AdminStrike, /) -> AdminStrike:
         """Parses an admin strike.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -541,6 +549,8 @@ class Parser:
     def parse_admin_token(self, payload: raw.AdminToken, /) -> AdminToken:
         """Parses an admin token.
 
+        .. versionadded:: 1.3
+
         Parameters
         ----------
         payload: Dict[:class:`str`, Any]
@@ -561,6 +571,8 @@ class Parser:
 
     def parse_admin_user(self, payload: raw.AdminUser, /) -> AdminUser:
         """Parses an admin user.
+
+        .. versionadded:: 1.3
 
         Parameters
         ----------
@@ -2008,6 +2020,25 @@ class Parser:
             members=list(map(self.parse_member, payload['members'])),
             users=list(map(self.parse_user, payload['users'])),
         )
+
+    def parse_member_with_user(self, payload: raw.MemberWithUserResponse, /) -> Member:
+        """Parses an object with member and user.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The member + user payload to parse.
+
+        Returns
+        -------
+        :class:`Member`
+            The parsed member object.
+        """
+
+        user = self.parse_user(payload['user'])
+        return self.parse_member(payload['member'], user)
 
     def parse_members_with_users(self, payload: raw.AllMemberResponse, /) -> list[Member]:
         """Parses an object with members and associated users.
@@ -3867,6 +3898,35 @@ class Parser:
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
         )
+
+    def parse_server_participant(
+        self,
+        payload: tuple[raw.User, typing.Optional[raw.Member]],
+        /,
+    ) -> typing.Union[Member, User]:
+        """Parses a server participant tuple.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Tuple[Dict[:class:`str`, Any], Optional[Dict[:class:`str`, Any]]]
+            The participant tuple to parse.
+
+        Returns
+        -------
+        Union[:class:`Member`, :class:`User`]
+            The parsed member object.
+        """
+        user_payload = payload[0]
+        member_payload = payload[1]
+
+        user = self.parse_user(user_payload)
+
+        if member_payload is None:
+            return user
+
+        return self.parse_member(member_payload, user)
 
     def parse_server_public_invite(self, payload: raw.ServerInviteResponse, /) -> ServerPublicInvite:
         """Parses a server public invite object.

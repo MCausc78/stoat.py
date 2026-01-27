@@ -83,7 +83,10 @@ class CreatedReport(BaseReport):
         return ReportStatus.created
 
     def to_dict(self) -> raw.CreatedReport:
-        """:class:`dict`: Convert report to raw data."""
+        """:class:`dict`: Convert report to raw data.
+
+        .. versionadded:: 1.3
+        """
         return {
             '_id': self.id,
             'author_id': self.author_id,
@@ -114,7 +117,10 @@ class RejectedReport(BaseReport):
         return ReportStatus.rejected
 
     def to_dict(self) -> raw.RejectedReport:
-        """:class:`dict`: Convert report to raw data."""
+        """:class:`dict`: Convert report to raw data.
+
+        .. versionadded:: 1.3
+        """
         return {
             '_id': self.id,
             'author_id': self.author_id,
@@ -144,7 +150,10 @@ class ResolvedReport(BaseReport):
         return ReportStatus.resolved
 
     def to_dict(self) -> raw.ResolvedReport:
-        """:class:`dict`: Convert report to raw data."""
+        """:class:`dict`: Convert report to raw data.
+
+        .. versionadded:: 1.3
+        """
         return {
             '_id': self.id,
             'author_id': self.author_id,
@@ -184,7 +193,10 @@ class MessageReportedContent(BaseReportedContent):
         return ReportedContentType.message
 
     def to_dict(self) -> raw.MessageReportedContent:
-        """:class:`dict`: Convert reported content to raw data."""
+        """:class:`dict`: Convert reported content to raw data.
+
+        .. versionadded:: 1.3
+        """
         return {
             'type': 'Message',
             'id': self.target_id,
@@ -208,7 +220,10 @@ class ServerReportedContent(BaseReportedContent):
         return ReportedContentType.server
 
     def to_dict(self) -> raw.ServerReportedContent:
-        """:class:`dict`: Convert reported content to raw data."""
+        """:class:`dict`: Convert reported content to raw data.
+
+        .. versionadded:: 1.3
+        """
         return {
             'type': 'Server',
             'id': self.target_id,
@@ -235,7 +250,10 @@ class UserReportedContent(BaseReportedContent):
         return ReportedContentType.user
 
     def to_dict(self) -> raw.UserReportedContent:
-        """:class:`dict`: Convert reported content to raw data."""
+        """:class:`dict`: Convert reported content to raw data.
+
+        .. versionadded:: 1.3
+        """
         payload: raw.UserReportedContent = {
             'type': 'User',
             'id': self.target_id,

@@ -84,10 +84,11 @@ from .read_state import ReadState
 
 if typing.TYPE_CHECKING:
     from . import raw
+    from .admin import AdminCase
     from .bot import BaseBot
     from .cdn import StatelessAsset, Asset, ResolvableResource
     from .http import HTTPOverrideOptions
-    from .invite import Invite
+    from .invite import ServerInvite, Invite
     from .message import BaseMessage, Message
     from .permissions import PermissionOverride
     from .server import Category, BaseRole, Role, Server, Member
@@ -1951,6 +1952,89 @@ class BaseServerChannel(BaseChannel):
         """
 
         return await self.state.http.create_channel_invite(self.id, http_overrides=http_overrides)
+
+    async def create_invite_as_admin(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+        slug: typing.Optional[str] = None,
+    ) -> ServerInvite:
+        """|coro|
+
+        Creates a invite for the channel as admin.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+        slug: Optional[:class:`str`]
+            The slug.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------------+
+            | Value                | Description                                        |
+            +----------------------+----------------------------------------------------+
+            | ``InvalidOperation`` | The target channel is not group or server channel. |
+            +----------------------+----------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create server invites. |
+            +-----------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------------------+
+            | Value        | Reason                                       |
+            +--------------+----------------------------------------------+
+            | ``NotFound`` | The case/channel/server/owner was not found. |
+            +--------------+----------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`ServerInvite`
+            The created invite.
+        """
+        return await self.state.http.create_server_invite_as_admin(
+            self.server_id, self.id, http_overrides=http_overrides, case=case, slug=slug
+        )
 
     async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|

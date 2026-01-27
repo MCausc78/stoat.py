@@ -873,7 +873,10 @@ class UserFlags(BaseFlags, support_kwargs=True):
 
     @flag()
     def global_moderator(cls) -> int:
-        """:class:`bool`: Whether the user is a global moderator."""
+        """:class:`bool`: Whether the user is a global moderator.
+
+        .. versionadded:: 1.3
+        """
         return 1 << 4
 
 

@@ -53,6 +53,7 @@ if typing.TYPE_CHECKING:
     from datetime import datetime
 
     from . import raw
+    from .admin import BaseAdminCase, AdminComment
     from .channel import SavedMessagesChannel, DMChannel
     from .http import HTTPOverrideOptions
     from .message import BaseMessage
@@ -525,6 +526,71 @@ class BaseUser(Base, Connectable, Messageable):
 
         return await self.state.http.block_user(self.id, http_overrides=http_overrides)
 
+    async def create_admin_comment(
+        self,
+        content: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[ULIDOr[BaseAdminCase]] = None,
+    ) -> AdminComment:
+        """|coro|
+
+        Creates an admin comment on the user.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        content: :class:`str`
+            The comment's contents. Must be between 1 and 2000 characters.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[ULIDOr[:class:`BaseAdminCase`]]
+            The case this comment is related to.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create comments.   |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminComment`
+            The created comment.
+        """
+
+        return await self.state.http.create_admin_comment(self.id, content, http_overrides=http_overrides, case=case)
+
     async def deny_friend_request(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
 
@@ -723,6 +789,64 @@ class BaseUser(Base, Connectable, Messageable):
 
         channel = await self.open_dm(http_overrides=http_overrides)
         return channel.id
+
+    async def fetch_comments_as_admin(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> list[AdminComment]:
+        """|coro|
+
+        Retrieves comments for the server.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve comments. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AdminComment`]
+            The comments.
+        """
+        return await self.state.http.get_admin_object_comments(self.id, http_overrides=http_overrides)
 
     async def fetch_default_avatar(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> bytes:
         """|coro|
@@ -1626,7 +1750,10 @@ class User(DisplayUser):
         return self.flags.spam
 
     def is_global_moderator(self) -> bool:
-        """:class:`bool`: Whether this user is a global moderator."""
+        """:class:`bool`: Whether this user is a global moderator.
+
+        .. versionadded:: 1.3
+        """
         return self.flags.global_moderator
 
     # badges

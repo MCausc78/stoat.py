@@ -92,7 +92,7 @@ Administration
     .. attribute:: server_flags_update
 
         The administrator updated server's flags.
-    .. attribute:: server_member_ban_all
+    .. attribute:: server_member_suspend_all
 
         The administrator suspended user accounts of all server members.
     .. attribute:: server_member_ban

@@ -576,7 +576,7 @@ class HTTPOverrideOptions:
         ...
 
 
-def _resolve_member_id(target: typing.Union[str, BaseServer, BaseUser, BaseMember], /) -> str:
+def _resolve_target_id(target: typing.Union[str, BaseServer, BaseUser, BaseMember], /) -> str:
     ret: str = getattr(target, 'id', target)  # type: ignore
     return ret
 
@@ -1421,7 +1421,7 @@ class HTTPClient:
         content: str,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
-        case_id: typing.Optional[ULIDOr[BaseAdminCase]] = None,
+        case: typing.Optional[ULIDOr[BaseAdminCase]] = None,
     ) -> AdminComment:
         """|coro|
 
@@ -1431,6 +1431,10 @@ class HTTPClient:
 
         .. versionadded:: 1.3
 
+        .. note::
+
+            This can only be used by admin users/machines.
+
         Parameters
         ----------
         object: Union[:class:`str`, :class:`BaseServer`, :class:`BaseUser`, :class:`BaseMember`]
@@ -1439,8 +1443,8 @@ class HTTPClient:
             The comment's contents. Must be between 1 and 2000 characters.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
-        case_id: Optional[ULIDOr[:class:`BaseAdminCase`]]
-            The case's ID this comment is related to.
+        case: Optional[ULIDOr[:class:`BaseAdminCase`]]
+            The case this comment is related to.
 
         Raises
         ------
@@ -1478,8 +1482,8 @@ class HTTPClient:
         """
 
         payload: raw.AdminCommentCreate = {
-            'case': None if case_id is None else resolve_id(case_id),
-            'object': _resolve_member_id(object),
+            'case': None if case is None else resolve_id(case),
+            'object': _resolve_target_id(object),
             'content': content,
         }
         resp: raw.AdminComment = await self.request(
@@ -1501,6 +1505,10 @@ class HTTPClient:
         You must have :attr:`~AdminUserPermissions.comments` permission to do that.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -1543,7 +1551,7 @@ class HTTPClient:
         Returns
         -------
         :class:`AdminComment`
-            The edited comment.
+            The newly updated comment.
         """
         payload: raw.AdminCommentEdit = {'content': content}
         resp: raw.AdminComment = await self.request(
@@ -1554,15 +1562,19 @@ class HTTPClient:
         return self.state.parser.parse_admin_comment(resp)
 
     async def get_admin_case_comments(
-        self, case: typing.Union[str, AdminCase], /, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self, case: typing.Union[str, AdminCase], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
     ) -> list[AdminComment]:
         """|coro|
 
-        Retrieve a list of comments for an admin case.
+        Retrieves the comments for an admin case.
 
         You must have :attr:`~AdminUserPermissions.comments` permission to do that.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -1615,17 +1627,20 @@ class HTTPClient:
     async def get_admin_object_comments(
         self,
         object: typing.Union[str, BaseServer, BaseUser, BaseMember],
-        /,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
     ) -> list[AdminComment]:
         """|coro|
 
-        Retrieve a list of comments for an object.
+        Retrieves comments for an object.
 
         You must have :attr:`~AdminUserPermissions.comments` permission to do that.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -1669,7 +1684,7 @@ class HTTPClient:
             The comments.
         """
         resp: list[raw.AdminComment] = await self.request(
-            routes.ADMIN_COMMENTS_COMMENT_FETCH_OBJECT.compile(object_id=_resolve_member_id(object)),
+            routes.ADMIN_COMMENTS_COMMENT_FETCH_OBJECT.compile(object_id=_resolve_target_id(object)),
             http_overrides=http_overrides,
         )
         return list(map(self.state.parser.parse_admin_comment, resp))
@@ -1688,6 +1703,10 @@ class HTTPClient:
         must have :attr:`~AdminUserPermissions.create_tokens` permission to do that.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -1764,6 +1783,10 @@ class HTTPClient:
 
         .. versionadded:: 1.3
 
+        .. note::
+
+            This can only be used by admin machines.
+
         Parameters
         ----------
         platform_user: ULIDOr[:class:`BaseUser`]
@@ -1838,15 +1861,20 @@ class HTTPClient:
     ) -> AdminUser:
         """|coro|
 
-        Creates an admin user account.
+        Edits an admin user account.
 
-        You must use an admin machine token, and the user you're acting on behalf of
-        must have :attr:`~AdminUserPermissions.manage_admin_users` permission to do that.
+        You must have :attr:`~AdminUserPermissions.manage_admin_users` permission to do that.
 
         .. versionadded:: 1.3
 
+        .. note::
+
+            This can only be used by admin users/machines.
+
         Parameters
         ----------
+        admin_user: ULIDOr[:class:`BaseAdminUser`]
+            The admin user to edit.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         platform_user: UndefinedOr[ULIDOr[:class:`BaseUser`]]
@@ -1900,7 +1928,7 @@ class HTTPClient:
         Returns
         -------
         :class:`AdminUser`
-            The created user.
+            The newly updated user.
         """
         payload: raw.AdminUserEdit = {}
         if platform_user is not UNDEFINED:
@@ -1925,6 +1953,10 @@ class HTTPClient:
         Retrieves admin users.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -1977,10 +2009,19 @@ class HTTPClient:
 
         Revokes an admin token.
 
+        You must use an admin machine token, and if the token isn't yours, then
+        the user you're acting on behalf of must have :attr:`~AdminUserPermissions.create_tokens` permission to do that.
+
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin machines.
 
         Parameters
         ----------
+        admin_token: ULIDOr[:class:`BaseAdminToken`]
+            The admin to revoke.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
 
@@ -2033,7 +2074,14 @@ class HTTPClient:
 
         You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
 
+        Fires :class:`ServerCreateEvent` for the added user,
+        plus :class:`ServerMemberJoinEvent` and optionally :class:`MessageCreateEvent`, both for all server members.
+
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -2120,7 +2168,7 @@ class HTTPClient:
     async def ban_as_admin(
         self,
         server: ULIDOr[BaseServer],
-        user: typing.Union[str, BaseUser, BaseMember],
+        member: typing.Union[str, BaseUser, BaseMember],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         case: typing.Optional[typing.Union[str, AdminCase]] = None,
@@ -2133,13 +2181,19 @@ class HTTPClient:
 
         You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
 
+        May fire :class:`ServerMemberRemoveEvent` for banned user and all server members.
+
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
         server: ULIDOr[:class:`BaseServer`]
             The server.
-        user: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
             The user to ban from the server.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
@@ -2210,7 +2264,7 @@ class HTTPClient:
 
         if case is not None:
             params['case'] = _resolve_short_case_id(case)
-        params['user_id'] = _resolve_member_id(user)
+        params['user_id'] = _resolve_target_id(member)
         params['suppress_alerts'] = utils._bool(suppress_alerts)
 
         resp: raw.ServerBan = await self.request(
@@ -2225,7 +2279,7 @@ class HTTPClient:
     async def edit_server_owner_as_admin(
         self,
         server: ULIDOr[BaseServer],
-        owner: ULIDOr[BaseUser],
+        owner: typing.Union[str, BaseUser, BaseMember],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         case: typing.Optional[typing.Union[str, AdminCase]] = None,
@@ -2236,7 +2290,13 @@ class HTTPClient:
 
         You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
 
+        Fires :class:`ServerUpdateEvent` for all server members.
+
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -2307,7 +2367,7 @@ class HTTPClient:
 
         if case is not None:
             params['case'] = _resolve_short_case_id(case)
-        params['user_id'] = _resolve_member_id(owner)
+        params['user_id'] = _resolve_target_id(owner)
 
         await self.request(
             routes.ADMIN_SERVERS_ACTIONS_SERVER_CHANGE_OWNER.compile(server_id=resolve_id(server)),
@@ -2331,6 +2391,10 @@ class HTTPClient:
         You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -2390,7 +2454,13 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`ServerInvite`
+            The created invite.
         """
+
         params: raw.OptionsAdminServerCreateInvite = {}  # type: ignore
 
         if case is not None:
@@ -2419,7 +2489,13 @@ class HTTPClient:
 
         You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
 
+        Fires :class:`ServerDeleteEvent` for all server members.
+
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -2485,6 +2561,10 @@ class HTTPClient:
         You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -2564,6 +2644,10 @@ class HTTPClient:
         Fires :class:`ServerUpdateEvent` for all server members.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -2700,7 +2784,7 @@ class HTTPClient:
             payload['analytics'] = analytics
 
         if owner is not UNDEFINED:
-            payload['owner'] = _resolve_member_id(owner)
+            payload['owner'] = _resolve_target_id(owner)
 
         if len(remove) > 0:
             payload['remove'] = remove
@@ -2726,18 +2810,24 @@ class HTTPClient:
     ) -> None:
         """|coro|
 
-        Removes a member from the server.
+        Kicks a member from the server.
 
         You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
 
+        Fires :class:`ServerMemberRemoveEvent` for kicked user and all server members.
+
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
         server: ULIDOr[:class:`BaseServer`]
             The server.
         member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
-            The user to unban from the server.
+            The user to kick from the server.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         case: Optional[Union[:class:`str`, :class:`AdminCase`]]
@@ -2795,7 +2885,7 @@ class HTTPClient:
 
         if case is not None:
             params['case'] = _resolve_short_case_id(case)
-        params['user_id'] = _resolve_member_id(member)
+        params['user_id'] = _resolve_target_id(member)
         params['suppress_alerts'] = utils._bool(suppress_alerts)
 
         await self.request(
@@ -2815,11 +2905,15 @@ class HTTPClient:
     ) -> None:
         """|coro|
 
-        Unbans a member from the server.
+        Unbans an user from the server.
 
         You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -2833,7 +2927,7 @@ class HTTPClient:
             The case related to the action.
             Must be a short ID if string.
         reason: Optional[:class:`str`]
-            The ban reason. Can be only up to 1024 characters long.
+            The unban reason. Can be only up to 1024 characters long.
 
         Raises
         ------
@@ -2901,15 +2995,18 @@ class HTTPClient:
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         case: typing.Optional[typing.Union[str, AdminCase]] = None,
-        reason: typing.Optional[str] = None,
     ) -> tuple[Server, User, list[AdminComment]]:
         """|coro|
 
-        Unbans a member from the server.
+        Retrieves a server.
 
         You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
 
         .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
 
         Parameters
         ----------
@@ -2923,14 +3020,6 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +----------------------+---------------------------------+
-            | Value                | Description                     |
-            +----------------------+---------------------------------+
-            | ``InvalidOperation`` | You tried to kick server owner. |
-            +----------------------+---------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -2988,6 +3077,180 @@ class HTTPClient:
         owner = parser.parse_user(resp['owner'])
         comments = list(map(parser.parse_admin_comment, resp['comments']))
         return (server, owner, comments)
+
+    async def get_members_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+        after: typing.Optional[int] = None,
+    ) -> tuple[list[Member], typing.Optional[int]]:
+        """|coro|
+
+        Retrieves all server members.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+        after: Optional[:class:`int`]
+            The UNIX timestamp in milliseconds after which to retrieve members by their :attr:`~Member.joined_at`.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve servers. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The case/server was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        Tuple[List[:class:`Member`], Optional[:class:`int`]]
+            The member list, and the value to retrieve next members.
+        """
+        params: raw.OptionsAdminServerGetMembers = {}
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+        if after is not None:
+            params['after'] = after
+
+        resp: raw.AdminMemberWithUserAndOffsetResponse = await self.request(
+            routes.ADMIN_SERVERS_FETCH_SERVER_GET_ALL_MEMBERS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        parser = self.state.parser
+        return (list(map(parser.parse_member_with_user, resp['users'])), resp['after'])
+
+    async def get_server_participants_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+    ) -> list[typing.Union[Member, User]]:
+        """|coro|
+
+        Retrieves all server participants.
+
+        Participants include authors of all existing messages ever sent in the server.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve servers. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The case/server was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[Union[:class:`Member`, :class:`User`]]
+            The server participants.
+        """
+        params: raw.OptionsAdminServerGetParticipants = {}
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+
+        resp: list[tuple[raw.User, typing.Optional[raw.Member]]] = await self.request(
+            routes.ADMIN_SERVERS_FETCH_SERVER_GET_PARTICIPANTS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        return list(map(self.state.parser.parse_server_participant, resp))
 
     # Bots control
     async def create_bot(self, name: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Bot:
@@ -6287,7 +6550,7 @@ class HTTPClient:
 
         Accepts an invite.
 
-        Fires either :class:`PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for the current user,
+        Fires either :class:`PrivateChannelCreateEvent` or :class:`ServerCreateEvent` for the current user,
         and fires either :class:`GroupRecipientAddEvent` or :class:`ServerMemberJoinEvent`,
         and :class:`MessageCreateEvent` (optional in server context), both for all group recipients/server members.
 
@@ -7416,7 +7679,7 @@ class HTTPClient:
         """
         payload: raw.DataBanCreate = {'reason': reason}
         response: raw.ServerBan = await self.request(
-            routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=_resolve_member_id(user)),
+            routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=_resolve_target_id(user)),
             http_overrides=http_overrides,
             json=payload,
         )
@@ -8457,7 +8720,7 @@ class HTTPClient:
         resp: raw.Member = await self.request(
             routes.SERVERS_MEMBER_EDIT.compile(
                 server_id=resolve_id(server),
-                member_id=_resolve_member_id(member),
+                member_id=_resolve_target_id(member),
             ),
             http_overrides=http_overrides,
             json=payload,
@@ -8581,7 +8844,7 @@ class HTTPClient:
         resp: raw.Member = await self.request(
             routes.SERVERS_MEMBER_FETCH.compile(
                 server_id=resolve_id(server),
-                member_id=_resolve_member_id(member),
+                member_id=_resolve_target_id(member),
             ),
             http_overrides=http_overrides,
         )
@@ -8783,7 +9046,7 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
-            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_member_id(member)),
+            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_target_id(member)),
             http_overrides=http_overrides,
         )
 
@@ -9798,7 +10061,7 @@ class HTTPClient:
             payload['analytics'] = analytics
 
         if owner is not UNDEFINED:
-            payload['owner'] = _resolve_member_id(owner)
+            payload['owner'] = _resolve_target_id(owner)
 
         if len(remove) > 0:
             payload['remove'] = remove

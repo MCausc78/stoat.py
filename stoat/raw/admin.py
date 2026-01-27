@@ -179,7 +179,7 @@ class AdminMemberWithUserAndOffsetResponse(typing.TypedDict):
     users: list[MemberWithUserResponse]
 
 
-# Not real structures, just for typing
+# These structures don't actually exist on backend, they exist just for typing
 class OptionsAdminServerMemberAdd(typing.TypedDict):
     case: typing_extensions.NotRequired[str]
     user_id: str
@@ -225,4 +225,13 @@ class OptionsAdminServerUnbanMember(typing.TypedDict):
 
 
 class OptionsAdminServerGet(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+
+
+class OptionsAdminServerGetMembers(typing.TypedDict):
+    case: typing_extensions.NotRequired[str]
+    after: typing_extensions.NotRequired[int]
+
+
+class OptionsAdminServerGetParticipants(typing.TypedDict):
     case: typing_extensions.NotRequired[str]
