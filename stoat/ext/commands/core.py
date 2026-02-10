@@ -1175,7 +1175,7 @@ class GroupMixin(typing.Generic[GearT]):
     # )
 
     def __init__(self, /, *args: typing.Any, **kwargs: typing.Any) -> None:
-        case_insensitive = kwargs.get('case_insensitive', False)
+        case_insensitive = kwargs.pop('case_insensitive', False)
         self.all_commands: dict[str, Command[GearT, ..., typing.Any]] = (
             _CaseInsensitiveDict() if case_insensitive else {}
         )
