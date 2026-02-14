@@ -88,7 +88,7 @@ Links
 
 - `Documentation <https://stoatpy.readthedocs.io/en/latest/index.html>`_
 - `Official Stoat Server <https://stt.gg/ZZQb4sxx>`_
-- `Stoat API <https://stoat.gg/API>`_
+- `Stoat API <https://stt.gg/API>`_
 
 Why Not
 -------
