@@ -63,21 +63,21 @@ T = typing.TypeVar('T')
 _CFT = typing.TypeVar('_CFT', bound='Callable[..., Coroutine[typing.Any, typing.Any, typing.Any]]')
 
 
-def when_mentioned(bot: Bot, _message: Message, /) -> list[str]:
+def when_mentioned(ctx: Context[Bot], /) -> list[str]:
     """A callable that implements a command prefix equivalent to being mentioned.
 
-    These are meant to be passed into the :attr:`.Bot.command_prefix` attribute.
+    These are meant to be passed into the :attr:`Bot.command_prefix` attribute.
     """
-    me = bot.me
+    me = ctx.bot.me
     if me is None:
         return []
     return [f'<@{me.id}> ', f'<@!{me.id}> ']
 
 
-def when_mentioned_or(*prefixes: str) -> Callable[[Bot, Message], list[str]]:
+def when_mentioned_or(*prefixes: str) -> Callable[[Context[Bot]], list[str]]:
     """A callable that implements when mentioned or other prefixes provided.
 
-    These are meant to be passed into the :attr:`.Bot.command_prefix` attribute.
+    These are meant to be passed into the :attr:`Bot.command_prefix` attribute.
 
     Example
     -------
@@ -94,20 +94,20 @@ def when_mentioned_or(*prefixes: str) -> Callable[[Bot, Message], list[str]]:
 
         .. code-block:: python3
 
-            async def get_prefix(bot, message):
+            async def get_prefix(ctx):
                 extras = await prefixes_for(message.server)  # returns a list
-                return commands.when_mentioned_or(*extras)(bot, message)
+                return commands.when_mentioned_or(*extras)(ctx)
 
 
     See Also
     --------
-    :func:`.when_mentioned`
+    :func:`when_mentioned`
     """
 
     r = list(prefixes)
 
-    def inner(bot: Bot, _message: Message, /) -> list[str]:
-        me = bot.me
+    def inner(ctx: Context[Bot], /) -> list[str]:
+        me = ctx.bot.me
         if me is None:
             return r
         return [f'<@{me.id}> ', f'<@!{me.id}> '] + r
