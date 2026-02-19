@@ -59,14 +59,14 @@ class Messageable:
 
     The following classes implement this ABC:
 
-    - :class:`SavedMessagesChannel`
-    - :class:`DMChannel`
-    - :class:`GroupChannel`
-    - :class:`TextChannel`
-    - :class:`VoiceChannel`
-    - :class:`BaseMember`
-    - :class:`BaseUser`
-    - :class:`PartialMessageable`
+    - :class:`~stoat.SavedMessagesChannel`
+    - :class:`~stoat.DMChannel`
+    - :class:`~stoat.GroupChannel`
+    - :class:`~stoat.TextChannel`
+    - :class:`~stoat.VoiceChannel`
+    - :class:`~stoat.BaseMember`
+    - :class:`~stoat.BaseUser`
+    - :class:`~stoat.PartialMessageable`
     - :class:`stoat.ext.commands.Context`
     """
 
@@ -78,7 +78,20 @@ class Messageable:
         return self.state
 
     async def fetch_channel_id(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> str:
-        """:class:`str`: Retrieves the channel's ID."""
+        """|coro|
+
+        Retrieves the channel's ID.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Returns
+        -------
+        :class:`str`
+            The channel's ID.
+        """
         return self.get_channel_id()
 
     def get_channel_id(self) -> str:
@@ -153,10 +166,6 @@ class Messageable:
         channel_id = await self.fetch_channel_id(http_overrides=http_overrides)
         await state.shard.end_typing(channel_id)
 
-    # We can't use normal references like :class:`HTTPException` or :class:`MessageInteractions`,
-    # because it breaks references in commands extension.
-    # Use :class:`~stoat.HTTPException` and :class:`~stoat.MessageInteractions` explicitly.
-
     async def acknowledge(
         self,
         message: UndefinedOr[typing.Optional[ULIDOr[BaseMessage]]] = UNDEFINED,
@@ -168,20 +177,20 @@ class Messageable:
 
         Marks the destination channel as read.
 
-        You must have :attr:`~Permissions.view_channel` to do this.
+        You must have :attr:`~stoat.Permissions.view_channel` to do this.
 
-        Fires :class:`MessageAckEvent` for the current user.
+        Fires :class:`~stoat.MessageAckEvent` for the current user.
 
         .. note::
             This can only be used by non-bot accounts.
 
         Parameters
         ----------
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`~stoat.BaseMessage`]
             The message to mark as read.
-        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -244,13 +253,11 @@ class Messageable:
 
         Parameters
         ----------
-        channel: ULIDOr[:class:`TextableChannel`]
-            The channel the message is in.
-        message: ULIDOr[:class:`BaseMessage`]
+        message: ULIDOr[:class:`~stoat.BaseMessage`]
             The message to retrieve.
-        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides.
 
         Raises
@@ -317,9 +324,9 @@ class Messageable:
 
         Parameters
         ----------
-        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides.
         limit: Optional[:class:`int`]
             The maximum number of messages to get. Must be between 1 and 100. Defaults to 50.
@@ -369,11 +376,11 @@ class Messageable:
         :class:`~stoat.InternalServerError`
             Possible values for :attr:`~stoat.HTTPException.type`:
 
-            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
-            | Value             | Reason                                         | Populated attributes                                                              |
-            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                            |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------------------+
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~stoat.HTTPException.collection`, :attr:`~stoat.HTTPException.operation` |
-            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------------------+
 
         Returns
         -------
@@ -421,9 +428,9 @@ class Messageable:
         ----------
         query: Optional[:class:`str`]
             The full-text search query. See `MongoDB documentation <https://www.mongodb.com/docs/manual/text-search/>`_ for more information.
-        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides.
         pinned: Optional[:class:`bool`]
             Whether to search for (un-)pinned messages or not.
@@ -487,11 +494,11 @@ class Messageable:
         :class:`~stoat.InternalServerError`
             Possible values for :attr:`~stoat.HTTPException.type`:
 
-            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
-            | Value             | Reason                                         | Populated attributes                                                              |
-            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                            |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------------------+
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~stoat.HTTPException.collection`, :attr:`~stoat.HTTPException.operation` |
-            +-------------------+------------------------------------------------+-----------------------------------------------------------------------------------+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------------------+
 
         Returns
         -------
@@ -540,15 +547,15 @@ class Messageable:
 
         If message mentions any roles, you must :attr:`~stoat.Permission.mention_roles` to do that.
 
-        Fires :class:`MessageCreateEvent` and optionally :class:`MessageAppendEvent`, both for all users who can see destination channel.
+        Fires :class:`~stoat.MessageCreateEvent` and optionally :class:`~stoat.MessageAppendEvent`, both for all users who can see destination channel.
 
         Parameters
         ----------
         content: Optional[:class:`str`]
             The message content.
-        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides.
         nonce: Optional[:class:`str`]
             The message nonce.
@@ -556,7 +563,7 @@ class Messageable:
             The attachments to send the message with.
 
             You must have :attr:`~stoat.Permissions.upload_files` to provide this.
-        replies: Optional[List[Union[:class:`Reply`, ULIDOr[:class:`~stoat.BaseMessage`]]]]
+        replies: Optional[List[Union[:class:`~stoat.Reply`, ULIDOr[:class:`~stoat.BaseMessage`]]]]
             The message replies.
         embeds: Optional[List[:class:`~stoat.SendableEmbed`]]
             The embeds to send the message with.
@@ -567,7 +574,7 @@ class Messageable:
 
             You must have :attr:`~stoat.Permissions.use_masquerade` to provide this.
 
-            If :attr:`~stoat.MessageMasquerade.color` is provided, :attr:`~Permissions.use_masquerade` is also required.
+            If :attr:`~stoat.MessageMasquerade.color` is provided, :attr:`~stoat.Permissions.use_masquerade` is also required.
         interactions: Optional[:class:`~stoat.MessageInteractions`]
             The message interactions.
 
@@ -592,31 +599,31 @@ class Messageable:
         :class:`stoat.HTTPException`
             Possible values for :attr:`~stoat.HTTPException.type`:
 
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | Value                  | Reason                                                                                                                           |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``EmptyMessage``       | The message was empty.                                                                                                           |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``FailedValidation``   | The payload was invalid.                                                                                                         |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidFlagValue``   | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                                                  |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`~stoat.MessageInteractions.reactions` elements was invalid.                    |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                                         |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``EmptyMessage``       | The message was empty.                                                                                                         |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``FailedValidation``   | The payload was invalid.                                                                                                       |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidFlagValue``   | Both ``mention_everyone`` and ``mention_online`` were ``True``.                                                                |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``   | The passed nonce was already used. One of :attr:`~stoat.MessageInteractions.reactions` elements was invalid.                   |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
             | ``InvalidProperty``    | :attr:`~stoat.MessageInteractions.restrict_reactions` was ``True`` but :attr:`~stoat.MessageInteractions.reactions` was empty. |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``IsBot``              | The current token belongs to bot account.                                                                                        |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``IsNotBot``           | The current token belongs to user account.                                                                                       |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``PayloadTooLarge``    | The message was too large.                                                                                                       |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyAttachments`` | You provided more attachments than allowed on this instance.                                                                     |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                                          |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
-            | ``TooManyReplies``     | You were replying to more messages than was allowed on this instance.                                                            |
-            +------------------------+----------------------------------------------------------------------------------------------------------------------------------+
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``IsBot``              | The current token belongs to bot account.                                                                                      |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``IsNotBot``           | The current token belongs to user account.                                                                                     |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``PayloadTooLarge``    | The message was too large.                                                                                                     |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyAttachments`` | You provided more attachments than allowed on this instance.                                                                   |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyEmbeds``      | You provided more embeds than allowed on this instance.                                                                        |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
+            | ``TooManyReplies``     | You were replying to more messages than was allowed on this instance.                                                          |
+            +------------------------+--------------------------------------------------------------------------------------------------------------------------------+
         :class:`~stoat.Unauthorized`
             Possible values for :attr:`~stoat.HTTPException.type`:
 
@@ -642,15 +649,15 @@ class Messageable:
             | ``NotFound`` | The channel/file/reply was not found. |
             +--------------+---------------------------------------+
         :class:`stoat.InternalServerError`
-            Possible values for :attr:`~HTTPException.type`:
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
-            +-------------------+-------------------------------------------------------+-----------------------------------------------------------------------------------+
-            | Value             | Reason                                                | Populated attributes                                                              |
-            +-------------------+-------------------------------------------------------+-----------------------------------------------------------------------------------+
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
+            | Value             | Reason                                                | Populated attributes                                                            |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
             | ``DatabaseError`` | Something went wrong during querying database.        | :attr:`~stoat.HTTPException.collection`, :attr:`~stoat.HTTPException.operation` |
-            +-------------------+-------------------------------------------------------+-----------------------------------------------------------------------------------+
-            | ``InternalError`` | Somehow something went wrong during message creation. |                                                                                   |
-            +-------------------+-------------------------------------------------------+-----------------------------------------------------------------------------------+
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went wrong during message creation. |                                                                                 |
+            +-------------------+-------------------------------------------------------+---------------------------------------------------------------------------------+
 
         Returns
         -------
@@ -690,11 +697,11 @@ class Connectable:
 
     The following classes implement this ABC:
 
-    - :class:`DMChannel`
-    - :class:`GroupChannel`
-    - :class:`TextChannel`
-    - :class:`VoiceChannel`
-    - :class:`User`
+    - :class:`~stoat.DMChannel`
+    - :class:`~stoat.GroupChannel`
+    - :class:`~stoat.TextChannel`
+    - :class:`~stoat.VoiceChannel`
+    - :class:`~stoat.User`
     """
 
     __slots__ = ()
@@ -702,7 +709,21 @@ class Connectable:
     state: State
 
     async def fetch_channel_id(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> str:
-        """:class:`str`: Retrieves the channel's ID."""
+        """|coro|
+
+        Retrieves the channel's ID.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Returns
+        -------
+        :class:`str`
+            The channel's ID.
+        """
+
         return self.get_channel_id()
 
     def get_channel_id(self) -> str:
@@ -722,16 +743,16 @@ class Connectable:
 
         Asks the voice server for a token to join the call in destination channel.
 
-        You must have :attr:`~Permissions.connect` to do this.
+        You must have :attr:`~stoat.Permissions.connect` to do this.
 
-        For Livekit instances, fires :class:`MessageCreateEvent` and :class:`VoiceChannelJoinEvent` / :class:`VoiceChannelMoveEvent`
+        For Livekit instances, fires :class:`~stoat.MessageCreateEvent` and :class:`~stoat.VoiceChannelJoinEvent` / :class:`~stoat.VoiceChannelMoveEvent`
         for all users who can see target channel.
 
         Parameters
         ----------
-        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides.
         node: UndefinedOr[Optional[:class:`str`]]
             The node's name to use for starting a call.
@@ -747,7 +768,7 @@ class Connectable:
             Useful for disconnecting on another device and joining on a new.
 
             .. versionadded:: 1.2
-        recipients: UndefinedOr[Optional[List[ULIDOr[:class:`BaseUser`]]]]
+        recipients: UndefinedOr[Optional[List[ULIDOr[:class:`~stoat.BaseUser`]]]]
             A list of users which should be notified of the call starting.
             Only used when the user is the first one connected.
 
@@ -755,62 +776,62 @@ class Connectable:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~stoat.HTTPException`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | Value                  | Reason                                                                                                                            |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``AlreadyConnected``   | The current user was already connected to this voice channel.                                                                     |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``CannotJoinCall``     | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidOperation``   | The voice server is unavailable.                                                                                                  |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``LivekitUnavailable`` | The voice server is unavailable. Only applicable to instances using Livekit.                                                      |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotConnected``       | The current user was already connected to other voice channel.                                                                    |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotAVoiceChannel``   | The channel was not a voice channel. Only applicable to instances using Livekit.                                                  |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``UnknownNode``        | The server could not discover a voice node.                                                                                       |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``VosoUnavailable``    | The voice server is unavailable. Not applicable to instances using Livekit.                                                       |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                                                        |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyConnected``   | The current user was already connected to this voice channel.                                                                                 |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``CannotJoinCall``     | The channel was type of :attr:`~stoat.ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~stoat.ChannelType.text`). |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``   | The voice server is unavailable.                                                                                                              |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``LivekitUnavailable`` | The voice server is unavailable. Only applicable to instances using Livekit.                                                                  |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotConnected``       | The current user was already connected to other voice channel.                                                                                |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``   | The channel was not a voice channel. Only applicable to instances using Livekit.                                                              |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``UnknownNode``        | The server could not discover a voice node.                                                                                                   |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``VosoUnavailable``    | The voice server is unavailable. Not applicable to instances using Livekit.                                                                   |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+        :class:`~stoat.Unauthorized`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
             +--------------------+----------------------------------------+
             | Value              | Reason                                 |
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        :class:`Forbidden`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~stoat.Forbidden`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
             +----------------------------------+--------------------------------------------------------+
             | Value                            | Reason                                                 |
             +----------------------------------+--------------------------------------------------------+
             | ``MissingPermission``            | You do not have the proper permissions to join a call. |
             +----------------------------------+--------------------------------------------------------+
-        :class:`NotFound`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~stoat.NotFound`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
             +--------------+----------------------------+
             | Value        | Reason                     |
             +--------------+----------------------------+
             | ``NotFound`` | The channel was not found. |
             +--------------+----------------------------+
-        :class:`InternalServerError`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~stoat.InternalServerError`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-            | Value             | Reason                                          | Populated attributes                                                |
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database.  | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-            | ``InternalError`` | Somehow something went during retrieving token. |                                                                     |
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------------------+
+            | Value             | Reason                                          | Populated attributes                                                            |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.  | :attr:`~stoat.HTTPException.collection`, :attr:`~stoat.HTTPException.operation` |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went during retrieving token. |                                                                                 |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------------------+
 
         Returns
         -------
@@ -840,9 +861,9 @@ class Connectable:
 
         Parameters
         ----------
-        channel_http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        channel_http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides for getting channel.
-        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
             The HTTP request overrides.
         node: Optional[:class:`str`]
             The node's name to use for starting a call.
@@ -856,62 +877,62 @@ class Connectable:
 
         Raises
         ------
-        :class:`HTTPException`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~stoat.HTTPException`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | Value                  | Reason                                                                                                                            |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``AlreadyConnected``   | The current user was already connected to this voice channel.                                                                     |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``CannotJoinCall``     | The channel was type of :attr:`~ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~ChannelType.text`). |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``InvalidOperation``   | The voice server is unavailable.                                                                                                  |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``LivekitUnavailable`` | The voice server is unavailable. Only applicable to instances using Livekit.                                                      |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotConnected``       | The current user was already connected to other voice channel.                                                                    |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotAVoiceChannel``   | The channel was not a voice channel. Only applicable to instances using Livekit.                                                  |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``UnknownNode``        | The server could not discover a voice node.                                                                                       |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``VosoUnavailable``    | The voice server is unavailable. Not applicable to instances using Livekit.                                                       |
-            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | Value                  | Reason                                                                                                                                        |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``AlreadyConnected``   | The current user was already connected to this voice channel.                                                                                 |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``CannotJoinCall``     | The channel was type of :attr:`~stoat.ChannelType.saved_messages` (or if instance uses legacy voice server, :attr:`~stoat.ChannelType.text`). |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidOperation``   | The voice server is unavailable.                                                                                                              |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``LivekitUnavailable`` | The voice server is unavailable. Only applicable to instances using Livekit.                                                                  |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotConnected``       | The current user was already connected to other voice channel.                                                                                |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``NotAVoiceChannel``   | The channel was not a voice channel. Only applicable to instances using Livekit.                                                              |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``UnknownNode``        | The server could not discover a voice node.                                                                                                   |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+            | ``VosoUnavailable``    | The voice server is unavailable. Not applicable to instances using Livekit.                                                                   |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------+
+        :class:`~stoat.Unauthorized`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
             +--------------------+----------------------------------------+
             | Value              | Reason                                 |
             +--------------------+----------------------------------------+
             | ``InvalidSession`` | The current bot/user token is invalid. |
             +--------------------+----------------------------------------+
-        :class:`Forbidden`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~stoat.Forbidden`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
             +----------------------------------+--------------------------------------------------------+
             | Value                            | Reason                                                 |
             +----------------------------------+--------------------------------------------------------+
             | ``MissingPermission``            | You do not have the proper permissions to join a call. |
             +----------------------------------+--------------------------------------------------------+
-        :class:`NotFound`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~stoat.NotFound`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
             +--------------+----------------------------+
             | Value        | Reason                     |
             +--------------+----------------------------+
             | ``NotFound`` | The channel was not found. |
             +--------------+----------------------------+
-        :class:`InternalServerError`
-            Possible values for :attr:`~HTTPException.type`:
+        :class:`~stoat.InternalServerError`
+            Possible values for :attr:`~stoat.HTTPException.type`:
 
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-            | Value             | Reason                                          | Populated attributes                                                |
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-            | ``DatabaseError`` | Something went wrong during querying database.  | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
-            | ``InternalError`` | Somehow something went during retrieving token. |                                                                     |
-            +-------------------+-------------------------------------------------+---------------------------------------------------------------------+
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------------------+
+            | Value             | Reason                                          | Populated attributes                                                            |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database.  | :attr:`~stoat.HTTPException.collection`, :attr:`~stoat.HTTPException.operation` |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------------------+
+            | ``InternalError`` | Somehow something went during retrieving token. |                                                                                 |
+            +-------------------+-------------------------------------------------+---------------------------------------------------------------------------------+
         :class:`TypeError`
             If livekit dependency is not installed.
         """

@@ -717,6 +717,21 @@ class BaseUser(Base, Connectable, Messageable):
         return await self.state.http.get_user(self.id, http_overrides=http_overrides)
 
     async def fetch_channel_id(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> str:
+        """|coro|
+
+        Retrieves the channel's ID.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Returns
+        -------
+        :class:`str`
+            The channel's ID.
+        """
+
         channel_id = self.dm_channel_id
         if channel_id:
             return channel_id

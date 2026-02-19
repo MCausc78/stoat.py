@@ -114,7 +114,7 @@ def linkcode_resolve(domain: str, info: dict[str, typing.Any]) -> typing.Optiona
         return None
 
     path = f'{path}#L{lineno}-L{lineno + len(src) - 1}'
-    return f'https://github.com/MCausc78/stoat/blob/' + git_commit + '/stoat/' + path
+    return f'https://github.com/MCausc78/stoat.py/blob/' + git_commit + '/stoat/' + path
 
 
 # Links used for cross-referencing stuff in other documentation

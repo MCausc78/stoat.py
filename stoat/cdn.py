@@ -213,6 +213,20 @@ class Asset(StatelessAsset):
         """:class:`str`: The asset URL."""
         return self.state.cdn_client.url_for(self.id, self.tag)
 
+    async def preview(
+        self,
+    ) -> bytes:
+        """|coro|
+
+        Preview an asset. Only applicable for images.
+
+        Returns
+        -------
+        :class:`bytes`
+            The preview in webp format.
+        """
+        return await self.state.cdn_client.preview(self.tag, self.id)
+
     async def read(
         self,
     ) -> bytes:
@@ -225,7 +239,7 @@ class Asset(StatelessAsset):
         :class:`bytes`
             The asset contents.
         """
-        return await self.state.cdn_client.read(self.tag, self.id)
+        return await self.state.cdn_client.read(self.tag, self.id, self.filename)
 
 
 class Resource(ABC):
@@ -593,12 +607,62 @@ class CDNClient:
 
         return f'{self._base}/{quote(tag)}/{quote(id)}'
 
-    async def read(
+    async def preview(
         self,
         tag: Tag,
         id: str,
     ) -> bytes:
+        """|coro|
+
+        Preview an asset. Only applicable for images.
+
+        Parameters
+        ----------
+        tag: :class:`str`
+            The asset's tag.
+        id: :class:`str`
+            The asset's ID.
+
+        Returns
+        -------
+        :class:`bytes`
+            The preview in webp format.
+        """
+
         response = await self.request('GET', f'/{quote(tag)}/{quote(id)}')
+        data = await response.read()
+        if not response.closed:
+            ret = response.close()
+            if isawaitable(ret):
+                await ret
+        return data
+
+    async def read(
+        self,
+        tag: Tag,
+        id: str,
+        filename: str = 'original',
+    ) -> bytes:
+        """|coro|
+
+        Read asset contents.
+
+        Parameters
+        ----------
+        tag: :class:`str`
+            The asset's tag.
+        id: :class:`str`
+            The asset's ID.
+        filename: :class:`str`
+            The asset's filename. A special value of ``original`` can be used to retrieve asset by ID. Defaults to ``original``.
+
+        Returns
+        -------
+        :class:`bytes`
+            The asset contents.
+        """
+
+        response = await self.request('GET', f'/{quote(tag)}/{quote(id)}/{quote(filename)}')
         data = await response.read()
         if not response.closed:
             ret = response.close()
@@ -611,6 +675,23 @@ class CDNClient:
         tag: Tag,
         data: aiohttp.FormData,
     ) -> str:
+        """|coro|
+
+        Uploads a file to CDN.
+
+        Parameters
+        ----------
+        tag: :class:`str`
+            The asset's tag.
+        data: :class:`aiohttp.FormData`
+            The asset's contents to upload. Form must have a field called ``file``.
+
+        Returns
+        -------
+        :class:`str`
+            The asset ID.
+        """
+
         response = await self.request('POST', f'/{quote(tag)}', data=data)
         rd = await utils._json_or_text(response)
         if not response.closed:
