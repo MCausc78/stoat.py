@@ -645,9 +645,9 @@ class Parser:
         server_id: :class:`str`
             Should be empty for this method.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -680,9 +680,9 @@ class Parser:
         server_id: :class:`str`
             Should be empty for this method.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -715,9 +715,9 @@ class Parser:
         server_id: :class:`str`
             Should be empty for this method.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -727,13 +727,32 @@ class Parser:
 
         channel_id = payload['channel']
         clear = payload.get('remove', ())
-        data = payload['partial']
+
+        if 'partial' in payload:
+            channel_update = self.parse_partial_channel(payload['partial'], channel_id, clear)
+            previous_channel = PartialChannel(state=self.state, id=channel_id)
+        else:
+            channel_update = self.parse_partial_channel(payload['after'], channel_id, clear)
+            before_payload = payload['before']
+
+            fake_clear = []
+            if channel_update.description is None and 'description' not in before_payload:
+                fake_clear.append('Description')
+            if channel_update.internal_icon is None and 'icon' not in before_payload:
+                fake_clear.append('Icon')
+            if channel_update.default_permissions is None and 'default_permissions' not in before_payload:
+                fake_clear.append('DefaultPermissions')
+            if channel_update.voice is None and 'voice' not in before_payload:
+                fake_clear.append('Voice')
+
+            previous_channel = self.parse_partial_channel(payload['before'], channel_id, fake_clear)
 
         return AuditLogEntryAction(
             state=self.state,
             type=AuditLogEntryActionType.channel_update,
             channel_id=channel_id,
-            internal_channel_update=self.parse_partial_channel(data, channel_id, clear),
+            internal_channel_update=channel_update,
+            internal_previous_channel=previous_channel,
         )
 
     def parse_audit_log_entry_channel_role_permissions_edit_action(
@@ -753,9 +772,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The audit log entry action payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -790,9 +809,9 @@ class Parser:
         server_id: :class:`str`
             Should be empty for this method.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -826,9 +845,9 @@ class Parser:
         server_id: :class:`str`
             Should be empty for this method.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -873,14 +892,40 @@ class Parser:
         """
 
         user_id = payload['user']
+        user = users.get(user_id, user_id)
         clear = payload.get('remove', ())
-        data = payload['partial']
+
+        # FieldsMember = typing.Literal['Nickname', 'Avatar', 'Roles', 'Timeout', 'CanReceive', 'CanPublish']
+
+        if 'partial' in payload:
+            member_update = self.parse_partial_member(payload['partial'], server_id, user, clear)
+            previous_member = PartialMember(state=self.state, server_id=server_id, internal_user=user)
+        else:
+            member_update = self.parse_partial_member(payload['after'], server_id, user, clear)
+            before_payload = payload['before']
+
+            fake_clear = []
+            if member_update.nick is None and 'nickname' not in before_payload:
+                fake_clear.append('Description')
+            if member_update.internal_server_avatar is None and 'Avatar' not in before_payload:
+                fake_clear.append('Avatar')
+            if member_update.role_ids is None and 'roles' not in before_payload:
+                fake_clear.append('Roles')
+            if member_update.timed_out_until is None and 'timeout' not in before_payload:
+                fake_clear.append('Timeout')
+            if member_update.can_receive is None and 'can_receive' not in before_payload:
+                fake_clear.append('CanReceive')
+            if member_update.can_publish is None and 'can_publish' not in before_payload:
+                fake_clear.append('CanPublish')
+
+            previous_member = self.parse_partial_member(payload['before'], server_id, user, fake_clear)
 
         return AuditLogEntryAction(
             state=self.state,
             type=AuditLogEntryActionType.member_update,
-            internal_member_update=self.parse_partial_member(data, server_id, user_id, clear),
-            internal_user=members.get(user_id, users.get(user_id, user_id)),
+            internal_member_update=member_update,
+            internal_previous_member=previous_member,
+            internal_user=members.get(user_id, user),
         )
 
     def parse_audit_log_entry_member_kick_action(
@@ -937,9 +982,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The audit log entry action payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -1007,9 +1052,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The audit log entry action payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -1041,9 +1086,9 @@ class Parser:
         payload: Dict[:class:`str`, Any]
             The audit log entry action payload to parse.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -1077,9 +1122,9 @@ class Parser:
         server_id: :class:`str`
             The ID of the server of audit log entry.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -1088,13 +1133,26 @@ class Parser:
         """
 
         role_id = payload['role']
-        clear = payload.get('clear', ())
-        data = payload['partial']
+        clear = payload.get('remove', ())
+
+        if 'partial' in payload:
+            role_update = self.parse_partial_role(payload['partial'], server_id, role_id, clear)
+            previous_role = PartialRole(state=self.state, id=role_id, server_id=server_id)
+        else:
+            role_update = self.parse_partial_role(payload['after'], server_id, role_id, clear)
+            before_payload = payload['before']
+
+            fake_clear = []
+            if role_update.color is None and 'colour' not in before_payload:
+                fake_clear.append('Colour')
+
+            previous_role = self.parse_partial_role(payload['before'], server_id, role_id, fake_clear)
 
         return AuditLogEntryAction(
             state=self.state,
             type=AuditLogEntryActionType.role_update,
-            internal_role_update=self.parse_partial_role(data, server_id, role_id, clear),
+            internal_previous_role=previous_role,
+            internal_role_update=role_update,
             role_id=role_id,
         )
 
@@ -1117,9 +1175,9 @@ class Parser:
         server_id: :class:`str`
             Should be empty for this method.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -1151,9 +1209,9 @@ class Parser:
         server_id: :class:`str`
             The ID of the server of audit log entry.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -1162,12 +1220,34 @@ class Parser:
         """
 
         clear = payload.get('remove', ())
-        data = payload['partial']
+
+        # FieldsServer = typing.Literal['Description', 'Categories', 'SystemMessages', 'Icon', 'Banner']
+        if 'partial' in payload:
+            server_update = self.parse_partial_server(payload['partial'], server_id, clear)
+            previous_server = PartialServer(state=self.state, id=server_id)
+        else:
+            server_update = self.parse_partial_server(payload['after'], server_id, clear)
+            before_payload = payload['before']
+
+            fake_clear = []
+            if server_update.description is None and 'description' not in before_payload:
+                fake_clear.append('Description')
+            if server_update.categories is None and 'categories' not in before_payload:
+                fake_clear.append('Categories')
+            if server_update.system_messages is None and 'system_messages' not in before_payload:
+                fake_clear.append('SystemMessages')
+            if server_update.internal_icon is None and 'icon' not in before_payload:
+                fake_clear.append('Icon')
+            if server_update.internal_banner is None and 'banner' not in before_payload:
+                fake_clear.append('Banner')
+
+            previous_server = self.parse_partial_server(payload['before'], server_id, fake_clear)
 
         return AuditLogEntryAction(
             state=self.state,
             type=AuditLogEntryActionType.server_update,
-            internal_server_update=self.parse_partial_server(data, server_id, clear),
+            internal_previous_server=previous_server,
+            internal_server_update=server_update,
             server_id=server_id,
         )
 
@@ -1190,9 +1270,9 @@ class Parser:
         server_id: :class:`str`
             Should be empty for this method.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -1227,9 +1307,9 @@ class Parser:
         server_id: :class:`str`
             Should be empty for this method.
         members: Dict[:class:`str`, :class:`Member`]
-            Should be empty.
+            Should be empty for this method.
         users: Dict[:class:`str`, :class:`User`]
-            Should be empty.
+            Should be empty for this method.
 
         Returns
         --------
@@ -3782,7 +3862,12 @@ class Parser:
         )
 
     def parse_partial_member(
-        self, payload: raw.PartialMember, server_id: str, user_id: str, clear: Collection[raw.FieldsMember], /
+        self,
+        payload: raw.PartialMember,
+        server_id: str,
+        user: typing.Union[User, str],
+        clear: Collection[raw.FieldsMember],
+        /,
     ) -> PartialMember:
         """Parses a partial member object.
 
@@ -3794,8 +3879,8 @@ class Parser:
             The partial member payload to parse.
         server_id: :class:`str`
             The ID of the server the member belongs to.
-        user_id: :class:`str`
-            The ID of the user.
+        user: Union[:class:`User`, :class:`str`]:
+            The ID of the user, or full user instance.
         clear: Collection[:class:`str`]
             The cleared fields.
 
@@ -3812,7 +3897,7 @@ class Parser:
         return PartialMember(
             state=self.state,
             server_id=server_id,
-            internal_user=user_id,
+            internal_user=user,
             nick=None if 'Nickname' in clear else payload.get('nickname', UNDEFINED),
             internal_server_avatar=None
             if 'Avatar' in clear

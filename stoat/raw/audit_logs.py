@@ -10,6 +10,8 @@ from .server_members import Member, PartialMember, FieldsMember
 from .servers import PartialServer, PartialRole, FieldsServer, FieldsRole
 from .users import User
 
+# Note: `partial` only exists for backwards compatibility
+
 
 class AuditLogEntry(typing.TypedDict):
     _id: str
@@ -51,7 +53,9 @@ class AuditLogEntryChannelEditAction(typing.TypedDict):
     type: typing.Literal['ChannelEdit']
     channel: str
     remove: typing_extensions.NotRequired[list[FieldsChannel]]
-    partial: PartialChannel
+    partial: typing_extensions.NotRequired[PartialChannel]
+    before: PartialChannel
+    after: PartialChannel
 
 
 class AuditLogEntryChannelRolePermissionsEditAction(typing.TypedDict):
@@ -70,7 +74,9 @@ class AuditLogEntryMemberEditAction(typing.TypedDict):
     type: typing.Literal['MemberEdit']
     user: str
     remove: typing_extensions.NotRequired[list[FieldsMember]]
-    partial: PartialMember
+    partial: typing_extensions.NotRequired[PartialMember]
+    before: PartialMember
+    after: PartialMember
 
 
 class AuditLogEntryMemberKickAction(typing.TypedDict):
@@ -81,14 +87,18 @@ class AuditLogEntryMemberKickAction(typing.TypedDict):
 class AuditLogEntryServerEditAction(typing.TypedDict):
     type: typing.Literal['ServerEdit']
     remove: typing_extensions.NotRequired[list[FieldsServer]]
-    partial: PartialServer
+    partial: typing_extensions.NotRequired[PartialServer]
+    before: PartialServer
+    after: PartialServer
 
 
 class AuditLogEntryRoleEditAction(typing.TypedDict):
     type: typing.Literal['RoleEdit']
     role: str
     remove: typing_extensions.NotRequired[list[FieldsRole]]
-    partial: PartialRole
+    partial: typing_extensions.NotRequired[PartialRole]
+    before: PartialRole
+    after: PartialRole
 
 
 class AuditLogEntryRoleCreateAction(typing.TypedDict):

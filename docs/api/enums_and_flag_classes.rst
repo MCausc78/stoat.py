@@ -394,13 +394,15 @@ Servers
 
         A server channel was updated.
 
-        +---------------------------------------------+--------------------------------+
-        | Field                                       | Description                    |
-        +---------------------------------------------+--------------------------------+
-        | :attr:`~AuditLogEntryAction.channel_id`     | The ID of the updated channel. |
-        +---------------------------------------------+--------------------------------+
-        | :attr:`~AuditLogEntryAction.channel_update` | The channel's changes.         |
-        +---------------------------------------------+--------------------------------+
+        +-----------------------------------------------+-----------------------------------+
+        | Field                                         | Description                       |
+        +-----------------------------------------------+-----------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_id`       | The ID of the updated channel.    |
+        +-----------------------------------------------+-----------------------------------+
+        | :attr:`~AuditLogEntryAction.channel_update`   | The channel's changes.            |
+        +-----------------------------------------------+-----------------------------------+
+        | :attr:`~AuditLogEntryAction.previous_channel` | The channel before being updated. |
+        +-----------------------------------------------+-----------------------------------+
     .. attribute:: channel_role_permissions_update
 
         Permission overrides for a role were updated for a specific server channel.
@@ -427,13 +429,15 @@ Servers
 
         A server member was updated.
 
-        +--------------------------------------------+------------------------------------+
-        | Field                                      | Description                        |
-        +--------------------------------------------+------------------------------------+
-        | :attr:`~AuditLogEntryAction.member_update` | The member's changes.              |
-        +--------------------------------------------+------------------------------------+
-        | :attr:`~AuditLogEntryAction.user_id`       | The user ID of the updated member. |
-        +--------------------------------------------+------------------------------------+
+        +----------------------------------------------+------------------------------------+
+        | Field                                        | Description                        |
+        +----------------------------------------------+------------------------------------+
+        | :attr:`~AuditLogEntryAction.member_update`   | The member's changes.              |
+        +----------------------------------------------+------------------------------------+
+        | :attr:`~AuditLogEntryAction.previous_member` | The member before being updated.   |
+        +----------------------------------------------+------------------------------------+
+        | :attr:`~AuditLogEntryAction.user_id`         | The user ID of the updated member. |
+        +----------------------------------------------+------------------------------------+
     .. attribute:: member_remove
 
         A server member was removed (kicked).
@@ -447,11 +451,13 @@ Servers
 
         The server was updated.
 
-        +--------------------------------------------+-----------------------+
-        | Field                                      | Description           |
-        +--------------------------------------------+-----------------------+
-        | :attr:`~AuditLogEntryAction.server_update` | The server's changes. |
-        +--------------------------------------------+-----------------------+
+        +----------------------------------------------+----------------------------------+
+        | Field                                        | Description                      |
+        +----------------------------------------------+----------------------------------+
+        | :attr:`~AuditLogEntryAction.previous_server` | The server before being updated. |
+        +----------------------------------------------+----------------------------------+
+        | :attr:`~AuditLogEntryAction.server_update`   | The server's changes.            |
+        +----------------------------------------------+----------------------------------+
     .. attribute:: role_create
 
         A role was created.
@@ -467,13 +473,15 @@ Servers
 
         A role was updated.
 
-        +------------------------------------------+------------------------+
-        | Field                                    | Description            |
-        +------------------------------------------+------------------------+
-        | :attr:`~AuditLogEntryAction.role_id`     | The updated role's ID. |
-        +------------------------------------------+------------------------+
-        | :attr:`~AuditLogEntryAction.role_update` | The role's changes.    |
-        +------------------------------------------+------------------------+
+        +--------------------------------------------+--------------------------------+
+        | Field                                      | Description                    |
+        +--------------------------------------------+--------------------------------+
+        | :attr:`~AuditLogEntryAction.previous_role` | The role before being updated. |
+        +--------------------------------------------+--------------------------------+
+        | :attr:`~AuditLogEntryAction.role_id`       | The updated role's ID.         |
+        +--------------------------------------------+--------------------------------+
+        | :attr:`~AuditLogEntryAction.role_update`   | The role's changes.            |
+        +--------------------------------------------+--------------------------------+
     .. attribute:: role_delete
 
         A role was deleted.

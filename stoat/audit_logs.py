@@ -246,6 +246,18 @@ class AuditLogEntryAction:
     internal_payload: typing.Optional[dict[str, typing.Any]] = field(default=None, repr=False, kw_only=True, eq=True)
     """Optional[Dict[:class:`str`, Any]]: The raw audit log entry action data."""
 
+    internal_previous_channel: typing.Optional[PartialChannel] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialChannel`]: The channel before being updated."""
+
+    internal_previous_member: typing.Optional[PartialMember] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialMember`]: The member before being updated."""
+
+    internal_previous_role: typing.Optional[PartialRole] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialRole`]: The role before being updated."""
+
+    internal_previous_server: typing.Optional[PartialServer] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialServer`]: The server before being updated."""
+
     internal_role_update: typing.Optional[PartialRole] = field(default=None, repr=False, kw_only=True, eq=True)
     """Optional[:class:`PartialRole`]: The updated role as it was updated."""
 
@@ -380,6 +392,59 @@ class AuditLogEntryAction:
                 hint='the audit log entry action type is not member_update',
             )
         return self.internal_member_update
+
+    @property
+    def previous_channel(self) -> PartialChannel:
+        """:class:`PartialChannel`: The channel before being updated."""
+        if self.internal_previous_channel is None:
+            raise NoData(
+                what='',
+                type='AuditLogEntryAction.previous_channel',
+                hint='the audit log entry action type is not channel_update',
+            )
+        return self.internal_previous_channel
+
+    @property
+    def previous_member(self) -> PartialMember:
+        """:class:`PartialMember`: The member before being updated."""
+        if self.internal_previous_member is None:
+            raise NoData(
+                what='',
+                type='AuditLogEntryAction.previous_member',
+                hint='the audit log entry action type is not member_update',
+            )
+        return self.internal_previous_member
+
+    @property
+    def previous_role(self) -> PartialRole:
+        """:class:`PartialRole`: The role before being updated."""
+        if self.internal_previous_role is None:
+            raise NoData(
+                what='',
+                type='AuditLogEntryAction.previous_role',
+                hint='the audit log entry action type is not role_update',
+            )
+        return self.internal_previous_role
+
+    @property
+    def previous_server(self) -> PartialServer:
+        """:class:`PartialServer`: The server before being updated."""
+        if self.internal_previous_server is None:
+            raise NoData(
+                what='',
+                type='AuditLogEntryAction.previous_server',
+                hint='the audit log entry action type is not server_update',
+            )
+        return self.internal_previous_server
+
+    internal_previous_member: typing.Optional[PartialMember] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialMember`]: The member before being updated."""
+
+    internal_previous_role: typing.Optional[PartialRole] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialRole`]: The role before being updated."""
+
+    internal_previous_server: typing.Optional[PartialServer] = field(default=None, repr=False, kw_only=True, eq=True)
+    """Optional[:class:`PartialServer`]: The server before being updated."""
 
     @property
     def role_update(self) -> PartialRole:
