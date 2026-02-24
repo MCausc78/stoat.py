@@ -3937,7 +3937,10 @@ class HTTPClient:
         node: UndefinedOr[Optional[:class:`str`]]
             The node's name to use for starting a call.
 
-            Can be ``None`` to tell server choose the node automatically.
+            If ``None`` or ``UNDEFINED``, the currently assigned channel node will be used.
+
+            If channel has no node assigned, you should discover existing voice nodes via :meth:`query_node`
+            (on official instances, you generally currently should use ``worldwide``). Otherwise, this will throw an ``UnknownNode`` error.
 
             .. versionadded:: 1.2
         force_disconnect: UndefinedOr[Optional[:class:`bool`]]
@@ -3969,7 +3972,9 @@ class HTTPClient:
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
             | ``NotConnected``       | The current user was already connected to other voice channel.                                                                    |
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
-            | ``NotAVoiceChannel``   | ???. Only applicable to instances using Livekit                                                                                   |
+            | ``NotAVoiceChannel``   | The channel was not a voice channel. Only applicable to instances using Livekit.                                                  |
+            +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
+            | ``UnknownNode``        | The server could not discover a voice node.                                                                                       |
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
             | ``VosoUnavailable``    | The voice server is unavailable. Not applicable to instances using Livekit.                                                       |
             +------------------------+-----------------------------------------------------------------------------------------------------------------------------------+
@@ -6728,7 +6733,7 @@ class HTTPClient:
         timeout: UndefinedOr[typing.Optional[typing.Union[datetime, timedelta, float, int]]] = UNDEFINED,
         can_publish: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
         can_receive: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
-        voice: UndefinedOr[ULIDOr[typing.Union[TextChannel, VoiceChannel]]] = UNDEFINED,
+        voice: UndefinedOr[typing.Optional[ULIDOr[typing.Union[TextChannel, VoiceChannel]]]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -6775,6 +6780,8 @@ class HTTPClient:
 
             This must be a timezone-aware datetime object. Consider using :func:`stoat.utils.utcnow()`.
 
+            If the member has :attr:`~Permissions.timeout_members`, this will throw a ``NonElevated`` error.
+
             You must have :attr:`~Permissions.timeout_members` to provide this.
         can_publish: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should send voice data.
@@ -6784,10 +6791,14 @@ class HTTPClient:
             Whether the member should receive voice data.
 
             You must have :attr:`~Permissions.deafen_members` to provide this.
-        voice: UndefinedOr[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]
+        voice: UndefinedOr[Optional[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]]
             The voice channel to move the member to.
 
             You must have :attr:`~Permissions.move_members` to provide this.
+
+            .. versionchanged:: 1.3
+
+                Members can be kicked from the current voice channel.
 
         Raises
         ------
@@ -6814,13 +6825,15 @@ class HTTPClient:
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+----------------------------------------------------------------------------------+
-            | Value                 | Reason                                                                           |
-            +-----------------------+----------------------------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                      |
-            +-----------------------+----------------------------------------------------------------------------------+
-            | ``NotElevated``       | Ranking of one of roles you tried to add is lower than ranking of your top role. |
-            +-----------------------+----------------------------------------------------------------------------------+
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``IsElevated``        | The member has :attr:`~Permissions.timeout_members`, and as such cannot be timed out. |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                           |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``NotElevated``       | Ranking of one of roles you tried to add is lower than ranking of your top role.      |
+            +-----------------------+---------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -6893,7 +6906,11 @@ class HTTPClient:
                 payload['can_receive'] = can_receive
 
         if voice is not UNDEFINED:
-            payload['voice_channel'] = resolve_id(voice)
+            # While specifying both remove and voice channel can cause an InvalidOperation error, this should be not possible
+            if voice is None:
+                remove.append('VoiceChannel')
+            else:
+                payload['voice_channel'] = resolve_id(voice)
 
         if len(remove) > 0:
             payload['remove'] = remove

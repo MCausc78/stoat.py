@@ -12,7 +12,7 @@ In order to work with the library and the Stoat API in general, we should first 
 
 Creating a Bot account is a pretty straightforward process.
 
-1. Make sure you're logged on to the `Stoat website <https://app.stoat.chat>`_.
+1. Make sure you're logged on to the `Stoat website <https://stoat.chat/app>`_.
 2. Navigate to the bots page.
 3. Click on the "CREATE A BOT" button.
 

@@ -4814,17 +4814,21 @@ class Parser:
         """
         return ServerMemberJoinEvent(
             shard=shard,
-            member=Member(
-                state=self.state,
-                server_id=payload['id'],
-                internal_user=payload['user'],
-                joined_at=joined_at,
-                nick=None,
-                internal_server_avatar=None,
-                role_ids=[],
-                timed_out_until=None,
-                can_publish=True,
-                can_receive=True,
+            member=(
+                self.parse_member(payload['member'])
+                if 'member' in payload
+                else Member(
+                    state=self.state,
+                    server_id=payload['id'],
+                    internal_user=payload['user'],
+                    joined_at=joined_at,
+                    nick=None,
+                    internal_server_avatar=None,
+                    role_ids=[],
+                    timed_out_until=None,
+                    can_publish=True,
+                    can_receive=True,
+                )
             ),
         )
 

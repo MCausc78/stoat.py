@@ -827,6 +827,17 @@ Settings
 
         Use Stoat colors.
 
+.. class:: AndroidFont
+
+    Specifies the font to use across UI for Stoat Android app.
+
+    .. attribute:: default
+
+        Use default font.
+    .. attribute:: google_sans_flex
+
+        Use `Google Sans Flex <https://fonts.google.com/specimen/Google+Sans+Flex>`_ font.
+
 .. class:: AndroidProfilePictureShape
 
     Specifies rounding grade for profile pictures, including in chat and profiles.

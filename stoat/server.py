@@ -4569,6 +4569,21 @@ class BaseMember(Connectable, Messageable):
         return await self.state.http.ban(self.server_id, self.id, http_overrides=http_overrides, reason=reason)
 
     async def fetch_channel_id(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> str:
+        """|coro|
+
+        Retrieves the channel's ID.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`~stoat.HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Returns
+        -------
+        :class:`str`
+            The channel's ID.
+        """
+
         channel_id = self.dm_channel_id
         if channel_id:
             return channel_id
@@ -4668,7 +4683,7 @@ class BaseMember(Connectable, Messageable):
         timeout: UndefinedOr[typing.Optional[typing.Union[datetime, timedelta, float, int]]] = UNDEFINED,
         can_publish: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
         can_receive: UndefinedOr[typing.Optional[bool]] = UNDEFINED,
-        voice: UndefinedOr[ULIDOr[typing.Union[TextChannel, VoiceChannel]]] = UNDEFINED,
+        voice: UndefinedOr[typing.Optional[ULIDOr[typing.Union[TextChannel, VoiceChannel]]]] = UNDEFINED,
     ) -> Member:
         """|coro|
 
@@ -4711,6 +4726,8 @@ class BaseMember(Connectable, Messageable):
 
             This must be a timezone-aware datetime object. Consider using :func:`stoat.utils.utcnow()`.
 
+            If the member has :attr:`~Permissions.timeout_members`, this will throw a ``NonElevated`` error.
+
             You must have :attr:`~Permissions.timeout_members` to provide this.
         can_publish: UndefinedOr[Optional[:class:`bool`]]
             Whether the member should send voice data.
@@ -4720,10 +4737,14 @@ class BaseMember(Connectable, Messageable):
             Whether the member should receive voice data.
 
             You must have :attr:`~Permissions.deafen_members` to provide this.
-        voice: UndefinedOr[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]
+        voice: UndefinedOr[Optional[ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]]]
             The voice channel to move the member to.
 
             You must have :attr:`~Permissions.move_members` to provide this.
+
+            .. versionchanged:: 1.3
+
+                Members can be kicked from the current voice channel.
 
         Raises
         ------
@@ -4750,13 +4771,15 @@ class BaseMember(Connectable, Messageable):
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+----------------------------------------------------------------------------------+
-            | Value                 | Reason                                                                           |
-            +-----------------------+----------------------------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                      |
-            +-----------------------+----------------------------------------------------------------------------------+
-            | ``NotElevated``       | Ranking of one of roles you tried to add is lower than ranking of your top role. |
-            +-----------------------+----------------------------------------------------------------------------------+
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``IsElevated``        | The member has :attr:`~Permissions.timeout_members`, and as such cannot be timed out. |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                           |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``NotElevated``       | Ranking of one of roles you tried to add is lower than ranking of your top role.      |
+            +-----------------------+---------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -5263,6 +5286,8 @@ class BaseMember(Connectable, Messageable):
 
         Timeouts the member.
 
+        If the member has :attr:`~Permissions.timeout_members`, this will throw a ``NonElevated`` error.
+
         You must have :attr:`~Permissions.timeout_members` to do this.
 
         Fires :class:`ServerMemberUpdateEvent` for all server members.
@@ -5301,11 +5326,13 @@ class BaseMember(Connectable, Messageable):
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-----------------------+-------------------------------------------------------------+
-            | Value                 | Reason                                                      |
-            +-----------------------+-------------------------------------------------------------+
-            | ``MissingPermission`` | You do not have the proper permissions to edit this member. |
-            +-----------------------+-------------------------------------------------------------+
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                                |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``IsElevated``        | The member has :attr:`~Permissions.timeout_members`, and as such cannot be timed out. |
+            +-----------------------+---------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit this member.                           |
+            +-----------------------+---------------------------------------------------------------------------------------+
         :class:`NotFound`
             Possible values for :attr:`~HTTPException.type`:
 

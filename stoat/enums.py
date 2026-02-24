@@ -423,6 +423,11 @@ class AndroidTheme(Enum):
     stoat = 'Stoat'
 
 
+class AndroidFont(Enum):
+    default = 'Default'
+    google_sans_flex = 'GoogleSansFlex'
+
+
 class AndroidProfilePictureShape(Enum):
     sharp = 0
     rounded = 15
@@ -602,6 +607,7 @@ __all__ = (
     # Settings
     'Language',
     'AndroidTheme',
+    'AndroidFont',
     'AndroidProfilePictureShape',
     'AndroidMessageReplyStyle',
     'ReviteChangelogEntry',
