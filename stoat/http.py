@@ -6035,6 +6035,7 @@ class HTTPClient:
                 server_id=resolve_id(server),
                 category_id=resolve_id(category),
             ),
+            json=payload,
             http_overrides=http_overrides,
         )
         return self.state.parser.parse_category(resp)
