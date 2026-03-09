@@ -940,6 +940,7 @@ class Connectable:
 
         try:
             from livekit.rtc import Room  # type: ignore
+            from .voice import VoiceClient  # type: ignore
         except ImportError:
             raise TypeError('Livekit is unavailable') from None
         else:
