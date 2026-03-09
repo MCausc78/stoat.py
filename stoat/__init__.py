@@ -56,9 +56,9 @@ from .user import *
 from .webhook import *
 
 from .voice import (
-    AudioSource,
-    FFmpegAudio,
-    VoiceClient,
+    AudioSource as AudioSource,
+    FFmpegAudio as FFmpegAudio,
+    VoiceClient as VoiceClient,
 )
 
 import typing

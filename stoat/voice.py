@@ -96,7 +96,12 @@ class FFmpegAudio(AudioSourceBase):
                 if self._closed:
                     break
 
-                data = self._process.stdout.read(frame_size)
+                stdout = self._process.stdout
+                if stdout is None:
+                    logger.error("FFmpeg stdout pipe not available")
+                    return
+
+                data = stdout.read(frame_size)
                 if not data:
                     logger.info('FFmpeg output ended')
                     break
@@ -205,7 +210,7 @@ class VoiceClient:
 
             if track:
                 try:
-                    await self._room.local_participant.unpublish_track(track)
+                    await self._room.local_participant.unpublish_track(track.sid)
                 except Exception as e:
                     logger.warning(f'Error unpublishing track: {e}')
 
