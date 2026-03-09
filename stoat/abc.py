@@ -52,6 +52,7 @@ if typing.TYPE_CHECKING:
     from .message import Reply, MessageInteractions, MessageMasquerade, SendableEmbed, BaseMessage, Message
     from .state import State
     from .user import BaseUser
+    from .voice import VoiceClient
 
 
 class Messageable:
@@ -856,8 +857,8 @@ class Connectable:
         channel_http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         node: typing.Optional[str] = None,
-    ) -> Room:
-        """Connects to a destination voice channel and returns a `Room <https://docs.livekit.io/python/livekit/rtc/room.html#livekit.rtc.room.Room>`_ associated with destination.
+    ) -> VoiceClient:
+        """Connects to a destination voice channel and returns a `VoiceClient` associated with destination.
 
         Parameters
         ----------
@@ -950,7 +951,7 @@ class Connectable:
             token, url = await state.http.join_call(channel_id, http_overrides=http_overrides, node=node)
 
             await room.connect(url, token)
-            return room
+            return VoiceClient(room)
 
 
 __all__ = (

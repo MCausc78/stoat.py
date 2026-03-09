@@ -19,6 +19,7 @@ from . import (
     abc as abc,
     routes as routes,
     utils as utils,
+    voice as voice,
 )
 
 from .adapter import *
@@ -53,6 +54,12 @@ from .shard import *
 from .state import *
 from .user import *
 from .webhook import *
+
+from .voice import (
+    AudioSource,
+    FFmpegAudio,
+    VoiceClient,
+)
 
 import typing
 
