@@ -337,14 +337,6 @@ class BaseUser(Base, Connectable, Messageable):
         return self.state.http.url_for(routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=self.id))
         
     @property
-    def display_avatar_url(self) -> str:
-        """:class:`str`: The URL to user's avatar, or their default avatar if they have none set."""
-        avatar = self.internal_avatar
-        if avatar is None:
-            return self.default_avatar_url
-        return self.state.cdn_client.url_for(avatar.id, 'avatars')
-
-    @property
     def dm_channel_id(self) -> typing.Optional[str]:
         """Optional[:class:`str`]: The ID of the private channel with this user."""
 
@@ -1353,7 +1345,15 @@ class DisplayUser(BaseUser):
     @property
     def avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`Asset`]: The avatar of the user."""
-        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
+        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')#
+        
+    @property
+    def display_avatar_url(self) -> str:
+        """:class:`str`: The URL to user's avatar, or their default avatar if they have none set."""
+        avatar = self.internal_avatar
+        if avatar is None:
+            return self.default_avatar_url
+        return self.state.cdn_client.url_for(avatar.id, 'avatars')
 
     @property
     def tag(self) -> str:
