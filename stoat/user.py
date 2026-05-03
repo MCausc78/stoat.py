@@ -1345,7 +1345,7 @@ class DisplayUser(BaseUser):
     @property
     def avatar(self) -> typing.Optional[Asset]:
         """Optional[:class:`Asset`]: The avatar of the user."""
-        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')#
+        return self.internal_avatar and self.internal_avatar.attach_state(self.state, 'avatars')
         
     @property
     def display_avatar_url(self) -> str:
