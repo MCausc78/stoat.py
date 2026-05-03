@@ -190,6 +190,36 @@ CacheContextType
     .. attribute:: authenticated_event
 
         The context relates to :class:`AuthenticatedEvent` event.
+    .. attribute:: member_or_user_through_audit_log_entry_user
+    
+        The context comes from :attr:`AuditLogEntry.user`.
+
+        .. versionadded:: 1.3
+    .. attribute:: member_through_audit_log_entry_user
+    
+        The context comes from :attr:`AuditLogEntry.user_as_member`.
+
+        .. versionadded:: 1.3
+    .. attribute:: user_through_audit_log_entry_user
+    
+        The context comes from :attr:`AuditLogEntry.user_as_user`.
+
+        .. versionadded:: 1.3
+    .. attribute:: member_or_user_through_audit_log_entry_action_user
+    
+        The context comes from :attr:`AuditLogEntryAction.user`.
+
+        .. versionadded:: 1.3
+    .. attribute:: member_through_audit_log_entry_action_user
+    
+        The context comes from :attr:`AuditLogEntryAction.user_as_member`.
+
+        .. versionadded:: 1.3
+    .. attribute:: user_through_audit_log_entry_action_user
+    
+        The context comes from :attr:`AuditLogEntryAction.user_as_user`.
+
+        .. versionadded:: 1.3
     .. attribute:: message_through_messageable_getter
 
         The context comes from :meth:`Messageable.get_message`.
@@ -1061,6 +1091,26 @@ EntityCacheContext
     :members:
     :inherited-members:
 
+AuditLogEntryCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: AuditLogEntryCacheContext
+
+.. autoclass:: AuditLogEntryCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+AuditLogEntryActionCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: AuditLogEntryActionCacheContext
+
+.. autoclass:: AuditLogEntryActionCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
 MessageableCacheContext
 ~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1277,6 +1327,66 @@ WebhookCacheContext
 .. attributetable:: WebhookCacheContext
 
 .. autoclass:: WebhookCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+    
+MemberOrUserThroughAuditLogEntryUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughAuditLogEntryUserCacheContext
+
+.. autoclass:: MemberOrUserThroughAuditLogEntryUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughAuditLogEntryUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughAuditLogEntryUserCacheContext
+
+.. autoclass:: MemberThroughAuditLogEntryUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughAuditLogEntryUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughAuditLogEntryUserCacheContext
+
+.. autoclass:: UserThroughAuditLogEntryUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberOrUserThroughAuditLogEntryActionUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberOrUserThroughAuditLogEntryActionUserCacheContext
+
+.. autoclass:: MemberOrUserThroughAuditLogEntryActionUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+MemberThroughAuditLogEntryActionUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: MemberThroughAuditLogEntryActionUserCacheContext
+
+.. autoclass:: MemberThroughAuditLogEntryActionUserCacheContext
+    :show-inheritance:
+    :members:
+    :inherited-members:
+
+UserThroughAuditLogEntryActionUserCacheContext
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: UserThroughAuditLogEntryActionUserCacheContext
+
+.. autoclass:: UserThroughAuditLogEntryActionUserCacheContext
     :show-inheritance:
     :members:
     :inherited-members:

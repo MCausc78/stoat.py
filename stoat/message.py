@@ -587,7 +587,9 @@ class BaseMessage(Base):
         """
         return await self.state.http.clear_reactions(self.channel_id, self.id, http_overrides=http_overrides)
 
-    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
+    async def delete(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, reason: typing.Optional[str] = None
+    ) -> None:
         """|coro|
 
         Deletes the message in a channel.
@@ -600,6 +602,10 @@ class BaseMessage(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -636,7 +642,9 @@ class BaseMessage(Base):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.delete_message(self.channel_id, self.id, http_overrides=http_overrides)
+        return await self.state.http.delete_message(
+            self.channel_id, self.id, http_overrides=http_overrides, reason=reason
+        )
 
     async def edit(
         self,
@@ -1282,19 +1290,19 @@ class PartialMessage(BaseMessage):
     This inherits from :class:`BaseMessage`.
     """
 
-    content: UndefinedOr[str] = field(repr=True, kw_only=True)
+    content: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new message's content."""
 
-    edited_at: UndefinedOr[datetime] = field(repr=True, kw_only=True)
+    edited_at: UndefinedOr[datetime] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`~datetime.datetime`]: When the message was edited."""
 
-    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(repr=True, kw_only=True)
+    internal_embeds: UndefinedOr[list[StatelessEmbed]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[List[:class:`StatelessEmbed`]]: The new message embeds."""
 
-    pinned: UndefinedOr[bool] = field(repr=True, kw_only=True)
-    """UndefinedOr[:class:`bool`]: Whether the message was just pinned."""
+    pinned: UndefinedOr[typing.Optional[bool]] = field(default=UNDEFINED, repr=True, kw_only=True)
+    """UndefinedOr[Optional[:class:`bool`]]: Whether the message was just pinned or unpinned. ``None`` denotes message got unpinned."""
 
-    reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(repr=True, kw_only=True)
+    reactions: UndefinedOr[dict[str, tuple[str, ...]]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Dict[:class:`str`, Tuple[:class:`str`, ...]]]: The new message's reactions."""
 
     @property
@@ -1305,6 +1313,35 @@ class PartialMessage(BaseMessage):
             if self.internal_embeds is UNDEFINED
             else [e.attach_state(self.state) for e in self.internal_embeds]
         )
+
+    def get_clear_fields(self) -> list[raw.FieldsMessage]:
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
+
+        fields: list[raw.FieldsMessage] = []
+        if self.pinned is None:
+            fields.append('Pinned')
+        return fields
+
+    def to_dict(self) -> raw.PartialMessage:
+        """:class:`dict`: Convert partial message to raw data.
+
+        .. versionadded:: 1.3
+        """
+        payload: raw.PartialMessage = {}
+        if self.content is not UNDEFINED:
+            payload['content'] = self.content
+        if self.edited_at is not UNDEFINED:
+            payload['edited'] = self.edited_at.isoformat()
+        if self.internal_embeds is not UNDEFINED:
+            payload['embeds'] = [embed.to_dict() for embed in self.internal_embeds]
+        if self.pinned is not UNDEFINED and self.pinned is not None:
+            payload['pinned'] = self.pinned
+        if self.reactions is not UNDEFINED:
+            payload['reactions'] = {k: list(v) for k, v in self.reactions.items()}
+        return payload
 
 
 @define(slots=True)
@@ -3753,7 +3790,7 @@ class Message(BaseMessage):
         if data.internal_embeds is not UNDEFINED:
             self.internal_embeds = data.internal_embeds
         if data.pinned is not UNDEFINED:
-            self.pinned = data.pinned
+            self.pinned = False if data.pinned is None else data.pinned
         if data.reactions is not UNDEFINED:
             self.reactions = data.reactions
 

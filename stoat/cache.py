@@ -36,6 +36,7 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
     from .abc import Messageable
+    from .audit_logs import AuditLogEntry, AuditLogEntryAction
     from .bot import Bot
     from .emoji import ServerEmoji, DetachedEmoji, Emoji
     from .channel import (
@@ -180,6 +181,12 @@ class CacheContextType(Enum):
     authenticated_event = 'AuthenticatedEvent'
 
     # Relationships
+    member_or_user_through_audit_log_entry_user = 'AuditLogEntry.user: Union[Member, User]'
+    member_through_audit_log_entry_user = 'AuditLogEntry.user_as_member: Member'
+    user_through_audit_log_entry_user = 'AuditLogEntry.user_as_user: User'
+    member_or_user_through_audit_log_entry_action_user = 'AuditLogEntryAction.user: Union[Member, User]'
+    member_through_audit_log_entry_action_user = 'AuditLogEntryAction.user_as_member: Member'
+    user_through_audit_log_entry_action_user = 'AuditLogEntryAction.user_as_user: User'
     message_through_messageable_getter = 'Messageable.get_message(): Optional[Message]'
     messages_through_messageable_getter = 'Messageable.messages: Dict[str, Message]'
     user_through_bot_owner = 'Bot.owner: User'
@@ -323,7 +330,7 @@ class CacheContextType(Enum):
 class BaseCacheContext:
     """Represents a cache context."""
 
-    type: CacheContextType = field(repr=True, hash=True, kw_only=True, eq=True)
+    type: CacheContextType = field(repr=True, kw_only=True, eq=True)
     """:class:`CacheContextType`: The context's type."""
 
 
@@ -341,7 +348,7 @@ class EventCacheContext(BaseCacheContext):
 class ReadyEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ReadyEvent`."""
 
-    event: ReadyEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ReadyEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ReadyEvent`: The event involved."""
 
 
@@ -349,7 +356,7 @@ class ReadyEventCacheContext(EventCacheContext):
 class PrivateChannelCreateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`PrivateChannelCreateEvent`."""
 
-    event: PrivateChannelCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: PrivateChannelCreateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`PrivateChannelCreateEvent`: The event involved."""
 
 
@@ -357,7 +364,7 @@ class PrivateChannelCreateEventCacheContext(EventCacheContext):
 class ServerChannelCreateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerChannelCreateEvent`."""
 
-    event: ServerChannelCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerChannelCreateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerChannelCreateEvent`: The event involved."""
 
 
@@ -365,7 +372,7 @@ class ServerChannelCreateEventCacheContext(EventCacheContext):
 class ChannelUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ChannelUpdateEvent`."""
 
-    event: ChannelUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ChannelUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ChannelUpdateEvent`: The event involved."""
 
 
@@ -373,7 +380,7 @@ class ChannelUpdateEventCacheContext(EventCacheContext):
 class ChannelDeleteEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ChannelDeleteEvent`."""
 
-    event: ChannelDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ChannelDeleteEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ChannelDeleteEvent`: The event involved."""
 
 
@@ -381,7 +388,7 @@ class ChannelDeleteEventCacheContext(EventCacheContext):
 class GroupRecipientAddEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`GroupRecipientAddEvent`."""
 
-    event: GroupRecipientAddEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: GroupRecipientAddEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`GroupRecipientAddEvent`: The event involved."""
 
 
@@ -389,7 +396,7 @@ class GroupRecipientAddEventCacheContext(EventCacheContext):
 class GroupRecipientRemoveEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`GroupRecipientRemoveEvent`."""
 
-    event: GroupRecipientRemoveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: GroupRecipientRemoveEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`GroupRecipientRemoveEvent`: The event involved."""
 
 
@@ -397,7 +404,7 @@ class GroupRecipientRemoveEventCacheContext(EventCacheContext):
 class ChannelStartTypingEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ChannelStartTypingEvent`."""
 
-    event: ChannelStartTypingEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ChannelStartTypingEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ChannelStartTypingEvent`: The event involved."""
 
 
@@ -405,7 +412,7 @@ class ChannelStartTypingEventCacheContext(EventCacheContext):
 class ChannelStopTypingEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ChannelStopTypingEvent`."""
 
-    event: ChannelStopTypingEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ChannelStopTypingEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ChannelStopTypingEvent`: The event involved."""
 
 
@@ -413,7 +420,7 @@ class ChannelStopTypingEventCacheContext(EventCacheContext):
 class MessageAckEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`MessageAckEvent`."""
 
-    event: MessageAckEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: MessageAckEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`MessageAckEvent`: The event involved."""
 
 
@@ -421,7 +428,7 @@ class MessageAckEventCacheContext(EventCacheContext):
 class MessageCreateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`MessageCreateEvent`."""
 
-    event: MessageCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: MessageCreateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`MessageCreateEvent`: The event involved."""
 
 
@@ -429,7 +436,7 @@ class MessageCreateEventCacheContext(EventCacheContext):
 class MessageUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`MessageUpdateEvent`."""
 
-    event: MessageUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: MessageUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`MessageUpdateEvent`: The event involved."""
 
 
@@ -437,7 +444,7 @@ class MessageUpdateEventCacheContext(EventCacheContext):
 class MessageAppendEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`MessageAppendEvent`."""
 
-    event: MessageAppendEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: MessageAppendEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`MessageAppendEvent`: The event involved."""
 
 
@@ -445,7 +452,7 @@ class MessageAppendEventCacheContext(EventCacheContext):
 class MessageDeleteEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`MessageDeleteEvent`."""
 
-    event: MessageDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: MessageDeleteEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`MessageDeleteEvent`: The event involved."""
 
 
@@ -453,7 +460,7 @@ class MessageDeleteEventCacheContext(EventCacheContext):
 class MessageReactEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`MessageReactEvent`."""
 
-    event: MessageReactEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: MessageReactEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`MessageReactEvent`: The event involved."""
 
 
@@ -461,7 +468,7 @@ class MessageReactEventCacheContext(EventCacheContext):
 class MessageUnreactEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`MessageUnreactEvent`."""
 
-    event: MessageUnreactEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: MessageUnreactEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`MessageUnreactEvent`: The event involved."""
 
 
@@ -469,7 +476,7 @@ class MessageUnreactEventCacheContext(EventCacheContext):
 class MessageClearReactionEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`MessageClearReactionEvent`."""
 
-    event: MessageClearReactionEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: MessageClearReactionEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`MessageClearReactionEvent`: The event involved."""
 
 
@@ -477,7 +484,7 @@ class MessageClearReactionEventCacheContext(EventCacheContext):
 class MessageDeleteBulkEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`MessageDeleteBulkEvent`."""
 
-    event: MessageDeleteBulkEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: MessageDeleteBulkEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`MessageDeleteBulkEvent`: The event involved."""
 
 
@@ -485,7 +492,7 @@ class MessageDeleteBulkEventCacheContext(EventCacheContext):
 class ServerCreateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerCreateEvent`."""
 
-    event: ServerCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerCreateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerCreateEvent`: The event involved."""
 
 
@@ -493,7 +500,7 @@ class ServerCreateEventCacheContext(EventCacheContext):
 class ServerEmojiCreateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerEmojiCreateEvent`."""
 
-    event: ServerEmojiCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerEmojiCreateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerEmojiCreateEvent`: The event involved."""
 
 
@@ -501,7 +508,7 @@ class ServerEmojiCreateEventCacheContext(EventCacheContext):
 class ServerEmojiDeleteEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerEmojiDeleteEvent`."""
 
-    event: ServerEmojiDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerEmojiDeleteEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerEmojiDeleteEvent`: The event involved."""
 
 
@@ -509,7 +516,7 @@ class ServerEmojiDeleteEventCacheContext(EventCacheContext):
 class ServerUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerUpdateEvent`."""
 
-    event: ServerUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerUpdateEvent`: The event involved."""
 
 
@@ -517,7 +524,7 @@ class ServerUpdateEventCacheContext(EventCacheContext):
 class ServerDeleteEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerDeleteEvent`."""
 
-    event: ServerDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerDeleteEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerDeleteEvent`: The event involved."""
 
 
@@ -525,7 +532,7 @@ class ServerDeleteEventCacheContext(EventCacheContext):
 class ServerMemberJoinEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerMemberJoinEvent`."""
 
-    event: ServerMemberJoinEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerMemberJoinEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerMemberJoinEvent`: The event involved."""
 
 
@@ -533,7 +540,7 @@ class ServerMemberJoinEventCacheContext(EventCacheContext):
 class ServerMemberUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerMemberUpdateEvent`."""
 
-    event: ServerMemberUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerMemberUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerMemberUpdateEvent`: The event involved."""
 
 
@@ -541,7 +548,7 @@ class ServerMemberUpdateEventCacheContext(EventCacheContext):
 class ServerMemberRemoveEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerMemberRemoveEvent`."""
 
-    event: ServerMemberRemoveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerMemberRemoveEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerMemberRemoveEvent`: The event involved."""
 
 
@@ -549,7 +556,7 @@ class ServerMemberRemoveEventCacheContext(EventCacheContext):
 class RawServerRoleUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`RawServerRoleUpdateEvent`."""
 
-    event: RawServerRoleUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: RawServerRoleUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`RawServerRoleUpdateEvent`: The event involved."""
 
 
@@ -557,7 +564,7 @@ class RawServerRoleUpdateEventCacheContext(EventCacheContext):
 class ServerRoleDeleteEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ServerRoleDeleteEvent`."""
 
-    event: ServerRoleDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerRoleDeleteEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerRoleDeleteEvent`: The event involved."""
 
 
@@ -565,7 +572,7 @@ class ServerRoleDeleteEventCacheContext(EventCacheContext):
 class ServerRoleRanksUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`.ServerRoleRanksUpdateEvent`."""
 
-    event: ServerRoleRanksUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ServerRoleRanksUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`.ServerRoleRanksUpdateEvent`: The event involved."""
 
 
@@ -573,7 +580,7 @@ class ServerRoleRanksUpdateEventCacheContext(EventCacheContext):
 class ReportCreateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`ReportCreateEvent`."""
 
-    event: ReportCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: ReportCreateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`ReportCreateEvent`: The event involved."""
 
 
@@ -581,7 +588,7 @@ class ReportCreateEventCacheContext(EventCacheContext):
 class UserUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`UserUpdateEvent`."""
 
-    event: UserUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: UserUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`UserUpdateEvent`: The event involved."""
 
 
@@ -589,7 +596,7 @@ class UserUpdateEventCacheContext(EventCacheContext):
 class UserRelationshipUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`UserRelationshipUpdateEvent`."""
 
-    event: UserRelationshipUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: UserRelationshipUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`UserRelationshipUpdateEvent`: The event involved."""
 
 
@@ -597,7 +604,7 @@ class UserRelationshipUpdateEventCacheContext(EventCacheContext):
 class UserSettingsUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`UserSettingsUpdateEvent`."""
 
-    event: UserSettingsUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: UserSettingsUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`UserSettingsUpdateEvent`: The event involved."""
 
 
@@ -605,7 +612,7 @@ class UserSettingsUpdateEventCacheContext(EventCacheContext):
 class UserPlatformWipeEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`UserPlatformWipeEvent`."""
 
-    event: UserPlatformWipeEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: UserPlatformWipeEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`UserPlatformWipeEvent`: The event involved."""
 
 
@@ -613,7 +620,7 @@ class UserPlatformWipeEventCacheContext(EventCacheContext):
 class WebhookCreateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`WebhookCreateEvent`."""
 
-    event: WebhookCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: WebhookCreateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`WebhookCreateEvent`: The event involved."""
 
 
@@ -621,7 +628,7 @@ class WebhookCreateEventCacheContext(EventCacheContext):
 class WebhookUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`WebhookUpdateEvent`."""
 
-    event: WebhookUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: WebhookUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`WebhookUpdateEvent`: The event involved."""
 
 
@@ -629,7 +636,7 @@ class WebhookUpdateEventCacheContext(EventCacheContext):
 class WebhookDeleteEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`WebhookDeleteEvent`."""
 
-    event: WebhookDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: WebhookDeleteEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`WebhookDeleteEvent`: The event involved."""
 
 
@@ -637,7 +644,7 @@ class WebhookDeleteEventCacheContext(EventCacheContext):
 class SessionCreateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`SessionCreateEvent`."""
 
-    event: SessionCreateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: SessionCreateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`SessionCreateEvent`: The event involved."""
 
 
@@ -645,7 +652,7 @@ class SessionCreateEventCacheContext(EventCacheContext):
 class SessionDeleteEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`SessionDeleteEvent`."""
 
-    event: SessionDeleteEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: SessionDeleteEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`SessionDeleteEvent`: The event involved."""
 
 
@@ -653,7 +660,7 @@ class SessionDeleteEventCacheContext(EventCacheContext):
 class SessionDeleteAllEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`SessionDeleteAllEvent`."""
 
-    event: SessionDeleteAllEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: SessionDeleteAllEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`SessionDeleteAllEvent`: The event involved."""
 
 
@@ -661,7 +668,7 @@ class SessionDeleteAllEventCacheContext(EventCacheContext):
 class VoiceChannelJoinEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`VoiceChannelJoinEvent`."""
 
-    event: VoiceChannelJoinEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: VoiceChannelJoinEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`VoiceChannelJoinEvent`: The event involved."""
 
 
@@ -669,7 +676,7 @@ class VoiceChannelJoinEventCacheContext(EventCacheContext):
 class VoiceChannelLeaveEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`VoiceChannelLeaveEvent`."""
 
-    event: VoiceChannelLeaveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: VoiceChannelLeaveEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`VoiceChannelLeaveEvent`: The event involved."""
 
 
@@ -677,7 +684,7 @@ class VoiceChannelLeaveEventCacheContext(EventCacheContext):
 class VoiceChannelMoveEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`VoiceChannelMoveEvent`."""
 
-    event: VoiceChannelMoveEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: VoiceChannelMoveEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`VoiceChannelMoveEvent`: The event involved."""
 
 
@@ -685,7 +692,7 @@ class VoiceChannelMoveEventCacheContext(EventCacheContext):
 class UserVoiceStateUpdateEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`UserVoiceStateUpdateEvent`."""
 
-    event: UserVoiceStateUpdateEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: UserVoiceStateUpdateEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`UserVoiceStateUpdateEvent`: The event involved."""
 
 
@@ -693,7 +700,7 @@ class UserVoiceStateUpdateEventCacheContext(EventCacheContext):
 class UserMoveVoiceChannelEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`UserMoveVoiceChannelEvent`."""
 
-    event: UserMoveVoiceChannelEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: UserMoveVoiceChannelEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`UserMoveVoiceChannelEvent`: The event involved."""
 
 
@@ -701,7 +708,7 @@ class UserMoveVoiceChannelEventCacheContext(EventCacheContext):
 class AuthenticatedEventCacheContext(EventCacheContext):
     """Represents a cache context that involves a :class:`AuthenticatedEvent`."""
 
-    event: AuthenticatedEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    event: AuthenticatedEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`AuthenticatedEvent`: The event involved."""
 
 
@@ -711,17 +718,36 @@ class EntityCacheContext(BaseCacheContext):
 
 
 @define(slots=True)
+class AuditLogEntryCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`AuditLogEntry` entity.
+
+    .. versionadded:: 1.3
+    """
+
+    entry: AuditLogEntry = field(repr=True, kw_only=True, eq=True)
+
+
+@define(slots=True)
+class AuditLogEntryActionCacheContext(EntityCacheContext):
+    """Represents a cache context that involves an :class:`AuditLogEntryAction` entity.
+
+    .. versionadded:: 1.3"""
+
+    action: AuditLogEntryAction = field(repr=True, kw_only=True, eq=True)
+
+
+@define(slots=True)
 class MessageableCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`~stoat.abc.Messageable` entity."""
 
-    entity: Messageable = field(repr=True, hash=True, kw_only=True, eq=True)
+    entity: Messageable = field(repr=True, kw_only=True, eq=True)
 
 
 @define(slots=True)
 class BotCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`Bot` entity."""
 
-    bot: Bot = field(repr=True, hash=True, kw_only=True, eq=True)
+    bot: Bot = field(repr=True, kw_only=True, eq=True)
     """:class:`Bot`: The bot involved."""
 
 
@@ -729,7 +755,7 @@ class BotCacheContext(EntityCacheContext):
 class DMChannelCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`DMChannel` entity."""
 
-    channel: DMChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: DMChannel = field(repr=True, kw_only=True, eq=True)
     """:class:`DMChannel`: The channel involved."""
 
 
@@ -737,7 +763,7 @@ class DMChannelCacheContext(EntityCacheContext):
 class GroupChannelCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`GroupChannel` entity."""
 
-    channel: GroupChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: GroupChannel = field(repr=True, kw_only=True, eq=True)
     """:class:`GroupChannel`: The channel involved."""
 
 
@@ -745,7 +771,7 @@ class GroupChannelCacheContext(EntityCacheContext):
 class BaseServerChannelCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`BaseServerChannel` entity."""
 
-    channel: BaseServerChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: BaseServerChannel = field(repr=True, kw_only=True, eq=True)
     """:class:`BaseServerChannel`: The channel involved."""
 
 
@@ -753,7 +779,7 @@ class BaseServerChannelCacheContext(EntityCacheContext):
 class TextChannelCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`TextChannel` entity."""
 
-    channel: TextChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: TextChannel = field(repr=True, kw_only=True, eq=True)
     """:class:`TextChannel`: The channel involved."""
 
 
@@ -761,7 +787,7 @@ class TextChannelCacheContext(EntityCacheContext):
 class VoiceChannelCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`VoiceChannel` entity."""
 
-    channel: VoiceChannel = field(repr=True, hash=True, kw_only=True, eq=True)
+    channel: VoiceChannel = field(repr=True, kw_only=True, eq=True)
     """:class:`VoiceChannel`: The channel involved."""
 
 
@@ -769,7 +795,7 @@ class VoiceChannelCacheContext(EntityCacheContext):
 class BaseEmojiCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`BaseEmoji` entity."""
 
-    emoji: BaseEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji: BaseEmoji = field(repr=True, kw_only=True, eq=True)
     """:class:`BaseEmoji`: The emoji involved."""
 
 
@@ -777,7 +803,7 @@ class BaseEmojiCacheContext(EntityCacheContext):
 class ServerEmojiCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`ServerEmoji` entity."""
 
-    emoji: ServerEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji: ServerEmoji = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerEmoji`: The emoji involved."""
 
 
@@ -785,7 +811,7 @@ class ServerEmojiCacheContext(EntityCacheContext):
 class DetachedEmojiCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`DetachedEmoji` entity."""
 
-    emoji: DetachedEmoji = field(repr=True, hash=True, kw_only=True, eq=True)
+    emoji: DetachedEmoji = field(repr=True, kw_only=True, eq=True)
     """:class:`DetachedEmoji`: The emoji involved."""
 
 
@@ -793,7 +819,7 @@ class DetachedEmojiCacheContext(EntityCacheContext):
 class ClientCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`Client`."""
 
-    client: Client = field(repr=True, hash=True, kw_only=True, eq=True)
+    client: Client = field(repr=True, kw_only=True, eq=True)
     """:class:`Client`: The client involved."""
 
 
@@ -801,7 +827,7 @@ class ClientCacheContext(EntityCacheContext):
 class ServerPublicInviteCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`ServerPublicInvite` entity."""
 
-    invite: ServerPublicInvite = field(repr=True, hash=True, kw_only=True, eq=True)
+    invite: ServerPublicInvite = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerPublicInvite`: The invite involved."""
 
 
@@ -809,7 +835,7 @@ class ServerPublicInviteCacheContext(EntityCacheContext):
 class GroupPublicInviteCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`GroupPublicInvite` entity."""
 
-    invite: GroupPublicInvite = field(repr=True, hash=True, kw_only=True, eq=True)
+    invite: GroupPublicInvite = field(repr=True, kw_only=True, eq=True)
     """:class:`GroupPublicInvite`: The invite involved."""
 
 
@@ -817,7 +843,7 @@ class GroupPublicInviteCacheContext(EntityCacheContext):
 class GroupInviteCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`GroupInvite` entity."""
 
-    invite: GroupInvite = field(repr=True, hash=True, kw_only=True, eq=True)
+    invite: GroupInvite = field(repr=True, kw_only=True, eq=True)
     """:class:`GroupInvite`: The invite involved."""
 
 
@@ -825,7 +851,7 @@ class GroupInviteCacheContext(EntityCacheContext):
 class ServerInviteCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`ServerInvite` entity."""
 
-    invite: ServerInvite = field(repr=True, hash=True, kw_only=True, eq=True)
+    invite: ServerInvite = field(repr=True, kw_only=True, eq=True)
     """:class:`ServerInvite`: The invite involved."""
 
 
@@ -833,7 +859,7 @@ class ServerInviteCacheContext(EntityCacheContext):
 class BaseMessageCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`BaseMessage` entity."""
 
-    message: BaseMessage = field(repr=True, hash=True, kw_only=True, eq=True)
+    message: BaseMessage = field(repr=True, kw_only=True, eq=True)
     """:class:`BaseMessage`: The message involved."""
 
 
@@ -841,7 +867,7 @@ class BaseMessageCacheContext(EntityCacheContext):
 class MessageCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`Message` entity."""
 
-    message: Message = field(repr=True, hash=True, kw_only=True, eq=True)
+    message: Message = field(repr=True, kw_only=True, eq=True)
     """:class:`Message`: The message involved."""
 
 
@@ -849,7 +875,7 @@ class MessageCacheContext(EntityCacheContext):
 class ReadStateCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`ReadState` entity."""
 
-    read_state: ReadState = field(repr=True, hash=True, kw_only=True, eq=True)
+    read_state: ReadState = field(repr=True, kw_only=True, eq=True)
     """:class:`ReadState`: The read state involved."""
 
 
@@ -857,7 +883,7 @@ class ReadStateCacheContext(EntityCacheContext):
 class BaseRoleCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`BaseRole` entity."""
 
-    role: BaseRole = field(repr=True, hash=True, kw_only=True, eq=True)
+    role: BaseRole = field(repr=True, kw_only=True, eq=True)
     """:class:`BaseRole`: The role involved."""
 
 
@@ -865,7 +891,7 @@ class BaseRoleCacheContext(EntityCacheContext):
 class BaseServerCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`BaseServer` entity."""
 
-    server: BaseServer = field(repr=True, hash=True, kw_only=True, eq=True)
+    server: BaseServer = field(repr=True, kw_only=True, eq=True)
     """:class:`BaseServer`: The server involved."""
 
 
@@ -873,7 +899,7 @@ class BaseServerCacheContext(EntityCacheContext):
 class BaseMemberCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`BaseMember` entity."""
 
-    member: BaseMember = field(repr=True, hash=True, kw_only=True, eq=True)
+    member: BaseMember = field(repr=True, kw_only=True, eq=True)
     """:class:`BaseMember`: The member involved."""
 
 
@@ -881,7 +907,7 @@ class BaseMemberCacheContext(EntityCacheContext):
 class MemberCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`Member` entity."""
 
-    member: Member = field(repr=True, hash=True, kw_only=True, eq=True)
+    member: Member = field(repr=True, kw_only=True, eq=True)
     """:class:`Member`: The member involved."""
 
 
@@ -889,7 +915,7 @@ class MemberCacheContext(EntityCacheContext):
 class ServerCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`Server` entity."""
 
-    server: Server = field(repr=True, hash=True, kw_only=True, eq=True)
+    server: Server = field(repr=True, kw_only=True, eq=True)
     """:class:`Server`: The server involved."""
 
 
@@ -897,7 +923,7 @@ class ServerCacheContext(EntityCacheContext):
 class BaseUserCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`BaseUser` entity."""
 
-    user: BaseUser = field(repr=True, hash=True, kw_only=True, eq=True)
+    user: BaseUser = field(repr=True, kw_only=True, eq=True)
     """:class:`BaseUser`: The user involved."""
 
 
@@ -905,7 +931,7 @@ class BaseUserCacheContext(EntityCacheContext):
 class UserCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`User` entity."""
 
-    user: User = field(repr=True, hash=True, kw_only=True, eq=True)
+    user: User = field(repr=True, kw_only=True, eq=True)
     """:class:`User`: The user involved."""
 
 
@@ -913,15 +939,61 @@ class UserCacheContext(EntityCacheContext):
 class WebhookCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`Webhook` entity."""
 
-    webhook: Webhook = field(repr=True, hash=True, kw_only=True, eq=True)
+    webhook: Webhook = field(repr=True, kw_only=True, eq=True)
     """:class:`Webhook`: The webhook involved."""
+
+
+@define(slots=True)
+class MemberOrUserThroughAuditLogEntryUserCacheContext(AuditLogEntryCacheContext):
+    """Represents a cache context that involves an :class:`AuditLogEntry`, wishing to retrieve audit log entry's user.
+
+    .. versionadded:: 1.3
+    """
+
+
+@define(slots=True)
+class MemberThroughAuditLogEntryUserCacheContext(AuditLogEntryCacheContext):
+    """Represents a cache context that involves an :class:`AuditLogEntry`, wishing to retrieve audit log entry's user as :class:`Member` instance.
+
+    .. versionadded:: 1.3
+    """
+
+
+@define(slots=True)
+class UserThroughAuditLogEntryUserCacheContext(AuditLogEntryCacheContext):
+    """Represents a cache context that involves an :class:`AuditLogEntry`, wishing to retrieve audit log entry's user as :class:`User` instance.
+
+    .. versionadded:: 1.3
+    """
+
+
+@define(slots=True)
+class MemberOrUserThroughAuditLogEntryActionUserCacheContext(AuditLogEntryActionCacheContext):
+    """Represents a cache context that involves an :class:`AuditLogEntryAction`, wishing to retrieve audit log entry's user.
+
+    .. versionadded:: 1.3
+    """
+
+
+@define(slots=True)
+class MemberThroughAuditLogEntryActionUserCacheContext(AuditLogEntryActionCacheContext):
+    """Represents a cache context that involves an :class:`AuditLogEntryAction`, wishing to retrieve audit log entry's user as :class:`Member` instance.
+
+    .. versionadded:: 1.3"""
+
+
+@define(slots=True)
+class UserThroughAuditLogEntryActionUserCacheContext(AuditLogEntryActionCacheContext):
+    """Represents a cache context that involves an :class:`AuditLogEntryAction`, wishing to retrieve audit log entry's user as :class:`User` instance.
+
+    .. versionadded:: 1.3"""
 
 
 @define(slots=True)
 class UserAddedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessUserAddedSystemEvent` entity."""
 
-    system_message: StatelessUserAddedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessUserAddedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessUserAddedSystemEvent`: The system message involved."""
 
 
@@ -929,7 +1001,7 @@ class UserAddedSystemEventCacheContext(EntityCacheContext):
 class UserRemovedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessUserRemovedSystemEvent` entity."""
 
-    system_message: StatelessUserRemovedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessUserRemovedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessUserRemovedSystemEvent`: The system message involved."""
 
 
@@ -937,7 +1009,7 @@ class UserRemovedSystemEventCacheContext(EntityCacheContext):
 class UserJoinedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessStatelessUserJoinedSystemEvent` entity."""
 
-    system_message: StatelessUserJoinedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessUserJoinedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessUserJoinedSystemEvent`: The system message involved."""
 
 
@@ -945,7 +1017,7 @@ class UserJoinedSystemEventCacheContext(EntityCacheContext):
 class UserLeftSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessUserLeftSystemEvent` entity."""
 
-    system_message: StatelessUserLeftSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessUserLeftSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessUserLeftSystemEvent`: The system message involved."""
 
 
@@ -953,7 +1025,7 @@ class UserLeftSystemEventCacheContext(EntityCacheContext):
 class UserKickedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessUserKickedSystemEvent` entity."""
 
-    system_message: StatelessUserKickedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessUserKickedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessUserKickedSystemEvent`: The system message involved."""
 
 
@@ -961,7 +1033,7 @@ class UserKickedSystemEventCacheContext(EntityCacheContext):
 class UserBannedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessUserBannedSystemEvent` entity."""
 
-    system_message: StatelessUserBannedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessUserBannedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessUserBannedSystemEvent`: The system message involved."""
 
 
@@ -969,7 +1041,7 @@ class UserBannedSystemEventCacheContext(EntityCacheContext):
 class ChannelRenamedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessChannelRenamedSystemEvent` entity."""
 
-    system_message: StatelessChannelRenamedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessChannelRenamedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessChannelRenamedSystemEvent`: The system message involved."""
 
 
@@ -977,7 +1049,7 @@ class ChannelRenamedSystemEventCacheContext(EntityCacheContext):
 class ChannelDescriptionChangedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessChannelDescriptionChangedSystemEvent` entity."""
 
-    system_message: StatelessChannelDescriptionChangedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessChannelDescriptionChangedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessChannelDescriptionChangedSystemEvent`: The system message involved."""
 
 
@@ -985,7 +1057,7 @@ class ChannelDescriptionChangedSystemEventCacheContext(EntityCacheContext):
 class ChannelIconChangedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessChannelIconChangedSystemEvent` entity."""
 
-    system_message: StatelessChannelIconChangedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessChannelIconChangedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessChannelIconChangedSystemEvent`: The system message involved."""
 
 
@@ -993,7 +1065,7 @@ class ChannelIconChangedSystemEventCacheContext(EntityCacheContext):
 class ChannelOwnershipChangedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessChannelOwnershipChangedSystemEvent` entity."""
 
-    system_message: StatelessChannelOwnershipChangedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessChannelOwnershipChangedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessChannelOwnershipChangedSystemEvent`: The system message involved."""
 
 
@@ -1001,7 +1073,7 @@ class ChannelOwnershipChangedSystemEventCacheContext(EntityCacheContext):
 class MessagePinnedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessMessagePinnedSystemEvent` entity."""
 
-    system_message: StatelessMessagePinnedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessMessagePinnedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessMessagePinnedSystemEvent`: The system message involved."""
 
 
@@ -1009,7 +1081,7 @@ class MessagePinnedSystemEventCacheContext(EntityCacheContext):
 class MessageUnpinnedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessMessageUnpinnedSystemEvent` entity."""
 
-    system_message: StatelessMessageUnpinnedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessMessageUnpinnedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessMessageUnpinnedSystemEvent`: The system message involved."""
 
 
@@ -1017,7 +1089,7 @@ class MessageUnpinnedSystemEventCacheContext(EntityCacheContext):
 class CallStartedSystemEventCacheContext(EntityCacheContext):
     """Represents a cache context that involves an :class:`StatelessCallStartedSystemEvent` entity."""
 
-    system_message: StatelessCallStartedSystemEvent = field(repr=True, hash=True, kw_only=True, eq=True)
+    system_message: StatelessCallStartedSystemEvent = field(repr=True, kw_only=True, eq=True)
     """:class:`StatelessCallStartedSystemEvent`: The system message involved."""
 
 
@@ -1732,6 +1804,24 @@ _USER_MOVE_VOICE_CHANNEL_EVENT: typing.Final[UndefinedCacheContext] = UndefinedC
 _AUTHENTICATED_EVENT: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.authenticated_event,
 )
+_MEMBER_OR_USER_THROUGH_AUDIT_LOG_ENTRY_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_audit_log_entry_user,
+)
+_MEMBER_THROUGH_AUDIT_LOG_ENTRY_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_audit_log_entry_user,
+)
+_USER_THROUGH_AUDIT_LOG_ENTRY_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_audit_log_entry_user,
+)
+_MEMBER_OR_USER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_or_user_through_audit_log_entry_action_user,
+)
+_MEMBER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.member_through_audit_log_entry_action_user,
+)
+_USER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
+    type=CacheContextType.user_through_audit_log_entry_action_user,
+)
 _MESSAGE_THROUGH_MESSAGEABLE_GETTER: typing.Final[UndefinedCacheContext] = UndefinedCacheContext(
     type=CacheContextType.message_through_messageable_getter,
 )
@@ -2178,6 +2268,12 @@ ProvideCacheContextIn = typing.Literal[
     'UserVoiceStateUpdateEvent',
     'AuthenticatedEvent',
     # Relationships
+    'AuditLogEntry.user',
+    'AuditLogEntry.user_as_member',
+    'AuditLogEntry.user_as_user',
+    'AuditLogEntryAction.user',
+    'AuditLogEntryAction.user_as_member',
+    'AuditLogEntryAction.user_as_user',
     'Messageable.get_message()',
     'Messageable.messages',
     'Bot.owner',
@@ -3735,6 +3831,8 @@ __all__ = (
     'UserMoveVoiceChannelEventCacheContext',
     'AuthenticatedEventCacheContext',
     'EntityCacheContext',
+    'AuditLogEntryCacheContext',
+    'AuditLogEntryActionCacheContext',
     'MessageableCacheContext',
     'BotCacheContext',
     'DMChannelCacheContext',
@@ -3758,6 +3856,12 @@ __all__ = (
     'BaseUserCacheContext',
     'UserCacheContext',
     'WebhookCacheContext',
+    'MemberOrUserThroughAuditLogEntryUserCacheContext',
+    'MemberThroughAuditLogEntryUserCacheContext',
+    'UserThroughAuditLogEntryUserCacheContext',
+    'MemberOrUserThroughAuditLogEntryActionUserCacheContext',
+    'MemberThroughAuditLogEntryActionUserCacheContext',
+    'UserThroughAuditLogEntryActionUserCacheContext',
     'MessageThroughMessageableGetterCacheContext',
     'MessagesThroughMessageableGetterCacheContext',
     'UserThroughBotOwnerCacheContext',
@@ -3921,6 +4025,12 @@ __all__ = (
     '_USER_VOICE_STATE_UPDATE_EVENT',
     '_USER_MOVE_VOICE_CHANNEL_EVENT',
     '_AUTHENTICATED_EVENT',
+    '_MEMBER_OR_USER_THROUGH_AUDIT_LOG_ENTRY_USER',
+    '_MEMBER_THROUGH_AUDIT_LOG_ENTRY_USER',
+    '_USER_THROUGH_AUDIT_LOG_ENTRY_USER',
+    '_MEMBER_OR_USER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER',
+    '_MEMBER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER',
+    '_USER_THROUGH_AUDIT_LOG_ENTRY_ACTION_USER',
     '_MESSAGE_THROUGH_MESSAGEABLE_GETTER',
     '_MESSAGES_THROUGH_MESSAGEABLE_GETTER',
     '_USER_THROUGH_BOT_OWNER',

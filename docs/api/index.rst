@@ -38,6 +38,7 @@ Documents
 .. toctree::
     :maxdepth: 1
 
+    audit_logs
     authentication
     bots
     cache

@@ -72,10 +72,10 @@ class HTTPException(StoatException):
         The duration in seconds to wait until ratelimit expires.
     error: Optional[:class:`str`]
         The validation error details.
-        Only applicable when :attr:`~.type` is ``'FailedValidation'``.
+        Only applicable when :attr:`type` is ``'FailedValidation'``.
     max: Optional[:class:`int`]
         The maximum count of entities.
-        Only applicable when :attr:`~.type` one of following values:
+        Only applicable when :attr:`type` one of following values:
 
         - ``'FileTooLarge'``
         - ``'GroupTooLarge'``
@@ -89,27 +89,27 @@ class HTTPException(StoatException):
         - ``'TooManyServers'``
     permission: Optional[:class:`str`]
         The permission required to perform request.
-        Only applicable when :attr:`~.type` one of following values:
+        Only applicable when :attr:`type` one of following values:
 
         - ``'MissingPermission'``
         - ``'MissingUserPermission'``
     operation: Optional[:class:`str`]
         The database operation that failed.
-        Only applicable when :attr:`~.type` is ``'DatabaseError'``.
+        Only applicable when :attr:`type` is ``'DatabaseError'``.
     collection: Optional[:class:`str`]
         The collection's name the operation was on.
-        Not always available when :attr:`~.type` is ``'DatabaseError'``.
+        Not always available when :attr:`type` is ``'DatabaseError'``.
     location: Optional[:class:`str`]
         The path to Rust location where error occured.
     with_: Optional[:class:`str`]
         The collection's name the operation was on.
-        Only applicable when :attr:`~.type` one of following values:
+        Only applicable when :attr:`type` one of following values:
         - ``'IncorrectData'``
 
-        Not always available when :attr:`~.type` is ``'DatabaseError'``.
+        Not always available when :attr:`type` is ``'DatabaseError'``.
     feature: Optional[:class:`str`]
         The feature that was disabled.
-        Only applicable when :attr:`~.type` is ``'FeatureDisabled'``.
+        Only applicable when :attr:`type` is ``'FeatureDisabled'``.
 
         Possible values:
 
@@ -369,12 +369,21 @@ class NoData(StoatException):
     This is different from :exc:`NotFound`, and inherits from :class:`StoatException`.
     """
 
-    __slots__ = ('what', 'type')
+    __slots__ = (
+        'what',
+        'type',
+        'hint',
+    )
 
-    def __init__(self, what: str, type: str) -> None:
-        self.what = what
-        self.type = type
-        super().__init__(f'Unable to find {type} {what} in cache')
+    def __init__(self, what: str, type: str, *, hint: typing.Optional[str] = None) -> None:
+        self.what: str = what
+        self.type: str = type
+
+        if hint:
+            msg = f'Unable to find {type} {what} in cache (hint: {hint})'
+        else:
+            msg = f'Unable to find {type} {what} in cache'
+        super().__init__(msg)
 
 
 __all__ = (

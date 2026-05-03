@@ -1,3 +1,5 @@
+from .audit_logs import *
+
 # This is actually used
 from . import authifier as a  # noqa: F401
 from .authorized_bots import *

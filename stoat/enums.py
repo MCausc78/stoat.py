@@ -162,6 +162,39 @@ else:
                 return value
 
 
+E = typing.TypeVar('E')
+
+
+def _create_unknown_value(cls: type[E], val: typing.Any) -> E:
+    value_cls = cls._enum_value_cls_  # type: ignore # This is narrowed below
+    name = f'unknown_{val}'
+    return value_cls(name=name, value=val)
+
+
+def try_enum(cls: type[E], val: typing.Any) -> E:
+    """A function that tries to turn the value into enum ``cls``.
+
+    If it fails it returns a proxy invalid value instead.
+
+    Parameters
+    ----------
+    cls: :class:`type`
+        The enum to try converting value into.
+    val: Any
+        The value.
+
+    Returns
+    -------
+    Any
+        The converted value, or a proxy.
+    """
+
+    try:
+        return cls._enum_value_map_[val]  # type: ignore # All errors are caught below
+    except (KeyError, TypeError, AttributeError):
+        return _create_unknown_value(cls, val)
+
+
 class MFAMethod(Enum):
     password = 'Password'
     recovery = 'Recovery'
@@ -275,6 +308,30 @@ class ReportedContentType(Enum):
     message = 'Message'
     server = 'Server'
     user = 'User'
+
+
+class AuditLogEntryActionType(Enum):
+    message_delete = 'MessageDelete'
+    message_bulk_delete = 'MessageBulkDelete'
+    ban = 'BanCreate'
+    unban = 'BanDelete'
+    channel_create = 'ChannelCreate'
+    channel_update = 'ChannelEdit'
+    channel_role_permissions_update = 'ChannelRolePermissionsEdit'
+    channel_delete = 'ChannelDelete'
+    member_update = 'MemberEdit'
+    member_remove = 'MemberKick'
+    server_update = 'ServerEdit'
+    role_create = 'RoleCreate'
+    role_update = 'RoleEdit'
+    role_delete = 'RoleDelete'
+    roles_reorder = 'RolesReorder'
+    invite_delete = 'InviteDelete'
+    webhook_create = 'WebhookCreate'
+    webhook_delete = 'WebhookDelete'
+    emoji_delete = 'EmojiDelete'
+
+    unknown = ''
 
 
 class MemberRemovalIntention(Enum):
@@ -517,6 +574,8 @@ class UserReportReason(Enum):
 __all__ = (
     'EnumMeta',
     'Enum',
+    '_create_unknown_value',
+    'try_enum',
     # Authentication
     'MFAMethod',
     # Asset
@@ -543,6 +602,7 @@ __all__ = (
     'ReportStatus',
     'ReportedContentType',
     # Servers
+    'AuditLogEntryActionType',
     'MemberRemovalIntention',
     # Settings
     'Language',

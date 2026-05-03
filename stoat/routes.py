@@ -196,6 +196,7 @@ PUSH_UNSUBSCRIBE: typing.Final[Route] = Route(POST, '/push/unsubscribe')
 SAFETY_REPORT_CONTENT: typing.Final[Route] = Route(POST, '/safety/report')
 
 # Servers control
+SERVERS_AUDIT_LOG_QUERY: typing.Final[Route] = Route(GET, '/servers/{server_id}/audit_logs')
 SERVERS_BAN_CREATE: typing.Final[Route] = Route(PUT, '/servers/{server_id}/bans/{user_id}')
 SERVERS_BAN_LIST: typing.Final[Route] = Route(GET, '/servers/{server_id}/bans')
 SERVERS_BAN_REMOVE: typing.Final[Route] = Route(DELETE, '/servers/{server_id}/bans/{user_id}')
@@ -357,6 +358,7 @@ __all__ = (
     'PUSH_SUBSCRIBE',
     'PUSH_UNSUBSCRIBE',
     'SAFETY_REPORT_CONTENT',
+    'SERVERS_AUDIT_LOG_QUERY',
     'SERVERS_BAN_CREATE',
     'SERVERS_BAN_LIST',
     'SERVERS_BAN_REMOVE',

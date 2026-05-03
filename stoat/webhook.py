@@ -453,13 +453,15 @@ class PartialWebhook(BaseWebhook):
     This inherits from :class:`BaseWebhook`.
     """
 
-    name: UndefinedOr[str] = field(repr=True, hash=True, kw_only=True, eq=True)
+    name: UndefinedOr[str] = field(default=UNDEFINED, repr=True, hash=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`str`]: The new webhook's name."""
 
-    internal_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, hash=True, kw_only=True, eq=True)
+    internal_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(
+        default=UNDEFINED, repr=True, hash=True, kw_only=True, eq=True
+    )
     """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new webhook's stateless avatar."""
 
-    raw_permissions: UndefinedOr[int] = field(repr=True, hash=True, kw_only=True, eq=True)
+    raw_permissions: UndefinedOr[int] = field(default=UNDEFINED, repr=True, hash=True, kw_only=True, eq=True)
     """UndefinedOr[:class:`int`]: The new webhook's permissions raw value."""
 
     @property
@@ -475,6 +477,31 @@ class PartialWebhook(BaseWebhook):
         ret = _new_permissions(Permissions)
         ret.value = self.raw_permissions
         return ret
+
+    def get_clear_fields(self) -> list[raw.FieldsWebhook]:
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
+
+        fields: list[raw.FieldsWebhook] = []
+        if self.internal_avatar is None:
+            fields.append('Avatar')
+        return fields
+
+    def to_dict(self) -> raw.PartialWebhook:
+        """:class:`dict`: Convert partial webhook to raw data.
+
+        .. versionadded:: 1.3
+        """
+        payload: raw.PartialWebhook = {}
+        if self.name is not UNDEFINED:
+            payload['name'] = self.name
+        if self.internal_avatar is not UNDEFINED and self.internal_avatar is not None:
+            payload['avatar'] = self.internal_avatar.to_dict('avatars')
+        if self.raw_permissions is not UNDEFINED:
+            payload['permissions'] = self.raw_permissions
+        return payload
 
 
 @define(slots=True)

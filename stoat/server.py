@@ -107,7 +107,7 @@ from .core import (
     resolve_id,
 )
 from .emoji import ServerEmoji
-from .enums import ChannelType, ContentReportReason, RelationshipStatus, UserReportReason
+from .enums import ChannelType, ContentReportReason, AuditLogEntryActionType, RelationshipStatus, UserReportReason
 from .errors import NoData
 from .flags import Permissions, ALLOW_PERMISSIONS_IN_TIMEOUT, ServerFlags, UserBadges, UserFlags
 from .permissions import Permissions, PermissionOverride
@@ -123,9 +123,10 @@ from .user import (
 
 
 if typing.TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Collection, Mapping
 
     from . import raw
+    from .audit_logs import AuditLogEntry
     from .channel import (
         SavedMessagesChannel,
         DMChannel,
@@ -361,7 +362,9 @@ class BaseRole(Base):
             )
         return server
 
-    async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
+    async def delete(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, reason: typing.Optional[str] = None
+    ) -> None:
         """|coro|
 
         Deletes the role.
@@ -374,6 +377,10 @@ class BaseRole(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -413,12 +420,13 @@ class BaseRole(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.delete_role(self.server_id, self.id, http_overrides=http_overrides)
+        return await self.state.http.delete_role(self.server_id, self.id, http_overrides=http_overrides, reason=reason)
 
     async def edit(
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         color: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         hoist: UndefinedOr[bool] = UNDEFINED,
@@ -436,6 +444,10 @@ class BaseRole(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
         color: UndefinedOr[Optional[:class:`str`]]
@@ -498,6 +510,7 @@ class BaseRole(Base):
             self.server_id,
             self.id,
             http_overrides=http_overrides,
+            reason=reason,
             name=name,
             color=color,
             hoist=hoist,
@@ -508,6 +521,7 @@ class BaseRole(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         allow: Permissions = Permissions.none(),
         deny: Permissions = Permissions.none(),
     ) -> Server:
@@ -523,6 +537,10 @@ class BaseRole(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         allow: :class:`Permissions`
             The permissions to allow.
         deny: :class:`Permissions`
@@ -574,7 +592,12 @@ class BaseRole(Base):
         """
 
         return await self.state.http.set_server_permissions_for_role(
-            self.server_id, self.id, http_overrides=http_overrides, allow=allow, deny=deny
+            self.server_id,
+            self.id,
+            http_overrides=http_overrides,
+            reason=reason,
+            allow=allow,
+            deny=deny,
         )
 
 
@@ -587,19 +610,19 @@ class PartialRole(BaseRole):
     This inherits from :class:`BaseRole`.
     """
 
-    name: UndefinedOr[str] = field(repr=True, kw_only=True)
+    name: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new role's name."""
 
-    permissions: UndefinedOr[PermissionOverride] = field(repr=True, kw_only=True)
+    permissions: UndefinedOr[PermissionOverride] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`PermissionOverride`]: The new role's permissions."""
 
-    color: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
+    color: UndefinedOr[typing.Optional[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`str`]]: The new role's color. This can be any valid CSS color."""
 
-    hoist: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    hoist: UndefinedOr[bool] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether this role should be shown separately on the member sidebar."""
 
-    rank: UndefinedOr[int] = field(repr=True, kw_only=True)
+    rank: UndefinedOr[int] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The new role's rank."""
 
     def into_full(self) -> typing.Optional[Role]:
@@ -621,6 +644,35 @@ class PartialRole(BaseRole):
                 hoist=self.hoist,
                 rank=self.rank,
             )
+
+    def get_clear_fields(self) -> list[raw.FieldsRole]:
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
+
+        fields: list[raw.FieldsRole] = []
+        if self.color is None:
+            fields.append('Colour')
+        return fields
+
+    def to_dict(self) -> raw.PartialRole:
+        """:class:`dict`: Convert partial role to raw data.
+
+        .. versionadded:: 1.3
+        """
+        payload: raw.PartialRole = {}
+        if self.name is not UNDEFINED:
+            payload['name'] = self.name
+        if self.permissions is not UNDEFINED:
+            payload['permissions'] = self.permissions.to_field_dict()
+        if self.color is not UNDEFINED and self.color is not None:
+            payload['colour'] = self.color
+        if self.hoist is not UNDEFINED:
+            payload['hoist'] = self.hoist
+        if self.rank is not UNDEFINED:
+            payload['rank'] = self.rank
+        return payload
 
 
 @define(slots=True)
@@ -962,7 +1014,11 @@ class BaseServer(Base):
         return await self.state.http.ban(self.id, user, http_overrides=http_overrides, reason=reason)
 
     async def bulk_edit_role_ranks(
-        self, ranks: list[ULIDOr[BaseRole]], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self,
+        ranks: list[ULIDOr[BaseRole]],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> Server:
         """|coro|
 
@@ -995,6 +1051,8 @@ class BaseServer(Base):
             Must contain all roles.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
 
         Raises
         -------
@@ -1046,7 +1104,7 @@ class BaseServer(Base):
         :class:`Server`
             The server with updated role ranks.
         """
-        return await self.state.http.bulk_edit_role_ranks(self.id, ranks, http_overrides=http_overrides)
+        return await self.state.http.bulk_edit_role_ranks(self.id, ranks, http_overrides=http_overrides, reason=reason)
 
     async def create_category(
         self,
@@ -1124,6 +1182,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: None = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -1135,6 +1194,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: typing.Literal[ChannelType.text] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -1147,6 +1207,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: typing.Literal[ChannelType.voice] = ...,
         name: str,
         description: typing.Optional[str] = ...,
@@ -1158,6 +1219,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         type: typing.Optional[ChannelType] = None,
         name: str,
         description: typing.Optional[str] = None,
@@ -1176,8 +1238,12 @@ class BaseServer(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         type: Optional[:class:`ChannelType`]
-            The channel type. Defaults to :attr:`.ChannelType.text` if not provided.
+            The channel type. Defaults to :attr:`ChannelType.text` if not provided.
         name: :class:`str`
             The channel name. Must be between 1 and 32 characters.
         description: Optional[:class:`str`]
@@ -1241,6 +1307,7 @@ class BaseServer(Base):
         return await self.state.http.create_server_channel(
             self.id,
             http_overrides=http_overrides,
+            reason=reason,
             type=type,
             name=name,
             description=description,
@@ -1343,6 +1410,7 @@ class BaseServer(Base):
         name: str,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
         voice: typing.Optional[ChannelVoiceMetadata] = None,
@@ -1361,6 +1429,10 @@ class BaseServer(Base):
             The channel name. Must be between 1 and 32 characters.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         description: Optional[:class:`str`]
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
@@ -1420,6 +1492,7 @@ class BaseServer(Base):
         """
         channel = await self.create_channel(
             http_overrides=http_overrides,
+            reason=reason,
             type=ChannelType.text,
             name=name,
             description=description,
@@ -1433,6 +1506,7 @@ class BaseServer(Base):
         name: str,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         description: typing.Optional[str] = None,
         nsfw: typing.Optional[bool] = None,
         voice: typing.Optional[ChannelVoiceMetadata] = None,
@@ -1451,6 +1525,10 @@ class BaseServer(Base):
             The channel name. Must be between 1 and 32 characters.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         description: Optional[:class:`str`]
             The channel description. Can be only up to 1024 characters.
         nsfw: Optional[:class:`bool`]
@@ -1511,6 +1589,7 @@ class BaseServer(Base):
         channel = await self.create_channel(
             type=ChannelType.voice,
             http_overrides=http_overrides,
+            reason=reason,
             name=name,
             description=description,
             nsfw=nsfw,
@@ -1522,6 +1601,7 @@ class BaseServer(Base):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         name: str,
         rank: typing.Optional[int] = None,
     ) -> Role:
@@ -1537,6 +1617,10 @@ class BaseServer(Base):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: :class:`str`
             The role name. Must be between 1 and 32 characters long.
         rank: Optional[:class:`int`]
@@ -1595,7 +1679,9 @@ class BaseServer(Base):
             The role created in server.
         """
 
-        return await self.state.http.create_role(self.id, http_overrides=http_overrides, name=name, rank=rank)
+        return await self.state.http.create_role(
+            self.id, http_overrides=http_overrides, reason=reason, name=name, rank=rank
+        )
 
     async def delete(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
@@ -1717,6 +1803,7 @@ class BaseServer(Base):
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         mfa_ticket: typing.Optional[str] = None,
+        reason: typing.Optional[str] = None,
         name: UndefinedOr[str] = UNDEFINED,
         description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
@@ -1742,6 +1829,10 @@ class BaseServer(Base):
             The HTTP request overrides.
         mfa_ticket: Optional[:class:`str`]
             The valid MFA ticket token. Must be provided if ``owner`` is provided as well.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         name: UndefinedOr[:class:`str`]
             The new server name. Must be between 1 and 32 characters long.
         description: UndefinedOr[Optional[:class:`str`]]
@@ -1846,6 +1937,7 @@ class BaseServer(Base):
             self.id,
             http_overrides=http_overrides,
             mfa_ticket=mfa_ticket,
+            reason=reason,
             name=name,
             description=description,
             icon=icon,
@@ -1992,6 +2084,107 @@ class BaseServer(Base):
         """
         return await self.state.http.get_server(
             self.id, http_overrides=http_overrides, populate_channels=populate_channels
+        )
+
+    async def fetch_audit_logs(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        user: typing.Optional[ULIDOr[BaseUser]] = None,
+        type: typing.Optional[
+            typing.Union[AuditLogEntryActionType, str, Collection[typing.Union[AuditLogEntryActionType, str]]]
+        ] = None,
+        before: typing.Optional[ULIDOr[AuditLogEntry]] = None,
+        after: typing.Optional[ULIDOr[AuditLogEntry]] = None,
+        limit: typing.Optional[int] = None,
+        populate_users: typing.Optional[bool] = None,
+    ) -> list[AuditLogEntry]:
+        """|coro|
+
+        Retrieve server's audit logs.
+
+        You must have :attr:`~Permissions.view_audit_logs` to do this.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        user: Optional[ULIDOr[:class:`BaseUser`]]
+            The user to filter audit log entries by (:attr:`AuditLogEntry.user`).
+
+            .. note::
+
+                This does not retrieve audit logs that *target* specified user.
+        type: Optional[Union[:class:`AuditLogEntryActionType`, :class:`str`, Collection[Union[:class:`AuditLogEntryActionType`, :class:`str`]]]]
+            The type(s) to filter audit logs by.
+            If a string value(s) is passed, it is assumed to be a raw API value.
+        before: Optional[ULIDOr[:class:`AuditLogEntry`]]
+            The entry before which audit log entries should be fetched.
+        after: Optional[ULIDOr[:class:`AuditLogEntry`]]
+            The entry after which audit log entries should be fetched.
+        limit: Optional[:class:`int`]
+            The maximum number of entries to get. Must be between 1 and 100. Defaults to 50.
+        populate_users: Optional[:class:`bool`]
+            Whether to populate user and member objects.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------+
+            | Value                | Reason                   |
+            +----------------------+--------------------------+
+            | ``FailedValidation`` | The payload was invalid. |
+            +----------------------+--------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------+
+            | Value                 | Reason                                                             |
+            +-----------------------+--------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to get server's audit logs. |
+            +-----------------------+--------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------+
+            | Value        | Reason                    |
+            +--------------+---------------------------+
+            | ``NotFound`` | The server was not found. |
+            +--------------+---------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AuditLogEntry`]
+            The entries retrieved, sorted in descending order by ID.
+        """
+
+        return await self.state.http.get_audit_logs(
+            self.id,
+            http_overrides=http_overrides,
+            user=user,
+            type=type,
+            before=before,
+            after=after,
+            limit=limit,
+            populate_users=populate_users,
         )
 
     async def fetch_bans(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[Ban]:
@@ -2770,7 +2963,11 @@ class BaseServer(Base):
         )
 
     async def set_default_permissions(
-        self, permissions: Permissions, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self,
+        permissions: Permissions,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> Server:
         """|coro|
 
@@ -2786,6 +2983,10 @@ class BaseServer(Base):
             The new permissions.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -2830,7 +3031,9 @@ class BaseServer(Base):
             The newly updated server.
         """
 
-        return await self.state.http.set_default_server_permissions(self.id, permissions, http_overrides=http_overrides)
+        return await self.state.http.set_default_server_permissions(
+            self.id, permissions, http_overrides=http_overrides, reason=reason
+        )
 
     async def subscribe(self) -> None:
         """|coro|
@@ -2840,7 +3043,11 @@ class BaseServer(Base):
         await self.state.shard.subscribe_to(self.id)
 
     async def unban(
-        self, user: ULIDOr[BaseUser], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+        self,
+        user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> None:
         """|coro|
 
@@ -2854,6 +3061,10 @@ class BaseServer(Base):
             The user to unban from the server.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -2883,7 +3094,7 @@ class BaseServer(Base):
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
 
-        return await self.state.http.unban(self.id, user, http_overrides=http_overrides)
+        return await self.state.http.unban(self.id, user, http_overrides=http_overrides, reason=reason)
 
 
 @define(slots=True)
@@ -2895,42 +3106,46 @@ class PartialServer(BaseServer):
     This inherits from :class:`BaseServer`.
     """
 
-    name: UndefinedOr[str] = field(repr=True, kw_only=True)
+    name: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new server's name."""
 
-    owner_id: UndefinedOr[str] = field(repr=True, kw_only=True)
+    owner_id: UndefinedOr[str] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`str`]: The new user's ID who owns this server."""
 
-    description: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
+    description: UndefinedOr[typing.Optional[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`str`]]: The new server's description."""
 
-    channel_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    channel_ids: UndefinedOr[list[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[List[:class:`str`]]: The server's channels now."""
 
     internal_categories: UndefinedOr[typing.Optional[typing.Union[list[Category], dict[str, Category]]]] = field(
-        repr=True, kw_only=True
+        default=UNDEFINED,
+        repr=True,
+        kw_only=True,
     )
     """UndefinedOr[Optional[Union[List[:class:`Category`], Dict[:class:`str`, :class:`Category`]]]]: The server's categories now."""
 
-    system_messages: UndefinedOr[typing.Optional[SystemMessageChannels]] = field(repr=True, kw_only=True)
+    system_messages: UndefinedOr[typing.Optional[SystemMessageChannels]] = field(
+        default=UNDEFINED, repr=True, kw_only=True
+    )
     """UndefinedOr[Optional[:class:`SystemMessageChannels`]]: The new server's system message assignments."""
 
-    raw_default_permissions: UndefinedOr[int] = field(repr=True, kw_only=True)
+    raw_default_permissions: UndefinedOr[int] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The raw value of new default permissions for everyone."""
 
-    internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
+    internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new server's icon, if any."""
 
-    internal_banner: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
+    internal_banner: UndefinedOr[typing.Optional[StatelessAsset]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new server's banner, if any."""
 
-    raw_flags: UndefinedOr[int] = field(repr=True, kw_only=True)
+    raw_flags: UndefinedOr[int] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`int`]: The new server's flags raw value."""
 
-    discoverable: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    discoverable: UndefinedOr[bool] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether the server is publicly discoverable."""
 
-    analytics: UndefinedOr[bool] = field(repr=True, kw_only=True)
+    analytics: UndefinedOr[bool] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[:class:`bool`]: Whether the server activity is being analyzed in real-time."""
 
     @property
@@ -2967,6 +3182,61 @@ class PartialServer(BaseServer):
     def banner(self) -> UndefinedOr[typing.Optional[Asset]]:
         """UndefinedOr[Optional[:class:`Asset`]]: The stateful server banner."""
         return self.internal_banner and self.internal_banner.attach_state(self.state, 'banners')
+
+    def get_clear_fields(self) -> list[raw.FieldsServer]:
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
+
+        fields: list[raw.FieldsServer] = []
+        if self.description is None:
+            fields.append('Description')
+        if self.internal_categories is None:
+            fields.append('Categories')
+        if self.system_messages is not None:
+            fields.append('SystemMessages')
+        if self.internal_icon is None:
+            fields.append('Icon')
+        if self.internal_banner is None:
+            fields.append('Banner')
+        return fields
+
+    def to_dict(self) -> raw.PartialServer:
+        """:class:`dict`: Convert partial server to raw data.
+
+        .. versionadded:: 1.3
+        """
+        payload: raw.PartialServer = {}
+        if self.owner_id is not UNDEFINED:
+            payload['owner'] = self.owner_id
+        if self.name is not UNDEFINED:
+            payload['name'] = self.name
+        if self.description is not UNDEFINED and self.description is not None:
+            payload['description'] = self.description
+        if self.channel_ids is not UNDEFINED:
+            payload['channels'] = self.channel_ids
+        if self.internal_categories is not UNDEFINED and self.internal_categories is not None:
+            if isinstance(self.internal_categories, dict):
+                if self.internal_categories:
+                    payload['categories'] = {k: v.to_dict() for k, v in self.internal_categories.items()}
+            else:
+                payload['categories'] = [c.to_dict() for c in self.internal_categories]
+        if self.system_messages is not UNDEFINED and self.system_messages is not None:
+            payload['system_messages'] = self.system_messages.to_dict()
+        if self.raw_default_permissions is not UNDEFINED:
+            payload['default_permissions'] = self.raw_default_permissions
+        if self.internal_icon is not UNDEFINED and self.internal_icon is not None:
+            payload['icon'] = self.internal_icon.to_dict('icons')
+        if self.internal_banner is not UNDEFINED and self.internal_banner is not None:
+            payload['banner'] = self.internal_banner.to_dict('banners')
+        if self.raw_flags is not UNDEFINED:
+            payload['flags'] = self.raw_flags
+        if self.discoverable is not UNDEFINED:
+            payload['discoverable'] = self.discoverable
+        if self.analytics is not UNDEFINED:
+            payload['analytics'] = self.analytics
+        return payload
 
 
 def sort_member_roles(
@@ -4406,6 +4676,7 @@ class BaseMember(Connectable, Messageable):
         self,
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
         nick: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         avatar: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
         roles: UndefinedOr[typing.Optional[list[ULIDOr[BaseRole]]]] = UNDEFINED,
@@ -4431,6 +4702,10 @@ class BaseMember(Connectable, Messageable):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
         nick: UndefinedOr[Optional[:class:`str`]]
             The member's new nick. Use ``None`` to remove the nickname.
 
@@ -4537,6 +4812,7 @@ class BaseMember(Connectable, Messageable):
             self.server_id,
             self.id,
             http_overrides=http_overrides,
+            reason=reason,
             nick=nick,
             avatar=avatar,
             roles=roles,
@@ -4546,7 +4822,9 @@ class BaseMember(Connectable, Messageable):
             voice=voice,
         )
 
-    async def kick(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
+    async def kick(
+        self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None, reason: typing.Optional[str] = None
+    ) -> None:
         """|coro|
 
         Kicks the member from the server.
@@ -4557,6 +4835,10 @@ class BaseMember(Connectable, Messageable):
         ----------
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -4605,7 +4887,7 @@ class BaseMember(Connectable, Messageable):
             | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
-        return await self.state.http.kick_member(self.server_id, self.id, http_overrides=http_overrides)
+        return await self.state.http.kick_member(self.server_id, self.id, http_overrides=http_overrides, reason=reason)
 
     async def mutual_friend_ids(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[str]:
         """|coro|
@@ -4998,6 +5280,7 @@ class BaseMember(Connectable, Messageable):
         length: typing.Optional[typing.Union[datetime, timedelta, float, int]],
         *,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        reason: typing.Optional[str] = None,
     ) -> Member:
         """|coro|
 
@@ -5017,6 +5300,10 @@ class BaseMember(Connectable, Messageable):
             This must be a timezone-aware datetime object. Consider using :func:`stoat.utils.utcnow()`.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
+        reason: Optional[:class:`str`]
+            The reason for action which will be stored in audit logs.
+
+            .. versionadded:: 1.3
 
         Raises
         ------
@@ -5070,7 +5357,9 @@ class BaseMember(Connectable, Messageable):
         :class:`Member`
             The newly updated member.
         """
-        return await self.state.http.edit_member(self.server_id, self.id, http_overrides=http_overrides, timeout=length)
+        return await self.state.http.edit_member(
+            self.server_id, self.id, http_overrides=http_overrides, reason=reason, timeout=length
+        )
 
     async def unblock(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> User:
         """|coro|
@@ -5139,28 +5428,71 @@ class PartialMember(BaseMember):
     This inherits from :class:`BaseMember`.
     """
 
-    nick: UndefinedOr[typing.Optional[str]] = field(repr=True, kw_only=True)
+    nick: UndefinedOr[typing.Optional[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`str`]]: The new member's nick."""
 
-    internal_server_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
+    internal_server_avatar: UndefinedOr[typing.Optional[StatelessAsset]] = field(
+        default=UNDEFINED, repr=True, kw_only=True
+    )
     """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new member's avatar."""
 
-    role_ids: UndefinedOr[list[str]] = field(repr=True, kw_only=True)
+    role_ids: UndefinedOr[list[str]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[List[:class:`str`]]: The new member's roles."""
 
-    timed_out_until: UndefinedOr[typing.Optional[datetime]] = field(repr=True, kw_only=True)
+    timed_out_until: UndefinedOr[typing.Optional[datetime]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`~datetime.datetime`]]: When member's time out expires now."""
 
-    can_publish: UndefinedOr[typing.Optional[bool]] = field(repr=True, kw_only=True)
+    can_publish: UndefinedOr[typing.Optional[bool]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`bool`]]: Whether the member can send voice data now."""
 
-    can_receive: UndefinedOr[typing.Optional[bool]] = field(repr=True, kw_only=True)
+    can_receive: UndefinedOr[typing.Optional[bool]] = field(default=UNDEFINED, repr=True, kw_only=True)
     """UndefinedOr[Optional[:class:`bool`]]: Whether the member can receive voice data now."""
 
     @property
     def server_avatar(self) -> UndefinedOr[typing.Optional[Asset]]:
         """UndefinedOr[Optional[:class:`Asset`]]: The member's avatar on server."""
         return self.internal_server_avatar and self.internal_server_avatar.attach_state(self.state, 'avatars')
+
+    def get_clear_fields(self) -> list[raw.FieldsMember]:
+        """List[:class:`str`]: The fields that were set to ``None``.
+
+        .. versionadded:: 1.3
+        """
+
+        fields: list[raw.FieldsMember] = []
+        if self.nick is None:
+            fields.append('Nickname')
+        if self.internal_server_avatar is None:
+            fields.append('Avatar')
+        if self.role_ids is None:
+            fields.append('Roles')
+        if self.timed_out_until is None:
+            fields.append('Timeout')
+        if self.can_receive is None:
+            fields.append('CanReceive')
+        if self.can_publish is None:
+            fields.append('CanPublish')
+        return fields
+
+    def to_dict(self) -> raw.PartialMember:
+        """:class:`dict`: Convert partial member to raw data.
+
+        .. versionadded:: 1.3
+        """
+        payload: raw.PartialMember = {}
+        if self.nick is not UNDEFINED and self.nick is not None:
+            payload['nickname'] = self.nick
+        if self.internal_server_avatar is not UNDEFINED and self.internal_server_avatar is not None:
+            payload['avatar'] = self.internal_server_avatar.to_dict('avatars')
+        if self.role_ids is not UNDEFINED:
+            payload['roles'] = self.role_ids
+        if self.timed_out_until is not UNDEFINED and self.timed_out_until is not None:
+            payload['timeout'] = self.timed_out_until.isoformat()
+        if self.can_publish is not UNDEFINED and self.can_publish is not None:
+            payload['can_publish'] = self.can_publish
+        if self.can_receive is not UNDEFINED and self.can_receive is not None:
+            payload['can_receive'] = self.can_receive
+        return payload
 
 
 @define(slots=True)

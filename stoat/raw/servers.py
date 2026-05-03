@@ -48,6 +48,7 @@ class PartialServer(typing.TypedDict):
 
 
 class Role(typing.TypedDict):
+    id: typing_extensions.NotRequired[str]  # Will be present only in future API version
     name: str
     permissions: OverrideField
     colour: typing_extensions.NotRequired[str]
@@ -56,6 +57,7 @@ class Role(typing.TypedDict):
 
 
 class PartialRole(typing.TypedDict):
+    id: typing_extensions.NotRequired[str]  # May be present only in future API version
     name: typing_extensions.NotRequired[str]
     permissions: typing_extensions.NotRequired[OverrideField]
     colour: typing_extensions.NotRequired[str]

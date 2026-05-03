@@ -15,6 +15,8 @@ class Member(typing.TypedDict):
     avatar: typing_extensions.NotRequired[File]
     roles: typing_extensions.NotRequired[list[str]]
     timeout: typing_extensions.NotRequired[str]
+    can_publish: typing_extensions.NotRequired[bool]
+    can_receive: typing_extensions.NotRequired[bool]
 
 
 class PartialMember(typing.TypedDict):
