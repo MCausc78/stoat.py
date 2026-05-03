@@ -337,11 +337,12 @@ class BaseUser(Base, Connectable, Messageable):
         return self.state.http.url_for(routes.USERS_GET_DEFAULT_AVATAR.compile(user_id=self.id))
         
     @property
-    def avatar_url(self) -> str:
+    def display_avatar_url(self) -> str:
         """:class:`str`: The URL to user's avatar, or their default avatar if they have none set."""
-        if self.avatar:
-            return self.avatar.url()
-        return self.default_avatar_url
+        avatar = self.internal_avatar
+        if avatar is None:
+            return self.default_avatar_url
+        return self.state.cdn_client.url_for(avatar.id, 'avatars')
 
     @property
     def dm_channel_id(self) -> typing.Optional[str]:
