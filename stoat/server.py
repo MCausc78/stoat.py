@@ -439,7 +439,7 @@ class BaseRole(Base):
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
-        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new role icon.
 
             .. versionadded:: 1.3
@@ -597,7 +597,7 @@ class PartialRole(BaseRole):
     """UndefinedOr[:class:`str`]: The new role's name."""
 
     internal_icon: UndefinedOr[typing.Optional[StatelessAsset]] = field(repr=True, kw_only=True)
-    """UndefinedOr[Optional[:class:`.StatelessAsset`]]: The new role's icon, if any.
+    """UndefinedOr[Optional[:class:`StatelessAsset`]]: The new role's icon, if any.
     
     .. versionadded:: 1.3
     """
@@ -656,7 +656,7 @@ class Role(BaseRole):
     """:class:`str`: The role's name."""
 
     internal_icon: typing.Optional[StatelessAsset] = field(repr=True, kw_only=True)
-    """Optional[:class:`.StatelessAsset`]: The new server's icon, if any.
+    """Optional[:class:`StatelessAsset`]: The new server's icon, if any.
     
     .. versionadded:: 1.2
     """
@@ -694,7 +694,7 @@ class Role(BaseRole):
 
     @property
     def icon(self) -> UndefinedOr[typing.Optional[Asset]]:
-        """UndefinedOr[Optional[:class:`.Asset`]]: The stateful role icon.
+        """UndefinedOr[Optional[:class:`Asset`]]: The stateful role icon.
 
         .. versionadded:: 1.3
         """

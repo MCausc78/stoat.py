@@ -7346,7 +7346,7 @@ class HTTPClient:
             The HTTP request overrides.
         name: UndefinedOr[:class:`str`]
             The new role name. Must be between 1 and 32 characters long.
-        icon: UndefinedOr[Optional[:class:`.ResolvableResource`]]
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
             The new role icon.
 
             .. versionadded:: 1.3
