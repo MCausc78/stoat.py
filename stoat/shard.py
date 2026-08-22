@@ -45,6 +45,7 @@ if typing.TYPE_CHECKING:
 
     from . import raw
     from .channel import TextableChannel
+    from .flags import ReadyPayloadFields
     from .message import BaseMessage
     from .server import BaseServer
     from .state import State
@@ -57,6 +58,38 @@ else:
     _HAS_MSGPACK = True
 
 _L = logging.getLogger(__name__)
+
+
+def _get_ready_query_parameter_value(
+    *,
+    ready_payload_fields: typing.Optional[ReadyPayloadFields] = None,
+    request_user_settings: typing.Optional[list[str]] = None,
+) -> list[str]:
+    values = []
+    if ready_payload_fields is not None:
+        if ready_payload_fields.users:
+            values.append('users')
+        if ready_payload_fields.servers:
+            values.append('servers')
+        if ready_payload_fields.channels:
+            values.append('channels')
+        if ready_payload_fields.members:
+            values.append('members')
+        if ready_payload_fields.emojis:
+            values.append('emojis')
+        if ready_payload_fields.voice_states:
+            values.append('voice_states')
+        if ready_payload_fields.read_states:
+            values.append('channel_unreads')
+        if request_user_settings:
+            for key in request_user_settings:
+                values.append(f'user_settings[{key}]')
+        if ready_payload_fields.policy_changes:
+            values.append('policy_changes')
+    elif request_user_settings:
+        for key in request_user_settings:
+            values.append(f'user_settings[{key}]')
+    return values
 
 
 class Close(Exception):
@@ -312,6 +345,10 @@ class ShardImpl(Shard):
         Whether the shard got logged out.
     reconnect_on_timeout: :class:`bool`
         Whether to reconnect when received pong nonce is not equal to current ping nonce. Defaults to ``True``.
+    ready_payload_fields: Optional[:class:`ReadyPayloadFields`]
+        The fields to receive in :class:`ReadyEvent`.
+
+        .. versionadded:: 1.3
     request_user_settings: Optional[List[:class:`str`]]
         The list of user setting keys to request.
     state: :class:`State`
@@ -339,6 +376,7 @@ class ShardImpl(Shard):
         '_token',
         'connect_delay',
         'reconnect_on_timeout',
+        'ready_payload_fields',
         'request_user_settings',
         'retries',
         'state',
@@ -358,6 +396,7 @@ class ShardImpl(Shard):
         format: ShardFormat = ShardFormat.json,
         handler: typing.Optional[EventHandler] = None,
         reconnect_on_timeout: bool = True,
+        ready_payload_fields: typing.Optional[ReadyPayloadFields] = None,
         request_user_settings: typing.Optional[list[str]] = None,
         retries: typing.Optional[int] = None,
         state: State,
@@ -384,8 +423,9 @@ class ShardImpl(Shard):
         self._token: str = token
 
         self.connect_delay: typing.Optional[float] = connect_delay
+        self.ready_payload_fields: typing.Optional[ReadyPayloadFields] = ready_payload_fields
         self.reconnect_on_timeout: bool = reconnect_on_timeout
-        self.request_user_settings = request_user_settings
+        self.request_user_settings: typing.Optional[list[str]] = request_user_settings
         self.retries: int = retries or 150
         self.state: State = state
         self.user_agent: str = user_agent or DEFAULT_SHARD_USER_AGENT
@@ -669,8 +709,13 @@ class ShardImpl(Shard):
             'version': '1',
             'format': self.format.value,
         }
-        if self.request_user_settings is not None:
-            params['__user_settings_keys'] = ','.join(self.request_user_settings)
+
+        ready_payload_fields = _get_ready_query_parameter_value(
+            ready_payload_fields=self.ready_payload_fields,
+            request_user_settings=self.request_user_settings,
+        )
+        if ready_payload_fields:
+            params['ready'] = ready_payload_fields
 
         errors = []
 

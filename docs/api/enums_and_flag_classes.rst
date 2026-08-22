@@ -953,6 +953,15 @@ ServerFlags
     :members:
     :inherited-members:
 
+ReadyPayloadFields
+~~~~~~~~~~~~~~~~~~
+
+.. attributetable:: ReadyPayloadFields
+
+.. autoclass:: ReadyPayloadFields
+    :members:
+    :inherited-members:
+
 UserBadges
 ~~~~~~~~~~
 

@@ -690,6 +690,51 @@ class ServerFlags(BaseFlags, support_kwargs=True):
         return 1 << 1
 
 
+@doc_flags('Indicates what ready payload fields to receive.', added_in='1.3.0')
+class ReadyPayloadFields(BaseFlags, support_kwargs=True):
+    __slots__ = ()
+
+    @flag()
+    def users(cls) -> int:
+        """:class:`bool`: Whether to receive :attr:`~ReadyEvent.users`."""
+        return 1 << 1
+
+    @flag()
+    def servers(cls) -> int:
+        """:class:`bool`: Whether to receive :attr:`~ReadyEvent.servers`."""
+        return 1 << 2
+
+    @flag()
+    def channels(cls) -> int:
+        """:class:`bool`: Whether to receive :attr:`~ReadyEvent.channels`."""
+        return 1 << 3
+
+    @flag()
+    def members(cls) -> int:
+        """:class:`bool`: Whether to receive :attr:`~ReadyEvent.members`."""
+        return 1 << 4
+
+    @flag()
+    def emojis(cls) -> int:
+        """:class:`bool`: Whether to receive :attr:`~ReadyEvent.emojis`."""
+        return 1 << 5
+
+    @flag()
+    def voice_states(cls) -> int:
+        """:class:`bool`: Whether to receive :attr:`~ReadyEvent.voice_states`."""
+        return 1 << 6
+
+    @flag()
+    def read_states(cls) -> int:
+        """:class:`bool`: Whether to receive :attr:`~ReadyEvent.read_states`."""
+        return 1 << 7
+
+    @flag()
+    def policy_changes(cls) -> int:
+        """:class:`bool`: Whether to receive :attr:`~ReadyEvent.policy_changes`."""
+        return 1 << 8
+
+
 @doc_flags('Wraps up an user badges flag value.')
 class UserBadges(BaseFlags, support_kwargs=True):
     __slots__ = ()
@@ -797,6 +842,7 @@ __all__ = (
     'DEFAULT_SERVER_PERMISSIONS',
     'UserPermissions',
     'ServerFlags',
+    'ReadyPayloadFields',
     'UserBadges',
     'UserFlags',
 )
