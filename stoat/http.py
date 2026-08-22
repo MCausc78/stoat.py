@@ -3870,8 +3870,8 @@ class HTTPClient:
 
             If ``None`` or ``UNDEFINED``, the currently assigned channel node will be used.
 
-            If channel has no node assigned, you should discover existing voice nodes via :meth:`query_node`
-            (on official instances, you generally currently should use ``worldwide``). Otherwise, this will throw an ``UnknownNode`` error.
+            If the channel has no node assigned,
+            you should query the instance's information with :meth:`query_node` and use the closest node returned.
 
             .. versionadded:: 1.2
         force_disconnect: UndefinedOr[Optional[:class:`bool`]]
