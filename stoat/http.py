@@ -445,6 +445,7 @@ class DefaultRateLimiter(RateLimiter):
 _HTTP_OVERRIDE_PARAMETER_KEYS: tuple[str, ...] = (
     'adapter',
     'accept_json',
+    'add_cokies',
     'base_url',
     'bot',
     'cookie',
@@ -469,6 +470,8 @@ class HTTPOverrideOptions:
     ----------
     accept_json: :class:`bool`
         Whether to explicitly receive JSON or not.
+    add_cookies: UndefinedOr[:class:`str`]
+        The cookies to add.
     adapter: :class:`HTTPAdapter`
         The adapter to use when sending a HTTP request.
     base_url: :class:`str`
@@ -498,6 +501,7 @@ class HTTPOverrideOptions:
     if typing.TYPE_CHECKING:
         accept_json: bool
         adapter: HTTPAdapter
+        add_cookies: UndefinedOr[str]
         base_url: str
         bot: UndefinedOr[bool]
         cookie: UndefinedOr[str]
@@ -718,6 +722,7 @@ class HTTPClient:
         /,
         *,
         accept_json: bool = True,
+        add_cookies: UndefinedOr[str] = UNDEFINED,
         bot: UndefinedOr[bool] = UNDEFINED,
         cookie: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         idempotency_key: typing.Optional[str] = None,
@@ -738,6 +743,8 @@ class HTTPClient:
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
+        add_cookies: UndefinedOr[:class:`str`]
+            The cookies to add.
         bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`bot`.
         cookie: UndefinedOr[:class:`str`]
@@ -769,11 +776,19 @@ class HTTPClient:
             headers['Content-type'] = 'application/json'
 
         # Allow users to set cookie if Stoat is under attack mode
+        cookie_header = None
+
         if cookie is UNDEFINED:
             if self.cookie:
-                headers['Cookie'] = self.cookie
+                cookie_header = self.cookie
         elif cookie is not None:
-            headers['Cookie'] = cookie
+            cookie_header = cookie
+
+        if cookie_header:
+            if add_cookies is UNDEFINED:
+                headers['Cookie'] = cookie_header
+            else:
+                headers['Cookie'] = cookie_header + '; ' + add_cookies
 
         if bot is UNDEFINED:
             bot = self.bot
@@ -854,6 +869,7 @@ class HTTPClient:
         route: routes.CompiledRoute,
         *,
         accept_json: bool = True,
+        add_cookies: UndefinedOr[str] = UNDEFINED,
         bot: UndefinedOr[bool] = UNDEFINED,
         cookie: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
@@ -874,6 +890,8 @@ class HTTPClient:
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
+        add_cookies: UndefinedOr[:class:`str`]
+            The cookies to add.
         bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         cookie: UndefinedOr[:class:`str`]
@@ -916,6 +934,7 @@ class HTTPClient:
             tmp = http_overrides.populate(
                 route=route,
                 accept_json=accept_json,
+                add__cookies=add_cookies,
                 bot=bot,
                 cookie=cookie,
                 headers=headers,
@@ -932,6 +951,8 @@ class HTTPClient:
 
             if hasattr(tmp, 'accept_json'):
                 accept_json = http_overrides.accept_json
+            if hasattr(tmp, 'add_cookies'):
+                add_cookies = http_overrides.add_cookies
             if hasattr(tmp, 'bot'):
                 bot = http_overrides.bot
             if hasattr(tmp, 'cookie'):
@@ -953,6 +974,7 @@ class HTTPClient:
             headers,
             route,
             accept_json=accept_json,
+            add_cookies=add_cookies,
             bot=bot,
             cookie=cookie,
             idempotency_key=idempotency_key,
@@ -1091,6 +1113,7 @@ class HTTPClient:
         route: routes.CompiledRoute,
         *,
         accept_json: bool = True,
+        add_cookies: UndefinedOr[str] = UNDEFINED,
         bot: UndefinedOr[bool] = UNDEFINED,
         http_overrides: typing.Optional[HTTPOverrideOptions] = None,
         idempotency_key: typing.Optional[str] = None,
@@ -1111,6 +1134,8 @@ class HTTPClient:
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
+        add_cookies: UndefinedOr[:class:`str`]
+            The cookies to add.
         bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
@@ -1144,6 +1169,7 @@ class HTTPClient:
         response = await self.raw_request(
             route,
             accept_json=accept_json,
+            add_cookies=add_cookies,
             bot=bot,
             http_overrides=http_overrides,
             idempotency_key=idempotency_key,
@@ -9999,13 +10025,15 @@ class HTTPClient:
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
-            +-------------------------+---------------------------------------------------+
-            | Value                   | Reason                                            |
-            +-------------------------+---------------------------------------------------+
-            | ``CompromisedPassword`` | The new password was compromised.                 |
-            +-------------------------+---------------------------------------------------+
-            | ``ShortPassword``       | The new password was less than 8 characters long. |
-            +-------------------------+---------------------------------------------------+
+            +-------------------------+---------------------------------------------------------------+
+            | Value                   | Reason                                                        |
+            +-------------------------+---------------------------------------------------------------+
+            | ``CompromisedPassword`` | The new password was compromised.                             |
+            +-------------------------+---------------------------------------------------------------+
+            | ``PasswordDisabled``    | The account is a SSO account, meaning it has no password set. |
+            +-------------------------+---------------------------------------------------------------+
+            | ``ShortPassword``       | The new password was less than 8 characters long.             |
+            +-------------------------+---------------------------------------------------------------+
         :class:`Unauthorized`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -11387,6 +11415,60 @@ class HTTPClient:
         assert not isinstance(ret, MFARequired), 'Recursion detected'
         return ret
 
+    async def login_with_token(
+        self, token: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> typing.Union[Session, AccountDisabled]:
+        """|coro|
+
+        Logs in to an account using a SSO token.
+
+        Parameters
+        ----------
+        token: :class:`str`
+            The SSO token to login with.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+------------------------------------+
+            | Value            | Reason                             |
+            +------------------+------------------------------------+
+            | ``InvalidToken`` | The provided SSO token is invalid. |
+            +------------------+------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------+
+            | Value                 | Reason                                                     |
+            +-----------------------+------------------------------------------------------------+
+            | ``UnverifiedAccount`` | The account you tried to log into is currently unverified. |
+            +-----------------------+------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        Union[:class:`Session`, :class:`AccountDisabled`]
+            The session if successfully logged in, or :class:`AccountDisabled` containing user ID associated with the account.
+        """
+        payload: raw.a.DataToken = {'login_token': token}
+        resp: raw.a.ResponseLogin = await self.request(
+            routes.AUTH_SESSION_TOKEN_LOGIN.compile(), http_overrides=http_overrides, json=payload, token=None
+        )
+        ret = self.state.parser.parse_response_login(resp, None)
+        assert not isinstance(ret, MFARequired), 'Recursion detected'
+        return ret
+
     async def logout(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> None:
         """|coro|
 
@@ -11511,6 +11593,203 @@ class HTTPClient:
         if revoke_self is not None:
             params['revoke_self'] = utils._bool(revoke_self)
         await self.request(routes.AUTH_SESSION_REVOKE_ALL.compile(), http_overrides=http_overrides, params=params)
+
+    async def authorize_sso(
+        self,
+        idp_id: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        redirect_uri: str,
+    ) -> tuple[str, str]:
+        """|coro|
+
+        Retrieve redirect to authorization interfance along with callback ID.
+
+        Parameters
+        ----------
+        idp_id: :class:`str`
+            The ID of the identity provider.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        redirect_uri: :class:`str`
+            The URI to redirect to.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | Value                    | Reason                                                                                                           |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidClient``        | The provider returned `invalid_client <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.         |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidEndpoints``     | The issuer has invalid endpoints set.                                                                            |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidGrant``         | The provider returned `invalid_grant <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.          |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidIdpId``         | The provided identity provider ID is invalid.                                                                    |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidRedirectUri``   | The provided redirect URI is invalid.                                                                            |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidRequest``       | The provider returned `invalid_request <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.        |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidScope``         | The provider returned `invalid_scope <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.          |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``RequestFailed``        | Request to the identity provider failed.                                                                         |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``UnauthorizedClient``   | The provider returned `unauthorized_client <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.    |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``UnsupportedGrantType`` | The provider returned `unsupported_grant_type <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error. |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            The instance does not have SSO callback URL set up, or an internal error happened.
+
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        Tuple[:class:`str`, :class:`str`]
+            A ``(location, callback_id)`` tuple containing the discovered redirect URI, and a state (generally ULID).
+        """
+        params = {'redirect_uri': redirect_uri}
+        response = await self.raw_request(
+            routes.AUTH_SSO_AUTHORIZE.compile(idp_id=idp_id), http_overrides=http_overrides, params=params, token=None
+        )
+
+        if not response.closed:
+            tmp = response.close()
+            if isawaitable(tmp):
+                await tmp
+
+        cookies = response.cookies
+        cookie = cookies.get('callback-id')
+
+        callback_id = '' if cookie is None else cookie.value
+        location = response.headers['Location']
+
+        return (location, callback_id)
+
+    async def sso_callback(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        code: str,  # Type says it's optional, but that's required in endpoint
+        access_token: typing.Optional[str] = None,
+        id_token: typing.Optional[str] = None,
+        callback_id: str,  # Type says it's optional, but that's required in endpoint
+    ) -> str:
+        """|coro|
+
+        Retrieves the redirect URI with supplemental ``login_token`` query string parameter.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        code: :class:`str`
+            The authorization code generated by the authorization server.
+        access_token: Optional[:class:`str`]
+            The access token to access the requested scope.
+        id_token: Optional[:class:`str`]
+            The ID token associated with the authenticated session.
+        callback_id: class:`str`
+            The callback ID.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | Value                    | Reason                                                                                                           |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``ContentTypeMismatch``  | The userinfo response from identity provider was a non-JSON response.                                            |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidClient``        | The provider returned `invalid_client <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.         |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidEndpoints``     | The issuer has invalid endpoints set.                                                                            |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidGrant``         | The provider returned `invalid_grant <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.          |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidIdClaim``       | The ID claim was invalid.                                                                                        |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidIdpId``         | The callback's identity provider ID is invalid.                                                                  |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidRedirectUri``   | The callback's redirect URI is invalid.                                                                          |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidRequest``       | The provider returned `invalid_request <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.        |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidScope``         | The provider returned `invalid_scope <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.          |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``InvalidUserinfo``      | The userinfo response from identity provider was invalid.                                                        |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``MissingAuthCode``      | The ``code`` parameter was not provided.                                                                         |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``MissingCallback``      | The callback ID was not provided.                                                                                |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``MissingHeaders``       | The userinfo response from identity provider did not had ``Content-Type`` header.                                |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``RequestFailed``        | Request to the identity provider failed.                                                                         |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``UnauthorizedClient``   | The provider returned `unauthorized_client <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error.    |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+            | ``UnsupportedGrantType`` | The provider returned `unsupported_grant_type <https://www.rfc-editor.org/rfc/rfc6749.html#section-5.2>`_ error. |
+            +--------------------------+------------------------------------------------------------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------+-------------------------------------------------------------------------------+
+            | Value            | Name                                                                          |
+            +------------------+-------------------------------------------------------------------------------+
+            | ``InvalidState`` | The callback ID was not an ULID or expired (typically happens in 10 minutes). |
+            +------------------+-------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            The instance does not have SSO callback URL set up, or an internal error happened.
+
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                           |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.operation`, :attr:`~HTTPException.with_` |
+            +-------------------+------------------------------------------------+----------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`str`
+            Retrieves the redirect URI with supplemental ``login_token`` query string parameter.
+        """
+
+        params: raw.a.DataCallback = {}
+        if code is not None:
+            params['code'] = code
+        if access_token is not None:
+            params['access_token'] = access_token
+        if id_token is not None:
+            params['id_token'] = id_token
+
+        response = await self.raw_request(
+            routes.AUTH_SSO_CALLBACK.compile(),
+            http_overrides=http_overrides,
+            add_cookies='callback-id=' + callback_id,
+            params=params,
+            token=None,
+        )
+
+        if not response.closed:
+            tmp = response.close()
+            if isawaitable(tmp):
+                await tmp
+
+        location = response.headers['Location']
+        return location
 
 
 __all__ = (
