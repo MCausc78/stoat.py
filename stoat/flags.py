@@ -382,6 +382,96 @@ def doc_flags(
     return decorator
 
 
+@doc_flags('Wraps up a Stoat admin user permissions flag value.', added_in='1.3.0')
+class AdminUserPermissions(BaseFlags, support_kwargs=True):
+    __slots__ = ()
+
+    @flag()
+    def comments(cls) -> int:
+        """:class:`bool`: Whether the admin user can create and manage comments on objects."""
+        return 1 << 0
+
+    @flag()
+    def manage_admin_users(cls) -> int:
+        """:class:`bool`: Whether the admin user can manage the other admin users."""
+        return 1 << 1
+
+    @flag()
+    def create_tokens(cls) -> int:
+        """:class:`bool`: Whether the admin machine can create token for the user it's acting on behalf of."""
+        return 1 << 2
+
+    @flag()
+    def view_users(cls) -> int:
+        """:class:`bool`: Whether the admin user can view the platform users."""
+        return 1 << 3
+
+    @flag()
+    def manage_users(cls) -> int:
+        """:class:`bool`: Whether the admin user can manage the platform users."""
+        return 1 << 4
+
+    @flag()
+    def manage_users_sensitive_info(cls) -> int:
+        """:class:`bool`: Whether the admin user can manage the platform user's sensitive information."""
+        return 1 << 5
+
+    @flag()
+    def view_servers(cls) -> int:
+        """:class:`bool`: Whether the admin user can view the platform servers."""
+        return 1 << 6
+
+    @flag()
+    def manage_servers(cls) -> int:
+        """:class:`bool`: Whether the admin user can manage the platform servers."""
+        return 1 << 7
+
+    @flag()
+    def view_dm_channels(cls) -> int:
+        """:class:`bool`: ..."""
+        return 1 << 8
+
+    @flag()
+    def manage_dm_channels(cls) -> int:
+        """:class:`bool`: ..."""
+        return 1 << 9
+
+    @flag()
+    def view_cases(cls) -> int:
+        """:class:`bool`: ..."""
+        return 1 << 10
+
+    @flag()
+    def manage_own_cases(cls) -> int:
+        """:class:`bool`: ..."""
+        return 1 << 11
+
+    @flag()
+    def manage_other_cases(cls) -> int:
+        """:class:`bool`: ..."""
+        return 1 << 12
+
+    @flag()
+    def view_reports(cls) -> int:
+        """:class:`bool`: ..."""
+        return 1 << 13
+
+    @flag()
+    def search(cls) -> int:
+        """:class:`bool`: ..."""
+        return 1 << 14
+
+    @flag()
+    def manage_notes(cls) -> int:
+        """:class:`bool`: Whether the admin user can manage notes on the objects."""
+        return 1 << 15
+
+    @flag()
+    def discover(cls) -> int:
+        """:class:`bool`: Whether the admin user can manage submission requests for server discovery."""
+        return 1 << 16
+
+
 @doc_flags('Wraps up a Stoat Bot flag value.')
 class BotFlags(BaseFlags, support_kwargs=False):
     __slots__ = ()
@@ -781,11 +871,20 @@ class UserFlags(BaseFlags, support_kwargs=True):
         """:class:`bool`: Whether the user was marked as spam and removed from platform."""
         return 1 << 3
 
+    @flag()
+    def global_moderator(cls) -> int:
+        """:class:`bool`: Whether the user is a global moderator.
+
+        .. versionadded:: 1.3
+        """
+        return 1 << 4
+
 
 __all__ = (
     'flag',
     'BaseFlags',
     'doc_flags',
+    'AdminUserPermissions',
     'BotFlags',
     'MessageFlags',
     'Permissions',

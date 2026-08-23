@@ -53,3 +53,8 @@ class DataMemberEdit(typing.TypedDict):
     can_receive: typing_extensions.NotRequired[bool]
     voice_channel: typing_extensions.NotRequired[str]
     remove: typing_extensions.NotRequired[list[FieldsMember]]
+
+
+class MemberWithUserResponse(typing.TypedDict):
+    user: User
+    member: Member

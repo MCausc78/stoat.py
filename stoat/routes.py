@@ -115,7 +115,30 @@ PATCH: typing.Final[HTTPMethod] = 'PATCH'
 
 ROOT: typing.Final[Route] = Route(GET, '/')
 
+# Administration control
+ADMIN_COMMENTS_COMMENT_CREATE: typing.Final[Route] = Route(POST, '/admin/comments')
+ADMIN_COMMENTS_COMMENT_EDIT: typing.Final[Route] = Route(PATCH, '/admin/comments/{comment_id}')
+ADMIN_COMMENTS_COMMENT_FETCH_CASE: typing.Final[Route] = Route(GET, '/admin/comments/case/{case_id}')
+ADMIN_COMMENTS_COMMENT_FETCH_OBJECT: typing.Final[Route] = Route(GET, '/admin/comments/object/{object_id}')
+ADMIN_META_CREATE_TOKEN: typing.Final[Route] = Route(POST, '/admin/tokens')
+ADMIN_META_CREATE_USER: typing.Final[Route] = Route(POST, '/admin/users')
+ADMIN_META_EDIT_USER: typing.Final[Route] = Route(PATCH, '/admin/users/{admin_user_id}')
+ADMIN_META_FETCH_USERS: typing.Final[Route] = Route(GET, '/admin/users')
+ADMIN_META_REVOKE_TOKEN: typing.Final[Route] = Route(DELETE, '/admin/tokens/{admin_token_id}')
+ADMIN_SERVERS_ACTIONS_SERVER_ADD_MEMBERS: typing.Final[Route] = Route(POST, '/admin/servers/{server_id}/members')
+ADMIN_SERVERS_ACTIONS_SERVER_BAN_MEMBERS: typing.Final[Route] = Route(POST, '/admin/servers/{server_id}/ban')
+ADMIN_SERVERS_ACTIONS_SERVER_CHANGE_OWNER: typing.Final[Route] = Route(POST, '/admin/servers/{server_id}/owner')
+ADMIN_SERVERS_ACTIONS_SERVER_CREATE_INVITE: typing.Final[Route] = Route(POST, '/admin/servers/{server_id}/invites')
+ADMIN_SERVERS_ACTIONS_SERVER_DELETE: typing.Final[Route] = Route(DELETE, '/admin/servers/{server_id}')
+ADMIN_SERVERS_ACTIONS_SERVER_DELETE_INVITES: typing.Final[Route] = Route(DELETE, '/admin/servers/{server_id}/invites')
+ADMIN_SERVERS_ACTIONS_SERVER_EDIT: typing.Final[Route] = Route(PATCH, '/admin/servers/{server_id}')
+ADMIN_SERVERS_ACTIONS_SERVER_REMOVE_MEMBERS: typing.Final[Route] = Route(POST, '/admin/servers/{server_id}/remove')
+ADMIN_SERVERS_ACTIONS_SERVER_UNBAN_MEMBERS: typing.Final[Route] = Route(POST, '/admin/servers/{server_id}/unban')
+ADMIN_SERVERS_FETCH_SERVER_GET: typing.Final[Route] = Route(GET, '/admin/servers/{server_id}')
+ADMIN_SERVERS_FETCH_SERVER_GET_ALL_MEMBERS: typing.Final[Route] = Route(GET, '/admin/servers/{server_id}/members')
+ADMIN_SERVERS_FETCH_SERVER_GET_PARTICIPANTS: typing.Final[Route] = Route(GET, '/admin/servers/{server_id}/participants')
 
+# Bots control
 BOTS_CREATE: typing.Final[Route] = Route(POST, '/bots/create')
 BOTS_DELETE: typing.Final[Route] = Route(DELETE, '/bots/{bot_id}')
 BOTS_EDIT: typing.Final[Route] = Route(PATCH, '/bots/{bot_id}')
@@ -305,6 +328,27 @@ __all__ = (
     'DELETE',
     'PATCH',
     'ROOT',
+    'ADMIN_COMMENTS_COMMENT_CREATE',
+    'ADMIN_COMMENTS_COMMENT_EDIT',
+    'ADMIN_COMMENTS_COMMENT_FETCH_CASE',
+    'ADMIN_COMMENTS_COMMENT_FETCH_OBJECT',
+    'ADMIN_META_CREATE_TOKEN',
+    'ADMIN_META_CREATE_USER',
+    'ADMIN_META_EDIT_USER',
+    'ADMIN_META_FETCH_USERS',
+    'ADMIN_META_REVOKE_TOKEN',
+    'ADMIN_SERVERS_ACTIONS_SERVER_ADD_MEMBERS',
+    'ADMIN_SERVERS_ACTIONS_SERVER_BAN_MEMBERS',
+    'ADMIN_SERVERS_ACTIONS_SERVER_CHANGE_OWNER',
+    'ADMIN_SERVERS_ACTIONS_SERVER_CREATE_INVITE',
+    'ADMIN_SERVERS_ACTIONS_SERVER_DELETE',
+    'ADMIN_SERVERS_ACTIONS_SERVER_DELETE_INVITES',
+    'ADMIN_SERVERS_ACTIONS_SERVER_EDIT',
+    'ADMIN_SERVERS_ACTIONS_SERVER_REMOVE_MEMBERS',
+    'ADMIN_SERVERS_ACTIONS_SERVER_UNBAN_MEMBERS',
+    'ADMIN_SERVERS_FETCH_SERVER_GET',
+    'ADMIN_SERVERS_FETCH_SERVER_GET_ALL_MEMBERS',
+    'ADMIN_SERVERS_FETCH_SERVER_GET_PARTICIPANTS',
     'BOTS_CREATE',
     'BOTS_DELETE',
     'BOTS_EDIT',

@@ -37,7 +37,7 @@ from multidict import CIMultiDict
 
 from . import __version__, utils
 from .adapter import HTTPResponse, HTTPAdapter, AIOHTTPAdapter
-from .enums import AssetMetadataType
+from .enums import TokenType, AssetMetadataType
 from .errors import HTTPException
 
 if typing.TYPE_CHECKING:
@@ -526,18 +526,47 @@ class CDNClient:
 
     @property
     def bot(self) -> bool:
-        """:class:`bool`: Whether the token belongs to bot account."""
+        """:class:`bool`: Whether the token belongs to bot account.
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
+        """
         return self.state.http.bot
 
     @property
     def oauth2(self) -> bool:
-        """:class:`bool`: Whether the token is an OAuth2 access token."""
+        """:class:`bool`: Whether the token is an OAuth2 access token.
+
+        .. versionadded:: 1.2
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
+        """
         return self.state.http.oauth2
+
+    @property
+    def on_behalf_of(self) -> typing.Optional[str]:
+        """Optional[:class:`str`]: The other admin user the admin machine should act on behalf of.
+        This can be either ID or email of the admin user.
+
+        .. versionadded:: 1.3
+        """
+        return self.state.http.on_behalf_of
 
     @property
     def token(self) -> str:
         """:class:`str`: The token in use. May be empty if not started."""
         return self.state.http.token
+
+    @property
+    def token_type(self) -> TokenType:
+        """:class:`TokenType`: The token's type.
+
+        .. versionadded:: 1.3
+        """
+        return self.state.http.token_type
 
     async def request(self, method: str, route: str, /, **kwargs) -> HTTPResponse:
         headers: CIMultiDict[str]
@@ -550,13 +579,20 @@ class CDNClient:
             headers = CIMultiDict(tmp)
 
         if kwargs.pop('authenticated', True):
-            if self.bot:
-                th = 'X-Bot-Token'
-            elif self.oauth2:
-                th = 'X-OAuth2-Token'
+            token = self.token
+            token_type = self.token_type
+
+            if token_type is TokenType.admin:
+                on_behalf_of = self.on_behalf_of
+
+                if on_behalf_of is None:
+                    headers['X-Admin-User'] = token
+                else:
+                    headers['X-Admin-Machine'] = token
+                    headers['X-Admin-On-Behalf-Of'] = on_behalf_of
             else:
-                th = 'X-Session-Token'
-            headers[th] = self.token
+                if token:
+                    headers[token_type.value] = token
 
         if not kwargs.pop('manual_accept', False):
             headers['Accept'] = 'application/json'

@@ -7,6 +7,7 @@ import typing_extensions
 class BaseReport(typing.TypedDict):
     _id: str
     author_id: str
+    case_id: typing.Optional[str]
     content: ReportedContent
     additional_context: str
     notes: str

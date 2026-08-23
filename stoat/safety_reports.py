@@ -34,6 +34,7 @@ from .enums import ReportStatus, ReportedContentType
 if typing.TYPE_CHECKING:
     from datetime import datetime
 
+    from . import raw
     from .enums import ContentReportReason, UserReportReason
 
 
@@ -47,11 +48,17 @@ class BaseReport(Base):
     author_id: str = field(repr=True, kw_only=True)
     """:class:`str`: The user's ID who created this report."""
 
+    case_id: typing.Optional[str] = field(repr=True, kw_only=True)
+    """Optional[:class:`str`]: The internal case's ID.
+    
+    .. versionadded:: 1.3
+    """
+
     content: ReportedContent = field(repr=True, kw_only=True)
     """:class:`ReportedContent`: The reported content."""
 
-    additional_context: typing.Optional[str] = field(repr=True, kw_only=True)
-    """Optional[:class:`str`]: The additional context included in report."""
+    additional_context: str = field(repr=True, kw_only=True)
+    """:class:`str`: The additional context included in report."""
 
     notes: str = field(repr=True, kw_only=True)
     """:class:`str`: The additional notes included in report."""
@@ -75,6 +82,21 @@ class CreatedReport(BaseReport):
         """Literal[:attr:`.ReportStatus.created`]: The report's status."""
         return ReportStatus.created
 
+    def to_dict(self) -> raw.CreatedReport:
+        """:class:`dict`: Convert report to raw data.
+
+        .. versionadded:: 1.3
+        """
+        return {
+            '_id': self.id,
+            'author_id': self.author_id,
+            'case_id': self.case_id,
+            'content': self.content.to_dict(),
+            'additional_context': self.additional_context,
+            'status': 'Created',
+            'notes': self.notes,
+        }
+
 
 @define(slots=True)
 class RejectedReport(BaseReport):
@@ -94,6 +116,23 @@ class RejectedReport(BaseReport):
         """Literal[:attr:`.ReportStatus.rejected`]: The report's status."""
         return ReportStatus.rejected
 
+    def to_dict(self) -> raw.RejectedReport:
+        """:class:`dict`: Convert report to raw data.
+
+        .. versionadded:: 1.3
+        """
+        return {
+            '_id': self.id,
+            'author_id': self.author_id,
+            'case_id': self.case_id,
+            'content': self.content.to_dict(),
+            'additional_context': self.additional_context,
+            'status': 'Rejected',
+            'rejection_reason': self.rejection_reason,
+            'closed_at': None if self.closed_at is None else self.closed_at.isoformat(),
+            'notes': self.notes,
+        }
+
 
 @define(slots=True)
 class ResolvedReport(BaseReport):
@@ -109,6 +148,22 @@ class ResolvedReport(BaseReport):
     def status(self) -> typing.Literal[ReportStatus.resolved]:
         """Literal[:attr:`.ReportStatus.resolved`]: The report's status."""
         return ReportStatus.resolved
+
+    def to_dict(self) -> raw.ResolvedReport:
+        """:class:`dict`: Convert report to raw data.
+
+        .. versionadded:: 1.3
+        """
+        return {
+            '_id': self.id,
+            'author_id': self.author_id,
+            'case_id': self.case_id,
+            'content': self.content.to_dict(),
+            'additional_context': self.additional_context,
+            'status': 'Resolved',
+            'closed_at': None if self.closed_at is None else self.closed_at.isoformat(),
+            'notes': self.notes,
+        }
 
 
 Report = typing.Union[CreatedReport, RejectedReport, ResolvedReport]
@@ -137,6 +192,17 @@ class MessageReportedContent(BaseReportedContent):
         """Literal[:attr:`.ReportedContentType.message`]: The content's type."""
         return ReportedContentType.message
 
+    def to_dict(self) -> raw.MessageReportedContent:
+        """:class:`dict`: Convert reported content to raw data.
+
+        .. versionadded:: 1.3
+        """
+        return {
+            'type': 'Message',
+            'id': self.target_id,
+            'report_reason': self.reason.value,
+        }
+
 
 @define(slots=True)
 class ServerReportedContent(BaseReportedContent):
@@ -152,6 +218,17 @@ class ServerReportedContent(BaseReportedContent):
     def type(self) -> typing.Literal[ReportedContentType.server]:
         """Literal[:attr:`.ReportedContentType.server`]: The content's type."""
         return ReportedContentType.server
+
+    def to_dict(self) -> raw.ServerReportedContent:
+        """:class:`dict`: Convert reported content to raw data.
+
+        .. versionadded:: 1.3
+        """
+        return {
+            'type': 'Server',
+            'id': self.target_id,
+            'report_reason': self.reason.value,
+        }
 
 
 @define(slots=True)
@@ -171,6 +248,20 @@ class UserReportedContent(BaseReportedContent):
     def type(self) -> typing.Literal[ReportedContentType.user]:
         """Literal[:attr:`.ReportedContentType.user`]: The content's type."""
         return ReportedContentType.user
+
+    def to_dict(self) -> raw.UserReportedContent:
+        """:class:`dict`: Convert reported content to raw data.
+
+        .. versionadded:: 1.3
+        """
+        payload: raw.UserReportedContent = {
+            'type': 'User',
+            'id': self.target_id,
+            'report_reason': self.reason.value,
+        }
+        if self.message_id is not None:
+            payload['message_id'] = self.message_id
+        return payload
 
 
 ReportedContent = typing.Union[MessageReportedContent, ServerReportedContent, UserReportedContent]

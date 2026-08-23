@@ -22,6 +22,7 @@ from . import (
 )
 
 from .adapter import *
+from .admin import *
 from .authentication import *
 from .base import *
 from .bot import *

@@ -1,7 +1,7 @@
 .. currentmodule:: stoat
 
-Messages
-========
+OAuth2
+======
 
 The following section documents everything related to OAuth2.
 

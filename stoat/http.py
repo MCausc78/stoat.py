@@ -35,6 +35,16 @@ from multidict import CIMultiDict, MultiMapping
 
 from . import __version__, routes, utils
 from .adapter import HTTPResponse, HTTPForm, HTTPAdapter, AIOHTTPAdapter
+from .admin import (
+    BaseAdminComment,
+    AdminComment,
+    BaseAdminCase,
+    AdminCase,
+    BaseAdminToken,
+    AdminToken,
+    BaseAdminUser,
+    AdminUser,
+)
 from .authentication import (
     PartialAccount,
     MFATicket,
@@ -68,6 +78,7 @@ from .core import (
 )
 from .emoji import BaseEmoji, ServerEmoji, Emoji, ResolvableEmoji, resolve_emoji
 from .enums import (
+    TokenType,
     ChannelType,
     MessageSort,
     ContentReportReason,
@@ -88,7 +99,14 @@ from .errors import (
     InternalServerError,
     BadGateway,
 )
-from .flags import MessageFlags, Permissions, ServerFlags, UserBadges, UserFlags
+from .flags import (
+    AdminUserPermissions,
+    MessageFlags,
+    Permissions,
+    ServerFlags,
+    UserBadges,
+    UserFlags,
+)
 from .invite import BaseInvite, PublicInvite, ServerInvite, Invite
 from .message import (
     Reply,
@@ -454,6 +472,7 @@ _HTTP_OVERRIDE_PARAMETER_KEYS: tuple[str, ...] = (
     'mfa_ticket',
     'token',
     'rate_limiter',
+    'token_type',
     'user_agent',
 )
 
@@ -475,6 +494,10 @@ class HTTPOverrideOptions:
         The base API url to use when sending a HTTP request.
     bot: UndefinedOr[:class:`bool`]
         Whether the authentication token belongs to bot account. Defaults to :attr:`HTTPClient.bot`.
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
     cookie: UndefinedOr[:class:`str`]
         The cookies to use when performing a request.
     headers: MultiMapping[:class:`str`]
@@ -487,8 +510,23 @@ class HTTPOverrideOptions:
         The MFA ticket to pass in headers.
     oauth2: :class:`bool`
         Whether the authentication token is an OAuth2 access token. Defaults to :attr:`HTTPClient.oauth2`.
+
+        .. versionadded:: 1.2
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
+    on_behalf_of: UndefinedOr[Optional[:class:`str`]]
+        The admin user the machine is acting on behalf of.
+        This can be either ID or email of the admin user's account.
+
+        .. versionadded:: 1.3
     token: UndefinedOr[Optional[:class:`str`]]
         The token to use when requesting the route.
+    token_type: UndefinedOr[:class:`TokenType`]
+        The token's type.
+
+        .. versionadded:: 1.3
     user_agent: UndefinedOr[:class:`str`]
         The user agent to use for HTTP request. Defaults to :attr:`HTTPClient.user_agent`.
     """
@@ -506,7 +544,9 @@ class HTTPOverrideOptions:
         json: UndefinedOr[typing.Any]
         mfa_ticket: typing.Optional[str]
         oauth2: UndefinedOr[bool]
+        on_behalf_of: UndefinedOr[typing.Optional[str]]
         token: UndefinedOr[typing.Optional[str]]
+        token_type: UndefinedOr[TokenType]
         user_agent: UndefinedOr[str]
 
     def __init__(self, /, **kwargs) -> None:
@@ -536,8 +576,13 @@ class HTTPOverrideOptions:
         ...
 
 
-def _resolve_member_id(target: typing.Union[str, BaseUser, BaseMember], /) -> str:
+def _resolve_target_id(target: typing.Union[str, BaseServer, BaseUser, BaseMember], /) -> str:
     ret: str = getattr(target, 'id', target)  # type: ignore
+    return ret
+
+
+def _resolve_short_case_id(target: typing.Union[str, AdminCase], /) -> str:
+    ret: str = getattr(target, 'short_id', target)  # type: ignore
     return ret
 
 
@@ -546,20 +591,25 @@ class HTTPClient:
 
     Attributes
     ----------
-    bot: :class:`bool`
-        Whether the token belongs to bot account.
     cookie: :class:`str`
         The cookie used to make requests. If ``cf_clearance`` cookie is present, then it's used to prevent HTML pages when service is down.
     max_retries: :class:`int`
         How many times to retry requests that received 429 or 502 HTTP status code.
-    oauth2: :class:`bool`
-        Whether the token is an OAuth2 access token.
+    on_behalf_of: Optional[:class:`str`]
+        The other admin user the admin machine should act on behalf of.
+        This can be either ID or email of the admin user.
+
+        .. versionadded:: 1.3
     rate_limiter: Optional[:class:`RateLimiter`]
         The rate limiter in use.
     state: :class:`State`
         The state.
     token: :class:`str`
         The token in use. May be empty if not started.
+    token_type: :class:`TokenType`
+        The token's type.
+
+        .. versionadded:: 1.3
     user_agent: :class:`str`
         The HTTP user agent used when making requests.
     """
@@ -569,13 +619,13 @@ class HTTPClient:
     __slots__ = (
         '_adapter',
         '_base',
-        'bot',
         'cookie',
         'max_retries',
-        'oauth2',
+        'on_behalf_of',
         'rate_limiter',
         'state',
         'token',
+        'token_type',
         'user_agent',
     )
 
@@ -589,10 +639,12 @@ class HTTPClient:
         cookie: typing.Optional[str] = None,
         max_retries: typing.Optional[int] = None,
         oauth2: bool = False,
+        on_behalf_of: typing.Optional[str] = None,
         rate_limiter: UndefinedOr[
             typing.Optional[typing.Union[Callable[[HTTPClient], typing.Optional[RateLimiter]], RateLimiter]]
         ] = UNDEFINED,
         state: State,
+        token_type: typing.Optional[TokenType] = None,
         user_agent: typing.Optional[str] = None,
     ) -> None:
         if base is None:
@@ -602,10 +654,9 @@ class HTTPClient:
             typing.Union[utils.MaybeAwaitableFunc[[HTTPClient], HTTPAdapter], HTTPAdapter]
         ] = adapter
         self._base: str = base.rstrip('/')
-        self.bot: bool = bot
         self.cookie: typing.Optional[str] = cookie
         self.max_retries: int = max_retries or 3
-        self.oauth2: bool = oauth2
+        self.on_behalf_of: typing.Optional[str] = on_behalf_of
 
         if rate_limiter is UNDEFINED:
             self.rate_limiter: typing.Optional[RateLimiter] = DefaultRateLimiter()
@@ -614,8 +665,17 @@ class HTTPClient:
         else:
             self.rate_limiter = rate_limiter
 
+        if token_type is None:
+            if bot:
+                token_type = TokenType.bot
+            elif oauth2:
+                token_type = TokenType.oauth2
+            else:
+                token_type = TokenType.user
+
         self.state: State = state
         self.token: str = token or ''
+        self.token_type: TokenType = token_type
         self.user_agent: str = user_agent or DEFAULT_HTTP_USER_AGENT
 
     async def __aenter__(self) -> Self:
@@ -654,6 +714,38 @@ class HTTPClient:
         """:class:`str`: The base URL used for API requests."""
         return self._base
 
+    @property
+    def bot(self) -> bool:
+        """:class:`bool`: Whether the token belongs to bot account.
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
+        """
+        return self.token_type is TokenType.bot
+
+    @bot.setter
+    def bot(self, value: bool, /) -> None:
+        if value:
+            self.token_type = TokenType.bot
+
+    @property
+    def oauth2(self) -> bool:
+        """:class:`bool`: Whether the token is an OAuth2 access token.
+
+        .. versionadded:: 1.2
+
+        .. deprecated:: 1.3
+
+            Use ``token_type``.
+        """
+        return self.token_type is TokenType.oauth2
+
+    @oauth2.setter
+    def oauth2(self, value: bool, /) -> None:
+        if value:
+            self.token_type = TokenType.oauth2
+
     def url_for(self, route: routes.CompiledRoute, /) -> str:
         """Returns URL for route.
 
@@ -669,7 +761,14 @@ class HTTPClient:
         """
         return self._base + route.build()
 
-    def with_credentials(self, token: str, *, bot: bool = True, oauth2: bool = False) -> None:
+    def with_credentials(
+        self,
+        token: str,
+        *,
+        bot: bool = True,
+        oauth2: bool = False,
+        token_type: typing.Optional[TokenType] = None,
+    ) -> None:
         """Modifies HTTP client credentials.
 
         Parameters
@@ -678,12 +777,33 @@ class HTTPClient:
             The authentication token.
         bot: :class:`bool`
             Whether the token belongs to bot account or not. Defaults to ``True``.
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
         oauth2: :class:`bool`
             Whether the token is an OAuth2 access token. Defaults to ``False``.
+
+            .. versionadded:: 1.2
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
+        token_type: Optional[:class:`TokenType`]
+            The token's type.
+
+            .. versionadded:: 1.3
         """
+        if token_type is None:
+            if bot:
+                token_type = TokenType.bot
+            elif oauth2:
+                token_type = TokenType.oauth2
+            else:
+                token_type = TokenType.user
+
         self.token = token
-        self.bot = bot
-        self.oauth2 = oauth2
+        self.token_type = token_type
 
     async def get_adapter(self) -> HTTPAdapter:
         if self._adapter is None:
@@ -724,8 +844,10 @@ class HTTPClient:
         json_body: bool = False,
         mfa_ticket: typing.Optional[str] = None,
         oauth2: UndefinedOr[bool] = UNDEFINED,
+        on_behalf_of: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         overrides: typing.Optional[HTTPOverrideOptions] = None,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        token_type: UndefinedOr[TokenType] = UNDEFINED,
         user_agent: UndefinedOr[typing.Optional[str]] = UNDEFINED,
     ) -> utils.MaybeAwaitable[None]:
         """Populate headers.
@@ -738,8 +860,14 @@ class HTTPClient:
             The route.
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
+        admin_auth: UndefinedOr[Optional[:class:`AdminAuthentication`]]
+            The authentication for the platform administration API.
         bot: UndefinedOr[:class:`bool`]
             Whether the authentication token belongs to bot account. Defaults to :attr:`bot`.
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
         idempotency_key: Optional[:class:`str`]
@@ -750,10 +878,25 @@ class HTTPClient:
             The MFA ticket to pass in headers.
         oauth2: UndefinedOr[:class:`bool`]
             Whether the token is an OAuth2 access token. Defaults to :attr:`oauth2`.
+
+            .. versionadded:: 1.2
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
+        on_behalf_of: UndefinedOr[Optional[:class:`str`]]
+            The other admin user the admin machine should act on behalf of.
+            This can be either ID or email of the admin user.
+
+            .. versionadded:: 1.3
         overrides: Optional[:class:`HTTPOverrideOptions`]
             The HTTP request overrides.
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
+        token_type: UndefinedOr[:class:`TokenType`]
+            The token's type to use.
+
+            .. versionadded:: 1.3
         user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`user_agent`.
 
@@ -775,24 +918,37 @@ class HTTPClient:
         elif cookie is not None:
             headers['Cookie'] = cookie
 
-        if bot is UNDEFINED:
-            bot = self.bot
-
-        if oauth2 is UNDEFINED:
-            oauth2 = self.oauth2
-
-        if bot:
-            th = 'X-Bot-Token'
-        elif oauth2:
-            th = 'X-OAuth2-Token'
-        else:
-            th = 'X-Session-Token'
-
         if token is UNDEFINED:
             token = self.token
 
-        if token:
-            headers[th] = token
+        if token_type is UNDEFINED:
+            if bot is not UNDEFINED or oauth2 is not UNDEFINED:
+                if bot is UNDEFINED:
+                    bot = self.bot
+                if oauth2 is UNDEFINED:
+                    oauth2 = self.oauth2
+
+                if bot:
+                    token_type = TokenType.bot
+                elif oauth2:
+                    token_type = TokenType.oauth2
+                else:
+                    token_type = TokenType.user
+            else:
+                token_type = self.token_type
+
+        if token_type is TokenType.admin:
+            if on_behalf_of is UNDEFINED:
+                on_behalf_of = self.on_behalf_of
+
+            if on_behalf_of is None:
+                headers['X-Admin-User'] = token
+            else:
+                headers['X-Admin-Machine'] = token
+                headers['X-Admin-On-Behalf-Of'] = on_behalf_of
+        else:
+            if token:
+                headers[token_type.value] = token
 
         if user_agent is UNDEFINED:
             user_agent = self.user_agent
@@ -860,7 +1016,10 @@ class HTTPClient:
         idempotency_key: typing.Optional[str] = None,
         json: UndefinedOr[typing.Any] = UNDEFINED,
         mfa_ticket: typing.Optional[str] = None,
+        oauth2: UndefinedOr[bool] = UNDEFINED,
+        on_behalf_of: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        token_type: UndefinedOr[TokenType] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> HTTPResponse:
@@ -875,7 +1034,7 @@ class HTTPClient:
         accept_json: :class:`bool`
             Whether to explicitly receive JSON or not. Defaults to ``True``.
         bot: UndefinedOr[:class:`bool`]
-            Whether the authentication token belongs to bot account. Defaults to :attr:`.bot`.
+            Whether the authentication token belongs to bot account. Defaults to :attr:`bot`.
         cookie: UndefinedOr[:class:`str`]
             The cookies to use when performing a request.
         http_overrides: Optional[:class:`HTTPOverrideOptions`]
@@ -886,8 +1045,25 @@ class HTTPClient:
             The JSON payload to pass in.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        oauth2: UndefinedOr[:class:`bool`]
+            Whether the token is an OAuth2 access token. Defaults to :attr:`oauth2`.
+
+            .. versionadded:: 1.3
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
+        on_behalf_of: UndefinedOr[Optional[:class:`str`]]
+            The other admin user the admin machine should act on behalf of.
+            This can be either ID or email of the admin user.
+
+            .. versionadded:: 1.3
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
+        token_type: UndefinedOr[:class:`TokenType`]
+            The token's type.
+
+            .. versionadded:: 1.3
         user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`.user_agent`.
         \\*\\*kwargs
@@ -922,7 +1098,10 @@ class HTTPClient:
                 idempotency_key=idempotency_key,
                 json=json,
                 mfa_ticket=mfa_ticket,
+                oauth2=oauth2,
+                on_behalf_of=on_behalf_of,
                 token=token,
+                token_type=token_type,
                 user_agent=user_agent,
                 kwargs=kwargs,
             )
@@ -944,8 +1123,14 @@ class HTTPClient:
                 json = http_overrides.json
             if hasattr(tmp, 'mfa_ticket'):
                 mfa_ticket = http_overrides.mfa_ticket
+            if hasattr(tmp, 'oauth2'):
+                oauth2 = http_overrides.oauth2
+            if hasattr(tmp, 'on_behalf_of'):
+                on_behalf_of = http_overrides.on_behalf_of
             if hasattr(tmp, 'token'):
                 token = http_overrides.token
+            if hasattr(tmp, 'token_type'):
+                token_type = http_overrides.token_type
             if hasattr(tmp, 'user_agent'):
                 user_agent = http_overrides.user_agent
 
@@ -958,8 +1143,11 @@ class HTTPClient:
             idempotency_key=idempotency_key,
             json_body=json is not UNDEFINED,
             mfa_ticket=mfa_ticket,
+            oauth2=oauth2,
+            on_behalf_of=on_behalf_of,
             overrides=http_overrides,
             token=token,
+            token_type=token_type,
             user_agent=user_agent,
         )
         if isawaitable(tmp):
@@ -1097,7 +1285,10 @@ class HTTPClient:
         json: UndefinedOr[typing.Any] = UNDEFINED,
         log: bool = True,
         mfa_ticket: typing.Optional[str] = None,
+        oauth2: UndefinedOr[bool] = UNDEFINED,
+        on_behalf_of: UndefinedOr[typing.Optional[str]] = UNDEFINED,
         token: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        token_type: UndefinedOr[TokenType] = UNDEFINED,
         user_agent: UndefinedOr[str] = UNDEFINED,
         **kwargs,
     ) -> typing.Any:
@@ -1124,8 +1315,25 @@ class HTTPClient:
             by routes like ``GET /servers/{server_id}/members``. Defaults to ``True``.
         mfa_ticket: Optional[:class:`str`]
             The MFA ticket to pass in headers.
+        oauth2: :class:`bool`
+            Whether the authentication token is an OAuth2 access token. Defaults to :attr:`HTTPClient.oauth2`.
+
+            .. versionadded:: 1.2
+
+            .. deprecated:: 1.3
+
+                Use ``token_type``.
+        on_behalf_of: UndefinedOr[Optional[:class:`str`]]
+            The admin user the machine is acting on behalf of.
+            This can be either ID or email of the admin user's account.
+
+            .. versionadded:: 1.3
         token: UndefinedOr[Optional[:class:`str`]]
             The token to use when requesting the route.
+        token_type: UndefinedOr[:class:`TokenType`]
+            The token's type.
+
+            .. versionadded:: 1.3
         user_agent: UndefinedOr[:class:`str`]
             The user agent to use for HTTP request. Defaults to :attr:`user_agent`.
         \\*\\*kwargs
@@ -1149,7 +1357,10 @@ class HTTPClient:
             idempotency_key=idempotency_key,
             json=json,
             mfa_ticket=mfa_ticket,
+            oauth2=oauth2,
+            on_behalf_of=on_behalf_of,
             token=token,
+            token_type=token_type,
             user_agent=user_agent,
             **kwargs,
         )
@@ -1202,6 +1413,1844 @@ class HTTPClient:
         """
         resp: raw.StoatConfig = await self.request(routes.ROOT.compile(), http_overrides=http_overrides, token=None)
         return self.state.parser.parse_instance(resp)
+
+    # Administration
+    async def create_admin_comment(
+        self,
+        object: typing.Union[str, BaseServer, BaseUser, BaseMember],
+        content: str,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[ULIDOr[BaseAdminCase]] = None,
+    ) -> AdminComment:
+        """|coro|
+
+        Creates an admin comment on the object.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        object: Union[:class:`str`, :class:`BaseServer`, :class:`BaseUser`, :class:`BaseMember`]
+            The object to comment on.
+        content: :class:`str`
+            The comment's contents. Must be between 1 and 2000 characters.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[ULIDOr[:class:`BaseAdminCase`]]
+            The case this comment is related to.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create comments.   |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminComment`
+            The created comment.
+        """
+
+        payload: raw.AdminCommentCreate = {
+            'case': None if case is None else resolve_id(case),
+            'object': _resolve_target_id(object),
+            'content': content,
+        }
+        resp: raw.AdminComment = await self.request(
+            routes.ADMIN_COMMENTS_COMMENT_CREATE.compile(), http_overrides=http_overrides, json=payload
+        )
+        return self.state.parser.parse_admin_comment(resp)
+
+    async def edit_admin_comment(
+        self,
+        comment: ULIDOr[BaseAdminComment],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        content: str,
+    ) -> AdminComment:
+        """|coro|
+
+        Edits an admin comment.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        comment: ULIDOr[:class:`BaseAdminComment`]
+            The comment to edit.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        content: :class:`str`
+            The new comment's contents. Must be between 1 and 2000 characters.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                               |
+            +-----------------------+--------------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit comments, or the comment isn't yours. |
+            +-----------------------+--------------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminComment`
+            The newly updated comment.
+        """
+        payload: raw.AdminCommentEdit = {'content': content}
+        resp: raw.AdminComment = await self.request(
+            routes.ADMIN_COMMENTS_COMMENT_EDIT.compile(comment_id=resolve_id(comment)),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_admin_comment(resp)
+
+    async def get_admin_case_comments(
+        self, case: typing.Union[str, AdminCase], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> list[AdminComment]:
+        """|coro|
+
+        Retrieves the comments for an admin case.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        case: Union[:class:`str`, :class:`AdminCase`]
+            The case to retrieve comments for.
+            Must be a short ID if string.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve comments. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AdminComment`]
+            The comments.
+        """
+        resp: list[raw.AdminComment] = await self.request(
+            routes.ADMIN_COMMENTS_COMMENT_FETCH_CASE.compile(case_id=_resolve_short_case_id(case)),
+            http_overrides=http_overrides,
+        )
+        return list(map(self.state.parser.parse_admin_comment, resp))
+
+    async def get_admin_object_comments(
+        self,
+        object: typing.Union[str, BaseServer, BaseUser, BaseMember],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+    ) -> list[AdminComment]:
+        """|coro|
+
+        Retrieves comments for an object.
+
+        You must have :attr:`~AdminUserPermissions.comments` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        object: Union[:class:`str`, :class:`BaseServer`, :class:`BaseUser`, :class:`BaseMember`]
+            The object to retrieve comments for.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------+
+            | Value                 | Reason                                                       |
+            +-----------------------+--------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve comments. |
+            +-----------------------+--------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AdminComment`]
+            The comments.
+        """
+        resp: list[raw.AdminComment] = await self.request(
+            routes.ADMIN_COMMENTS_COMMENT_FETCH_OBJECT.compile(object_id=_resolve_target_id(object)),
+            http_overrides=http_overrides,
+        )
+        return list(map(self.state.parser.parse_admin_comment, resp))
+
+    async def create_admin_token(
+        self,
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        expires_at: datetime,
+    ) -> AdminToken:
+        """|coro|
+
+        Creates a token for the admin user.
+
+        You must use an admin machine token, and the user you're acting on behalf of
+        must have :attr:`~AdminUserPermissions.create_tokens` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        expires_at: :class:`~datetime.datetime`
+            When the token should expire.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------------------------------------------+
+            | Value                | Reason                                                       |
+            +----------------------+--------------------------------------------------------------+
+            | ``FailedValidation`` | The expiry date is more than 30 days away from current date. |
+            +----------------------+--------------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------+
+            | Value                 | Reason                                                |
+            +-----------------------+-------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions create tokens. |
+            +-----------------------+-------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminToken`
+            The created token.
+        """
+        payload: raw.AdminTokenCreate = {'expiry': expires_at.isoformat()}
+        resp: raw.AdminToken = await self.request(
+            routes.ADMIN_META_CREATE_TOKEN.compile(),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_admin_token(resp)
+
+    async def create_admin_user(
+        self,
+        platform_user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        email: str,
+        active: bool = True,
+        permissions: AdminUserPermissions,
+    ) -> AdminUser:
+        """|coro|
+
+        Creates an admin user account.
+
+        You must use an admin machine token, and the user you're acting on behalf of
+        must have :attr:`~AdminUserPermissions.manage_admin_users` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin machines.
+
+        Parameters
+        ----------
+        platform_user: ULIDOr[:class:`BaseUser`]
+            The platform user the admin user account should be associated with.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        email: :class:`str`
+            The internal admin user's email.
+        active: :class:`bool`
+            Whether the admin user can use the admin API.
+            If this is ``False``, the user will always receive a :class:`Forbidden` and ``LockedOut`` error code
+            upon using the admin APIs.
+        permissions: :class:`AdminUserPermissions`
+            The admin user's permissions.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                         |
+            +-----------------------+--------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create administrative user accounts. |
+            +-----------------------+--------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminUser`
+            The created user.
+        """
+        payload: raw.AdminUserCreate = {
+            'platform_user_id': resolve_id(platform_user),
+            'email': email,
+            'active': active,
+            'permissions': permissions.value,
+        }
+        resp: raw.AdminUser = await self.request(
+            routes.ADMIN_META_CREATE_USER.compile(),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_admin_user(resp)
+
+    async def edit_admin_user(
+        self,
+        admin_user: ULIDOr[BaseAdminUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        platform_user: UndefinedOr[ULIDOr[BaseUser]] = UNDEFINED,
+        email: UndefinedOr[str] = UNDEFINED,
+        active: UndefinedOr[bool] = UNDEFINED,
+        permissions: UndefinedOr[AdminUserPermissions] = UNDEFINED,
+    ) -> AdminUser:
+        """|coro|
+
+        Edits an admin user account.
+
+        You must have :attr:`~AdminUserPermissions.manage_admin_users` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        admin_user: ULIDOr[:class:`BaseAdminUser`]
+            The admin user to edit.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        platform_user: UndefinedOr[ULIDOr[:class:`BaseUser`]]
+            The platform user the admin user account should be associated with.
+        email: UndefinedOr[:class:`str`]
+            The internal admin user's email.
+        active: UndefinedOr[:class:`bool`]
+            Whether the admin user should be able to use the admin API.
+            If this is ``False``, the user will always receive a :class:`Forbidden` and ``LockedOut`` error code
+            upon using the admin APIs.
+        permissions: UndefinedOr[:class:`AdminUserPermissions`]
+            The new admin user's permissions.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                         |
+            +-----------------------+--------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create administrative user accounts. |
+            +-----------------------+--------------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------------------------------------------------------------------------+
+            | Value        | Reason                                                                                             |
+            +--------------+----------------------------------------------------------------------------------------------------+
+            | ``NotFound`` | The admin user account was not found. Only applicable if the instance is using reference database. |
+            +--------------+----------------------------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`AdminUser`
+            The newly updated user.
+        """
+        payload: raw.AdminUserEdit = {}
+        if platform_user is not UNDEFINED:
+            payload['platform_user_id'] = resolve_id(platform_user)
+        if email is not UNDEFINED:
+            payload['email'] = email
+        if active is not UNDEFINED:
+            payload['active'] = active
+        if permissions is not UNDEFINED:
+            payload['permissions'] = permissions.value
+
+        resp: raw.AdminUser = await self.request(
+            routes.ADMIN_META_EDIT_USER.compile(admin_user_id=resolve_id(admin_user)),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_admin_user(resp)
+
+    async def get_admin_users(self, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> list[AdminUser]:
+        """|coro|
+
+        Retrieves admin users.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------------------------+
+            | Value                 | Reason                                                                           |
+            +-----------------------+----------------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve administrative user accounts. |
+            +-----------------------+----------------------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[:class:`AdminUser`]
+            The admin users.
+        """
+        resp: list[raw.AdminUser] = await self.request(
+            routes.ADMIN_META_FETCH_USERS.compile(), http_overrides=http_overrides
+        )
+        return list(map(self.state.parser.parse_admin_user, resp))
+
+    async def revoke_admin_token(
+        self, admin_token: ULIDOr[BaseAdminToken], *, http_overrides: typing.Optional[HTTPOverrideOptions] = None
+    ) -> None:
+        """|coro|
+
+        Revokes an admin token.
+
+        You must use an admin machine token, and if the token isn't yours, then
+        the user you're acting on behalf of must have :attr:`~AdminUserPermissions.create_tokens` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin machines.
+
+        Parameters
+        ----------
+        admin_token: ULIDOr[:class:`BaseAdminToken`]
+            The admin to revoke.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+----------------------------------------------------------------+
+            | Value                 | Reason                                                         |
+            +-----------------------+----------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to revoke admin tokens. |
+            +-----------------------+----------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        await self.request(
+            routes.ADMIN_META_REVOKE_TOKEN.compile(admin_token_id=resolve_id(admin_token)),
+            http_overrides=http_overrides,
+        )
+
+    async def add_member_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+        suppress_alerts: bool = False,
+    ) -> Member:
+        """|coro|
+
+        Adds a member to the server.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        Fires :class:`ServerCreateEvent` for the added user,
+        plus :class:`ServerMemberJoinEvent` and optionally :class:`MessageCreateEvent`, both for all server members.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        user: ULIDOr[:class:`BaseUser`]
+            The user to add to the server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+        suppress_alerts: :class:`bool`
+            Whether to suppress the member's join system message.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-----------------------------------------------------------------------+
+            | Value                 | Reason                                                                |
+            +-----------------------+-----------------------------------------------------------------------+
+            | ``Banned``            | The user is banned from the target server.                            |
+            +-----------------------+-----------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to add users into the servers. |
+            +-----------------------+-----------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The case was not found. |
+            +--------------+-------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+------------------------------------+
+            | Value               | Reason                             |
+            +---------------------+------------------------------------+
+            | ``AlreadyInServer`` | The user is already in the server. |
+            +---------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Member`
+            The joined member.
+        """
+        params: raw.OptionsAdminServerMemberAdd = {}  # type: ignore
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+        params['user_id'] = resolve_id(user)
+        params['suppress_alerts'] = utils._bool(suppress_alerts)
+
+        resp: raw.MemberWithUserResponse = await self.request(
+            routes.ADMIN_SERVERS_ACTIONS_SERVER_ADD_MEMBERS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        parser = self.state.parser
+        user = parser.parse_user(resp['user'])
+        return parser.parse_member(resp['member'], user)
+
+    async def ban_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        member: typing.Union[str, BaseUser, BaseMember],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+        suppress_alerts: bool = False,
+        reason: typing.Optional[str] = None,
+    ) -> Ban:
+        """|coro|
+
+        Bans a member from the server.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        May fire :class:`ServerMemberRemoveEvent` for banned user and all server members.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+            The user to ban from the server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+        suppress_alerts: :class:`bool`
+            Whether to suppress the member's ban system message.
+        reason: Optional[:class:`str`]
+            The ban reason. Can be only up to 1024 characters long.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------------+----------------------------------------+
+            | Value                    | Description                            |
+            +--------------------------+----------------------------------------+
+            | ``FailedValidation``     | The payload was invalid.               |
+            +--------------------------+----------------------------------------+
+            | ``InvalidOperation``     | You tried to ban server owner.         |
+            +--------------------------+----------------------------------------+
+            | ``NotAMember``           | The user was not member of the server. |
+            +--------------------------+----------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------------------+
+            | Value                 | Reason                                                                  |
+            +-----------------------+-------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to ban members from the servers. |
+            +-----------------------+-------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------------------+
+            | Value        | Reason                              |
+            +--------------+-------------------------------------+
+            | ``NotFound`` | The case/server/user was not found. |
+            +--------------+-------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Ban`
+            The created ban.
+        """
+        params: raw.OptionsAdminServerMemberBan = {}  # type: ignore
+        payload: raw.DataBanCreate = {'reason': reason}
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+        params['user_id'] = _resolve_target_id(member)
+        params['suppress_alerts'] = utils._bool(suppress_alerts)
+
+        resp: raw.ServerBan = await self.request(
+            routes.ADMIN_SERVERS_ACTIONS_SERVER_BAN_MEMBERS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            json=payload,
+            params=params,
+        )
+        parser = self.state.parser
+        return parser.parse_ban(resp, {})
+
+    async def edit_server_owner_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        owner: typing.Union[str, BaseUser, BaseMember],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+    ) -> None:
+        """|coro|
+
+        Edits the server's owner as admin.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        owner: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+            The new server owner.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------------------------+
+            | Value                | Description                                       |
+            +----------------------+---------------------------------------------------+
+            | ``InvalidOperation`` | The specified member is already the server owner. |
+            +----------------------+---------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-----------------------------------------------------------------------+
+            | Value                 | Reason                                                                |
+            +-----------------------+-----------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to add users into the servers. |
+            +-----------------------+-----------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+-------------------------+
+            | Value        | Reason                  |
+            +--------------+-------------------------+
+            | ``NotFound`` | The case was not found. |
+            +--------------+-------------------------+
+        :class:`Conflict`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +---------------------+------------------------------------+
+            | Value               | Reason                             |
+            +---------------------+------------------------------------+
+            | ``AlreadyInServer`` | The user is already in the server. |
+            +---------------------+------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        params: raw.OptionsAdminServerChangeOwner = {}  # type: ignore
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+        params['user_id'] = _resolve_target_id(owner)
+
+        await self.request(
+            routes.ADMIN_SERVERS_ACTIONS_SERVER_CHANGE_OWNER.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+
+    async def create_server_invite_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        channel: ULIDOr[typing.Union[TextChannel, VoiceChannel]],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+        slug: typing.Optional[str] = None,
+    ) -> ServerInvite:
+        """|coro|
+
+        Creates a invite for the server as admin.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server to create invite for.
+        channel: ULIDOr[Union[:class:`TextChannel`, :class:`VoiceChannel`]]
+            The channel to create invite for.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+        slug: Optional[:class:`str`]
+            The slug.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+----------------------------------------------------+
+            | Value                | Description                                        |
+            +----------------------+----------------------------------------------------+
+            | ``InvalidOperation`` | The target channel is not group or server channel. |
+            +----------------------+----------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to create server invites. |
+            +-----------------------+------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------------------+
+            | Value        | Reason                                       |
+            +--------------+----------------------------------------------+
+            | ``NotFound`` | The case/channel/server/owner was not found. |
+            +--------------+----------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`ServerInvite`
+            The created invite.
+        """
+
+        params: raw.OptionsAdminServerCreateInvite = {}  # type: ignore
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+        if slug is not None:
+            params['slug'] = slug
+        params['channel_id'] = resolve_id(channel)
+
+        resp: raw.ServerInvite = await self.request(
+            routes.ADMIN_SERVERS_ACTIONS_SERVER_CREATE_INVITE.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        return self.state.parser.parse_server_invite(resp)
+
+    async def delete_server_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+    ) -> None:
+        """|coro|
+
+        Deletes a server.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        Fires :class:`ServerDeleteEvent` for all server members.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server to delete.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-----------------------------------------------------------+
+            | Value                 | Reason                                                    |
+            +-----------------------+-----------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete servers. |
+            +-----------------------+-----------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        params: raw.OptionsAdminServerDelete = {}
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+
+        await self.request(
+            routes.ADMIN_SERVERS_ACTIONS_SERVER_DELETE.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+
+    async def delete_server_invites_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+        slug: typing.Optional[str] = None,
+    ) -> None:
+        """|coro|
+
+        Deletes a vanity invite if slug is provided, or all of server invites.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+        slug: Optional[:class:`str`]
+            The slug to delete.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+------------------------------------------------------------------+
+            | Value                 | Reason                                                           |
+            +-----------------------+------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to delete server invites. |
+            +-----------------------+------------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        params: raw.OptionsAdminServerDeleteInvites = {}
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+        if slug is not None:
+            params['slug'] = slug
+
+        await self.request(
+            routes.ADMIN_SERVERS_ACTIONS_SERVER_DELETE_INVITES.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+
+    async def edit_server_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        name: UndefinedOr[str] = UNDEFINED,
+        description: UndefinedOr[typing.Optional[str]] = UNDEFINED,
+        icon: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
+        banner: UndefinedOr[typing.Optional[ResolvableResource]] = UNDEFINED,
+        categories: UndefinedOr[typing.Optional[list[Category]]] = UNDEFINED,
+        system_messages: UndefinedOr[typing.Optional[SystemMessageChannels]] = UNDEFINED,
+        flags: UndefinedOr[ServerFlags] = UNDEFINED,
+        discoverable: UndefinedOr[bool] = UNDEFINED,
+        analytics: UndefinedOr[bool] = UNDEFINED,
+        owner: UndefinedOr[typing.Union[str, BaseUser, BaseMember]] = UNDEFINED,
+    ) -> Server:
+        """|coro|
+
+        Edits a server as admin.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` to do this.
+
+        Fires :class:`ServerUpdateEvent` for all server members.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server to edit.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        name: UndefinedOr[:class:`str`]
+            The new server name. Must be between 1 and 32 characters long.
+        description: UndefinedOr[Optional[:class:`str`]]
+            The new server description. Can be only up to 1024 characters.
+        icon: UndefinedOr[Optional[:class:`ResolvableResource`]]
+            The new server icon.
+        banner: UndefinedOr[Optional[:class:`ResolvableResource`]]
+            The new server banner.
+        categories: UndefinedOr[Optional[List[:class:`Category`]]]
+            The new server categories structure.
+
+            You must have :attr:`~Permissions.manage_channels`.
+        system_messages: UndefinedOr[Optional[:class:`SystemMessageChannels`]]
+            The new system message channels configuration.
+        flags: UndefinedOr[:class:`ServerFlags`]
+            The new server flags.
+        discoverable: UndefinedOr[:class:`bool`]
+            Whether this server is public and should show up on `Stoat Discover <https://rvlt.gg>`_.
+        analytics: UndefinedOr[:class:`bool`]
+            Whether analytics should be collected for this server. Must be enabled in order to show up on `Stoat Discover <https://rvlt.gg>`_.
+        owner: UndefinedOr[Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]]
+            The member to transfer ownership to.
+
+            The target user must be not a bot.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+--------------------------------------------+
+            | Value                | Reason                                     |
+            +----------------------+--------------------------------------------+
+            | ``FailedValidation`` | The payload was invalid.                   |
+            +----------------------+--------------------------------------------+
+            | ``InvalidOperation`` | One of these:                              |
+            |                      |                                            |
+            |                      | - More than 2 categories had same channel. |
+            |                      | - You tried to transfer ownership to bot.  |
+            +----------------------+--------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------+
+            | Value                 | Reason                                                  |
+            +-----------------------+---------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to edit servers. |
+            +-----------------------+---------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+----------------------------------------------------------------+
+            | Value        | Reason                                                         |
+            +--------------+----------------------------------------------------------------+
+            | ``NotFound`` | One of these:                                                  |
+            |              |                                                                |
+            |              | - The server/owner was not found.                              |
+            |              | - One of channels in one of provided categories was not found. |
+            +--------------+----------------------------------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        :class:`Server`
+            The newly updated server.
+        """
+        payload: raw.DataEditServer = {}
+        remove: list[raw.FieldsServer] = []
+
+        if name is not UNDEFINED:
+            payload['name'] = name
+
+        if description is not UNDEFINED:
+            if description is None:
+                remove.append('Description')
+            else:
+                payload['description'] = description
+
+        if icon is not UNDEFINED:
+            if icon is None:
+                remove.append('Icon')
+            else:
+                payload['icon'] = await resolve_resource(self.state, icon, tag='icons')
+
+        if banner is not UNDEFINED:
+            if banner is None:
+                remove.append('Banner')
+            else:
+                payload['banner'] = await resolve_resource(self.state, banner, tag='banners')
+
+        if categories is not UNDEFINED:
+            if categories is None:
+                remove.append('Categories')
+            else:
+                payload['categories'] = [category.to_dict() for category in categories]
+
+        if system_messages is not UNDEFINED:
+            if system_messages is None:
+                remove.append('SystemMessages')
+            else:
+                payload['system_messages'] = system_messages.to_dict()
+
+        if flags is not UNDEFINED:
+            payload['flags'] = flags.value
+
+        if discoverable is not UNDEFINED:
+            payload['discoverable'] = discoverable
+
+        if analytics is not UNDEFINED:
+            payload['analytics'] = analytics
+
+        if owner is not UNDEFINED:
+            payload['owner'] = _resolve_target_id(owner)
+
+        if len(remove) > 0:
+            payload['remove'] = remove
+
+        d: raw.Server = await self.request(
+            routes.ADMIN_SERVERS_ACTIONS_SERVER_EDIT.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            json=payload,
+        )
+        return self.state.parser.parse_server(
+            d,
+            (True, d['channels']),
+        )
+
+    async def kick_member_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        member: typing.Union[str, BaseUser, BaseMember],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+        suppress_alerts: bool = False,
+    ) -> None:
+        """|coro|
+
+        Kicks a member from the server.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        Fires :class:`ServerMemberRemoveEvent` for kicked user and all server members.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        member: Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]
+            The user to kick from the server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+        suppress_alerts: :class:`bool`
+            Whether to suppress the member's kick system message.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------+
+            | Value                | Description                     |
+            +----------------------+---------------------------------+
+            | ``InvalidOperation`` | You tried to kick server owner. |
+            +----------------------+---------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+--------------------------------------------------------------------------+
+            | Value                 | Reason                                                                   |
+            +-----------------------+--------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to kick members from the servers. |
+            +-----------------------+--------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The case/server/member was not found. |
+            +--------------+---------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        params: raw.OptionsAdminServerRemoveMembers = {}  # type: ignore
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+        params['user_id'] = _resolve_target_id(member)
+        params['suppress_alerts'] = utils._bool(suppress_alerts)
+
+        await self.request(
+            routes.ADMIN_SERVERS_ACTIONS_SERVER_REMOVE_MEMBERS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+
+    async def unban_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        user: ULIDOr[BaseUser],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+        reason: typing.Optional[str] = None,
+    ) -> None:
+        """|coro|
+
+        Unbans an user from the server.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        user: ULIDOr[:class:`BaseUser`]
+            The user to unban from the server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+        reason: Optional[:class:`str`]
+            The unban reason. Can be only up to 1024 characters long.
+
+        Raises
+        ------
+        :class:`HTTPException`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +----------------------+---------------------------------+
+            | Value                | Description                     |
+            +----------------------+---------------------------------+
+            | ``InvalidOperation`` | You tried to kick server owner. |
+            +----------------------+---------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+---------------------------------------------------------------------------+
+            | Value                 | Reason                                                                    |
+            +-----------------------+---------------------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to unban members from the servers. |
+            +-----------------------+---------------------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+---------------------------------------+
+            | Value        | Reason                                |
+            +--------------+---------------------------------------+
+            | ``NotFound`` | The case/server/member was not found. |
+            +--------------+---------------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+        """
+        params: raw.OptionsAdminServerUnbanMember = {}  # type: ignore
+        payload: raw.DataBanCreate = {'reason': reason}
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+        params['user_id'] = resolve_id(user)
+        params['suppress_alerts'] = 'false'  # Unused?
+
+        await self.request(
+            routes.ADMIN_SERVERS_ACTIONS_SERVER_UNBAN_MEMBERS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            json=payload,
+            params=params,
+        )
+
+    async def get_server_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+    ) -> tuple[Server, User, list[AdminComment]]:
+        """|coro|
+
+        Retrieves a server.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve servers. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The case/server was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        Tuple[:class:`Server`, :class:`User`, List[:class:`AdminComment`]]
+            The server, their owner, and comments belonging to the server.
+        """
+        params: raw.OptionsAdminServerGet = {}
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+
+        resp: raw.AdminServerResponse = await self.request(
+            routes.ADMIN_SERVERS_FETCH_SERVER_GET.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        parser = self.state.parser
+        server_payload = resp['server']
+
+        server = parser.parse_server(server_payload, (True, server_payload['channels']))
+        owner = parser.parse_user(resp['owner'])
+        comments = list(map(parser.parse_admin_comment, resp['comments']))
+        return (server, owner, comments)
+
+    async def get_members_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+        after: typing.Optional[int] = None,
+    ) -> tuple[list[Member], typing.Optional[int]]:
+        """|coro|
+
+        Retrieves all server members.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+        after: Optional[:class:`int`]
+            The UNIX timestamp in milliseconds after which to retrieve members by their :attr:`~Member.joined_at`.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve servers. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The case/server was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        Tuple[List[:class:`Member`], Optional[:class:`int`]]
+            The member list, and the value to retrieve next members.
+        """
+        params: raw.OptionsAdminServerGetMembers = {}
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+        if after is not None:
+            params['after'] = after
+
+        resp: raw.AdminMemberWithUserAndOffsetResponse = await self.request(
+            routes.ADMIN_SERVERS_FETCH_SERVER_GET_ALL_MEMBERS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        parser = self.state.parser
+        return (list(map(parser.parse_member_with_user, resp['users'])), resp['after'])
+
+    async def get_server_participants_as_admin(
+        self,
+        server: ULIDOr[BaseServer],
+        *,
+        http_overrides: typing.Optional[HTTPOverrideOptions] = None,
+        case: typing.Optional[typing.Union[str, AdminCase]] = None,
+    ) -> list[typing.Union[Member, User]]:
+        """|coro|
+
+        Retrieves all server participants.
+
+        Participants include authors of all existing messages ever sent in the server.
+
+        You must have :attr:`~AdminUserPermissions.manage_servers` permission to do that.
+
+        .. versionadded:: 1.3
+
+        .. note::
+
+            This can only be used by admin users/machines.
+
+        Parameters
+        ----------
+        server: ULIDOr[:class:`BaseServer`]
+            The server.
+        http_overrides: Optional[:class:`HTTPOverrideOptions`]
+            The HTTP request overrides.
+        case: Optional[Union[:class:`str`, :class:`AdminCase`]]
+            The case related to the action.
+            Must be a short ID if string.
+
+        Raises
+        ------
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +------------------------+------------------------------------------------------------+
+            | Value                  | Reason                                                     |
+            +------------------------+------------------------------------------------------------+
+            | ``InvalidCredentials`` | The admin token is invalid.                                |
+            +------------------------+------------------------------------------------------------+
+            | ``LockedOut``          | The admin token was valid, but the account was locked out. |
+            +------------------------+------------------------------------------------------------+
+        :class:`Forbidden`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-----------------------+-------------------------------------------------------------+
+            | Value                 | Reason                                                      |
+            +-----------------------+-------------------------------------------------------------+
+            | ``MissingPermission`` | You do not have the proper permissions to retrieve servers. |
+            +-----------------------+-------------------------------------------------------------+
+        :class:`NotFound`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------+--------------------------------+
+            | Value        | Reason                         |
+            +--------------+--------------------------------+
+            | ``NotFound`` | The case/server was not found. |
+            +--------------+--------------------------------+
+        :class:`InternalServerError`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | Value             | Reason                                         | Populated attributes                                                |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+            | ``DatabaseError`` | Something went wrong during querying database. | :attr:`~HTTPException.collection`, :attr:`~HTTPException.operation` |
+            +-------------------+------------------------------------------------+---------------------------------------------------------------------+
+
+        Returns
+        -------
+        List[Union[:class:`Member`, :class:`User`]]
+            The server participants.
+        """
+        params: raw.OptionsAdminServerGetParticipants = {}
+
+        if case is not None:
+            params['case'] = _resolve_short_case_id(case)
+
+        resp: list[tuple[raw.User, typing.Optional[raw.Member]]] = await self.request(
+            routes.ADMIN_SERVERS_FETCH_SERVER_GET_PARTICIPANTS.compile(server_id=resolve_id(server)),
+            http_overrides=http_overrides,
+            params=params,
+        )
+        return list(map(self.state.parser.parse_server_participant, resp))
 
     # Bots control
     async def create_bot(self, name: str, *, http_overrides: typing.Optional[HTTPOverrideOptions] = None) -> Bot:
@@ -1651,14 +3700,6 @@ class HTTPClient:
 
         Raises
         ------
-        :class:`Unauthorized`
-            Possible values for :attr:`~HTTPException.type`:
-
-            +--------------------+----------------------------------------+
-            | Value              | Reason                                 |
-            +--------------------+----------------------------------------+
-            | ``InvalidSession`` | The current bot/user token is invalid. |
-            +--------------------+----------------------------------------+
         :class:`HTTPException`
             Possible values for :attr:`~HTTPException.type`:
 
@@ -1669,13 +3710,21 @@ class HTTPClient:
             +----------------------+------------------------------------------------------+
             | ``IsBot``            | The current token belongs to bot account.            |
             +----------------------+------------------------------------------------------+
+        :class:`Unauthorized`
+            Possible values for :attr:`~HTTPException.type`:
+
+            +--------------------+----------------------------------------+
+            | Value              | Reason                                 |
+            +--------------------+----------------------------------------+
+            | ``InvalidSession`` | The current bot/user token is invalid. |
+            +--------------------+----------------------------------------+
         :class:`Forbidden`
             Possible values for :attr:`~HTTPException.type`:
 
             +-----------------------+-----------------------------------------------------+
             | Value                 | Reason                                              |
             +-----------------------+-----------------------------------------------------+
-            | ``Banned``            | The bot was banned in target server.                |
+            | ``Banned``            | The bot is banned from the target server.           |
             +-----------------------+-----------------------------------------------------+
             | ``BotIsPrivate``      | You do not own the bot to add it.                   |
             +-----------------------+-----------------------------------------------------+
@@ -4501,7 +6550,7 @@ class HTTPClient:
 
         Accepts an invite.
 
-        Fires either :class:`PrivateChannelCreateEvent` or :class:`.ServerCreateEvent` for the current user,
+        Fires either :class:`PrivateChannelCreateEvent` or :class:`ServerCreateEvent` for the current user,
         and fires either :class:`GroupRecipientAddEvent` or :class:`ServerMemberJoinEvent`,
         and :class:`MessageCreateEvent` (optional in server context), both for all group recipients/server members.
 
@@ -5630,7 +7679,7 @@ class HTTPClient:
         """
         payload: raw.DataBanCreate = {'reason': reason}
         response: raw.ServerBan = await self.request(
-            routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=_resolve_member_id(user)),
+            routes.SERVERS_BAN_CREATE.compile(server_id=resolve_id(server), user_id=_resolve_target_id(user)),
             http_overrides=http_overrides,
             json=payload,
         )
@@ -6680,7 +8729,7 @@ class HTTPClient:
         resp: raw.Member = await self.request(
             routes.SERVERS_MEMBER_EDIT.compile(
                 server_id=resolve_id(server),
-                member_id=_resolve_member_id(member),
+                member_id=_resolve_target_id(member),
             ),
             http_overrides=http_overrides,
             json=payload,
@@ -6804,7 +8853,7 @@ class HTTPClient:
         resp: raw.Member = await self.request(
             routes.SERVERS_MEMBER_FETCH.compile(
                 server_id=resolve_id(server),
-                member_id=_resolve_member_id(member),
+                member_id=_resolve_target_id(member),
             ),
             http_overrides=http_overrides,
         )
@@ -7006,7 +9055,7 @@ class HTTPClient:
             +-------------------+------------------------------------------------+---------------------------------------------------------------------+
         """
         await self.request(
-            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_member_id(member)),
+            routes.SERVERS_MEMBER_REMOVE.compile(server_id=resolve_id(server), member_id=_resolve_target_id(member)),
             http_overrides=http_overrides,
         )
 
@@ -7902,7 +9951,7 @@ class HTTPClient:
 
             .. deprecated:: 1.2
 
-                Due to categories rework in API v0.8.5, this parameter will be ignored on newer API versions,
+                Due to categories rework in API v0.9.5, this parameter will be ignored on newer API versions,
                 and was deprecated in favor of these dedicated methods:
 
                 - :meth:`HTTPClient.create_server_category`
@@ -7913,11 +9962,9 @@ class HTTPClient:
         flags: UndefinedOr[:class:`ServerFlags`]
             The new server flags. You must be a privileged user to provide this.
         discoverable: UndefinedOr[:class:`bool`]
-            Whether this server is public and should show up on `Stoat Discover <https://rvlt.gg>`_.
-
-            The new server flags. You must be a privileged user to provide this.
+            Whether this server is public and should show up on `Stoat Discover <https://rvlt.gg>`_. You must be a privileged user to provide this.
         analytics: UndefinedOr[:class:`bool`]
-            Whether analytics should be collected for this server. Must be enabled in order to show up on `Stoat Discover <https://rvlt.gg>`_.
+            Whether analytics should be collected for this server. Must be enabled in order to show up on `Stoat Discover <https://rvlt.gg>`_. You must be a privileged user to provide this.
         owner: UndefinedOr[Union[:class:`str`, :class:`BaseUser`, :class:`BaseMember`]]
             The member to transfer ownership to.
 
@@ -8033,7 +10080,7 @@ class HTTPClient:
             payload['analytics'] = analytics
 
         if owner is not UNDEFINED:
-            payload['owner'] = _resolve_member_id(owner)
+            payload['owner'] = _resolve_target_id(owner)
 
         if len(remove) > 0:
             payload['remove'] = remove

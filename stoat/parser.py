@@ -30,6 +30,14 @@ import sys
 import typing
 
 from . import discovery
+from .admin import (
+    AdminAuditItem,
+    AdminComment,
+    AdminCase,
+    AdminStrike,
+    AdminToken,
+    AdminUser,
+)
 from .authentication import (
     PartialAccount,
     MFATicket,
@@ -86,6 +94,7 @@ from .embed import (
 )
 from .emoji import ServerEmoji, DetachedEmoji, Emoji
 from .enums import (
+    AdminAuditItemActionType,
     MFAMethod,
     AssetMetadataType,
     ServerActivity,
@@ -420,6 +429,172 @@ class Parser:
             user_id=d.get('user_id'),
             server_id=d.get('server_id'),
             object_id=d.get('object_id'),
+        )
+
+    # basic end
+
+    def parse_admin_audit_item(self, payload: raw.AdminAuditItem, /) -> AdminAuditItem:
+        """Parses an admin audit item.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The admin audit item payload to parse.
+
+        Returns
+        -------
+        :class:`AdminAuditItem`
+            The parsed admin audit item object.
+        """
+        return AdminAuditItem(
+            state=self.state,
+            id=payload['id'],
+            moderator_id=payload['mod'],
+            action_type=AdminAuditItemActionType(payload['action']),
+            case_id=payload['case'],
+            target_id=payload.get('target'),
+            context=payload.get('context'),
+            timestamp=_parse_dt(payload['timestamp']),
+        )
+
+    def parse_admin_comment(self, payload: raw.AdminComment, /) -> AdminComment:
+        """Parses an admin comment.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The admin comment payload to parse.
+
+        Returns
+        -------
+        :class:`AdminComment`
+            The parsed admin comment object.
+        """
+        edited_at = payload.get('edited_at')
+        system_message = payload.get('system_message')
+
+        return AdminComment(
+            state=self.state,
+            id=payload['id'],
+            case_id=payload.get('case'),
+            object_id=payload['object'],
+            user_id=payload['user'],
+            edited_at=None if edited_at is None else _parse_dt(edited_at),
+            content=payload.get('content'),
+            system_message=None if system_message is None else AdminAuditItemActionType(system_message),
+            system_message_target=payload.get('system_message_target'),
+            system_message_context=payload.get('system_message_context'),
+        )
+
+    def parse_admin_case(self, payload: raw.AdminCase, /) -> AdminCase:
+        """Parses an admin case.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The admin case payload to parse.
+
+        Returns
+        -------
+        :class:`AdminCase`
+            The parsed admin case object.
+        """
+        closed_at = payload.get('closed_at')
+
+        return AdminCase(
+            state=self.state,
+            id=payload['id'],
+            short_id=payload['short_id'],
+            owner_id=payload['owner'],
+            title=payload['title'],
+            status=payload['status'],
+            closed_at=None if closed_at is None else _parse_dt(closed_at),
+            tags=payload['tags'],
+            reports=list(map(self.parse_report, payload['reports'])),  # type: ignore
+        )
+
+    def parse_admin_strike(self, payload: raw.AdminStrike, /) -> AdminStrike:
+        """Parses an admin strike.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The admin strike payload to parse.
+
+        Returns
+        -------
+        :class:`AdminStrike`
+            The parsed admin strike object.
+        """
+        return AdminStrike(
+            state=self.state,
+            id=payload['id'],
+            target_id=payload['target'],
+            moderator_id=payload['mod'],
+            case_id=payload.get('case'),
+            associated_action=payload.get('associated_action'),
+            overruled=payload.get('overruled', False),
+            reason=payload['reason'],
+            moderator_context=payload.get('mod_context'),
+        )
+
+    def parse_admin_token(self, payload: raw.AdminToken, /) -> AdminToken:
+        """Parses an admin token.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The admin token payload to parse.
+
+        Returns
+        -------
+        :class:`AdminToken`
+            The parsed admin token object.
+        """
+        return AdminToken(
+            state=self.state,
+            id=payload['id'],
+            user_id=payload['user'],
+            token=payload['token'],
+            expires_at=_parse_dt(payload['expiry']),
+        )
+
+    def parse_admin_user(self, payload: raw.AdminUser, /) -> AdminUser:
+        """Parses an admin user.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The admin user payload to parse.
+
+        Returns
+        -------
+        :class:`AdminUser`
+            The parsed admin user object.
+        """
+
+        platform_user = payload.get('revolt_user')
+
+        return AdminUser(
+            state=self.state,
+            id=payload['id'],
+            platform_user_id=payload['platform_user_id'],
+            email=payload['email'],
+            active=payload['active'],
+            raw_permissions=payload['permissions'],
+            platform_user=None if platform_user is None else self.parse_user(platform_user),
         )
 
     def parse_auth_event(self, shard: Shard, payload: raw.ClientAuthEvent, /) -> AuthifierEvent:
@@ -1046,6 +1221,7 @@ class Parser:
             state=self.state,
             id=payload['_id'],
             author_id=payload['author_id'],
+            case_id=payload.get('case_id'),
             content=self.parse_reported_content(payload['content']),
             additional_context=payload['additional_context'],
             notes=payload.get('notes', ''),
@@ -1844,6 +2020,25 @@ class Parser:
             members=list(map(self.parse_member, payload['members'])),
             users=list(map(self.parse_user, payload['users'])),
         )
+
+    def parse_member_with_user(self, payload: raw.MemberWithUserResponse, /) -> Member:
+        """Parses an object with member and user.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Dict[:class:`str`, Any]
+            The member + user payload to parse.
+
+        Returns
+        -------
+        :class:`Member`
+            The parsed member object.
+        """
+
+        user = self.parse_user(payload['user'])
+        return self.parse_member(payload['member'], user)
 
     def parse_members_with_users(self, payload: raw.AllMemberResponse, /) -> list[Member]:
         """Parses an object with members and associated users.
@@ -3180,6 +3375,7 @@ class Parser:
             state=self.state,
             id=payload['_id'],
             author_id=payload['author_id'],
+            case_id=payload.get('case_id'),
             content=self.parse_reported_content(payload['content']),
             additional_context=payload['additional_context'],
             notes=payload.get('notes', ''),
@@ -3287,6 +3483,7 @@ class Parser:
             state=self.state,
             id=payload['_id'],
             author_id=payload['author_id'],
+            case_id=payload.get('case_id'),
             content=self.parse_reported_content(payload['content']),
             additional_context=payload['additional_context'],
             notes=payload.get('notes', ''),
@@ -3703,6 +3900,35 @@ class Parser:
             before=None,  # filled on dispatch
             after=None,  # filled on dispatch
         )
+
+    def parse_server_participant(
+        self,
+        payload: tuple[raw.User, typing.Optional[raw.Member]],
+        /,
+    ) -> typing.Union[Member, User]:
+        """Parses a server participant tuple.
+
+        .. versionadded:: 1.3
+
+        Parameters
+        ----------
+        payload: Tuple[Dict[:class:`str`, Any], Optional[Dict[:class:`str`, Any]]]
+            The participant tuple to parse.
+
+        Returns
+        -------
+        Union[:class:`Member`, :class:`User`]
+            The parsed member object.
+        """
+        user_payload = payload[0]
+        member_payload = payload[1]
+
+        user = self.parse_user(user_payload)
+
+        if member_payload is None:
+            return user
+
+        return self.parse_member(member_payload, user)
 
     def parse_server_public_invite(self, payload: raw.ServerInviteResponse, /) -> ServerPublicInvite:
         """Parses a server public invite object.
