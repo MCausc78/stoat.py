@@ -1,5 +1,5 @@
 # This is actually used
-from . import authifier as a  # noqa: F401
+from . import authifier as a, gifbox as gb  # noqa: F401
 from .authorized_bots import *
 from .basic import *
 from .bots import *
